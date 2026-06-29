@@ -1,3 +1,7 @@
+## Screenshot
+
+![Infinity screenshot](Docs/screenshot.png)
+
 # Infinity Issues
 
 This repository is the public issue and support tracker for **Infinity**.
