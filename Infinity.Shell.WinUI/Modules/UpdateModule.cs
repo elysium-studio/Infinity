@@ -1,8 +1,10 @@
-﻿using Elysium.Application.DependencyInjection;
+﻿using Elysium.Application.Abstractions;
+using Elysium.Application.DependencyInjection;
 using Elysium.UI.WinUI;
 using Elysium.Updates.Abstractions;
 using Elysium.Updates.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Dispatching;
 using System;
 using System.IO;
 
@@ -13,17 +15,15 @@ public class UpdateModule :
 {
     private const string RestartForUpdateArgument = "update=restart";
     private const string DismissUpdateArgument = "update=dismiss";
-
     public void Register(IServiceCollection services)
     {
+        DispatcherQueue dispatcherQueue = DispatcherQueue.GetForCurrentThread();
         services.AddUpdateController(configuration =>
         {
             configuration.FeedUrl = "https://elysiumstud.io/feeds/infinity";
         });
-
         services.AddSingleton(provider => new AppToastNotifier("ElysiumStudio.Infinity", "Infinity",
             Path.Combine(AppContext.BaseDirectory, "Assets", "Infinity.ico")));
-
         services.Subscribe<IUpdateController>((provider, controller) =>
         {
             void HandleUpdateReady(string version)
@@ -36,21 +36,20 @@ public class UpdateModule :
                     .AddButton("Restart", RestartForUpdateArgument)
                     .AddButton("Dismiss", DismissUpdateArgument)
                     .Build();
-
                 provider.GetRequiredService<AppToastNotifier>().Show(content, argument =>
                 {
                     if (argument == RestartForUpdateArgument)
                     {
-                        IUpdateController controller = provider.GetRequiredService<IUpdateController>();
-
-                        if (controller.ApplyAndRestart())
+                        dispatcherQueue.TryEnqueue(async () =>
                         {
-                            Environment.Exit(0);
-                        }
+                            if (controller.ApplyAndRestart())
+                            {
+                                await provider.GetRequiredService<IApplicationLifetime>().ExitAsync();
+                            }
+                        });
                     }
                 });
             }
-
             controller.UpdateReady += HandleUpdateReady;
             return () => controller.UpdateReady -= HandleUpdateReady;
         });

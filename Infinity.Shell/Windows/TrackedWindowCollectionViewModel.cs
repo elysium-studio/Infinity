@@ -161,7 +161,7 @@ public partial class TrackedWindowCollectionViewModel :
     public void ExitApplication()
     {
         logger.LogInformation("Exiting application");
-        lifetime.Exit();
+        _ = lifetime.ExitAsync();
     }
 
     public async void NavigateToAbout()

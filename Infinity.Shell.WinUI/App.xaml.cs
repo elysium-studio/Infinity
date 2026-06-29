@@ -70,5 +70,8 @@ public partial class App
                 _ = navigator.NavigateAsync("TourWindow");
             }
         }
+
+
+
     }
 }
