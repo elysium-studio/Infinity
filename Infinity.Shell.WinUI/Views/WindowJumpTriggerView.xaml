@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Infinity.Shell.WinUI.WindowJumpTriggerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:WinUI="using:Elysium.UI.WinUI"
+    HorizontalAlignment="Stretch"
+    VerticalAlignment="Stretch"
+    HorizontalContentAlignment="Center"
+    VerticalContentAlignment="Top"
+    DataContext="{WinUI:ViewModel Key=WindowJumpTriggerView}"
+    Loaded="{x:Bind ViewModel.Activate}"
+    Unloaded="{x:Bind ViewModel.Deactivate}">
+    <StackPanel
+        MaxWidth="600"
+        HorizontalAlignment="Center"
+        Spacing="28">
+        <Border
+            x:Name="HeroCard"
+            Height="240"
+            HorizontalAlignment="Stretch"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="14">
+            <StackPanel
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="28">
+                <Grid
+                    VerticalAlignment="Center"
+                    ColumnSpacing="10"
+                    RowSpacing="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="64" />
+                        <RowDefinition Height="64" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="64" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="64" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="64" />
+                    </Grid.ColumnDefinitions>
+                    <Grid
+                        x:Name="WinKeyCard"
+                        Grid.Row="0"
+                        Grid.Column="0">
+                        <Border
+                            Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                            BorderBrush="{ThemeResource ControlStrokeColorSecondaryBrush}"
+                            BorderThickness="1.5"
+                            CornerRadius="12" />
+                        <Border
+                            x:Name="WinKeyAccentOverlay"
+                            Background="{ThemeResource AccentFillColorDefaultBrush}"
+                            CornerRadius="12"
+                            Opacity="0" />
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                            Text="{x:Bind ViewModel.FirstModifier, Mode=OneWay}" />
+                    </Grid>
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontSize="18"
+                        FontWeight="SemiBold"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="+" />
+                    <Grid
+                        x:Name="CtrlKeyCard"
+                        Grid.Row="0"
+                        Grid.Column="2">
+                        <Border
+                            Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                            BorderBrush="{ThemeResource ControlStrokeColorSecondaryBrush}"
+                            BorderThickness="1.5"
+                            CornerRadius="12" />
+                        <Border
+                            x:Name="CtrlKeyAccentOverlay"
+                            Background="{ThemeResource AccentFillColorDefaultBrush}"
+                            CornerRadius="12"
+                            Opacity="0" />
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                            Text="{x:Bind ViewModel.SecondModifier, Mode=OneWay}" />
+                    </Grid>
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.Column="3"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontSize="18"
+                        FontWeight="SemiBold"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="+" />
+                    <Grid
+                        x:Name="ShiftKeyCard"
+                        Grid.Row="0"
+                        Grid.Column="4">
+                        <Border
+                            Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                            BorderBrush="{ThemeResource ControlStrokeColorSecondaryBrush}"
+                            BorderThickness="1.5"
+                            CornerRadius="12" />
+                        <Border
+                            x:Name="ShiftKeyAccentOverlay"
+                            Background="{ThemeResource AccentFillColorDefaultBrush}"
+                            CornerRadius="12"
+                            Opacity="0" />
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                            Text="Shift" />
+                    </Grid>
+                    <StackPanel
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="5"
+                        HorizontalAlignment="Center"
+                        Orientation="Horizontal"
+                        Spacing="10">
+                        <Grid
+                            x:Name="LeftArrowKeyCard"
+                            Width="64"
+                            Height="64">
+                            <Border
+                                Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                                BorderBrush="{ThemeResource ControlStrokeColorSecondaryBrush}"
+                                BorderThickness="1.5"
+                                CornerRadius="12" />
+                            <Border
+                                x:Name="LeftArrowAccentOverlay"
+                                Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                CornerRadius="12"
+                                Opacity="0" />
+                            <FontIcon
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                FontSize="18"
+                                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                Glyph="&#xF0B0;" />
+                        </Grid>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="16"
+                            FontWeight="SemiBold"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="or" />
+                        <Grid
+                            x:Name="RightArrowKeyCard"
+                            Width="64"
+                            Height="64">
+                            <Border
+                                Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                                BorderBrush="{ThemeResource ControlStrokeColorSecondaryBrush}"
+                                BorderThickness="1.5"
+                                CornerRadius="12" />
+                            <Border
+                                x:Name="RightArrowAccentOverlay"
+                                Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                CornerRadius="12"
+                                Opacity="0" />
+                            <FontIcon
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                FontSize="18"
+                                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                Glyph="&#xF0AF;" />
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+                <Border
+                    Width="1"
+                    Height="140"
+                    VerticalAlignment="Center"
+                    Background="{ThemeResource ControlStrokeColorSecondaryBrush}"
+                    Opacity="0.6" />
+                <Grid
+                    x:Name="JumpStage"
+                    Width="200"
+                    Height="92"
+                    Margin="0,0,0,-16"
+                    VerticalAlignment="Center">
+                    <StackPanel
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Top"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <Border
+                            Width="90"
+                            Height="70"
+                            Background="{ThemeResource ControlFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource ControlStrokeColorSecondaryBrush}"
+                            BorderThickness="1"
+                            CornerRadius="10" />
+                        <Border
+                            Width="90"
+                            Height="70"
+                            Background="{ThemeResource ControlFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource ControlStrokeColorSecondaryBrush}"
+                            BorderThickness="1"
+                            CornerRadius="10" />
+                    </StackPanel>
+                    <Line
+                        Stroke="{ThemeResource ControlStrokeColorSecondaryBrush}"
+                        StrokeDashArray="2,2"
+                        StrokeThickness="1"
+                        X1="100"
+                        X2="100"
+                        Y1="4"
+                        Y2="78" />
+                    <Border
+                        x:Name="JumpWindow"
+                        Width="64"
+                        Height="44"
+                        Margin="20,14,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource AccentFillColorDefaultBrush}"
+                        BorderThickness="1.5"
+                        CornerRadius="8">
+                        <Grid>
+                            <Border
+                                x:Name="JumpWindowTitlebar"
+                                Height="14"
+                                VerticalAlignment="Top"
+                                Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                CornerRadius="8,8,0,0"
+                                Opacity="0.55" />
+                        </Grid>
+                    </Border>
+                    <StackPanel
+                        Margin="0,0,0,2"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Bottom"
+                        Orientation="Horizontal"
+                        Spacing="6">
+                        <Grid Width="6" Height="6">
+                            <Ellipse
+                                Width="6"
+                                Height="6"
+                                Fill="{ThemeResource ControlStrokeColorSecondaryBrush}" />
+                            <Ellipse
+                                x:Name="PageDotOneAccent"
+                                Width="6"
+                                Height="6"
+                                Fill="{ThemeResource AccentFillColorDefaultBrush}" />
+                        </Grid>
+                        <Grid Width="6" Height="6">
+                            <Ellipse
+                                Width="6"
+                                Height="6"
+                                Fill="{ThemeResource ControlStrokeColorSecondaryBrush}" />
+                            <Ellipse
+                                x:Name="PageDotTwoAccent"
+                                Width="6"
+                                Height="6"
+                                Fill="{ThemeResource AccentFillColorDefaultBrush}" />
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+        <StackPanel x:Name="HeadingGroup" Spacing="8">
+            <TextBlock
+                Style="{StaticResource TitleTextBlockStyle}"
+                Text="Sending a window to another page"
+                TextAlignment="Center"
+                TextWrapping="Wrap" />
+            <TextBlock
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                TextAlignment="Center"
+                TextWrapping="Wrap">
+                <Run Text="Hold " />
+                <Run Text="{x:Bind ViewModel.FirstModifier, Mode=OneWay}" />
+                <Run Text="+" />
+                <Run Text="{x:Bind ViewModel.SecondModifier, Mode=OneWay}" />
+                <Run Text="+Shift and press the Left or Right arrow key. The window in focus jumps straight to the page beside it, so you can reorganize without touching the mouse. Drop Shift and the same combo just switches pages, leaving the window where it is." />
+            </TextBlock>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

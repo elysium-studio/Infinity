@@ -1,0 +1,167 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0-windows10.0.22000.0</TargetFramework>
+		<TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+		<RootNamespace>Infinity.Shell.WinUI</RootNamespace>
+		<AssemblyName>Infinity</AssemblyName>
+		<AssemblyTitle>Infinity</AssemblyTitle>
+		<ApplicationIcon>Assets\Infinity.ico</ApplicationIcon>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<Platforms>x64</Platforms>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+		<UseWinUI>true</UseWinUI>
+		<EnableMsixTooling>false</EnableMsixTooling>
+		<WindowsPackageType>None</WindowsPackageType>
+		<Nullable>enable</Nullable>
+		<EnablePreviewFeatures>true</EnablePreviewFeatures>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+		<StartupObject>Infinity.Shell.WinUI.Start</StartupObject>
+		<EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
+		<PublishAot>true</PublishAot>
+		<IsAotCompatible>true</IsAotCompatible>
+		<ServerGarbageCollection>false</ServerGarbageCollection>
+		<ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+		<InvariantGlobalization>true</InvariantGlobalization>
+	</PropertyGroup>
+	<ItemGroup>
+		<TrimmerRootDescriptor Include="TrimmerRootDescriptor.xml" />
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="Assets\**\*">
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="Views\PageNumberSwitchTriggerView.xaml" />
+	  <None Remove="Views\PageSwitchTriggerView.xaml" />
+	  <None Remove="Views\WelcomeView.xaml" />
+	  <None Remove="Views\WindowDragTriggerView.xaml" />
+	  <None Remove="Views\WindowJumpTriggerView.xaml" />
+	  <None Remove="Views\WindowNumberTriggerView.xaml" />
+	  <None Remove="WindowPreviewGridDebugWindow.xaml" />
+	  <None Remove="Windows\TourWindow.xaml" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.WinUI.Behaviors" Version="8.3.260402-preview2" />
+		<PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.3.260402-preview2" />
+		<PackageReference Include="CommunityToolkit.WinUI.Triggers" Version="8.3.260402-preview2" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.9" />
+		<PackageReference Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
+		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.1839" />
+		<PackageReference Include="Microsoft.WindowsAppSDK" Version="2.2.0" />
+		<PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="3.0.1" />
+		<PackageReference Include="Velopack" Version="1.2.0" />
+		<PackageReference Include="WinUIEx" Version="2.9.1" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Infinity.Application.DependencyInjection\Infinity.Application.DependencyInjection.csproj" />
+		<ProjectReference Include="..\Infinity.Platform.DependencyInjection.Windows\Infinity.Platform.Windows.DependencyInjection.csproj" />
+		<ProjectReference Include="..\Infinity.Platform.Windows\Infinity.Platform.Windows.csproj" />
+		<ProjectReference Include="..\Infinity.Shell\Infinity.Shell.csproj" />
+		<Content Include="..\Infinity.Platform.Windows.Native\$(Platform)\$(Configuration)\Infinity.Platform.Windows.Native.dll">
+			<Link>Infinity.Platform.Windows.Native.dll</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
+		<Reference Include="Elysium.Application">
+			<HintPath>$(ElysiumBuildPath)\Elysium.Application.dll</HintPath>
+		</Reference>
+		<Reference Include="Elysium.Application.Abstractions">
+			<HintPath>$(ElysiumBuildPath)\Elysium.Application.Abstractions.dll</HintPath>
+		</Reference>
+		<Reference Include="Elysium.Application.DependencyInjection">
+			<HintPath>$(ElysiumBuildPath)\Elysium.Application.DependencyInjection.dll</HintPath>
+		</Reference>
+		<Reference Include="Elysium.Licensing">
+			<HintPath>$(ElysiumBuildPath)\Elysium.Licensing.dll</HintPath>
+		</Reference>
+		<Reference Include="Elysium.Licensing.Abstractions">
+			<HintPath>$(ElysiumBuildPath)\Elysium.Licensing.Abstractions.dll</HintPath>
+		</Reference>
+		<Reference Include="Elysium.Licensing.DependencyInjection">
+			<HintPath>$(ElysiumBuildPath)\Elysium.Licensing.DependencyInjection.dll</HintPath>
+		</Reference>
+		<Reference Include="Elysium.Platform.Abstractions">
+			<HintPath>$(ElysiumBuildPath)\Elysium.Platform.Abstractions.dll</HintPath>
+		</Reference>
+		<Reference Include="Elysium.Platform.Windows">
+			<HintPath>$(ElysiumBuildPath)\Elysium.Platform.Windows.dll</HintPath>
+		</Reference>
+		<Reference Include="Elysium.Presentation">
+			<HintPath>$(ElysiumBuildPath)\Elysium.Presentation.dll</HintPath>
+		</Reference>
+		<Reference Include="Elysium.Presentation.Abstractions">
+		  <HintPath>..\..\Elysium\build\Release\Elysium.Presentation.Abstractions.dll</HintPath>
+		</Reference>
+		<Reference Include="Elysium.Presentation.DependencyInjection">
+		  <HintPath>..\..\Elysium\build\Release\Elysium.Presentation.DependencyInjection.dll</HintPath>
+		</Reference>
+		<Reference Include="Elysium.UI.Controls.WinUI">
+			<HintPath>$(ElysiumBuildPath)\Elysium.UI.Controls.WinUI.dll</HintPath>
+		</Reference>
+		<Reference Include="Elysium.UI.WinUI">
+			<HintPath>$(ElysiumBuildPath)\Elysium.UI.WinUI.dll</HintPath>
+		</Reference>
+		<Reference Include="Elysium.Updates">
+			<HintPath>$(ElysiumBuildPath)\Elysium.Updates.dll</HintPath>
+		</Reference>
+		<Reference Include="Elysium.Updates.Abstractions">
+			<HintPath>$(ElysiumBuildPath)\Elysium.Updates.Abstractions.dll</HintPath>
+		</Reference>
+		<Reference Include="Elysium.Updates.DependencyInjection">
+			<HintPath>$(ElysiumBuildPath)\Elysium.Updates.DependencyInjection.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Views\PageNumberSwitchTriggerView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Views\PageSwitchTriggerView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Views\WindowNumberTriggerView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Views\WindowJumpTriggerView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="WindowPreviewGridDebugWindow.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Views\WindowDragTriggerView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Views\WelcomeView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Windows\TourWindow.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<Target Name="CopyPriAndXbfToPublish" AfterTargets="Publish">
+		<ItemGroup>
+			<PriFiles Include="$(OutDir)*.pri" />
+			<XbfFiles Include="$(OutDir)*.xbf" />
+		</ItemGroup>
+		<Copy SourceFiles="@(PriFiles)" DestinationFolder="$(PublishDir)" />
+		<Copy SourceFiles="@(XbfFiles)" DestinationFolder="$(PublishDir)" />
+	</Target>
+</Project>

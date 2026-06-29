@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Infinity.Shell.WinUI.PreviewPositionView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CommunityToolkit="using:CommunityToolkit.WinUI.Controls"
+    Loaded="{x:Bind ViewModel.Activate}"
+    Unloaded="{x:Bind ViewModel.Deactivate}">
+    <CommunityToolkit:SettingsCard Description="Where the preview bar appears on screen" Header="Preview Position">
+        <ComboBox SelectedValue="{x:Bind ViewModel.Value, Mode=TwoWay}" SelectedValuePath="Tag">
+            <ComboBoxItem Content="Auto">
+                <ComboBoxItem.Tag>
+                    <x:Int32>2</x:Int32>
+                </ComboBoxItem.Tag>
+            </ComboBoxItem>
+            <ComboBoxItem Content="Top">
+                <ComboBoxItem.Tag>
+                    <x:Int32>0</x:Int32>
+                </ComboBoxItem.Tag>
+            </ComboBoxItem>
+            <ComboBoxItem Content="Bottom">
+                <ComboBoxItem.Tag>
+                    <x:Int32>1</x:Int32>
+                </ComboBoxItem.Tag>
+            </ComboBoxItem>
+        </ComboBox>
+    </CommunityToolkit:SettingsCard>
+</UserControl>

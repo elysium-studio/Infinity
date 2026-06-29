@@ -1,0 +1,13 @@
+<Controls:DesktopFlyout
+    x:Class="Infinity.Shell.WinUI.DesktopFlyoutView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="using:Elysium.UI.Controls.WinUI"
+    xmlns:WinUI="using:Elysium.UI.WinUI"
+    DataContext="{WinUI:ViewModel Key=DesktopFlyoutView}"
+    IsOpen="{x:Bind ViewModel.IsOpen, Mode=TwoWay}"
+    IsTabStop="False"
+    Placement="{x:Bind ToPlacement(ViewModel.PlacementIndex), Mode=OneWay}"
+    StaysOpen="{x:Bind ViewModel.StaysOpen, Mode=OneWay}">
+    <ContentControl Content="{WinUI:View Key=TrackedWindowCollectionView}" IsTabStop="False" />
+</Controls:DesktopFlyout>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Infinity.Shell.WinUI.StartWithWindowsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CommunityToolkit="using:CommunityToolkit.WinUI.Controls"
+    Loaded="{x:Bind ViewModel.Activate}"
+    Unloaded="{x:Bind ViewModel.Deactivate}">
+    <CommunityToolkit:SettingsCard Description="Automatically launch Infinity when you sign in" Header="Start with Windows">
+        <ToggleSwitch
+            IsOn="{x:Bind ViewModel.Value, Mode=TwoWay}"
+            OffContent="No"
+            OnContent="Yes" />
+    </CommunityToolkit:SettingsCard>
+</UserControl>

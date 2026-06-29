@@ -1,0 +1,32 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="Infinity.Application.Abstractions/Infinity.Application.Abstractions.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="Infinity.Application.DependencyInjection/Infinity.Application.DependencyInjection.csproj" Id="f5a66fce-0cdd-4bfb-a104-457628eb3b80">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="Infinity.Application/Infinity.Application.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="Infinity.Platform.Abstractions/Infinity.Platform.Abstractions.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="Infinity.Platform.DependencyInjection.Windows/Infinity.Platform.Windows.DependencyInjection.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="Infinity.Platform.Windows.Native/Infinity.Platform.Windows.Native.vcxproj" Id="5807db40-1c15-4d50-9d1c-9d8d8df7e0da" />
+  <Project Path="Infinity.Platform.Windows/Infinity.Platform.Windows.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="Infinity.Shell.WinUI/Infinity.Shell.WinUI.csproj">
+    <Platform Project="x64" />
+    <Deploy Solution="*|Any CPU" />
+  </Project>
+  <Project Path="Infinity.Shell/Infinity.Shell.csproj" Id="d292865a-bccf-446a-b9d5-9aa09c413068">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+</Solution>

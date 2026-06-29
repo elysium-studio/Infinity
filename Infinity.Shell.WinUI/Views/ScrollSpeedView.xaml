@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Infinity.Shell.WinUI.ScrollSpeedView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CommunityToolkit="using:CommunityToolkit.WinUI.Controls"
+    Loaded="{x:Bind ViewModel.Activate}"
+    Unloaded="{x:Bind ViewModel.Deactivate}">
+    <CommunityToolkit:SettingsCard Description="How fast windows move when you scroll" Header="Scroll Speed">
+        <ComboBox SelectedIndex="{x:Bind ViewModel.Value, Mode=TwoWay}">
+            <ComboBoxItem Content="Slow" />
+            <ComboBoxItem Content="Normal" />
+            <ComboBoxItem Content="Fast" />
+            <ComboBoxItem Content="Very Fast" />
+        </ComboBox>
+    </CommunityToolkit:SettingsCard>
+</UserControl>

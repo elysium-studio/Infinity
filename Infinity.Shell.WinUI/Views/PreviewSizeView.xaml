@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Infinity.Shell.WinUI.PreviewSizeView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CommunityToolkit="using:CommunityToolkit.WinUI.Controls"
+    Loaded="{x:Bind ViewModel.Activate}"
+    Unloaded="{x:Bind ViewModel.Deactivate}">
+    <CommunityToolkit:SettingsCard Description="Controls how tall the preview bar appears at the bottom of your screen" Header="Preview Size">
+        <ComboBox SelectedIndex="{x:Bind ViewModel.Value, Mode=TwoWay}">
+            <ComboBoxItem Content="Compact " />
+            <ComboBoxItem Content="Default" />
+            <ComboBoxItem Content="Large" />
+        </ComboBox>
+    </CommunityToolkit:SettingsCard>
+</UserControl>

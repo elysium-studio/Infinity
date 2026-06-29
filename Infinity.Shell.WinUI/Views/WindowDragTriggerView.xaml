@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Infinity.Shell.WinUI.WindowDragTriggerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:WinUI="using:Elysium.UI.WinUI"
+    HorizontalAlignment="Stretch"
+    VerticalAlignment="Stretch"
+    HorizontalContentAlignment="Center"
+    VerticalContentAlignment="Top"
+    DataContext="{WinUI:ViewModel Key=WindowDragTriggerView}"
+    Loaded="{x:Bind ViewModel.Activate}"
+    Unloaded="{x:Bind ViewModel.Deactivate}">
+    <StackPanel
+        MaxWidth="600"
+        HorizontalAlignment="Center"
+        Spacing="28">
+        <Border
+            x:Name="HeroCard"
+            Height="240"
+            HorizontalAlignment="Stretch"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="14">
+            <StackPanel
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="20">
+                <Grid
+                    x:Name="WinKeyCard"
+                    Width="64"
+                    Height="64">
+                    <Border
+                        Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                        BorderBrush="{ThemeResource ControlStrokeColorSecondaryBrush}"
+                        BorderThickness="1.5"
+                        CornerRadius="12" />
+                    <Border
+                        x:Name="WinKeyAccentOverlay"
+                        Background="{ThemeResource AccentFillColorDefaultBrush}"
+                        CornerRadius="12"
+                        Opacity="0" />
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                        Text="{x:Bind ViewModel.FirstModifier, Mode=OneWay}" />
+                </Grid>
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="18"
+                    FontWeight="SemiBold"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="+" />
+                <Grid
+                    x:Name="CtrlKeyCard"
+                    Width="64"
+                    Height="64">
+                    <Border
+                        Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                        BorderBrush="{ThemeResource ControlStrokeColorSecondaryBrush}"
+                        BorderThickness="1.5"
+                        CornerRadius="12" />
+                    <Border
+                        x:Name="CtrlKeyAccentOverlay"
+                        Background="{ThemeResource AccentFillColorDefaultBrush}"
+                        CornerRadius="12"
+                        Opacity="0" />
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                        Text="{x:Bind ViewModel.SecondModifier, Mode=OneWay}" />
+                </Grid>
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="18"
+                    FontWeight="SemiBold"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="+" />
+                <Grid
+                    x:Name="DragStage"
+                    Width="200"
+                    Height="92"
+                    Margin="0,0,0,-16"
+                    VerticalAlignment="Center">
+                    <StackPanel
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Top"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                        <Border
+                            Width="90"
+                            Height="70"
+                            Background="{ThemeResource ControlFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource ControlStrokeColorSecondaryBrush}"
+                            BorderThickness="1"
+                            CornerRadius="10" />
+                        <Border
+                            Width="90"
+                            Height="70"
+                            Background="{ThemeResource ControlFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource ControlStrokeColorSecondaryBrush}"
+                            BorderThickness="1"
+                            CornerRadius="10" />
+                    </StackPanel>
+                    <Line
+                        Stroke="{ThemeResource ControlStrokeColorSecondaryBrush}"
+                        StrokeDashArray="2,2"
+                        StrokeThickness="1"
+                        X1="100"
+                        X2="100"
+                        Y1="4"
+                        Y2="78" />
+                    <Border
+                        x:Name="DragWindow"
+                        Width="64"
+                        Height="44"
+                        Margin="20,14,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource AccentFillColorDefaultBrush}"
+                        BorderThickness="1.5"
+                        CornerRadius="8">
+                        <Grid>
+                            <Border
+                                x:Name="DragWindowTitlebar"
+                                Height="14"
+                                VerticalAlignment="Top"
+                                Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                CornerRadius="8,8,0,0"
+                                Opacity="0.55" />
+                        </Grid>
+                    </Border>
+                    <Polygon
+                        x:Name="DragCursor"
+                        Width="18"
+                        Height="22"
+                        Margin="45,18,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Fill="{ThemeResource TextFillColorPrimaryBrush}"
+                        Points="0,0 0,16 4,12 7,18 10,16 7,11 12,11"
+                        Stroke="{ThemeResource SmokeFillColorDefaultBrush}"
+                        StrokeThickness="1.2" />
+                    <StackPanel
+                        Margin="0,0,0,2"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Bottom"
+                        Orientation="Horizontal"
+                        Spacing="6">
+                        <Grid Width="6" Height="6">
+                            <Ellipse
+                                Width="6"
+                                Height="6"
+                                Fill="{ThemeResource ControlStrokeColorSecondaryBrush}" />
+                            <Ellipse
+                                x:Name="PageDotOneAccent"
+                                Width="6"
+                                Height="6"
+                                Fill="{ThemeResource AccentFillColorDefaultBrush}" />
+                        </Grid>
+                        <Grid Width="6" Height="6">
+                            <Ellipse
+                                Width="6"
+                                Height="6"
+                                Fill="{ThemeResource ControlStrokeColorSecondaryBrush}" />
+                            <Ellipse
+                                x:Name="PageDotTwoAccent"
+                                Width="6"
+                                Height="6"
+                                Fill="{ThemeResource AccentFillColorDefaultBrush}" />
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+        <StackPanel x:Name="HeadingGroup" Spacing="8">
+            <TextBlock
+                Style="{StaticResource TitleTextBlockStyle}"
+                Text="Dragging a window to another page"
+                TextAlignment="Center"
+                TextWrapping="Wrap" />
+            <TextBlock
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                TextAlignment="Center"
+                TextWrapping="Wrap">
+                <Run Text="Hold " />
+                <Run Text="{x:Bind ViewModel.FirstModifier, Mode=OneWay}" />
+                <Run Text="+" />
+                <Run Text="{x:Bind ViewModel.SecondModifier, Mode=OneWay}" />
+                <Run Text=" and drag a window's title bar toward the edge of the screen to move it onto the next page." />
+            </TextBlock>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

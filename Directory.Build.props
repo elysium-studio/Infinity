@@ -1,0 +1,5 @@
+<Project>
+    <PropertyGroup>
+        <ElysiumBuildPath>$(MSBuildThisFileDirectory)..\Elysium\build\Release</ElysiumBuildPath>
+    </PropertyGroup>
+</Project>

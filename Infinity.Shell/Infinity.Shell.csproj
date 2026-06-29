@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
+		<Platforms>AnyCPU;x64</Platforms>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.9" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.9" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="10.0.9" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Infinity.Application.Abstractions\Infinity.Application.Abstractions.csproj" />
+		<ProjectReference Include="..\Infinity.Application\Infinity.Application.csproj" />
+		<ProjectReference Include="..\Infinity.Platform.Abstractions\Infinity.Platform.Abstractions.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<Reference Include="Elysium.Application.Abstractions">
+			<HintPath>$(ElysiumBuildPath)\Elysium.Application.Abstractions.dll</HintPath>
+		</Reference>
+		<Reference Include="Elysium.Licensing.Abstractions">
+			<HintPath>$(ElysiumBuildPath)\Elysium.Licensing.Abstractions.dll</HintPath>
+		</Reference>
+		<Reference Include="Elysium.Platform.Abstractions">
+			<HintPath>$(ElysiumBuildPath)\Elysium.Platform.Abstractions.dll</HintPath>
+		</Reference>
+		<Reference Include="Elysium.Presentation">
+			<HintPath>$(ElysiumBuildPath)\Elysium.Presentation.dll</HintPath>
+		</Reference>
+		<Reference Include="Elysium.Presentation.Abstractions">
+		  <HintPath>..\..\Elysium\build\Release\Elysium.Presentation.Abstractions.dll</HintPath>
+		</Reference>
+		<Reference Include="Elysium.Presentation.DependencyInjection">
+		  <HintPath>..\..\Elysium\build\Release\Elysium.Presentation.DependencyInjection.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+</Project>

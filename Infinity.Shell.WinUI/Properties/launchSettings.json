@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Infinity.Shell.WinUI": {
+      "commandName": "Project",
+      "debugEngines": "managed"
+    }
+  }
+}

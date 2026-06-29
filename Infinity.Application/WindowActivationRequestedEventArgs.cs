@@ -1,0 +1,3 @@
+﻿namespace Infinity.Application;
+
+public record WindowActivationRequestedEventArgs;

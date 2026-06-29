@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Infinity.Shell.WinUI.TrackedWindowView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    IsTabStop="False">
+    <UserControl.Resources>
+        <ThemeShadow x:Name="SharedShadow" />
+    </UserControl.Resources>
+    <Canvas>
+        <ItemContainer
+            x:Name="WindowContainer"
+            Canvas.Left="{x:Bind ViewModel.X, Mode=OneWay}"
+            Canvas.Top="{x:Bind ViewModel.Y, Mode=OneWay}"
+            Width="{x:Bind ViewModel.Width, Mode=OneWay}"
+            Height="{x:Bind ViewModel.Height, Mode=OneWay}"
+            CornerRadius="0"
+            FocusVisualPrimaryThickness="0"
+            FocusVisualSecondaryThickness="0"
+            IsTabStop="False"
+            PointerEntered="HandleWindowContainerPointerEntered"
+            PointerExited="HandleWindowContainerPointerExited"
+            Tapped="{x:Bind ViewModel.Navigate}"
+            ToolTipService.ToolTip="{x:Bind ViewModel.Title}">
+            <Grid
+                x:Name="ThumbnailGrid"
+                Shadow="{StaticResource SharedShadow}"
+                Translation="0,0,32">
+                <Border
+                    x:Name="ThumbnailHost"
+                    Background="Transparent"
+                    IsHitTestVisible="False" />
+                <Border
+                    x:Name="SelectionBorder"
+                    BorderBrush="{ThemeResource AccentAAFillColorDefaultBrush}"
+                    BorderThickness="2"
+                    CornerRadius="2"
+                    Visibility="{x:Bind ToSelectionVisibility(ViewModel.IsSelected), Mode=OneWay}" />
+                <Button
+                    x:Name="CloseButton"
+                    Width="24"
+                    Height="24"
+                    Margin="0,4,4,0"
+                    Padding="0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Click="{x:Bind ViewModel.Close}"
+                    CornerRadius="4"
+                    Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                    IsTabStop="False"
+                    PointerEntered="HandleCloseButtonPointerEntered"
+                    PointerExited="HandleCloseButtonPointerExited"
+                    ToolTipService.ToolTip="Close window">
+                    <Button.Resources>
+                        <ResourceDictionary>
+                            <ResourceDictionary.ThemeDictionaries>
+                                <ResourceDictionary x:Key="Default">
+                                    <SolidColorBrush x:Key="ButtonBackground" Color="Transparent" />
+                                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#C42B1C" />
+                                    <SolidColorBrush
+                                        x:Key="ButtonBackgroundPressed"
+                                        Opacity="0.9"
+                                        Color="#C42B1C" />
+                                    <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
+                                    <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Transparent" />
+                                    <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Transparent" />
+                                    <SolidColorBrush x:Key="ButtonForeground" Color="{ThemeResource TextFillColorPrimary}" />
+                                    <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
+                                    <SolidColorBrush x:Key="ButtonForegroundPressed" Color="White" />
+                                </ResourceDictionary>
+                                <ResourceDictionary x:Key="Light">
+                                    <SolidColorBrush x:Key="ButtonBackground" Color="Transparent" />
+                                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#C42B1C" />
+                                    <SolidColorBrush
+                                        x:Key="ButtonBackgroundPressed"
+                                        Opacity="0.9"
+                                        Color="#C42B1C" />
+                                    <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
+                                    <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Transparent" />
+                                    <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Transparent" />
+                                    <SolidColorBrush x:Key="ButtonForeground" Color="{ThemeResource TextFillColorPrimary}" />
+                                    <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White" />
+                                    <SolidColorBrush x:Key="ButtonForegroundPressed" Color="White" />
+                                </ResourceDictionary>
+                                <ResourceDictionary x:Key="HighContrast">
+                                    <SolidColorBrush x:Key="ButtonBackground" Color="Transparent" />
+                                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{ThemeResource SystemColorHighlightColor}" />
+                                    <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{ThemeResource SystemColorHighlightColor}" />
+                                    <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
+                                    <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="{ThemeResource SystemColorButtonTextColor}" />
+                                    <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="{ThemeResource SystemColorButtonTextColor}" />
+                                    <SolidColorBrush x:Key="ButtonForeground" Color="{ThemeResource SystemColorButtonTextColor}" />
+                                    <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="{ThemeResource SystemColorHighlightTextColor}" />
+                                    <SolidColorBrush x:Key="ButtonForegroundPressed" Color="{ThemeResource SystemColorHighlightTextColor}" />
+                                </ResourceDictionary>
+                            </ResourceDictionary.ThemeDictionaries>
+                        </ResourceDictionary>
+                    </Button.Resources>
+                    <TextBlock
+                        FontFamily="Segoe MDL2 Assets"
+                        FontSize="12"
+                        Text="&#xE624;" />
+                </Button>
+            </Grid>
+        </ItemContainer>
+    </Canvas>
+</UserControl>
