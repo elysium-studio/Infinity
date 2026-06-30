@@ -2,6 +2,7 @@
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
+using System.Threading;
 
 namespace Infinity.Application;
 
@@ -29,10 +30,15 @@ public class Scroller(IPanState state,
     private const double SpringImpulseScale = 0.18;
     private const double SpringMaxVelocity = 25.0;
 
+    private const int SystemMoveGraceMilliseconds = 250;
+
     private volatile bool haltRequested;
     private double springPosition;
     private double springVelocity;
     private bool isSpinging;
+
+    private WindowMoveScope? activeMoveScope;
+    private Timer? moveGuardReleaseTimer;
 
     public event EventHandler? ScrollStarted;
     public event EventHandler? ScrollStopped;
@@ -178,11 +184,17 @@ public class Scroller(IPanState state,
         dragGuard.HoldStarted -= HandleHoldStarted;
 
         stopTimer();
+
+        moveGuardReleaseTimer?.Dispose();
+        moveGuardReleaseTimer = null;
+
+        activeMoveScope?.Dispose();
+        activeMoveScope = null;
     }
 
     private void RepositionWindows(int intOffset)
     {
-        using var scope = moveGuard.Begin();
+        activeMoveScope ??= moveGuard.Begin();
 
         bool anyDragging = dragGuard.IsAnyDragging;
 
@@ -210,6 +222,28 @@ public class Scroller(IPanState state,
         }
 
         mover.EndBatch();
+
+        ScheduleMoveGuardRelease();
+    }
+
+    private void ScheduleMoveGuardRelease()
+    {
+        if (moveGuardReleaseTimer is null)
+        {
+            moveGuardReleaseTimer = new Timer(HandleMoveGuardReleaseTick, null, SystemMoveGraceMilliseconds, Timeout.Infinite);
+        }
+        else
+        {
+            moveGuardReleaseTimer.Change(SystemMoveGraceMilliseconds, Timeout.Infinite);
+        }
+    }
+
+    private void HandleMoveGuardReleaseTick(object? timerState) => dispatcher.Dispatch(ReleaseMoveGuard);
+
+    private void ReleaseMoveGuard()
+    {
+        activeMoveScope?.Dispose();
+        activeMoveScope = null;
     }
 
     private void HandleScrollDeltaReceived(int nativeScrollDelta)

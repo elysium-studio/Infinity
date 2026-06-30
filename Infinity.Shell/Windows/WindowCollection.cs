@@ -18,8 +18,8 @@ public class WindowCollection(IWindowStore store,
     ILogger<WindowCollection> logger) :
     IWindowCollection
 {
-    private readonly object refreshSyncRoot = new();
-    private readonly object reorderSyncRoot = new();
+    private readonly Lock refreshSyncRoot = new();
+    private readonly Lock reorderSyncRoot = new();
 
     private bool refreshQueued;
     private bool reorderQueued;

@@ -28,8 +28,10 @@ public static class IServiceCollectionExtensions
                     provider.GetRequiredService<IWindowRestoreGuard>(),
                     provider.GetRequiredService<IWindowMoveGuard>(),
                     provider.GetRequiredService<IWindowDragGuard>(),
+                    provider.GetRequiredService<IWindowEnumerator>(),
                     provider.GetRequiredService<IWindowEventListener>(),
                     provider.GetRequiredService<IPanState>(),
+                    provider.GetRequiredService<IDispatcher>(),
                     provider.GetRequiredService<IMessageWindow>().Handle,
                     provider.GetRequiredService<ILogger<WindowTracker>>()));
 

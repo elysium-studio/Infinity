@@ -7,11 +7,11 @@ namespace Infinity.Platform.Windows;
 public class WindowEnumerator : 
     IWindowEnumerator
 {
-    public void EnumerateVisible(Action<nint> onWindowFound)
+    public void EnumerateVisible(Action<nint> action)
     {
         PInvoke.EnumWindows((windowHandle, _) =>
         {
-            onWindowFound(windowHandle);
+            action(windowHandle);
             return true;
         }, new LPARAM(0));
     }

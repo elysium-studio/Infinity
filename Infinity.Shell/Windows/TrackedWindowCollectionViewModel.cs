@@ -144,6 +144,7 @@ public partial class TrackedWindowCollectionViewModel :
         }
 
         ResetFilterState();
+        Refresh();
 
         if (ShowDesktopBackground)
         {
@@ -253,85 +254,29 @@ public partial class TrackedWindowCollectionViewModel :
     private void HandleBackgroundChanged(object? sender, EventArgs args) =>
         dispatcher.Dispatch(ApplyBackground);
 
-    private void HandleDragMoved()
-    {
+    private void HandleDragMoved() =>
         dispatcher.Dispatch(Refresh);
-    }
 
     private void HandleDragScrolled() =>
         dispatcher.Dispatch(Refresh);
 
-    private void HandleRefreshRequested(object? sender, EventArgs args)
-    {
-        HashSet<IntPtr> current = [.. windowCollection.AllTrackedWindows.Select(window => window.Handle)];
+    private void HandleRefreshRequested(object? sender, EventArgs args) =>
+        dispatcher.Dispatch(Refresh);
 
-        foreach (IntPtr handle in trackedWindowCollection.All.Select(window => window.Handle).Where(handle => !current.Contains(handle)).ToList())
-        {
-            HandleWindowRemoved(sender, handle);
-        }
+    private void HandleWindowAdded(object? sender, TrackedWindow trackedWindow) =>
+        dispatcher.Dispatch(Refresh);
 
-        foreach (TrackedWindow trackedWindow in windowCollection.AllTrackedWindows)
-        {
-            if (!trackedWindowCollection.Contains(trackedWindow.Handle))
-            {
-                ITrackedWindow windowViewModel = Factory!.Create<TrackedWindowViewModel>(trackedWindow.Handle, (Action<IntPtr>)NavigateToWindowHandle);
-                trackedWindowCollection.Add(trackedWindow.Handle, windowViewModel);
-                Add(windowViewModel);
-            }
-        }
+    private void HandleWindowChanged(object? sender, TrackedWindow trackedWindow) =>
+        dispatcher.Dispatch(Refresh);
 
-        Refresh();
-    }
-
-    private void HandleWindowAdded(object? sender, TrackedWindow trackedWindow)
-    {
-        if (trackedWindowCollection.Contains(trackedWindow.Handle))
-        {
-            return;
-        }
-
-        logger.LogInformation("Window added: {Title} ({Handle})", trackedWindow.Title, trackedWindow.Handle);
-
-        ITrackedWindow windowViewModel = Factory!.Create<TrackedWindowViewModel>(trackedWindow.Handle, (Action<IntPtr>)NavigateToWindowHandle);
-
-        trackedWindowCollection.Add(trackedWindow.Handle, windowViewModel);
-        Add(windowViewModel);
-    }
-
-    private void HandleWindowChanged(object? sender, TrackedWindow trackedWindow)
-    {
-        if (!trackedWindowCollection.TryGet(trackedWindow.Handle, out ITrackedWindow? windowViewModel))
-        {
-            return;
-        }
-
-        windowViewModel!.Title = trackedWindow.Title;
-        windowViewModel.IsFiltered = !filterState.IsMatch(windowViewModel.Title);
-    }
-
-    private void HandleWindowRemoved(object? sender, IntPtr handle)
-    {
-        if (!trackedWindowCollection.TryGet(handle, out ITrackedWindow? windowViewModel))
-        {
-            return;
-        }
-
-        logger.LogInformation("Window removed: {Handle}", handle);
-
-        if (handle == selector.SelectedHandle)
-        {
-            selector.Clear(trackedWindowCollection.All);
-        }
-
-        Remove(windowViewModel!);
-        trackedWindowCollection.Remove(handle);
-    }
+    private void HandleWindowRemoved(object? sender, IntPtr handle) =>
+        dispatcher.Dispatch(Refresh);
 
     private void HandleWorkspaceLayoutChanged(object? sender, EventArgs args) =>
-        Refresh();
+        dispatcher.Dispatch(Refresh);
 
     private void HandleZOrderRefreshed(object? sender, EventArgs args) =>
-        ReorderWindows();
+        dispatcher.Dispatch(ReorderWindows);
 
     private void NavigateToWindowHandle(IntPtr handle)
     {
@@ -410,6 +355,8 @@ public partial class TrackedWindowCollectionViewModel :
 
     private void Refresh()
     {
+        SynchroniseWindows();
+
         CanvasWidth = ScreenWidth * ScaleFactor;
         ViewportIndicatorWidth = ScreenWidth * ScaleFactor;
 
@@ -441,7 +388,12 @@ public partial class TrackedWindowCollectionViewModel :
         {
             if (!trackedWindowCollection.TryGet(trackedWindow.Handle, out ITrackedWindow? windowViewModel))
             {
-                continue;
+                AddOrUpdateWindow(trackedWindow);
+
+                if (!trackedWindowCollection.TryGet(trackedWindow.Handle, out windowViewModel))
+                {
+                    continue;
+                }
             }
 
             ShellWindowLayout layout = calculator.Calculate(trackedWindow, scroller.VisualOffset, workspace.WorkAreaX, ScaleFactor, ScreenWidth, ScreenHeight);
@@ -457,6 +409,88 @@ public partial class TrackedWindowCollectionViewModel :
         }
 
         ReorderWindows();
+    }
+
+    private void SynchroniseWindows()
+    {
+        List<TrackedWindow> trackedWindows = [.. windowCollection.AllTrackedWindows];
+        HashSet<IntPtr> current = [.. trackedWindows.Select(window => window.Handle)];
+
+        foreach (IntPtr handle in trackedWindowCollection.All.Select(window => window.Handle).Where(handle => !current.Contains(handle)).ToList())
+        {
+            RemoveWindow(handle);
+        }
+
+        foreach (ITrackedWindow window in this.Where(window => !current.Contains(window.Handle)).ToList())
+        {
+            Remove(window);
+        }
+
+        foreach (TrackedWindow trackedWindow in trackedWindows)
+        {
+            AddOrUpdateWindow(trackedWindow);
+        }
+    }
+
+    private void AddOrUpdateWindow(TrackedWindow trackedWindow)
+    {
+        if (!trackedWindowCollection.TryGet(trackedWindow.Handle, out ITrackedWindow? windowViewModel))
+        {
+            foreach (ITrackedWindow orphanedWindow in this.Where(window => window.Handle == trackedWindow.Handle).ToList())
+            {
+                Remove(orphanedWindow);
+            }
+
+            logger.LogInformation("Window added: {Title} ({Handle})", trackedWindow.Title, trackedWindow.Handle);
+
+            windowViewModel = Factory!.Create<TrackedWindowViewModel>(trackedWindow.Handle, (Action<IntPtr>)NavigateToWindowHandle);
+
+            trackedWindowCollection.Add(trackedWindow.Handle, windowViewModel);
+            Add(windowViewModel);
+        }
+        else
+        {
+            foreach (ITrackedWindow duplicateWindow in this.Where(window => window.Handle == trackedWindow.Handle && !ReferenceEquals(window, windowViewModel)).ToList())
+            {
+                Remove(duplicateWindow);
+            }
+
+            if (!this.Contains(windowViewModel!))
+            {
+                Add(windowViewModel!);
+            }
+        }
+
+        windowViewModel!.Title = trackedWindow.Title;
+        windowViewModel.IsFiltered = !filterState.IsMatch(windowViewModel.Title);
+    }
+
+    private void RemoveWindow(IntPtr handle)
+    {
+        if (!trackedWindowCollection.TryGet(handle, out ITrackedWindow? windowViewModel))
+        {
+            foreach (ITrackedWindow orphanedWindow in this.Where(window => window.Handle == handle).ToList())
+            {
+                Remove(orphanedWindow);
+            }
+
+            return;
+        }
+
+        logger.LogInformation("Window removed: {Handle}", handle);
+
+        if (handle == selector.SelectedHandle)
+        {
+            selector.Clear(trackedWindowCollection.All);
+        }
+
+        Remove(windowViewModel!);
+        trackedWindowCollection.Remove(handle);
+
+        foreach (ITrackedWindow orphanedWindow in this.Where(window => window.Handle == handle).ToList())
+        {
+            Remove(orphanedWindow);
+        }
     }
 
     private void ReorderWindows()
