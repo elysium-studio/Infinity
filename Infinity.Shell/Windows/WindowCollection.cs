@@ -60,7 +60,7 @@ public class WindowCollection(IWindowStore store,
 
         HashSet<IntPtr> activeHandles = [.. store.Select(trackedWindow => trackedWindow.Handle)];
 
-        foreach (IntPtr staleHandle in trackedWindowCollection.All.Select(trackedWindow => trackedWindow.Handle)
+        foreach (IntPtr staleHandle in trackedWindowCollection.Select(trackedWindow => trackedWindow.Handle)
             .Where(handle => !activeHandles.Contains(handle)).ToList())
         {
             WindowRemoved?.Invoke(this, staleHandle);
@@ -156,13 +156,8 @@ public class WindowCollection(IWindowStore store,
         });
     }
 
-    private void HandleWindowChanged(object? sender, TrackedWindow trackedWindow)
-    {
-        dispatcher.Dispatch(() =>
-        {
-            WindowChanged?.Invoke(this, trackedWindow);
-        });
-    }
+    private void HandleWindowChanged(object? sender, TrackedWindow trackedWindow) =>
+        dispatcher.Dispatch(() => WindowChanged?.Invoke(this, trackedWindow));
 
     private void HandleScrollTick(object? sender, EventArgs args) =>
         Queue(false, false);

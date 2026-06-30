@@ -2,10 +2,9 @@
 
 namespace Infinity.Shell;
 
-public interface ITrackedWindowCollection
+public interface ITrackedWindowCollection :
+    IEnumerable<ITrackedWindow>
 {
-    IReadOnlyList<ITrackedWindow> All { get; }
-
     void Add(IntPtr handle, ITrackedWindow window);
 
     void Remove(IntPtr handle);

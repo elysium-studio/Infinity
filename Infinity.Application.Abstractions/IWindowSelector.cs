@@ -6,9 +6,9 @@ public interface IWindowSelector
 
     void Select(ITrackedWindow window);
 
-    void Step(bool forward, IReadOnlyCollection<ITrackedWindow> candidates);
+    void Step(bool forward, IEnumerable<ITrackedWindow> candidates);
 
-    void Clear(IReadOnlyCollection<ITrackedWindow> all);
+    void Clear(IEnumerable<ITrackedWindow> items);
 
-    IntPtr Resolve(IReadOnlyCollection<ITrackedWindow> all);
+    IntPtr Resolve(IEnumerable<ITrackedWindow> items);
 }

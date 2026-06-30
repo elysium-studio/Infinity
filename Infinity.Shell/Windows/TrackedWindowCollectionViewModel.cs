@@ -217,7 +217,7 @@ public partial class TrackedWindowCollectionViewModel :
     [RelayCommand]
     private void ActivateSelected()
     {
-        IntPtr handle = selector.Resolve(trackedWindowCollection.All);
+        IntPtr handle = selector.Resolve(trackedWindowCollection);
 
         if (handle == default)
         {
@@ -233,7 +233,7 @@ public partial class TrackedWindowCollectionViewModel :
             filterState.ClearActivation();
         }
 
-        selector.Clear(trackedWindowCollection.All);
+        selector.Clear(trackedWindowCollection);
         NavigateToWindowHandle(handle);
     }
 
@@ -245,7 +245,7 @@ public partial class TrackedWindowCollectionViewModel :
 
     private void ClearWindowFilterStates()
     {
-        foreach (ITrackedWindow window in trackedWindowCollection.All)
+        foreach (ITrackedWindow window in trackedWindowCollection)
         {
             window.IsFiltered = false;
         }
@@ -309,8 +309,8 @@ public partial class TrackedWindowCollectionViewModel :
             Messenger.Send(new FilterChangedEventArgs(true));
         }
 
-        filterState.Apply(trackedWindowCollection.All);
-        selector.Clear(trackedWindowCollection.All);
+        filterState.Apply(trackedWindowCollection);
+        selector.Clear(trackedWindowCollection);
 
         if (filterState.IsActive)
         {
@@ -416,7 +416,7 @@ public partial class TrackedWindowCollectionViewModel :
         List<TrackedWindow> trackedWindows = [.. windowCollection.AllTrackedWindows];
         HashSet<IntPtr> current = [.. trackedWindows.Select(window => window.Handle)];
 
-        foreach (IntPtr handle in trackedWindowCollection.All.Select(window => window.Handle).Where(handle => !current.Contains(handle)).ToList())
+        foreach (IntPtr handle in trackedWindowCollection.Select(window => window.Handle).Where(handle => !current.Contains(handle)).ToList())
         {
             RemoveWindow(handle);
         }
@@ -481,7 +481,7 @@ public partial class TrackedWindowCollectionViewModel :
 
         if (handle == selector.SelectedHandle)
         {
-            selector.Clear(trackedWindowCollection.All);
+            selector.Clear(trackedWindowCollection);
         }
 
         Remove(windowViewModel!);
@@ -516,7 +516,7 @@ public partial class TrackedWindowCollectionViewModel :
     private void ResetFilterState()
     {
         filterState.Filter = string.Empty;
-        filterState.Apply(trackedWindowCollection.All);
+        filterState.Apply(trackedWindowCollection);
         coordinator.PageBeforeFilter = -1;
         coordinator.NavigationTargetPage = -1;
         filterState.ResetSelectionResolved();
@@ -534,19 +534,15 @@ public partial class TrackedWindowCollectionViewModel :
     {
         ITrackedWindow? match = null;
 
-        if (!filterState.FilterSelectionResolved &&
-            string.Equals(FilterText, filterState.LastActivatedFilterText, StringComparison.OrdinalIgnoreCase) &&
-            filterState.LastActivatedHandle != default &&
-            trackedWindowCollection.TryGet(filterState.LastActivatedHandle, out ITrackedWindow? lastActivatedWindow) &&
-            !lastActivatedWindow!.IsFiltered)
+        if (!filterState.FilterSelectionResolved && 
+                string.Equals(FilterText, filterState.LastActivatedFilterText, StringComparison.OrdinalIgnoreCase) &&
+                filterState.LastActivatedHandle != default && trackedWindowCollection.TryGet(filterState.LastActivatedHandle, 
+                    out ITrackedWindow? lastActivatedWindow) && !lastActivatedWindow!.IsFiltered)
         {
             match = lastActivatedWindow;
         }
 
-        match ??= trackedWindowCollection.All
-            .Where(window => !window.IsFiltered)
-            .OrderBy(window => window.X)
-            .FirstOrDefault();
+        match ??= trackedWindowCollection.Where(window => !window.IsFiltered).OrderBy(window => window.X).FirstOrDefault();
 
         if (match is null)
         {
@@ -559,8 +555,8 @@ public partial class TrackedWindowCollectionViewModel :
     }
 
     [RelayCommand]
-    private void SelectNext() => selector.Step(forward: true, trackedWindowCollection.All);
+    private void SelectNext() => selector.Step(forward: true, trackedWindowCollection);
 
     [RelayCommand]
-    private void SelectPrevious() => selector.Step(forward: false, trackedWindowCollection.All);
+    private void SelectPrevious() => selector.Step(forward: false, trackedWindowCollection);
 }

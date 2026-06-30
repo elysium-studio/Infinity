@@ -14,7 +14,7 @@ public interface IWindowFilterState
 
     bool IsMatch(string title);
 
-    void Apply(IReadOnlyCollection<ITrackedWindow> windows);
+    void Apply(IEnumerable<ITrackedWindow> windows);
 
     void RecordActivation(string filterText, IntPtr handle);
 

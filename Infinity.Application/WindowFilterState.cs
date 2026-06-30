@@ -21,7 +21,7 @@ public class WindowFilterState(ITrackedWindowFilter filter) :
 
     public bool IsMatch(string title) => filter.IsMatch(title);
 
-    public void Apply(IReadOnlyCollection<ITrackedWindow> windows)
+    public void Apply(IEnumerable<ITrackedWindow> windows)
     {
         foreach (ITrackedWindow window in windows)
         {

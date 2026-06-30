@@ -27,7 +27,7 @@ public class WindowSelector(ISelectionPreviewQueue previewQueue,
         NavigateToPage(window.Handle);
     }
 
-    public void Step(bool forward, IReadOnlyCollection<ITrackedWindow> candidates)
+    public void Step(bool forward, IEnumerable<ITrackedWindow> candidates)
     {
         List<ITrackedWindow> ordered = [.. candidates
             .Where(window => !window.IsFiltered)
@@ -55,18 +55,19 @@ public class WindowSelector(ISelectionPreviewQueue previewQueue,
         Select(ordered[nextIndex]);
     }
 
-    public void Clear(IReadOnlyCollection<ITrackedWindow> all)
+    public void Clear(IEnumerable<ITrackedWindow> items)
     {
-        ClearSelected(all);
+        ClearSelected(items);
         selectedHandle = default;
+
         previewQueue.Cancel();
     }
 
-    public IntPtr Resolve(IReadOnlyCollection<ITrackedWindow> all)
+    public IntPtr Resolve(IEnumerable<ITrackedWindow> items)
     {
         if (selectedHandle != default)
         {
-            ITrackedWindow? current = all.FirstOrDefault(w => w.Handle == selectedHandle);
+            ITrackedWindow? current = items.FirstOrDefault(w => w.Handle == selectedHandle);
 
             if (current is not null && current.IsSelected)
             {
@@ -74,7 +75,7 @@ public class WindowSelector(ISelectionPreviewQueue previewQueue,
             }
         }
 
-        ITrackedWindow? selected = all.FirstOrDefault(w => w.IsSelected);
+        ITrackedWindow? selected = items.FirstOrDefault(w => w.IsSelected);
 
         if (selected is null)
         {
@@ -86,9 +87,9 @@ public class WindowSelector(ISelectionPreviewQueue previewQueue,
         return selectedHandle;
     }
 
-    private void ClearSelected(IReadOnlyCollection<ITrackedWindow> all)
+    private void ClearSelected(IEnumerable<ITrackedWindow> items)
     {
-        foreach (ITrackedWindow window in all)
+        foreach (ITrackedWindow window in items)
         {
             if (window.IsSelected)
             {
