@@ -89,6 +89,7 @@ public class WindowPageCoordinator(IWindowStore store,
             DateTime.UtcNow - expectedProgrammaticAtUtc < ProgrammaticRefocusWindow;
 
         bool isClosureInducedRefocus = suppressNextFocusFollow;
+
         if (isProgrammaticRefocus)
         {
             expectedProgrammaticHandle = default;
@@ -108,8 +109,9 @@ public class WindowPageCoordinator(IWindowStore store,
         double windowRight = trackedWindow.CanvasX + trackedWindow.Width;
 
         bool isCompletelyOutOfView = windowRight <= viewportLeft || windowLeft >= viewportRight;
+        bool isSpanningPages = (int)Math.Floor(windowLeft / workspaceWidth) != (int)Math.Floor((windowRight - 1) / workspaceWidth);
 
-        if (!isCompletelyOutOfView)
+        if (!isCompletelyOutOfView && !isSpanningPages)
         {
             return;
         }
