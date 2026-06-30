@@ -28,28 +28,33 @@ public class UpdateModule :
         {
             void HandleUpdateReady(string version)
             {
-                ToastContent content = new ToastBuilder()
-                    .AddText("Update ready")
-                    .AddText($"Infinity {version} has been downloaded.")
-                    .AddText("Restart to finish updating.")
-                    .SetLaunchArgument(RestartForUpdateArgument)
-                    .AddButton("Restart", RestartForUpdateArgument)
-                    .AddButton("Dismiss", DismissUpdateArgument)
-                    .Build();
-                provider.GetRequiredService<AppToastNotifier>().Show(content, argument =>
+                dispatcherQueue.TryEnqueue(() =>
                 {
-                    if (argument == RestartForUpdateArgument)
+                    ToastContent content = new ToastBuilder()
+                        .AddText("Update ready")
+                        .AddText($"Infinity {version} has been downloaded.")
+                        .AddText("Restart to finish updating.")
+                        .SetLaunchArgument(RestartForUpdateArgument)
+                        .AddButton("Restart", RestartForUpdateArgument)
+                        .AddButton("Dismiss", DismissUpdateArgument)
+                        .Build();
+
+                    provider.GetRequiredService<AppToastNotifier>().Show(content, argument =>
                     {
-                        dispatcherQueue.TryEnqueue(async () =>
+                        if (argument == RestartForUpdateArgument)
                         {
-                            if (controller.ApplyAndRestart())
+                            dispatcherQueue.TryEnqueue(async () =>
                             {
-                                await provider.GetRequiredService<IApplicationLifetime>().ExitAsync();
-                            }
-                        });
-                    }
+                                if (controller.ApplyAndRestart())
+                                {
+                                    await provider.GetRequiredService<IApplicationLifetime>().ExitAsync();
+                                }
+                            });
+                        }
+                    });
                 });
             }
+
             controller.UpdateReady += HandleUpdateReady;
             return () => controller.UpdateReady -= HandleUpdateReady;
         });
