@@ -9,9 +9,7 @@ public class Settings
 
     public DragScrollSpeed DragScrollSpeed { get; set; } = DragScrollSpeed.Normal;
 
-    public bool FadeFilteredWindows { get; set; } = false;
-
-    public double FilteredWindowOpacity { get; set; } = 0.35;
+    public bool HideFilteredWindows { get; set; } = false;
 
     public Dictionary<int, string>? PageTitles { get; set; } = [];
 

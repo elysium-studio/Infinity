@@ -1,13 +1,15 @@
 ﻿using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 
+namespace Infinity.Application;
+
 public class WindowFadeFilterEffects(IWindowStore store,
     IWindowOpacity opacity,
     ITrackedWindowFilter filter,
     Func<bool> fadeFilteredWindows) :
     IWindowFilterEffects
 {
-    private const byte FilteredOpacity = 80;
+    private const byte FilteredOpacity = 0;
 
     public void Apply()
     {

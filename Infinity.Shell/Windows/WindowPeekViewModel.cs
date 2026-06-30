@@ -4,7 +4,7 @@ using Elysium.Presentation;
 
 namespace Infinity.Shell;
 
-public partial class FadeFilteredWindowsViewModel(IServiceProvider provider,
+public partial class WindowPeekViewModel(IServiceProvider provider,
     IServiceFactory factory,
     IMessenger messenger,
     IDisposer disposer,

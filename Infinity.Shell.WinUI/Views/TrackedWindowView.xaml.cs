@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using System;
 using System.ComponentModel;
 using System.Numerics;
@@ -22,6 +23,7 @@ public sealed partial class TrackedWindowView :
     private IWindowPreview? subscribedPreview;
     private bool isLoaded;
     private bool isPreviewTargetQueued;
+    private Storyboard? filterStateStoryboard;
 
     public TrackedWindowView()
     {
@@ -64,7 +66,7 @@ public sealed partial class TrackedWindowView :
 
         if (viewModel is not null)
         {
-            ApplyFilterState(false);
+            ApplyFilterState();
             ApplyZIndex();
             QueuePreviewTargetUpdate();
         }
@@ -100,7 +102,7 @@ public sealed partial class TrackedWindowView :
 
             if (isLoaded)
             {
-                ApplyFilterState(false);
+                ApplyFilterState();
                 ApplyZIndex();
                 QueuePreviewTargetUpdate();
             }
@@ -203,9 +205,9 @@ public sealed partial class TrackedWindowView :
 
     private void ApplyFromPropertyName(string? propertyName)
     {
-        if (propertyName == nameof(TrackedWindowViewModel.IsFiltered) || propertyName == nameof(TrackedWindowViewModel.ShouldFadeThumb))
+        if (propertyName == nameof(TrackedWindowViewModel.IsFiltered))
         {
-            ApplyFilterState(true);
+            ApplyFilterState();
             ApplyZIndex();
         }
         else if (propertyName == nameof(TrackedWindowViewModel.IsSelected) || propertyName == nameof(TrackedWindowViewModel.ZIndex))
@@ -276,7 +278,6 @@ public sealed partial class TrackedWindowView :
         }
         catch
         {
-
         }
     }
 
@@ -349,22 +350,12 @@ public sealed partial class TrackedWindowView :
         }
     }
 
-    private void ApplyFilterState(bool animated)
+    private void ApplyFilterState()
     {
         if (!isLoaded || viewModel is null)
         {
             return;
         }
-
-        Visual? visual = GetThumbnailVisual();
-
-        if (visual is null)
-        {
-            return;
-        }
-
-        float targetOpacity = viewModel.ShouldFadeThumb ? 0.3f : 1.0f;
-        float targetScale = viewModel.IsFiltered ? 0.88f : 1.0f;
 
         try
         {
@@ -373,34 +364,49 @@ public sealed partial class TrackedWindowView :
                 SetCloseButtonVisible(false);
             }
 
-            visual.StopAnimation("Scale");
-            visual.StopAnimation("Opacity");
+            filterStateStoryboard?.Stop();
 
-            if (animated)
+            if (viewModel.IsFiltered)
             {
-                Compositor compositor = visual.Compositor;
-                CubicBezierEasingFunction easing = compositor.CreateCubicBezierEasingFunction(new Vector2(0.4f, 0.0f), new Vector2(0.2f, 1.0f));
+                DoubleAnimation opacityAnimation = new()
+                {
+                    To = 0.0,
+                    Duration = new Duration(TimeSpan.FromMilliseconds(300)),
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                };
 
-                Vector3KeyFrameAnimation scaleAnimation = compositor.CreateVector3KeyFrameAnimation();
-                scaleAnimation.InsertKeyFrame(1.0f, new Vector3(targetScale, targetScale, 1.0f), easing);
-                scaleAnimation.Duration = TimeSpan.FromMilliseconds(300);
-                scaleAnimation.Target = "Scale";
+                Storyboard.SetTarget(opacityAnimation, this);
+                Storyboard.SetTargetProperty(opacityAnimation, "Opacity");
 
-                ScalarKeyFrameAnimation opacityAnimation = compositor.CreateScalarKeyFrameAnimation();
-                opacityAnimation.InsertKeyFrame(1.0f, targetOpacity, easing);
-                opacityAnimation.Duration = TimeSpan.FromMilliseconds(300);
-                opacityAnimation.Target = "Opacity";
-
-                CompositionAnimationGroup group = compositor.CreateAnimationGroup();
-                group.Add(scaleAnimation);
-                group.Add(opacityAnimation);
-
-                visual.StartAnimationGroup(group);
+                filterStateStoryboard = new Storyboard();
+                filterStateStoryboard.Children.Add(opacityAnimation);
+                filterStateStoryboard.Completed += (sender, args) =>
+                {
+                    if (isLoaded && viewModel?.IsFiltered == true)
+                    {
+                        Visibility = Visibility.Collapsed;
+                    }
+                };
+                filterStateStoryboard.Begin();
             }
             else
             {
-                visual.Opacity = targetOpacity;
-                visual.Scale = new Vector3(targetScale, targetScale, 1.0f);
+                Opacity = 0.0;
+                Visibility = Visibility.Visible;
+
+                DoubleAnimation opacityAnimation = new()
+                {
+                    To = 1.0,
+                    Duration = new Duration(TimeSpan.FromMilliseconds(300)),
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                };
+
+                Storyboard.SetTarget(opacityAnimation, this);
+                Storyboard.SetTargetProperty(opacityAnimation, "Opacity");
+
+                filterStateStoryboard = new Storyboard();
+                filterStateStoryboard.Children.Add(opacityAnimation);
+                filterStateStoryboard.Begin();
             }
         }
         catch

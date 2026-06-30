@@ -37,7 +37,7 @@ public class ShellModule :
             .AddSingleton<IWindowFilterEffects>(provider => new WindowFadeFilterEffects(provider.GetRequiredService<IWindowStore>(),
                 provider.GetRequiredService<IWindowOpacity>(),
                 provider.GetRequiredService<ITrackedWindowFilter>(),
-                () => provider.GetRequiredService<IOptionsMonitor<Settings>>().CurrentValue.FadeFilteredWindows))
+                () => provider.GetRequiredService<IOptionsMonitor<Settings>>().CurrentValue.HideFilteredWindows))
             .AddSingleton<ITrackedWindowCollection, TrackedWindowCollection>()
             .AddSingleton<IWindowPageCoordinator>(provider => new WindowPageCoordinator(provider.GetRequiredService<IWindowStore>(),
                 provider.GetRequiredService<IPager>(),

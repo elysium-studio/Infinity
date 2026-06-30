@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <UserControl
-    x:Class="Infinity.Shell.WinUI.FadeFilteredWindowsView"
+    x:Class="Infinity.Shell.WinUI.WindowPeekView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:CommunityToolkit="using:CommunityToolkit.WinUI.Controls"
     Loaded="{x:Bind ViewModel.Activate}"
     Unloaded="{x:Bind ViewModel.Deactivate}">
-    <CommunityToolkit:SettingsCard Description="Make it easier to focus by fading windows that do not match your search" Header="Fade Filtered Windows">
+    <CommunityToolkit:SettingsCard Description="When hovering a window thumbnail or applying a filter, hide all other windows so only the matching one (or ones) stay visible." Header="Window Peek">
         <ToggleSwitch
             IsOn="{x:Bind ViewModel.Value, Mode=TwoWay}"
             OffContent="No"

@@ -112,17 +112,17 @@ public class SettingsModule :
                     provider.GetRequiredService<IHotKeysBuilder>(),
                     provider.GetRequiredService<HotKeysBuilderOptions>(),
                     provider.GetRequiredService<IKeyLabelProvider>()))
-            .AddViewFor<FadeFilteredWindowsView, IDesktopViewModel, FadeFilteredWindowsViewModel>(ServiceLifetime.Transient,
-                provider => new FadeFilteredWindowsView(),
-                provider => new FadeFilteredWindowsViewModel(provider,
+            .AddViewFor<WindowPeekView, IDesktopViewModel, WindowPeekViewModel>(ServiceLifetime.Transient,
+                provider => new WindowPeekView(),
+                provider => new WindowPeekViewModel(provider,
                     provider.GetRequiredService<IServiceFactory>(),
                     provider.GetRequiredService<IMessenger>(),
                     provider.GetRequiredService<IDisposer>(),
                     provider.GetRequiredService<IDispatcher>(),
                     provider.GetRequiredService<Settings>(),
                     provider.GetRequiredService<IWritableOptions<Settings>>(),
-                    config => config.FadeFilteredWindows,
-                    (config, fadeFilteredWindows) => config.FadeFilteredWindows = fadeFilteredWindows))
+                    config => config.HideFilteredWindows,
+                    (config, fadeFilteredWindows) => config.HideFilteredWindows = fadeFilteredWindows))
             .AddViewFor<DesktopBlurView, IDesktopViewModel, DesktopBlurViewModel>(ServiceLifetime.Transient,
                 provider => new DesktopBlurView(),
                 provider => new DesktopBlurViewModel(provider,
