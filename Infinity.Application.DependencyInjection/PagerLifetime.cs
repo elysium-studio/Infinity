@@ -54,12 +54,12 @@ public class PagerLifetime(IWindowTracker tracker,
             state.SetOffset(pageShift);
         }
 
+        titleSynchronizer.Start();
         zOrder.Refresh();
         listener.Start();
         tracker.Start();
         dragGuard.Start();
         dragScroller.Start();
-        titleSynchronizer.Start();
         zOrder.Start();
         scrollInput.Start();
         coordinator.Start();
