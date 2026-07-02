@@ -36,9 +36,7 @@ public class Pager(IWindowStore repository,
             pageCount = Math.Max(1, pageCount);
             pageCount = Math.Max(pageCount, currentPage + 1);
 
-            return maxPages.HasValue
-                ? Math.Min(pageCount, maxPages.Value)
-                : pageCount;
+            return maxPages.HasValue ? Math.Min(pageCount, maxPages.Value) : pageCount;
         }
     }
 

@@ -71,3 +71,4 @@ POINTER_FLAGS
 GetCurrentThreadId
 CreateDIBSection
 GetAsyncKeyState
+GetWindowLongPtr

@@ -64,6 +64,7 @@ public static class IServiceCollectionExtensions
                     provider.GetRequiredService<IWindowEventListener>(),
                     provider.GetRequiredService<IWindowFocusGuard>(),
                     () => provider.GetRequiredService<IMessageWindow>().Handle,
+                    provider.GetRequiredService<IDispatcher>(),
                     provider.GetRequiredService<ILogger<WindowZOrder>>()));
 
             services.AddSingleton<IWindowEventListener>(provider =>
