@@ -18,6 +18,7 @@ public sealed partial class TrackedWindowView :
     private const int SelectedZIndex = 1_000_000;
     private const int FilteredTierOffset = -100_000;
     private const int UntrackedOrderRank = -50_000;
+
     private TrackedWindowViewModel? viewModel;
     private TrackedWindowViewModel? subscribedViewModel;
     private IWindowPreview? subscribedPreview;
@@ -58,7 +59,7 @@ public sealed partial class TrackedWindowView :
             Visual? closeButtonVisual = GetCloseButtonVisual();
             closeButtonVisual?.Opacity = 0.0f;
         }
-        catch (Exception exception)
+        catch
         {
         }
 
@@ -74,12 +75,11 @@ public sealed partial class TrackedWindowView :
 
     private void HandleUnloaded(object sender, RoutedEventArgs args)
     {
-        IntPtr unloadedHandle = viewModel?.Handle ?? IntPtr.Zero;
-
         isLoaded = false;
         isPreviewTargetQueued = false;
 
         viewModel = null;
+
         subscribedViewModel?.PropertyChanged -= HandleViewModelPropertyChanged;
         subscribedViewModel = null;
 
@@ -254,13 +254,24 @@ public sealed partial class TrackedWindowView :
             return;
         }
 
-        if (!ThumbnailProxyManager.TryAttach(preview, ThumbnailHost, out nint proxyHandle))
+        double width = ThumbnailHost.ActualWidth;
+        double height = ThumbnailHost.ActualHeight;
+
+        for (int attempt = 0; attempt < 2; attempt++)
         {
+            if (!ThumbnailProxyManager.TryAttach(preview, ThumbnailHost, out nint proxyHandle))
+            {
+                return;
+            }
+
+            if (!ThumbnailProxyManager.UpdateSize(preview, width, height))
+            {
+                continue;
+            }
+
+            viewModel!.SetPreviewTarget(proxyHandle, width, height);
             return;
         }
-
-        ThumbnailProxyManager.UpdateSize(preview, ThumbnailHost.ActualWidth, ThumbnailHost.ActualHeight);
-        viewModel!.SetPreviewTarget(proxyHandle, ThumbnailHost.ActualWidth, ThumbnailHost.ActualHeight);
     }
 
     private void UpdateThumbnailCenterPoint()

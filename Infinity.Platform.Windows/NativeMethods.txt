@@ -70,3 +70,4 @@ POINTER_INPUT_TYPE
 POINTER_FLAGS
 GetCurrentThreadId
 CreateDIBSection
+GetAsyncKeyState

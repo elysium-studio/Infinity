@@ -25,8 +25,11 @@ public class WindowPageCoordinator(IWindowStore store,
     public event EventHandler? WindowActivationRequested;
 
     public int NavigationTargetPage { get; set; } = -1;
+
     public double NavigationTargetOffset { get; set; } = -1;
+
     public int PageBeforeFilter { get; set; } = -1;
+
     public IntPtr PendingActivation { get; set; }
 
     public void NavigateTo(IntPtr handle)

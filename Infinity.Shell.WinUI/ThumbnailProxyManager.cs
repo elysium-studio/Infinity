@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Hosting;
 using System;
 using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace Infinity.Shell.WinUI;
 
@@ -20,47 +21,201 @@ public static class ThumbnailProxyManager
 
             if (preview.KeepAlive is ThumbnailProxyHandle existingHandle)
             {
-                if (ReferenceEquals(existingHandle.Visual.Compositor, compositor))
+                if (TryAttachExisting(existingHandle, host, compositor, out proxyHandle))
                 {
-                    ElementCompositionPreview.SetElementChildVisual(host, existingHandle.Visual);
-                    proxyHandle = existingHandle.Proxy.Handle;
                     return true;
                 }
 
-                existingHandle.Dispose();
-                preview.KeepAlive = null;
+                ClearExisting(preview, host, existingHandle);
             }
 
-            SystemVisualProxyVisualPrivate proxy = SystemVisualProxyVisualPrivate.Create(compositor);
-            Visual proxyVisual = proxy.Visual;
-            proxyVisual.Offset = new Vector3(0.0f, 0.0f, 0.0f);
-            proxyVisual.Clip = compositor.CreateInsetClip();
+            return TryCreateAndAttach(preview, host, compositor, out proxyHandle);
+        }
+        catch
+        {
+            proxyHandle = 0;
+            return false;
+        }
+    }
 
-            ThumbnailProxyHandle newHandle = new(proxy, proxyVisual);
+    public static bool UpdateSize(IWindowPreview preview, double width, double height)
+    {
+        if (preview.KeepAlive is not ThumbnailProxyHandle handle)
+        {
+            return false;
+        }
 
-            preview.KeepAlive = newHandle;
-
-            ElementCompositionPreview.SetElementChildVisual(host, proxyVisual);
-
-            proxyHandle = proxy.Handle;
+        try
+        {
+            handle.Visual.Offset = new Vector3(0.0f, 0.0f, 0.0f);
+            handle.Visual.Size = new Vector2(NormalizeLength(width), NormalizeLength(height));
+            handle.Visual.Scale = new Vector3(1.0f, 1.0f, 1.0f);
 
             return true;
         }
-        catch (Exception exception)
+        catch (ObjectDisposedException)
+        {
+            ClearExisting(preview, null, handle);
+            return false;
+        }
+        catch (COMException)
+        {
+            ClearExisting(preview, null, handle);
+            return false;
+        }
+        catch (InvalidOperationException)
+        {
+            ClearExisting(preview, null, handle);
+            return false;
+        }
+    }
+
+    private static bool TryAttachExisting(
+        ThumbnailProxyHandle existingHandle,
+        FrameworkElement host,
+        Compositor compositor,
+        out nint proxyHandle)
+    {
+        proxyHandle = 0;
+
+        try
+        {
+            Compositor existingCompositor = existingHandle.Visual.Compositor;
+
+            if (!ReferenceEquals(existingCompositor, compositor))
+            {
+                return false;
+            }
+
+            nint existingProxyHandle = existingHandle.Proxy.Handle;
+
+            if (existingProxyHandle == 0)
+            {
+                return false;
+            }
+
+            ElementCompositionPreview.SetElementChildVisual(host, existingHandle.Visual);
+
+            proxyHandle = existingProxyHandle;
+
+            return true;
+        }
+        catch (ObjectDisposedException)
+        {
+            return false;
+        }
+        catch (COMException)
+        {
+            return false;
+        }
+        catch (InvalidOperationException)
         {
             return false;
         }
     }
 
-    public static void UpdateSize(IWindowPreview preview, double width, double height)
+    private static bool TryCreateAndAttach(
+        IWindowPreview preview,
+        FrameworkElement host,
+        Compositor compositor,
+        out nint proxyHandle)
     {
-        if (preview.KeepAlive is not ThumbnailProxyHandle handle)
+        proxyHandle = 0;
+        ThumbnailProxyHandle? handle = null;
+
+        try
+        {
+            SystemVisualProxyVisualPrivate proxy = SystemVisualProxyVisualPrivate.Create(compositor);
+            Visual visual = proxy.Visual;
+
+            visual.Offset = new Vector3(0.0f, 0.0f, 0.0f);
+            visual.Size = new Vector2(0.0f, 0.0f);
+            visual.Scale = new Vector3(1.0f, 1.0f, 1.0f);
+            visual.Clip = compositor.CreateInsetClip();
+
+            handle = new ThumbnailProxyHandle(proxy, visual);
+
+            ElementCompositionPreview.SetElementChildVisual(host, visual);
+
+            proxyHandle = proxy.Handle;
+
+            if (proxyHandle == 0)
+            {
+                SafeDispose(handle);
+                return false;
+            }
+
+            preview.KeepAlive = handle;
+
+            return true;
+        }
+        catch
+        {
+            SafeDispose(handle);
+            proxyHandle = 0;
+            return false;
+        }
+    }
+
+    private static void ClearExisting(IWindowPreview preview, FrameworkElement? host, ThumbnailProxyHandle handle)
+    {
+        if (ReferenceEquals(preview.KeepAlive, handle))
+        {
+            preview.KeepAlive = null;
+        }
+
+        if (host is not null)
+        {
+            TryClearChildVisual(host);
+        }
+
+        SafeDispose(handle);
+    }
+
+    private static void TryClearChildVisual(FrameworkElement host)
+    {
+        try
+        {
+            ElementCompositionPreview.SetElementChildVisual(host, null);
+        }
+        catch
+        {
+        }
+    }
+
+    private static void SafeDispose(ThumbnailProxyHandle? handle)
+    {
+        if (handle is null)
         {
             return;
         }
 
-        handle.Visual.Offset = new Vector3(0.0f, 0.0f, 0.0f);
-        handle.Visual.Size = new Vector2((float)Math.Max(0.0, width), (float)Math.Max(0.0, height));
-        handle.Visual.Scale = new Vector3(1.0f, 1.0f, 1.0f);
+        try
+        {
+            handle.Dispose();
+        }
+        catch
+        {
+        }
+    }
+
+    private static float NormalizeLength(double value)
+    {
+        if (double.IsNaN(value))
+        {
+            return 0.0f;
+        }
+
+        if (double.IsInfinity(value))
+        {
+            return 0.0f;
+        }
+
+        if (value < 0.0)
+        {
+            return 0.0f;
+        }
+
+        return (float)value;
     }
 }
