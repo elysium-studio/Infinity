@@ -59,13 +59,18 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<WindowFilterOptions>();
             services.AddSingleton<IWindowFilter, WindowFilter>();
 
-            services.AddSingleton<IWindowZOrder>(provider =>
-                new WindowZOrder(provider.GetRequiredService<IWindowStore>(),
+            services.AddSingleton<IWindowStack>(provider =>
+                new WindowStack(provider.GetRequiredService<IWindowStore>(),
                     provider.GetRequiredService<IWindowEventListener>(),
-                    provider.GetRequiredService<IWindowFocusGuard>(),
                     () => provider.GetRequiredService<IMessageWindow>().Handle,
                     provider.GetRequiredService<IDispatcher>(),
-                    provider.GetRequiredService<ILogger<WindowZOrder>>()));
+                    provider.GetRequiredService<ILogger<WindowStack>>()));
+
+            services.AddSingleton<IForegroundWindowTracker>(provider =>
+                new ForegroundWindowTracker(provider.GetRequiredService<IWindowEventListener>(),
+                    provider.GetRequiredService<IWindowFocusGuard>(),
+                    provider.GetRequiredService<IDispatcher>(),
+                    provider.GetRequiredService<ILogger<ForegroundWindowTracker>>()));
 
             services.AddSingleton<IWindowEventListener>(provider =>
                 new WindowEventListener(provider.GetRequiredService<IDispatcher>(),

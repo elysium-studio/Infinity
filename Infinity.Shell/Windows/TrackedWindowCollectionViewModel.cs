@@ -134,7 +134,7 @@ public partial class TrackedWindowCollectionViewModel :
             windowCollection.WindowAdded += HandleWindowAdded;
             windowCollection.WindowRemoved += HandleWindowRemoved;
             windowCollection.WindowChanged += HandleWindowChanged;
-            windowCollection.ZOrderRefreshed += HandleZOrderRefreshed;
+            windowCollection.WindowStackRefreshed += HandleWindowStackRefreshed;
             windowCollection.WorkspaceLayoutChanged += HandleWorkspaceLayoutChanged;
             windowCollection.RefreshRequested += HandleRefreshRequested;
             dragScroller.DragMoved += HandleDragMoved;
@@ -275,7 +275,7 @@ public partial class TrackedWindowCollectionViewModel :
     private void HandleWorkspaceLayoutChanged(object? sender, EventArgs args) =>
         dispatcher.Dispatch(Refresh);
 
-    private void HandleZOrderRefreshed(object? sender, EventArgs args) =>
+    private void HandleWindowStackRefreshed(object? sender, EventArgs args) =>
         dispatcher.Dispatch(ReorderWindows);
 
     private void NavigateToWindowHandle(IntPtr handle)
@@ -534,9 +534,9 @@ public partial class TrackedWindowCollectionViewModel :
     {
         ITrackedWindow? match = null;
 
-        if (!filterState.FilterSelectionResolved && 
+        if (!filterState.FilterSelectionResolved &&
                 string.Equals(FilterText, filterState.LastActivatedFilterText, StringComparison.OrdinalIgnoreCase) &&
-                filterState.LastActivatedHandle != default && trackedWindowCollection.TryGet(filterState.LastActivatedHandle, 
+                filterState.LastActivatedHandle != default && trackedWindowCollection.TryGet(filterState.LastActivatedHandle,
                     out ITrackedWindow? lastActivatedWindow) && !lastActivatedWindow!.IsFiltered)
         {
             match = lastActivatedWindow;

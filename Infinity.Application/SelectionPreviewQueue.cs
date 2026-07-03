@@ -3,7 +3,7 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Application;
 
-public class SelectionPreviewQueue(IWindowZOrder zOrder) :
+public class SelectionPreviewQueue(IWindowStack stack) :
     ISelectionPreviewQueue
 {
     private readonly object syncRoot = new();
@@ -66,7 +66,7 @@ public class SelectionPreviewQueue(IWindowZOrder zOrder) :
                 return;
             }
 
-            zOrder.BringToFront(handle);
+            stack.BringToFront(handle);
         }
         catch (OperationCanceledException)
         {

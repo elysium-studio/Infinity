@@ -17,17 +17,20 @@ public class WindowPageCoordinator(IWindowStore store,
     IWindowPageCoordinator
 {
     private const double ScrollTolerance = 2.0;
+    private const double MeaningfulVisibilityRatio = 0.60;
 
-    private static readonly TimeSpan ProgrammaticRefocusWindow = TimeSpan.FromMilliseconds(600);
-    private static readonly TimeSpan FocusFollowDeferDelay = TimeSpan.FromMilliseconds(80);
+    private static readonly TimeSpan ProgrammaticForegroundWindow = TimeSpan.FromMilliseconds(600);
+    private static readonly TimeSpan ForegroundFollowDeferDelay = TimeSpan.FromMilliseconds(80);
+    private static readonly TimeSpan ForegroundFollowSuppressionWindow = TimeSpan.FromMilliseconds(900);
 
     private readonly object syncRoot = new();
 
-    private CancellationTokenSource? focusFollowCancellationTokenSource;
-    private bool suppressNextFocusFollow;
+    private CancellationTokenSource? foregroundFollowCancellationTokenSource;
     private IntPtr expectedProgrammaticHandle;
+    private IntPtr foregroundWindowHandle;
     private long expectedProgrammaticAtTimestamp;
-    private long focusFollowGeneration;
+    private long foregroundFollowSuppressedAtTimestamp;
+    private long foregroundFollowGeneration;
 
     private int navigationTargetPage = -1;
     private double navigationTargetOffset = -1;
@@ -128,18 +131,26 @@ public class WindowPageCoordinator(IWindowStore store,
             return;
         }
 
-        int windowPage = GetWindowPage(trackedWindow, workspaceWidth);
-
-        if (windowPage != pager.CurrentPage)
+        if (IsWindowFullyVisible(trackedWindow, workspaceWidth))
         {
-            double targetOffset = windowPage * (double)workspaceWidth;
-
-            SetNavigationTarget(windowPage, targetOffset);
-            NavigationStarted?.Invoke(this, new NavigationStartedEventArgs(windowPage));
-            pager.NavigateToPage(windowPage);
+            RequestActivation(handle);
+            return;
         }
 
-        RequestActivation(handle);
+        int windowPage = GetWindowPage(trackedWindow, workspaceWidth);
+        double targetOffset = GetTargetOffset(trackedWindow, workspaceWidth, windowPage);
+
+        PendingActivation = handle;
+
+        if (IsNavigationSettled(windowPage, targetOffset))
+        {
+            RequestActivation(handle);
+            return;
+        }
+
+        SetNavigationTarget(windowPage, targetOffset);
+        NavigationStarted?.Invoke(this, new NavigationStartedEventArgs(windowPage));
+        scroller.ScrollTo(targetOffset);
     }
 
     public void NavigateToPage(IntPtr handle)
@@ -159,6 +170,11 @@ public class WindowPageCoordinator(IWindowStore store,
             return;
         }
 
+        if (IsWindowFullyVisible(trackedWindow, workspaceWidth))
+        {
+            return;
+        }
+
         int windowPage = GetWindowPage(trackedWindow, workspaceWidth);
         double targetOffset = GetTargetOffset(trackedWindow, workspaceWidth, windowPage);
 
@@ -171,17 +187,19 @@ public class WindowPageCoordinator(IWindowStore store,
         scroller.ScrollTo(targetOffset);
     }
 
-    public void HandleFocusChanged(IntPtr handle)
+    public void HandleForegroundWindowChanged(IntPtr handle)
     {
         if (handle == default)
         {
             return;
         }
 
-        if (ShouldIgnoreFocusChange(handle))
+        if (ShouldIgnoreForegroundWindowChanged(handle))
         {
             return;
         }
+
+        RecordForegroundWindow(handle);
 
         if (!store.TryGet(handle, out TrackedWindow? trackedWindow))
         {
@@ -193,36 +211,61 @@ public class WindowPageCoordinator(IWindowStore store,
             return;
         }
 
-        double viewportLeft = scroller.VisualOffset;
-
-        if (!IsFinite(viewportLeft))
+        if (IsWindowMeaningfullyVisible(trackedWindow, workspaceWidth))
         {
             return;
         }
 
-        double viewportRight = viewportLeft + workspaceWidth;
+        QueueForegroundFollow(handle);
+    }
 
-        bool isCompletelyOutOfView = IsCompletelyOutOfView(trackedWindow, viewportLeft, viewportRight);
-        bool isSpanningPages = IsSpanningPages(trackedWindow, workspaceWidth);
-
-        if (!isCompletelyOutOfView && !isSpanningPages)
+    public void HandleWindowMinimizeStarted(IntPtr handle)
+    {
+        if (handle == default)
         {
             return;
         }
 
-        QueueFocusFollow(handle);
+        StartForegroundFollowSuppression();
+
+        lock (syncRoot)
+        {
+            if (handle == foregroundWindowHandle)
+            {
+                foregroundWindowHandle = default;
+            }
+        }
+    }
+
+    public void HandleWindowMinimizeEnded(IntPtr handle)
+    {
+        if (handle == default)
+        {
+            return;
+        }
+
+        StartForegroundFollowSuppression();
+
+        lock (syncRoot)
+        {
+            foregroundWindowHandle = handle;
+        }
     }
 
     public void NotifyWindowClosed(IntPtr handle)
     {
         lock (syncRoot)
         {
-            suppressNextFocusFollow = true;
-            CancelPendingFocusFollowCore();
+            StartForegroundFollowSuppressionCore();
 
             if (handle != default && handle == expectedProgrammaticHandle)
             {
                 ClearExpectedProgrammaticActivationCore();
+            }
+
+            if (handle != default && handle == foregroundWindowHandle)
+            {
+                foregroundWindowHandle = default;
             }
         }
     }
@@ -231,7 +274,7 @@ public class WindowPageCoordinator(IWindowStore store,
     {
         lock (syncRoot)
         {
-            CancelPendingFocusFollowCore();
+            CancelPendingForegroundFollowCore();
 
             if (handle == default)
             {
@@ -240,6 +283,7 @@ public class WindowPageCoordinator(IWindowStore store,
             }
 
             expectedProgrammaticHandle = handle;
+            foregroundWindowHandle = handle;
             expectedProgrammaticAtTimestamp = Stopwatch.GetTimestamp();
         }
     }
@@ -262,29 +306,29 @@ public class WindowPageCoordinator(IWindowStore store,
         activator.Activate(handle);
     }
 
-    private void QueueFocusFollow(IntPtr handle)
+    private void QueueForegroundFollow(IntPtr handle)
     {
         CancellationTokenSource cancellationTokenSource = new();
         long generation;
 
         lock (syncRoot)
         {
-            CancelPendingFocusFollowCore();
+            CancelPendingForegroundFollowCore();
 
-            focusFollowGeneration++;
-            generation = focusFollowGeneration;
-            focusFollowCancellationTokenSource = cancellationTokenSource;
+            foregroundFollowGeneration++;
+            generation = foregroundFollowGeneration;
+            foregroundFollowCancellationTokenSource = cancellationTokenSource;
         }
 
-        _ = DelayAndCommitFocusFollowAsync(generation, handle, cancellationTokenSource);
+        _ = DelayAndCommitForegroundFollowAsync(generation, handle, cancellationTokenSource);
     }
 
-    private async Task DelayAndCommitFocusFollowAsync(long generation, IntPtr handle, CancellationTokenSource cancellationTokenSource)
+    private async Task DelayAndCommitForegroundFollowAsync(long generation, IntPtr handle, CancellationTokenSource cancellationTokenSource)
     {
         try
         {
-            await Task.Delay(FocusFollowDeferDelay, cancellationTokenSource.Token).ConfigureAwait(false);
-            dispatcher.Dispatch(() => RunCommitFocusFollow(generation, handle));
+            await Task.Delay(ForegroundFollowDeferDelay, cancellationTokenSource.Token).ConfigureAwait(false);
+            dispatcher.Dispatch(() => RunCommitForegroundFollow(generation, handle));
         }
         catch (OperationCanceledException)
         {
@@ -297,15 +341,15 @@ public class WindowPageCoordinator(IWindowStore store,
         }
         finally
         {
-            CleanupFocusFollowDelay(generation, cancellationTokenSource);
+            CleanupForegroundFollowDelay(generation, cancellationTokenSource);
         }
     }
 
-    private void RunCommitFocusFollow(long generation, IntPtr handle)
+    private void RunCommitForegroundFollow(long generation, IntPtr handle)
     {
         try
         {
-            CommitFocusFollow(generation, handle);
+            CommitForegroundFollow(generation, handle);
         }
         catch (ObjectDisposedException)
         {
@@ -315,14 +359,14 @@ public class WindowPageCoordinator(IWindowStore store,
         }
     }
 
-    private void CommitFocusFollow(long generation, IntPtr handle)
+    private void CommitForegroundFollow(long generation, IntPtr handle)
     {
         if (handle == default)
         {
             return;
         }
 
-        if (!ShouldCommitFocusFollow(generation))
+        if (!ShouldCommitForegroundFollow(generation))
         {
             return;
         }
@@ -337,6 +381,11 @@ public class WindowPageCoordinator(IWindowStore store,
             return;
         }
 
+        if (IsWindowMeaningfullyVisible(trackedWindow, workspaceWidth))
+        {
+            return;
+        }
+
         int windowPage = GetWindowPage(trackedWindow, workspaceWidth);
         double targetOffset = GetTargetOffset(trackedWindow, workspaceWidth, windowPage);
 
@@ -344,6 +393,7 @@ public class WindowPageCoordinator(IWindowStore store,
 
         if (IsNavigationSettled(windowPage, targetOffset))
         {
+            RequestActivation(handle);
             return;
         }
 
@@ -351,19 +401,17 @@ public class WindowPageCoordinator(IWindowStore store,
         scroller.ScrollTo(targetOffset);
     }
 
-    private bool ShouldCommitFocusFollow(long generation)
+    private bool ShouldCommitForegroundFollow(long generation)
     {
         lock (syncRoot)
         {
-            if (generation != focusFollowGeneration)
+            if (generation != foregroundFollowGeneration)
             {
                 return false;
             }
 
-            if (suppressNextFocusFollow)
+            if (IsForegroundFollowSuppressedCore())
             {
-                suppressNextFocusFollow = false;
-                focusFollowGeneration++;
                 return false;
             }
 
@@ -371,57 +419,96 @@ public class WindowPageCoordinator(IWindowStore store,
         }
     }
 
-    private bool ShouldIgnoreFocusChange(IntPtr handle)
+    private bool ShouldIgnoreForegroundWindowChanged(IntPtr handle)
     {
-        bool shouldIgnore = false;
-
         lock (syncRoot)
         {
-            if (expectedProgrammaticHandle != default)
+            if (IsForegroundFollowSuppressedCore())
             {
-                bool isInsideProgrammaticWindow = Stopwatch.GetElapsedTime(expectedProgrammaticAtTimestamp) < ProgrammaticRefocusWindow;
-
-                if (!isInsideProgrammaticWindow)
-                {
-                    ClearExpectedProgrammaticActivationCore();
-                }
-                else if (handle == expectedProgrammaticHandle)
-                {
-                    ClearExpectedProgrammaticActivationCore();
-                    shouldIgnore = true;
-                }
+                return true;
             }
 
-            if (suppressNextFocusFollow)
+            if (expectedProgrammaticHandle == default)
             {
-                suppressNextFocusFollow = false;
-                shouldIgnore = true;
+                return false;
             }
+
+            bool isInsideProgrammaticWindow = Stopwatch.GetElapsedTime(expectedProgrammaticAtTimestamp) < ProgrammaticForegroundWindow;
+
+            if (!isInsideProgrammaticWindow)
+            {
+                ClearExpectedProgrammaticActivationCore();
+                return false;
+            }
+
+            if (handle == expectedProgrammaticHandle)
+            {
+                ClearExpectedProgrammaticActivationCore();
+                return true;
+            }
+
+            return false;
         }
-
-        return shouldIgnore;
     }
 
-    private void CancelPendingFocusFollowCore()
+    private void RecordForegroundWindow(IntPtr handle)
     {
-        focusFollowGeneration++;
+        lock (syncRoot)
+        {
+            foregroundWindowHandle = handle;
+        }
+    }
 
-        if (focusFollowCancellationTokenSource is null)
+    private void StartForegroundFollowSuppression()
+    {
+        lock (syncRoot)
+        {
+            StartForegroundFollowSuppressionCore();
+        }
+    }
+
+    private void StartForegroundFollowSuppressionCore()
+    {
+        foregroundFollowSuppressedAtTimestamp = Stopwatch.GetTimestamp();
+        CancelPendingForegroundFollowCore();
+    }
+
+    private bool IsForegroundFollowSuppressedCore()
+    {
+        if (foregroundFollowSuppressedAtTimestamp == 0)
+        {
+            return false;
+        }
+
+        if (Stopwatch.GetElapsedTime(foregroundFollowSuppressedAtTimestamp) < ForegroundFollowSuppressionWindow)
+        {
+            return true;
+        }
+
+        foregroundFollowSuppressedAtTimestamp = 0;
+        return false;
+    }
+
+    private void CancelPendingForegroundFollowCore()
+    {
+        foregroundFollowGeneration++;
+
+        if (foregroundFollowCancellationTokenSource is null)
         {
             return;
         }
 
-        TryCancel(focusFollowCancellationTokenSource);
-        focusFollowCancellationTokenSource = null;
+        TryCancel(foregroundFollowCancellationTokenSource);
+        foregroundFollowCancellationTokenSource = null;
     }
 
-    private void CleanupFocusFollowDelay(long generation, CancellationTokenSource cancellationTokenSource)
+    private void CleanupForegroundFollowDelay(long generation, CancellationTokenSource cancellationTokenSource)
     {
         lock (syncRoot)
         {
-            if (generation == focusFollowGeneration && ReferenceEquals(focusFollowCancellationTokenSource, cancellationTokenSource))
+            if (generation == foregroundFollowGeneration && ReferenceEquals(foregroundFollowCancellationTokenSource, cancellationTokenSource))
             {
-                focusFollowCancellationTokenSource = null;
+                foregroundFollowCancellationTokenSource = null;
             }
         }
 
@@ -466,6 +553,34 @@ public class WindowPageCoordinator(IWindowStore store,
         return workspaceWidth > 0;
     }
 
+    private bool IsWindowFullyVisible(TrackedWindow trackedWindow, int workspaceWidth)
+    {
+        double viewportLeft = scroller.VisualOffset;
+
+        if (!IsFinite(viewportLeft))
+        {
+            return false;
+        }
+
+        double viewportRight = viewportLeft + workspaceWidth;
+
+        return IsFullyInView(trackedWindow, viewportLeft, viewportRight);
+    }
+
+    private bool IsWindowMeaningfullyVisible(TrackedWindow trackedWindow, int workspaceWidth)
+    {
+        double viewportLeft = scroller.VisualOffset;
+
+        if (!IsFinite(viewportLeft))
+        {
+            return false;
+        }
+
+        double viewportRight = viewportLeft + workspaceWidth;
+
+        return IsMeaningfullyInView(trackedWindow, viewportLeft, viewportRight);
+    }
+
     private static int GetWindowPage(TrackedWindow trackedWindow, int workspaceWidth)
     {
         double canvasX = GetSafeCanvasX(trackedWindow);
@@ -506,43 +621,54 @@ public class WindowPageCoordinator(IWindowStore store,
         return Math.Max(pageLeft, targetOffset);
     }
 
-    private static bool IsCompletelyOutOfView(TrackedWindow trackedWindow, double viewportLeft, double viewportRight)
+    private static bool IsFullyInView(TrackedWindow trackedWindow, double viewportLeft, double viewportRight)
     {
+        if (!IsFinite(viewportLeft) || !IsFinite(viewportRight) || viewportRight < viewportLeft)
+        {
+            return false;
+        }
+
         double windowLeft = GetSafeCanvasX(trackedWindow);
         double windowRight = windowLeft + GetSafeWidth(trackedWindow);
 
-        return windowRight <= viewportLeft || windowLeft >= viewportRight;
+        return windowLeft >= viewportLeft - ScrollTolerance &&
+            windowRight <= viewportRight + ScrollTolerance;
     }
 
-    private static bool IsSpanningPages(TrackedWindow trackedWindow, int workspaceWidth)
+    private static bool IsMeaningfullyInView(TrackedWindow trackedWindow, double viewportLeft, double viewportRight)
     {
+        if (!IsFinite(viewportLeft) || !IsFinite(viewportRight) || viewportRight < viewportLeft)
+        {
+            return false;
+        }
+
         double windowLeft = GetSafeCanvasX(trackedWindow);
-        double windowWidth = Math.Max(1.0, GetSafeWidth(trackedWindow));
-        double windowRight = windowLeft + windowWidth - 1.0;
+        double windowWidth = GetSafeWidth(trackedWindow);
+        double windowRight = windowLeft + windowWidth;
 
-        return GetWindowPage(windowLeft, workspaceWidth) != GetWindowPage(windowRight, workspaceWidth);
-    }
-
-    private static int GetWindowPage(double canvasX, int workspaceWidth)
-    {
-        if (!IsFinite(canvasX) || workspaceWidth <= 0)
+        if (windowWidth <= 0)
         {
-            return 0;
+            return false;
         }
 
-        double page = Math.Floor(canvasX / workspaceWidth);
-
-        if (page > int.MaxValue)
+        if (windowLeft >= viewportLeft - ScrollTolerance && windowRight <= viewportRight + ScrollTolerance)
         {
-            return int.MaxValue;
+            return true;
         }
 
-        if (page < int.MinValue)
+        double windowCenter = windowLeft + windowWidth / 2.0;
+
+        if (windowCenter >= viewportLeft && windowCenter <= viewportRight)
         {
-            return int.MinValue;
+            return true;
         }
 
-        return (int)page;
+        double visibleLeft = Math.Max(windowLeft, viewportLeft);
+        double visibleRight = Math.Min(windowRight, viewportRight);
+        double visibleWidth = Math.Max(0, visibleRight - visibleLeft);
+        double visibleRatio = visibleWidth / windowWidth;
+
+        return visibleRatio >= MeaningfulVisibilityRatio;
     }
 
     private static double GetSafeCanvasX(TrackedWindow trackedWindow)

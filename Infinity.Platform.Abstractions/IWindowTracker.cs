@@ -1,12 +1,10 @@
-﻿namespace Infinity.Platform.Abstractions;
+﻿namespace Infinity.Application.Abstractions;
 
 public interface IWindowTracker
 {
-    event Action<IntPtr>? WindowRestored;
-
-    void TryRegister(IntPtr windowHandle);
-
     void Start();
 
     void Stop();
+
+    void TryRegister(IntPtr windowHandle);
 }

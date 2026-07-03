@@ -9,7 +9,9 @@ namespace Infinity.Shell;
 public class WindowCollection(IWindowStore store,
     IScrollTimer timer,
     IScroller scroller,
-    IWindowZOrder zOrder,
+    IWindowStack windowStack,
+    IForegroundWindowTracker foregroundWindowTracker,
+    IWindowEventListener listener,
     IWorkspace workspace,
     IWindowFilterState filterState,
     IWindowPageCoordinator coordinator,
@@ -24,7 +26,7 @@ public class WindowCollection(IWindowStore store,
     private bool refreshQueued;
     private bool reorderQueued;
     private bool queuedRefreshShouldClearFilter;
-    private bool queuedRefreshShouldRefreshZOrder;
+    private bool queuedRefreshShouldRefreshWindowStack;
 
     public event EventHandler<TrackedWindow>? WindowAdded;
 
@@ -34,7 +36,7 @@ public class WindowCollection(IWindowStore store,
 
     public event EventHandler? ScrollStopped;
 
-    public event EventHandler? ZOrderRefreshed;
+    public event EventHandler? WindowStackRefreshed;
 
     public event EventHandler? WorkspaceLayoutChanged;
 
@@ -54,8 +56,10 @@ public class WindowCollection(IWindowStore store,
         store.WindowChanged += HandleWindowChanged;
         timer.Tick += HandleScrollTick;
         scroller.ScrollStopped += HandleScrollStopped;
-        zOrder.ZOrderChanged += HandleZOrderChanged;
-        zOrder.FocusedWindowChanged += HandleFocusedWindowChanged;
+        windowStack.WindowStackChanged += HandleWindowStackChanged;
+        foregroundWindowTracker.ForegroundWindowChanged += HandleForegroundWindowChanged;
+        listener.MinimizeStarted += HandleWindowMinimizeStarted;
+        listener.MinimizeEnded += HandleWindowMinimizeEnded;
         workspace.WorkspaceLayoutChanged += HandleWorkspaceLayoutChanged;
 
         HashSet<IntPtr> activeHandles = [.. store.Select(trackedWindow => trackedWindow.Handle)];
@@ -66,7 +70,7 @@ public class WindowCollection(IWindowStore store,
             WindowRemoved?.Invoke(this, staleHandle);
         }
 
-        zOrder.Refresh();
+        windowStack.Refresh();
         Queue(false, false);
     }
 
@@ -79,15 +83,17 @@ public class WindowCollection(IWindowStore store,
         store.WindowChanged -= HandleWindowChanged;
         timer.Tick -= HandleScrollTick;
         scroller.ScrollStopped -= HandleScrollStopped;
-        zOrder.ZOrderChanged -= HandleZOrderChanged;
-        zOrder.FocusedWindowChanged -= HandleFocusedWindowChanged;
+        windowStack.WindowStackChanged -= HandleWindowStackChanged;
+        foregroundWindowTracker.ForegroundWindowChanged -= HandleForegroundWindowChanged;
+        listener.MinimizeStarted -= HandleWindowMinimizeStarted;
+        listener.MinimizeEnded -= HandleWindowMinimizeEnded;
         workspace.WorkspaceLayoutChanged -= HandleWorkspaceLayoutChanged;
 
         lock (refreshSyncRoot)
         {
             refreshQueued = false;
             queuedRefreshShouldClearFilter = false;
-            queuedRefreshShouldRefreshZOrder = false;
+            queuedRefreshShouldRefreshWindowStack = false;
         }
 
         lock (reorderSyncRoot)
@@ -96,14 +102,14 @@ public class WindowCollection(IWindowStore store,
         }
     }
 
-    public void Queue(bool clearFilter, bool refreshZOrder)
+    public void Queue(bool clearFilter, bool refreshWindowStack)
     {
         bool shouldQueue;
 
         lock (refreshSyncRoot)
         {
             queuedRefreshShouldClearFilter |= clearFilter;
-            queuedRefreshShouldRefreshZOrder |= refreshZOrder;
+            queuedRefreshShouldRefreshWindowStack |= refreshWindowStack;
 
             shouldQueue = !refreshQueued;
             refreshQueued = true;
@@ -165,11 +171,17 @@ public class WindowCollection(IWindowStore store,
     private void HandleScrollStopped(object? sender, EventArgs args) =>
         ScrollStopped?.Invoke(this, EventArgs.Empty);
 
-    private void HandleZOrderChanged(object? sender, EventArgs args) =>
+    private void HandleWindowStackChanged(object? sender, EventArgs args) =>
         QueueReorder();
 
-    private void HandleFocusedWindowChanged(object? sender, IntPtr handle) =>
-        coordinator.HandleFocusChanged(handle);
+    private void HandleForegroundWindowChanged(object? sender, IntPtr handle) =>
+        dispatcher.Dispatch(() => coordinator.HandleForegroundWindowChanged(handle));
+
+    private void HandleWindowMinimizeStarted(IntPtr handle) =>
+        dispatcher.Dispatch(() => coordinator.HandleWindowMinimizeStarted(handle));
+
+    private void HandleWindowMinimizeEnded(IntPtr handle) =>
+        dispatcher.Dispatch(() => coordinator.HandleWindowMinimizeEnded(handle));
 
     private void HandleWorkspaceLayoutChanged(object? sender, EventArgs args)
     {
@@ -182,15 +194,15 @@ public class WindowCollection(IWindowStore store,
     private void ProcessQueuedRefresh()
     {
         bool shouldClearFilter;
-        bool shouldRefreshZOrder;
+        bool shouldRefreshWindowStack;
 
         lock (refreshSyncRoot)
         {
             refreshQueued = false;
             shouldClearFilter = queuedRefreshShouldClearFilter;
-            shouldRefreshZOrder = queuedRefreshShouldRefreshZOrder;
+            shouldRefreshWindowStack = queuedRefreshShouldRefreshWindowStack;
             queuedRefreshShouldClearFilter = false;
-            queuedRefreshShouldRefreshZOrder = false;
+            queuedRefreshShouldRefreshWindowStack = false;
         }
 
         if (shouldClearFilter && filterState.IsActive)
@@ -198,9 +210,9 @@ public class WindowCollection(IWindowStore store,
             filterState.Filter = string.Empty;
         }
 
-        if (shouldRefreshZOrder)
+        if (shouldRefreshWindowStack)
         {
-            zOrder.Refresh();
+            windowStack.Refresh();
         }
 
         RefreshRequested?.Invoke(this, EventArgs.Empty);
@@ -221,6 +233,6 @@ public class WindowCollection(IWindowStore store,
             }
         }
 
-        ZOrderRefreshed?.Invoke(this, EventArgs.Empty);
+        WindowStackRefreshed?.Invoke(this, EventArgs.Empty);
     }
 }

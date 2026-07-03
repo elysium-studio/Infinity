@@ -3,6 +3,9 @@ using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace Infinity.Application;
 
 public class WindowTracker(IWindowStore repository,
@@ -22,12 +25,14 @@ public class WindowTracker(IWindowStore repository,
 {
     private const int SelfHealIntervalMilliseconds = 3000;
 
+    private static readonly TimeSpan MinimizeSuspendDelay = TimeSpan.FromMilliseconds(160);
+
     private readonly Dictionary<IntPtr, int> suspendedCanvasPositions = [];
+    private readonly Dictionary<IntPtr, CancellationTokenSource> pendingMinimizeSuspensions = [];
+    private readonly object minimizeSyncRoot = new();
 
     private Timer? selfHealTimer;
     private int selfHealInProgress;
-
-    public event Action<IntPtr>? WindowRestored;
 
     public void Start()
     {
@@ -38,7 +43,7 @@ public class WindowTracker(IWindowStore repository,
         listener.MinimizeEnded += HandleMinimizeEnded;
         listener.DragEnded += HandleDragEnded;
         listener.WindowLocationChanged += HandleWindowLocationChanged;
-        listener.ZOrderChanged += HandleZOrderChanged;
+        listener.WindowStackChanged += HandleWindowStackChanged;
         state.OffsetChanged += HandleOffsetChanged;
 
         selfHealTimer = new Timer(HandleSelfHealTick, null, SelfHealIntervalMilliseconds, SelfHealIntervalMilliseconds);
@@ -53,8 +58,10 @@ public class WindowTracker(IWindowStore repository,
         listener.MinimizeEnded -= HandleMinimizeEnded;
         listener.DragEnded -= HandleDragEnded;
         listener.WindowLocationChanged -= HandleWindowLocationChanged;
-        listener.ZOrderChanged -= HandleZOrderChanged;
+        listener.WindowStackChanged -= HandleWindowStackChanged;
         state.OffsetChanged -= HandleOffsetChanged;
+
+        CancelPendingMinimizeSuspensions();
 
         selfHealTimer?.Dispose();
         selfHealTimer = null;
@@ -62,7 +69,7 @@ public class WindowTracker(IWindowStore repository,
 
     public void TryRegister(IntPtr windowHandle) => TryRegister(windowHandle, null);
 
-    private void TryRegister(IntPtr windowHandle, Dictionary<IntPtr, int>? zIndexMap)
+    private void TryRegister(IntPtr windowHandle, Dictionary<IntPtr, int>? windowStackIndexMap)
     {
         if (repository.TryGet(windowHandle, out _))
         {
@@ -93,7 +100,7 @@ public class WindowTracker(IWindowStore repository,
             }
 
             logger.LogDebug("TryRegister: {Handle} filtered, redirecting to ancestor {Ancestor}", windowHandle, ancestor);
-            TryRegister(ancestor, zIndexMap);
+            TryRegister(ancestor, windowStackIndexMap);
             return;
         }
 
@@ -113,7 +120,7 @@ public class WindowTracker(IWindowStore repository,
 
         int canvasX = isRestore ? previousCanvasX : x + (int)Math.Round(state.Offset);
         int lastPlacedX = canvasX - (int)Math.Round(state.Offset);
-        int zIndex = zIndexMap is not null && zIndexMap.TryGetValue(windowHandle, out int mappedZIndex) ? mappedZIndex : GetZIndex(windowHandle);
+        int zIndex = windowStackIndexMap is not null && windowStackIndexMap.TryGetValue(windowHandle, out int mappedZIndex) ? mappedZIndex : GetZIndex(windowHandle);
 
         repository.Add(new TrackedWindow
         {
@@ -128,14 +135,9 @@ public class WindowTracker(IWindowStore repository,
         });
 
         logger.LogInformation(isRestore
-            ? "Window restored: {Handle} canvasX={CanvasX} canvasY={CanvasY} screenX={ScreenX} screenY={ScreenY} lastPlacedX={LastPlacedX} width={Width} height={Height} zIndex={ZIndex}"
+            ? "Window restored into tracking: {Handle} canvasX={CanvasX} canvasY={CanvasY} screenX={ScreenX} screenY={ScreenY} lastPlacedX={LastPlacedX} width={Width} height={Height} zIndex={ZIndex}"
             : "Window registered: {Handle} canvasX={CanvasX} canvasY={CanvasY} screenX={ScreenX} screenY={ScreenY} lastPlacedX={LastPlacedX} width={Width} height={Height} zIndex={ZIndex}",
             windowHandle, canvasX, y, x, y, lastPlacedX, width, height, zIndex);
-
-        if (isRestore)
-        {
-            WindowRestored?.Invoke(windowHandle);
-        }
     }
 
     private void HandleWindowCreated(IntPtr windowHandle)
@@ -153,6 +155,7 @@ public class WindowTracker(IWindowStore repository,
     private void HandleWindowDestroyed(IntPtr windowHandle)
     {
         logger.LogDebug("Event: WindowDestroyed {Handle}", windowHandle);
+        CancelPendingMinimizeSuspension(windowHandle);
         suspendedCanvasPositions.Remove(windowHandle);
         Unregister(windowHandle);
     }
@@ -160,12 +163,13 @@ public class WindowTracker(IWindowStore repository,
     private void HandleMinimizeStarted(IntPtr windowHandle)
     {
         logger.LogDebug("Event: MinimizeStarted {Handle}", windowHandle);
-        SuspendTracking(windowHandle);
+        QueueMinimizeSuspension(windowHandle);
     }
 
     private void HandleMinimizeEnded(IntPtr windowHandle)
     {
         logger.LogDebug("Event: MinimizeEnded {Handle}", windowHandle);
+        CancelPendingMinimizeSuspension(windowHandle);
         TryRegister(windowHandle);
     }
 
@@ -187,7 +191,7 @@ public class WindowTracker(IWindowStore repository,
         HandleWindowMovedExternally(windowHandle);
     }
 
-    private void HandleZOrderChanged() => RefreshZIndices();
+    private void HandleWindowStackChanged() => RefreshWindowStackIndices();
 
     private void HandleOffsetChanged()
     {
@@ -204,6 +208,145 @@ public class WindowTracker(IWindowStore repository,
         }
 
         trackedWindow.CanvasX = trackedWindow.LastPlacedX + (int)Math.Round(state.Offset);
+    }
+
+    private void QueueMinimizeSuspension(IntPtr windowHandle)
+    {
+        if (windowHandle == IntPtr.Zero)
+        {
+            return;
+        }
+
+        CancellationTokenSource cancellationTokenSource = new();
+
+        lock (minimizeSyncRoot)
+        {
+            if (pendingMinimizeSuspensions.Remove(windowHandle, out CancellationTokenSource? existingCancellationTokenSource))
+            {
+                TryCancel(existingCancellationTokenSource);
+                existingCancellationTokenSource.Dispose();
+            }
+
+            pendingMinimizeSuspensions[windowHandle] = cancellationTokenSource;
+        }
+
+        _ = DelayAndSuspendIfStillMinimizedAsync(windowHandle, cancellationTokenSource);
+    }
+
+    private async Task DelayAndSuspendIfStillMinimizedAsync(IntPtr windowHandle, CancellationTokenSource cancellationTokenSource)
+    {
+        try
+        {
+            await Task.Delay(MinimizeSuspendDelay, cancellationTokenSource.Token).ConfigureAwait(false);
+            dispatcher.Dispatch(() => CommitMinimizeSuspension(windowHandle, cancellationTokenSource));
+        }
+        catch (OperationCanceledException)
+        {
+            CleanupMinimizeSuspension(windowHandle, cancellationTokenSource);
+        }
+        catch (ObjectDisposedException)
+        {
+            CleanupMinimizeSuspension(windowHandle, cancellationTokenSource);
+        }
+        catch (InvalidOperationException)
+        {
+            CleanupMinimizeSuspension(windowHandle, cancellationTokenSource);
+        }
+    }
+
+    private void CommitMinimizeSuspension(IntPtr windowHandle, CancellationTokenSource cancellationTokenSource)
+    {
+        if (!TryClaimPendingMinimizeSuspension(windowHandle, cancellationTokenSource))
+        {
+            return;
+        }
+
+        if (!repository.TryGet(windowHandle, out _))
+        {
+            logger.LogDebug("Minimize suspension: {Handle} skipped, no longer tracked", windowHandle);
+            return;
+        }
+
+        if (!reader.IsMinimised(windowHandle))
+        {
+            logger.LogDebug("Minimize suspension: {Handle} skipped, window was restored before tracking was suspended", windowHandle);
+            return;
+        }
+
+        SuspendTracking(windowHandle);
+    }
+
+    private bool TryClaimPendingMinimizeSuspension(IntPtr windowHandle, CancellationTokenSource cancellationTokenSource)
+    {
+        lock (minimizeSyncRoot)
+        {
+            if (!pendingMinimizeSuspensions.TryGetValue(windowHandle, out CancellationTokenSource? currentCancellationTokenSource))
+            {
+                return false;
+            }
+
+            if (!ReferenceEquals(currentCancellationTokenSource, cancellationTokenSource))
+            {
+                return false;
+            }
+
+            pendingMinimizeSuspensions.Remove(windowHandle);
+        }
+
+        cancellationTokenSource.Dispose();
+        return true;
+    }
+
+    private void CleanupMinimizeSuspension(IntPtr windowHandle, CancellationTokenSource cancellationTokenSource)
+    {
+        lock (minimizeSyncRoot)
+        {
+            if (pendingMinimizeSuspensions.TryGetValue(windowHandle, out CancellationTokenSource? currentCancellationTokenSource) &&
+                ReferenceEquals(currentCancellationTokenSource, cancellationTokenSource))
+            {
+                pendingMinimizeSuspensions.Remove(windowHandle);
+            }
+        }
+
+        cancellationTokenSource.Dispose();
+    }
+
+    private void CancelPendingMinimizeSuspension(IntPtr windowHandle)
+    {
+        CancellationTokenSource? cancellationTokenSource = null;
+
+        lock (minimizeSyncRoot)
+        {
+            if (pendingMinimizeSuspensions.Remove(windowHandle, out CancellationTokenSource? removedCancellationTokenSource))
+            {
+                cancellationTokenSource = removedCancellationTokenSource;
+            }
+        }
+
+        if (cancellationTokenSource is null)
+        {
+            return;
+        }
+
+        TryCancel(cancellationTokenSource);
+        cancellationTokenSource.Dispose();
+    }
+
+    private void CancelPendingMinimizeSuspensions()
+    {
+        List<CancellationTokenSource> cancellationTokenSources;
+
+        lock (minimizeSyncRoot)
+        {
+            cancellationTokenSources = [.. pendingMinimizeSuspensions.Values];
+            pendingMinimizeSuspensions.Clear();
+        }
+
+        foreach (CancellationTokenSource cancellationTokenSource in cancellationTokenSources)
+        {
+            TryCancel(cancellationTokenSource);
+            cancellationTokenSource.Dispose();
+        }
     }
 
     private void SuspendTracking(IntPtr windowHandle)
@@ -269,13 +412,13 @@ public class WindowTracker(IWindowStore repository,
         repository.Remove(windowHandle);
     }
 
-    private void RefreshZIndices()
+    private void RefreshWindowStackIndices()
     {
-        Dictionary<IntPtr, int> zIndexMap = BuildZIndexMap();
+        Dictionary<IntPtr, int> windowStackIndexMap = BuildWindowStackIndexMap();
 
         foreach (TrackedWindow trackedWindow in repository)
         {
-            if (zIndexMap.TryGetValue(trackedWindow.Handle, out int zIndex))
+            if (windowStackIndexMap.TryGetValue(trackedWindow.Handle, out int zIndex))
             {
                 trackedWindow.ZIndex = zIndex;
             }
@@ -314,18 +457,19 @@ public class WindowTracker(IWindowStore repository,
             {
                 logger.LogWarning("Self-heal: removing stale tracked window no longer present: {Handle}", staleHandle);
                 suspendedCanvasPositions.Remove(staleHandle);
+                CancelPendingMinimizeSuspension(staleHandle);
                 Unregister(staleHandle);
             }
 
             int countBeforeRecovery = repository.Count;
-            Dictionary<IntPtr, int> zIndexMap = BuildZIndexMap();
+            Dictionary<IntPtr, int> windowStackIndexMap = BuildWindowStackIndexMap();
 
             foreach (IntPtr liveWindow in liveWindows)
             {
                 if (!repository.TryGet(liveWindow, out _))
                 {
                     logger.LogDebug("Self-heal: attempting to register untracked live window: {Handle}", liveWindow);
-                    TryRegister(liveWindow, zIndexMap);
+                    TryRegister(liveWindow, windowStackIndexMap);
                 }
             }
 
@@ -353,24 +497,35 @@ public class WindowTracker(IWindowStore repository,
         return windows;
     }
 
-    private Dictionary<IntPtr, int> BuildZIndexMap()
+    private Dictionary<IntPtr, int> BuildWindowStackIndexMap()
     {
-        Dictionary<IntPtr, int> zIndexMap = [];
+        Dictionary<IntPtr, int> windowStackIndexMap = [];
         int index = 0;
 
         enumerator.EnumerateVisible(windowHandle =>
         {
-            zIndexMap[windowHandle] = index;
+            windowStackIndexMap[windowHandle] = index;
             index++;
         });
 
-        return zIndexMap;
+        return windowStackIndexMap;
     }
 
     private int GetZIndex(IntPtr windowHandle)
     {
-        Dictionary<IntPtr, int> zIndexMap = BuildZIndexMap();
+        Dictionary<IntPtr, int> windowStackIndexMap = BuildWindowStackIndexMap();
 
-        return zIndexMap.TryGetValue(windowHandle, out int zIndex) ? zIndex : int.MaxValue;
+        return windowStackIndexMap.TryGetValue(windowHandle, out int zIndex) ? zIndex : int.MaxValue;
+    }
+
+    private static void TryCancel(CancellationTokenSource cancellationTokenSource)
+    {
+        try
+        {
+            cancellationTokenSource.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
     }
 }

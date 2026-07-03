@@ -10,7 +10,7 @@ public interface IWindowCollection
 
     event EventHandler ScrollStopped;
 
-    event EventHandler ZOrderRefreshed;
+    event EventHandler WindowStackRefreshed;
 
     event EventHandler WorkspaceLayoutChanged;
 
@@ -24,7 +24,7 @@ public interface IWindowCollection
 
     void Stop();
 
-    void Queue(bool clearFilter, bool refreshZOrder);
+    void Queue(bool clearFilter, bool refreshWindowStack);
 
     void QueueReorder();
 }

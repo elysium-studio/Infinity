@@ -6,23 +6,27 @@ public interface IWindowPageCoordinator
 
     event EventHandler? WindowActivationRequested;
 
-    double NavigationTargetOffset { get; set; }
-
     int NavigationTargetPage { get; set; }
+
+    double NavigationTargetOffset { get; set; }
 
     int PageBeforeFilter { get; set; }
 
     IntPtr PendingActivation { get; set; }
 
-    void Activate(IntPtr handle);
-
-    void ExpectProgrammaticActivation(IntPtr handle);
-
-    void HandleFocusChanged(IntPtr handle);
-
     void NavigateTo(IntPtr handle);
 
     void NavigateToPage(IntPtr handle);
 
+    void HandleForegroundWindowChanged(IntPtr handle);
+
+    void HandleWindowMinimizeStarted(IntPtr handle);
+
+    void HandleWindowMinimizeEnded(IntPtr handle);
+
     void NotifyWindowClosed(IntPtr handle);
+
+    void ExpectProgrammaticActivation(IntPtr handle);
+
+    void Activate(IntPtr handle);
 }

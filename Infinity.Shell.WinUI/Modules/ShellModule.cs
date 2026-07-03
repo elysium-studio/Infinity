@@ -31,7 +31,6 @@ public class ShellModule :
                 provider.GetRequiredService<IPanState>(),
                 provider.GetRequiredService<IScroller>(),
                 provider.GetRequiredService<IWorkspace>(),
-                provider.GetRequiredService<IWindowTracker>(),
                 provider.GetRequiredService<ILogger<Pager>>()))
             .AddSingleton<ITrackedWindowFilter, TrackedWindowFilter>()
             .AddSingleton<IWindowFilterEffects>(provider => new WindowFadeFilterEffects(provider.GetRequiredService<IWindowStore>(),
@@ -50,14 +49,16 @@ public class ShellModule :
             .AddSingleton<IDesktopBackgroundController>(provider => new DesktopBackgroundController(
                 provider.GetRequiredService<IDesktopBackgroundSource>(),
                 provider.GetRequiredService<IDispatcher>()))
-            .AddSingleton<IWindowSelector>(provider => new WindowSelector(new SelectionPreviewQueue(provider.GetRequiredService<IWindowZOrder>()),
+            .AddSingleton<IWindowSelector>(provider => new WindowSelector(new SelectionPreviewQueue(provider.GetRequiredService<IWindowStack>()),
                 provider.GetRequiredService<IWindowStore>(),
                 provider.GetRequiredService<IPager>(),
                 provider.GetRequiredService<IWorkspace>()))
             .AddSingleton<IWindowCollection>(provider => new WindowCollection(provider.GetRequiredService<IWindowStore>(),
                 provider.GetRequiredService<IScrollTimer>(),
                 provider.GetRequiredService<IScroller>(),
-                provider.GetRequiredService<IWindowZOrder>(),
+                provider.GetRequiredService<IWindowStack>(),
+                provider.GetRequiredService<IForegroundWindowTracker>(),
+                provider.GetRequiredService<IWindowEventListener>(),
                 provider.GetRequiredService<IWorkspace>(),
                 provider.GetRequiredService<IWindowFilterState>(),
                 provider.GetRequiredService<IWindowPageCoordinator>(),

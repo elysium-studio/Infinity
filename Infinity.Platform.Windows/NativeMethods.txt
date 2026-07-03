@@ -72,3 +72,4 @@ GetCurrentThreadId
 CreateDIBSection
 GetAsyncKeyState
 GetWindowLongPtr
+ShowWindowAsync

@@ -14,7 +14,8 @@ public class PagerLifetime(IWindowTracker tracker,
     IPageGestureSource gestureSource,
     IWindowPageJumper jumper,
     IWindowTitleSynchronizer titleSynchronizer,
-    IWindowZOrder zOrder,
+    IWindowStack stack,
+    IForegroundWindowTracker foreground,
     IScrollInputSource scrollInput,
     IPointerInputSource pointerInput,
     IKeyboardInputSource keyboardInput,
@@ -55,12 +56,13 @@ public class PagerLifetime(IWindowTracker tracker,
         }
 
         titleSynchronizer.Start();
-        zOrder.Refresh();
+        stack.Refresh();
         listener.Start();
         tracker.Start();
         dragGuard.Start();
         dragScroller.Start();
-        zOrder.Start();
+        stack.Start();
+        foreground.Start();
         scrollInput.Start();
         coordinator.Start();
         windowCollection.Start();
@@ -91,7 +93,8 @@ public class PagerLifetime(IWindowTracker tracker,
         dragGuard.Stop();
         dragScroller.Stop();
         titleSynchronizer.Stop();
-        zOrder.Stop();
+        stack.Stop();
+        foreground.Stop();
         scrollInput.Stop();
         coordinator.Dispose();
         listener.Dispose();

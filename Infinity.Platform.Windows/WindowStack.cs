@@ -4,25 +4,22 @@ using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Infinity.Platform.Windows;
 
-public class WindowZOrder(IWindowStore repository,
+public class WindowStack(IWindowStore repository,
     IWindowEventListener listener,
-    IWindowFocusGuard focusGuard,
     Func<nint> handleFactory,
     IDispatcher dispatcher,
-    ILogger<WindowZOrder> logger) :
-    IWindowZOrder
+    ILogger<WindowStack> logger) :
+    IWindowStack
 {
     private const SET_WINDOW_POS_FLAGS SwpNoActivate = SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE;
     private const SET_WINDOW_POS_FLAGS SwpNoMove = SET_WINDOW_POS_FLAGS.SWP_NOMOVE;
-    private const SET_WINDOW_POS_FLAGS Swp_NOSIZE = SET_WINDOW_POS_FLAGS.SWP_NOSIZE;
+    private const SET_WINDOW_POS_FLAGS SwpNoSize = SET_WINDOW_POS_FLAGS.SWP_NOSIZE;
     private const SET_WINDOW_POS_FLAGS SwpNoOwnerZOrder = SET_WINDOW_POS_FLAGS.SWP_NOOWNERZORDER;
     private const SET_WINDOW_POS_FLAGS SwpAsyncWindowPos = SET_WINDOW_POS_FLAGS.SWP_ASYNCWINDOWPOS;
 
@@ -32,7 +29,7 @@ public class WindowZOrder(IWindowStore repository,
     private static readonly HWND HwndNotTopmost = new(new nint(-2));
 
     private readonly Lock refreshLock = new();
-    private readonly Dictionary<nint, int> zOrderMap = new();
+    private readonly Dictionary<nint, int> windowStackMap = new();
 
     private WNDENUMPROC? enumWindowsCallback;
     private HashSet<nint>? enumTrackedHandles;
@@ -41,11 +38,8 @@ public class WindowZOrder(IWindowStore repository,
     private int isStarted;
     private int refreshInFlight;
     private int refreshRequested;
-    private nint pendingFocusHandle;
 
-    public event EventHandler<nint>? FocusedWindowChanged;
-
-    public event EventHandler? ZOrderChanged;
+    public event EventHandler? WindowStackChanged;
 
     public void Start()
     {
@@ -54,9 +48,7 @@ public class WindowZOrder(IWindowStore repository,
             return;
         }
 
-        listener.ForegroundChanged += HandleForegroundChanged;
-        listener.MinimizeEnded += HandleMinimizeEnded;
-        listener.ZOrderChanged += HandleZOrderChanged;
+        listener.WindowStackChanged += HandleWindowStackChanged;
 
         ScheduleRefresh();
     }
@@ -68,12 +60,9 @@ public class WindowZOrder(IWindowStore repository,
             return;
         }
 
-        listener.ForegroundChanged -= HandleForegroundChanged;
-        listener.MinimizeEnded -= HandleMinimizeEnded;
-        listener.ZOrderChanged -= HandleZOrderChanged;
+        listener.WindowStackChanged -= HandleWindowStackChanged;
 
         Volatile.Write(ref refreshRequested, 0);
-        Interlocked.Exchange(ref pendingFocusHandle, 0);
     }
 
     public void BringToFront(nint windowHandle)
@@ -99,7 +88,7 @@ public class WindowZOrder(IWindowStore repository,
         }
 
         HWND hwnd = new(windowHandle);
-        SET_WINDOW_POS_FLAGS flags = SwpNoMove | Swp_NOSIZE | SwpNoActivate | SwpNoOwnerZOrder | SwpAsyncWindowPos;
+        SET_WINDOW_POS_FLAGS flags = SwpNoMove | SwpNoSize | SwpNoActivate | SwpNoOwnerZOrder | SwpAsyncWindowPos;
         bool wasTopmost = IsTopmost(hwnd);
 
         logger.LogDebug("Bringing window to front: {WindowHandle}", windowHandle);
@@ -120,47 +109,15 @@ public class WindowZOrder(IWindowStore repository,
         ScheduleRefresh();
     }
 
-    public void NotifyFocusChanged(nint windowHandle)
-    {
-        if (windowHandle == 0)
-        {
-            return;
-        }
-
-        RaiseFocusedWindowChanged(windowHandle, false);
-    }
-
     public void Refresh()
     {
         TrackedWindow[] trackedWindows = SnapshotTrackedWindows();
-        Dictionary<nint, int> zOrderSnapshot = BuildZOrderSnapshot(trackedWindows);
+        Dictionary<nint, int> windowStackSnapshot = BuildWindowStackSnapshot(trackedWindows);
 
-        Dispatch(() => ApplyZOrderSnapshot(trackedWindows, zOrderSnapshot, false));
+        Dispatch(() => ApplyWindowStackSnapshot(trackedWindows, windowStackSnapshot, false));
     }
 
-    private void HandleForegroundChanged(nint windowHandle)
-    {
-        if (windowHandle == 0)
-        {
-            return;
-        }
-
-        Interlocked.Exchange(ref pendingFocusHandle, windowHandle);
-        ScheduleRefresh();
-    }
-
-    private void HandleMinimizeEnded(nint windowHandle)
-    {
-        if (windowHandle == 0)
-        {
-            return;
-        }
-
-        Interlocked.Exchange(ref pendingFocusHandle, windowHandle);
-        ScheduleRefresh();
-    }
-
-    private void HandleZOrderChanged()
+    private void HandleWindowStackChanged()
     {
         ScheduleRefresh();
     }
@@ -195,15 +152,14 @@ public class WindowZOrder(IWindowStore repository,
                 if (IsStarted())
                 {
                     TrackedWindow[] trackedWindows = SnapshotTrackedWindows();
-                    Dictionary<nint, int> zOrderSnapshot = BuildZOrderSnapshot(trackedWindows);
+                    Dictionary<nint, int> windowStackSnapshot = BuildWindowStackSnapshot(trackedWindows);
 
-                    Dispatch(() => ApplyZOrderSnapshot(trackedWindows, zOrderSnapshot, true));
-                    PublishPendingFocus();
+                    Dispatch(() => ApplyWindowStackSnapshot(trackedWindows, windowStackSnapshot, true));
                 }
             }
             catch (Exception exception)
             {
-                logger.LogWarning(exception, "Exception in z-order refresh loop");
+                logger.LogWarning(exception, "Exception in window stack refresh loop");
             }
 
             Interlocked.Exchange(ref refreshInFlight, 0);
@@ -240,7 +196,7 @@ public class WindowZOrder(IWindowStore repository,
         }
     }
 
-    private Dictionary<nint, int> BuildZOrderSnapshot(TrackedWindow[] trackedWindows)
+    private Dictionary<nint, int> BuildWindowStackSnapshot(TrackedWindow[] trackedWindows)
     {
         HashSet<nint> trackedHandles = BuildTrackedHandleSet(trackedWindows);
 
@@ -254,17 +210,17 @@ public class WindowZOrder(IWindowStore repository,
             enumWindowsCallback ??= EnumWindowsCallback;
             enumTrackedHandles = trackedHandles;
             enumIndex = 0;
-            zOrderMap.Clear();
+            windowStackMap.Clear();
 
             try
             {
                 PInvoke.EnumWindows(enumWindowsCallback, new LPARAM(0));
-                return new Dictionary<nint, int>(zOrderMap);
+                return new Dictionary<nint, int>(windowStackMap);
             }
             finally
             {
                 enumTrackedHandles = null;
-                zOrderMap.Clear();
+                windowStackMap.Clear();
                 enumIndex = 0;
             }
         }
@@ -283,9 +239,9 @@ public class WindowZOrder(IWindowStore repository,
 
         if (trackedHandles.Contains(windowHandle))
         {
-            zOrderMap[windowHandle] = enumIndex;
+            windowStackMap[windowHandle] = enumIndex;
 
-            if (zOrderMap.Count == trackedHandles.Count)
+            if (windowStackMap.Count == trackedHandles.Count)
             {
                 return false;
             }
@@ -312,7 +268,7 @@ public class WindowZOrder(IWindowStore repository,
         return trackedHandles;
     }
 
-    private void ApplyZOrderSnapshot(TrackedWindow[] trackedWindows, Dictionary<nint, int> zOrderSnapshot, bool requireStarted)
+    private void ApplyWindowStackSnapshot(TrackedWindow[] trackedWindows, Dictionary<nint, int> windowStackSnapshot, bool requireStarted)
     {
         if (requireStarted && !IsStarted())
         {
@@ -324,7 +280,7 @@ public class WindowZOrder(IWindowStore repository,
         foreach (TrackedWindow trackedWindow in trackedWindows)
         {
             nint windowHandle = trackedWindow.Handle;
-            int zIndex = windowHandle != 0 && zOrderSnapshot.TryGetValue(windowHandle, out int value) ? value : int.MaxValue;
+            int zIndex = windowHandle != 0 && windowStackSnapshot.TryGetValue(windowHandle, out int value) ? value : int.MaxValue;
 
             if (trackedWindow.ZIndex == zIndex)
             {
@@ -340,62 +296,7 @@ public class WindowZOrder(IWindowStore repository,
             return;
         }
 
-        ZOrderChanged?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void PublishPendingFocus()
-    {
-        nint windowHandle = Interlocked.Exchange(ref pendingFocusHandle, 0);
-
-        if (windowHandle == 0)
-        {
-            return;
-        }
-
-        if (!IsWindowHandleValid(windowHandle))
-        {
-            return;
-        }
-
-        if (IsDirectFocus(windowHandle))
-        {
-            return;
-        }
-
-        RaiseFocusedWindowChanged(windowHandle, true);
-    }
-
-    private void RaiseFocusedWindowChanged(nint windowHandle, bool requireStarted)
-    {
-        EventHandler<nint>? handler = FocusedWindowChanged;
-
-        if (handler is null)
-        {
-            return;
-        }
-
-        Dispatch(() =>
-        {
-            if (requireStarted && !IsStarted())
-            {
-                return;
-            }
-
-            handler(this, windowHandle);
-        });
-    }
-
-    private bool IsDirectFocus(nint windowHandle)
-    {
-        try
-        {
-            return focusGuard.IsDirect(windowHandle);
-        }
-        catch (Exception exception)
-        {
-            logger.LogDebug(exception, "Focus guard failed while checking direct focus: {WindowHandle}", windowHandle);
-            return false;
-        }
+        WindowStackChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private nint GetAppHandle()
@@ -451,11 +352,11 @@ public class WindowZOrder(IWindowStore repository,
         }
         catch (ObjectDisposedException exception)
         {
-            logger.LogDebug(exception, "Dispatcher was disposed while publishing z-order state");
+            logger.LogDebug(exception, "Dispatcher was disposed while publishing window stack state");
         }
         catch (InvalidOperationException exception)
         {
-            logger.LogDebug(exception, "Dispatcher rejected z-order state publication");
+            logger.LogDebug(exception, "Dispatcher rejected window stack state publication");
         }
     }
 

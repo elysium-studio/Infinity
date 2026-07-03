@@ -14,7 +14,7 @@ public unsafe class WindowMover :
         SET_WINDOW_POS_FLAGS.SWP_NOSENDCHANGING |
         SET_WINDOW_POS_FLAGS.SWP_DEFERERASE;
 
-    private readonly List<PendingMove> pendingMoves = new();
+    private readonly List<PendingMove> pendingMoves = [];
 
     private HDWP deferWindowPosHandle;
     private bool batchFailed;
