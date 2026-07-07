@@ -29,24 +29,6 @@ public class SettingsModule :
                     provider.GetRequiredService<IMessenger>(),
                     provider.GetRequiredService<IDisposer>(),
                     provider.GetRequiredService<IEnumerable<ISettingViewModel>>()))
-            .AddViewFor<WindowsView, ISettingViewModel, WindowsViewModel>(ServiceLifetime.Transient,
-                provider => new WindowsView(),
-                provider => new WindowsViewModel(provider,
-                    provider.GetRequiredService<IServiceFactory>(),
-                    provider.GetRequiredService<IMessenger>(),
-                    provider.GetRequiredService<IDisposer>(),
-                    provider.GetRequiredService<IEnumerable<IWindowsViewModel>>()))
-            .AddViewFor<StartWithWindowsView, IWindowsViewModel, StartWithWindowsViewModel>(ServiceLifetime.Transient,
-                provider => new StartWithWindowsView(),
-                provider => new StartWithWindowsViewModel(provider,
-                    provider.GetRequiredService<IServiceFactory>(),
-                    provider.GetRequiredService<IMessenger>(),
-                    provider.GetRequiredService<IDisposer>(),
-                    provider.GetRequiredService<IDispatcher>(),
-                    provider.GetRequiredService<Settings>(),
-                    provider.GetRequiredService<IWritableOptions<Settings>>(),
-                    config => config.StartWithWindows,
-                    (config, startWithWindows) => config.StartWithWindows = startWithWindows))
             .AddViewFor<DesktopView, ISettingViewModel, DesktopViewModel>(ServiceLifetime.Transient,
                 provider => new DesktopView(),
                 provider => new DesktopViewModel(provider,
@@ -173,6 +155,24 @@ public class SettingsModule :
                     provider.GetRequiredService<Settings>(),
                     provider.GetRequiredService<IWritableOptions<Settings>>(),
                     config => (int)config.PreviewPosition,
-                    (config, previewPosition) => config.PreviewPosition = (PreviewPosition)previewPosition));
+                    (config, previewPosition) => config.PreviewPosition = (PreviewPosition)previewPosition))
+            .AddViewFor<WindowsView, ISettingViewModel, WindowsViewModel>(ServiceLifetime.Transient,
+                provider => new WindowsView(),
+                provider => new WindowsViewModel(provider,
+                    provider.GetRequiredService<IServiceFactory>(),
+                    provider.GetRequiredService<IMessenger>(),
+                    provider.GetRequiredService<IDisposer>(),
+                    provider.GetRequiredService<IEnumerable<IWindowsViewModel>>()))
+            .AddViewFor<StartWithWindowsView, IWindowsViewModel, StartWithWindowsViewModel>(ServiceLifetime.Transient,
+                provider => new StartWithWindowsView(),
+                provider => new StartWithWindowsViewModel(provider,
+                    provider.GetRequiredService<IServiceFactory>(),
+                    provider.GetRequiredService<IMessenger>(),
+                    provider.GetRequiredService<IDisposer>(),
+                    provider.GetRequiredService<IDispatcher>(),
+                    provider.GetRequiredService<Settings>(),
+                    provider.GetRequiredService<IWritableOptions<Settings>>(),
+                    config => config.StartWithWindows,
+                    (config, startWithWindows) => config.StartWithWindows = startWithWindows));
     }
 }
