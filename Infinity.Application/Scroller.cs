@@ -9,6 +9,7 @@ namespace Infinity.Application;
 public class Scroller(IPanState state,
     IWindowStore store,
     IWindowMover mover,
+    IWindowConcealer concealer,
     IWindowMoveGuard moveGuard,
     IWindowDragGuard dragGuard,
     IScrollInputSource source,
@@ -170,6 +171,8 @@ public class Scroller(IPanState state,
         }
     }
 
+    public void Reposition() => RepositionWindows((int)Math.Round(VisualOffset));
+
     public void Start()
     {
         source.ScrollDeltaReceived += HandleScrollDeltaReceived;
@@ -197,12 +200,18 @@ public class Scroller(IPanState state,
         activeMoveScope ??= moveGuard.Begin();
 
         bool anyDragging = dragGuard.IsAnyDragging;
+        IReadOnlySet<nint> concealedHandles = concealer.ConcealedHandles();
 
         mover.BeginBatch(store.Count);
 
         foreach (TrackedWindow trackedWindow in store)
         {
             if (anyDragging && dragGuard.IsDragging(trackedWindow.Handle))
+            {
+                continue;
+            }
+
+            if (concealedHandles.Contains(trackedWindow.Handle))
             {
                 continue;
             }

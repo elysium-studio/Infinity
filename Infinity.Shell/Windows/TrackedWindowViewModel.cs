@@ -13,7 +13,6 @@ public partial class TrackedWindowViewModel :
 {
     private readonly IWindowPreview? preview;
     private readonly IWindowController controller;
-    private readonly Action<IntPtr> navigate;
     private IntPtr previewTargetHandle;
     private double previewWidth;
     private double previewHeight;
@@ -55,11 +54,9 @@ public partial class TrackedWindowViewModel :
         IDisposer disposer,
         IWindowController controller,
         IWindowPreviewSurface windowPreviewSurface,
-        IntPtr handle,
-        Action<IntPtr> navigate) : base(provider, factory, messenger, disposer)
+        IntPtr handle) : base(provider, factory, messenger, disposer)
     {
         this.controller = controller;
-        this.navigate = navigate;
         preview = windowPreviewSurface.CreatePreview(handle);
         Handle = handle;
     }
@@ -72,9 +69,13 @@ public partial class TrackedWindowViewModel :
 
     public IWindowPreview? Preview1 => preview;
 
+    public void BeginPeek() => Messenger.Send(new WindowPeekChangedEventArgs(Handle, true));
+
     public void Close() => controller.Close(Handle);
 
-    public void Navigate() => navigate(Handle);
+    public void EndPeek() => Messenger.Send(new WindowPeekChangedEventArgs(Handle, false));
+
+    public void Navigate() => Messenger.Send(new WindowNavigationRequestedEventArgs(Handle));
 
     public void SetPreviewTarget(IntPtr sharedTargetHandle, double width, double height)
     {

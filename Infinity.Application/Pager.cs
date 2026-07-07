@@ -1,6 +1,5 @@
 ﻿using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
-using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;

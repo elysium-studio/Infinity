@@ -27,13 +27,13 @@ public static class IServiceCollectionExtensions
                     provider.GetRequiredService<IWindowAncestorResolver>(),
                     provider.GetRequiredService<IWindowRestoreGuard>(),
                     provider.GetRequiredService<IWindowMoveGuard>(),
+                    provider.GetRequiredService<IWindowConcealer>(),
                     provider.GetRequiredService<IWindowDragGuard>(),
                     provider.GetRequiredService<IWindowEnumerator>(),
                     provider.GetRequiredService<IWindowEventListener>(),
                     provider.GetRequiredService<IPanState>(),
                     provider.GetRequiredService<IDispatcher>(),
-                    provider.GetRequiredService<IMessageWindow>().Handle,
-                    provider.GetRequiredService<ILogger<WindowTracker>>()));
+                    provider.GetRequiredService<IMessageWindow>().Handle));
 
             services.AddSingleton<IScrollInputSource>(provider =>
                 new ModifiedScrollInput(provider.GetRequiredService<IPointerInputSource>(),
@@ -45,6 +45,7 @@ public static class IServiceCollectionExtensions
                 return new Scroller(provider.GetRequiredService<IPanState>(),
                     provider.GetRequiredService<IWindowStore>(),
                     provider.GetRequiredService<IWindowMover>(),
+                    provider.GetRequiredService<IWindowConcealer>(),
                     provider.GetRequiredService<IWindowMoveGuard>(),
                     provider.GetRequiredService<IWindowDragGuard>(),
                     provider.GetRequiredService<IScrollInputSource>(),

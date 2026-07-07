@@ -163,11 +163,17 @@ public sealed partial class TrackedWindowView :
     private void HandleThumbnailHostSizeChanged(object sender, SizeChangedEventArgs args) =>
         QueuePreviewTargetUpdate();
 
-    private void HandleWindowContainerPointerEntered(object sender, PointerRoutedEventArgs args) =>
+    private void HandleWindowContainerPointerEntered(object sender, PointerRoutedEventArgs args)
+    {
         SetCloseButtonVisible(true);
+        viewModel?.BeginPeek();
+    }
 
-    private void HandleWindowContainerPointerExited(object sender, PointerRoutedEventArgs args) =>
+    private void HandleWindowContainerPointerExited(object sender, PointerRoutedEventArgs args)
+    {
         SetCloseButtonVisible(false);
+        viewModel?.EndPeek();
+    }
 
     private void HandleCloseButtonPointerEntered(object sender, PointerRoutedEventArgs args) =>
         SetCloseButtonVisible(true);

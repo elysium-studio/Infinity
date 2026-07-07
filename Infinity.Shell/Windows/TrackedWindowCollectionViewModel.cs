@@ -15,7 +15,9 @@ namespace Infinity.Shell;
 
 public partial class TrackedWindowCollectionViewModel :
     ObservableCollectionViewModel<ITrackedWindow>,
-    IRecipient<OptionsChangedEventArgs<Settings>>
+    IRecipient<OptionsChangedEventArgs<Settings>>,
+    IRecipient<WindowPeekChangedEventArgs>,
+    IRecipient<WindowNavigationRequestedEventArgs>
 {
     private readonly IDispatcher dispatcher;
     private readonly IWorkspace workspace;
@@ -28,7 +30,8 @@ public partial class TrackedWindowCollectionViewModel :
     private readonly ITrackedWindowCollection trackedWindowCollection;
     private readonly IWindowSelector selector;
     private readonly IWindowFilterState filterState;
-    private readonly IWindowFilterEffectController filterEffects;
+    private readonly IWindowPeekController peekController;
+    private readonly WindowPeekSource peekSource;
     private readonly IDesktopBackgroundController backgroundController;
     private readonly IWindowPageCoordinator coordinator;
     private readonly INavigator navigator;
@@ -37,6 +40,9 @@ public partial class TrackedWindowCollectionViewModel :
     private readonly ILogger<TrackedWindowCollectionViewModel> logger;
     private bool activatingSelection;
     private bool subscribed;
+    private long activationPeekSuppressUntilTicks;
+
+    private const int ActivationPeekSuppressionMilliseconds = 300;
 
     [ObservableProperty]
     private string? backgroundColour;
@@ -84,7 +90,8 @@ public partial class TrackedWindowCollectionViewModel :
         ITrackedWindowCollection trackedWindowCollection,
         IWindowSelector selector,
         IWindowFilterState filterState,
-        IWindowFilterEffectController filterEffects,
+        IWindowPeekController peekController,
+        WindowPeekSource peekSource,
         IDesktopBackgroundController backgroundController,
         IWindowPageCoordinator coordinator,
         INavigator navigator,
@@ -103,7 +110,8 @@ public partial class TrackedWindowCollectionViewModel :
         this.trackedWindowCollection = trackedWindowCollection;
         this.selector = selector;
         this.filterState = filterState;
-        this.filterEffects = filterEffects;
+        this.peekController = peekController;
+        this.peekSource = peekSource;
         this.backgroundController = backgroundController;
         this.coordinator = coordinator;
         this.navigator = navigator;
@@ -203,16 +211,49 @@ public partial class TrackedWindowCollectionViewModel :
 
             if (filterState.IsActive)
             {
-                filterEffects.Apply();
+                peekController.Apply();
             }
             else
             {
-                filterEffects.Clear();
+                peekController.Clear();
             }
 
             windowCollection.Queue(false, false);
         });
     }
+
+    public void Receive(WindowPeekChangedEventArgs message)
+    {
+        dispatcher.Dispatch(() =>
+        {
+            if (coordinator.NavigationTargetPage >= 0 || Environment.TickCount64 < activationPeekSuppressUntilTicks)
+            {
+                return;
+            }
+
+            if (message.IsPeeking)
+            {
+                peekSource.Handle = message.Handle;
+                peekController.Apply();
+            }
+            else if (peekSource.Handle == message.Handle)
+            {
+                peekSource.Handle = default;
+
+                if (filterState.IsActive)
+                {
+                    peekController.Apply();
+                }
+                else
+                {
+                    peekController.Clear();
+                }
+            }
+        });
+    }
+
+    public void Receive(WindowNavigationRequestedEventArgs message) =>
+        dispatcher.Dispatch(() => NavigateToWindowHandle(message.Handle));
 
     [RelayCommand]
     private void ActivateSelected()
@@ -281,6 +322,11 @@ public partial class TrackedWindowCollectionViewModel :
     private void NavigateToWindowHandle(IntPtr handle)
     {
         logger.LogInformation("Navigating to window: {Handle}", handle);
+        peekSource.Handle = default;
+        peekController.Apply();
+
+        activationPeekSuppressUntilTicks = Environment.TickCount64 + ActivationPeekSuppressionMilliseconds;
+
         activatingSelection = true;
         coordinator.NavigateTo(handle);
         activatingSelection = false;
@@ -298,6 +344,8 @@ public partial class TrackedWindowCollectionViewModel :
 
     partial void OnFilterTextChanged(string value)
     {
+        peekSource.Handle = default;
+
         bool wasFilterActive = filterState.IsActive;
 
         filterState.Filter = value;
@@ -314,12 +362,12 @@ public partial class TrackedWindowCollectionViewModel :
 
         if (filterState.IsActive)
         {
-            filterEffects.Apply();
+            peekController.Apply();
             ScrollToMatch();
         }
         else if (coordinator.PageBeforeFilter >= 0 && !activatingSelection)
         {
-            filterEffects.Clear();
+            peekController.Clear();
             ClearWindowFilterStates();
             double targetOffset = coordinator.PageBeforeFilter * (double)ScreenWidth;
             coordinator.NavigationTargetPage = coordinator.PageBeforeFilter;
@@ -331,7 +379,7 @@ public partial class TrackedWindowCollectionViewModel :
         }
         else
         {
-            filterEffects.Clear();
+            peekController.Clear();
             ClearWindowFilterStates();
             coordinator.PageBeforeFilter = -1;
             filterState.ResetSelectionResolved();
@@ -443,7 +491,7 @@ public partial class TrackedWindowCollectionViewModel :
 
             logger.LogInformation("Window added: {Title} ({Handle})", trackedWindow.Title, trackedWindow.Handle);
 
-            windowViewModel = Factory!.Create<TrackedWindowViewModel>(trackedWindow.Handle, (Action<IntPtr>)NavigateToWindowHandle);
+            windowViewModel = Factory!.Create<TrackedWindowViewModel>(trackedWindow.Handle);
 
             trackedWindowCollection.Add(trackedWindow.Handle, windowViewModel);
             Add(windowViewModel);
@@ -484,6 +532,20 @@ public partial class TrackedWindowCollectionViewModel :
             selector.Clear(trackedWindowCollection);
         }
 
+        if (handle == peekSource.Handle)
+        {
+            peekSource.Handle = default;
+
+            if (filterState.IsActive)
+            {
+                peekController.Apply();
+            }
+            else
+            {
+                peekController.Clear();
+            }
+        }
+
         Remove(windowViewModel!);
         trackedWindowCollection.Remove(handle);
 
@@ -515,13 +577,14 @@ public partial class TrackedWindowCollectionViewModel :
 
     private void ResetFilterState()
     {
+        peekSource.Handle = default;
         filterState.Filter = string.Empty;
         filterState.Apply(trackedWindowCollection);
         coordinator.PageBeforeFilter = -1;
         coordinator.NavigationTargetPage = -1;
         filterState.ResetSelectionResolved();
         ClearWindowFilterStates();
-        filterEffects.Clear();
+        peekController.Clear();
 
         if (FilterText != string.Empty)
         {

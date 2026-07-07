@@ -114,12 +114,6 @@ namespace Infinity::Platform::Windows::Native
         lastBridgeResult = result;
     }
 
-    // The three Safe* functions below are the only places in this file that use
-    // __try/__except. MSVC forbids mixing SEH with any C++ objects that require
-    // unwinding in the same function (error C2712), so each of these takes only
-    // POD parameters and declares no locals beyond the return value, keeping them
-    // eligible for SEH regardless of what the rest of the file does.
-
     static HRESULT SafeOpenSharedTarget(OpenSharedTargetFromHandle function, ICompositionPartner* partner, HANDLE handle, IVisualTargetPartner** target)
     {
         __try

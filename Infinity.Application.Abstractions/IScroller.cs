@@ -11,6 +11,8 @@ public interface IScroller :
 
     void OnTick();
 
+    void Reposition();
+
     void Reset();
 
     void ScrollBy(double delta);

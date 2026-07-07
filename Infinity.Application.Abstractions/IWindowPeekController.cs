@@ -1,6 +1,6 @@
 ﻿namespace Infinity.Application.Abstractions;
 
-public interface IWindowFilterEffects
+public interface IWindowPeekController
 {
     void Apply();
 

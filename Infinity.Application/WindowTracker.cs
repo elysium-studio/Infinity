@@ -2,9 +2,6 @@
 using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
-using Microsoft.Extensions.Logging;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Infinity.Application;
 
@@ -14,13 +11,13 @@ public class WindowTracker(IWindowStore repository,
     IWindowAncestorResolver ancestorResolver,
     IWindowRestoreGuard restoreGuard,
     IWindowMoveGuard moveGuard,
+    IWindowConcealer concealer,
     IWindowDragGuard dragGuard,
     IWindowEnumerator enumerator,
     IWindowEventListener listener,
     IPanState state,
     IDispatcher dispatcher,
-    IntPtr handle,
-    ILogger<WindowTracker> logger) :
+    IntPtr handle) :
     IWindowTracker
 {
     private const int SelfHealIntervalMilliseconds = 3000;
@@ -73,19 +70,16 @@ public class WindowTracker(IWindowStore repository,
     {
         if (repository.TryGet(windowHandle, out _))
         {
-            logger.LogDebug("TryRegister: {Handle} skipped, already tracked", windowHandle);
             return;
         }
 
         if (!reader.IsVisible(windowHandle))
         {
-            logger.LogDebug("TryRegister: {Handle} skipped, not visible", windowHandle);
             return;
         }
 
         if (reader.IsMinimised(windowHandle))
         {
-            logger.LogDebug("TryRegister: {Handle} skipped, minimised", windowHandle);
             return;
         }
 
@@ -95,18 +89,15 @@ public class WindowTracker(IWindowStore repository,
 
             if (ancestor == windowHandle || ancestor == IntPtr.Zero)
             {
-                logger.LogDebug("TryRegister: {Handle} skipped, filtered out with no trackable ancestor", windowHandle);
                 return;
             }
 
-            logger.LogDebug("TryRegister: {Handle} filtered, redirecting to ancestor {Ancestor}", windowHandle, ancestor);
             TryRegister(ancestor, windowStackIndexMap);
             return;
         }
 
         if (!reader.TryReadGeometry(windowHandle, out int x, out int y, out int width, out int height))
         {
-            logger.LogWarning("TryRegister: {Handle} skipped, geometry read failed", windowHandle);
             return;
         }
 
@@ -133,61 +124,36 @@ public class WindowTracker(IWindowStore repository,
             LastPlacedY = y,
             ZIndex = zIndex
         });
-
-        logger.LogInformation(isRestore
-            ? "Window restored into tracking: {Handle} canvasX={CanvasX} canvasY={CanvasY} screenX={ScreenX} screenY={ScreenY} lastPlacedX={LastPlacedX} width={Width} height={Height} zIndex={ZIndex}"
-            : "Window registered: {Handle} canvasX={CanvasX} canvasY={CanvasY} screenX={ScreenX} screenY={ScreenY} lastPlacedX={LastPlacedX} width={Width} height={Height} zIndex={ZIndex}",
-            windowHandle, canvasX, y, x, y, lastPlacedX, width, height, zIndex);
     }
 
-    private void HandleWindowCreated(IntPtr windowHandle)
-    {
-        logger.LogDebug("Event: WindowCreated {Handle}", windowHandle);
-        TryRegister(windowHandle);
-    }
+    private void HandleWindowCreated(IntPtr windowHandle) => TryRegister(windowHandle);
 
-    private void HandleWindowShown(IntPtr windowHandle)
-    {
-        logger.LogDebug("Event: WindowShown {Handle}", windowHandle);
-        TryRegister(windowHandle);
-    }
+    private void HandleWindowShown(IntPtr windowHandle) => TryRegister(windowHandle);
 
     private void HandleWindowDestroyed(IntPtr windowHandle)
     {
-        logger.LogDebug("Event: WindowDestroyed {Handle}", windowHandle);
         CancelPendingMinimizeSuspension(windowHandle);
         suspendedCanvasPositions.Remove(windowHandle);
         Unregister(windowHandle);
     }
 
-    private void HandleMinimizeStarted(IntPtr windowHandle)
-    {
-        logger.LogDebug("Event: MinimizeStarted {Handle}", windowHandle);
-        QueueMinimizeSuspension(windowHandle);
-    }
+    private void HandleMinimizeStarted(IntPtr windowHandle) => QueueMinimizeSuspension(windowHandle);
 
     private void HandleMinimizeEnded(IntPtr windowHandle)
     {
-        logger.LogDebug("Event: MinimizeEnded {Handle}", windowHandle);
         CancelPendingMinimizeSuspension(windowHandle);
         TryRegister(windowHandle);
     }
 
-    private void HandleDragEnded(IntPtr windowHandle)
-    {
-        logger.LogDebug("Event: DragEnded {Handle}", windowHandle);
-        HandleWindowMovedExternally(windowHandle);
-    }
+    private void HandleDragEnded(IntPtr windowHandle) => HandleWindowMovedExternally(windowHandle);
 
     private void HandleWindowLocationChanged(IntPtr windowHandle)
     {
         if (moveGuard.IsSystemMove)
         {
-            logger.LogTrace("Event: WindowLocationChanged {Handle} ignored, system move in progress", windowHandle);
             return;
         }
 
-        logger.LogDebug("Event: WindowLocationChanged {Handle}", windowHandle);
         HandleWindowMovedExternally(windowHandle);
     }
 
@@ -263,13 +229,11 @@ public class WindowTracker(IWindowStore repository,
 
         if (!repository.TryGet(windowHandle, out _))
         {
-            logger.LogDebug("Minimize suspension: {Handle} skipped, no longer tracked", windowHandle);
             return;
         }
 
         if (!reader.IsMinimised(windowHandle))
         {
-            logger.LogDebug("Minimize suspension: {Handle} skipped, window was restored before tracking was suspended", windowHandle);
             return;
         }
 
@@ -353,38 +317,37 @@ public class WindowTracker(IWindowStore repository,
     {
         if (!repository.TryGet(windowHandle, out TrackedWindow trackedWindow))
         {
-            logger.LogDebug("SuspendTracking: {Handle} skipped, not tracked", windowHandle);
             return;
         }
 
         suspendedCanvasPositions[windowHandle] = trackedWindow.CanvasX;
-        logger.LogInformation("Window suspended: {Handle} savedCanvasX={CanvasX}", windowHandle, trackedWindow.CanvasX);
         Unregister(windowHandle);
     }
 
     private void HandleWindowMovedExternally(IntPtr windowHandle)
     {
+        if (concealer.IsConcealed(windowHandle))
+        {
+            return;
+        }
+
         if (!repository.TryGet(windowHandle, out TrackedWindow trackedWindow))
         {
-            logger.LogDebug("MovedExternally: {Handle} skipped, not tracked", windowHandle);
             return;
         }
 
         if (restoreGuard.IsRestoring(windowHandle))
         {
-            logger.LogDebug("MovedExternally: {Handle} skipped, restore in progress", windowHandle);
             return;
         }
 
         if (!reader.IsVisible(windowHandle) || reader.IsMinimised(windowHandle))
         {
-            logger.LogDebug("MovedExternally: {Handle} skipped, not visible/minimised (geometry ignored to avoid corrupting CanvasX/CanvasY)", windowHandle);
             return;
         }
 
         if (!reader.TryReadGeometry(windowHandle, out int x, out int y, out int width, out int height))
         {
-            logger.LogWarning("MovedExternally: {Handle} skipped, geometry read failed", windowHandle);
             return;
         }
 
@@ -395,9 +358,6 @@ public class WindowTracker(IWindowStore repository,
 
         int newCanvasX = x + (int)Math.Round(state.Offset);
 
-        logger.LogInformation("MovedExternally: {Handle} oldScreenX={OldX} oldScreenY={OldY} newScreenX={NewX} newScreenY={NewY} oldCanvasX={OldCanvasX} newCanvasX={NewCanvasX}",
-            windowHandle, trackedWindow.LastPlacedX, trackedWindow.LastPlacedY, x, y, trackedWindow.CanvasX, newCanvasX);
-
         trackedWindow.CanvasX = newCanvasX;
         trackedWindow.CanvasY = y;
         trackedWindow.Width = width;
@@ -406,11 +366,7 @@ public class WindowTracker(IWindowStore repository,
         trackedWindow.LastPlacedY = y;
     }
 
-    private void Unregister(IntPtr windowHandle)
-    {
-        logger.LogInformation("Window unregistered: {Handle}", windowHandle);
-        repository.Remove(windowHandle);
-    }
+    private void Unregister(IntPtr windowHandle) => repository.Remove(windowHandle);
 
     private void RefreshWindowStackIndices()
     {
@@ -439,7 +395,6 @@ public class WindowTracker(IWindowStore repository,
     {
         try
         {
-            logger.LogDebug("Self-heal sweep starting, tracked count={TrackedCount}", repository.Count);
 
             List<IntPtr> liveWindows = EnumerateTopLevelWindows();
             HashSet<IntPtr> liveWindowSet = [.. liveWindows];
@@ -455,7 +410,6 @@ public class WindowTracker(IWindowStore repository,
 
             foreach (IntPtr staleHandle in staleHandles)
             {
-                logger.LogWarning("Self-heal: removing stale tracked window no longer present: {Handle}", staleHandle);
                 suspendedCanvasPositions.Remove(staleHandle);
                 CancelPendingMinimizeSuspension(staleHandle);
                 Unregister(staleHandle);
@@ -468,19 +422,9 @@ public class WindowTracker(IWindowStore repository,
             {
                 if (!repository.TryGet(liveWindow, out _))
                 {
-                    logger.LogDebug("Self-heal: attempting to register untracked live window: {Handle}", liveWindow);
                     TryRegister(liveWindow, windowStackIndexMap);
                 }
             }
-
-            int recoveredCount = repository.Count - countBeforeRecovery;
-
-            if (recoveredCount > 0)
-            {
-                logger.LogWarning("Self-heal: recovered {Count} windows that fell out of tracking", recoveredCount);
-            }
-
-            logger.LogDebug("Self-heal sweep finished, tracked count={TrackedCount}", repository.Count);
         }
         finally
         {

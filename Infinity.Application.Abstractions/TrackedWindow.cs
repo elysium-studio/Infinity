@@ -19,4 +19,12 @@ public record TrackedWindow
     public int ZIndex { get; set; }
 
     public string Title { get; set; } = string.Empty;
+
+    public bool IsConcealed { get; set; }
+
+    public void InvalidatePlacement()
+    {
+        LastPlacedX = int.MinValue;
+        LastPlacedY = int.MinValue;
+    }
 }

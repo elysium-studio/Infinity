@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 namespace Infinity.Application;
 
 public class WindowPageCoordinator(IWindowStore store,
-    IPager pager,
     IScroller scroller,
     IWorkspace workspace,
     IWindowActivator activator,

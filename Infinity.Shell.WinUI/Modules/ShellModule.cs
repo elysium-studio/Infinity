@@ -33,21 +33,22 @@ public class ShellModule :
                 provider.GetRequiredService<IWorkspace>(),
                 provider.GetRequiredService<ILogger<Pager>>()))
             .AddSingleton<ITrackedWindowFilter, TrackedWindowFilter>()
-            .AddSingleton<IWindowFilterEffects>(provider => new WindowFadeFilterEffects(provider.GetRequiredService<IWindowStore>(),
-                provider.GetRequiredService<IWindowOpacity>(),
-                provider.GetRequiredService<ITrackedWindowFilter>(),
+            .AddSingleton<WindowPeekSource>()
+            .AddSingleton<IPeekSource>(provider => provider.GetRequiredService<WindowPeekSource>())
+            .AddSingleton<IPeekSource>(provider => new FilterPeekSource(provider.GetRequiredService<IWindowFilterState>()))
+            .AddSingleton<IWindowPeekController>(provider => new WindowPeekController(provider.GetRequiredService<IWindowStore>(),
+                provider.GetServices<IPeekSource>(),
+                provider.GetRequiredService<IWindowConcealer>(),
+                provider.GetRequiredService<IScroller>(),
                 () => provider.GetRequiredService<IOptionsMonitor<Settings>>().CurrentValue.HideFilteredWindows))
             .AddSingleton<ITrackedWindowCollection, TrackedWindowCollection>()
             .AddSingleton<IWindowPageCoordinator>(provider => new WindowPageCoordinator(provider.GetRequiredService<IWindowStore>(),
-                provider.GetRequiredService<IPager>(),
                 provider.GetRequiredService<IScroller>(),
                 provider.GetRequiredService<IWorkspace>(),
                 provider.GetRequiredService<IWindowActivator>(),
                 provider.GetRequiredService<IDispatcher>()))
             .AddSingleton<IWindowFilterState>(provider => new WindowFilterState(provider.GetRequiredService<ITrackedWindowFilter>()))
-            .AddSingleton<IWindowFilterEffectController>(provider => new WindowFilterEffectController(provider.GetServices<IWindowFilterEffects>()))
-            .AddSingleton<IDesktopBackgroundController>(provider => new DesktopBackgroundController(
-                provider.GetRequiredService<IDesktopBackgroundSource>(),
+            .AddSingleton<IDesktopBackgroundController>(provider => new DesktopBackgroundController(provider.GetRequiredService<IDesktopBackgroundSource>(),
                 provider.GetRequiredService<IDispatcher>()))
             .AddSingleton<IWindowSelector>(provider => new WindowSelector(new SelectionPreviewQueue(provider.GetRequiredService<IWindowStack>()),
                 provider.GetRequiredService<IWindowStore>(),
@@ -71,8 +72,7 @@ public class ShellModule :
                 provider.GetRequiredService<IDisposer>(),
                 provider.GetRequiredService<IWindowController>(),
                 provider.GetRequiredService<IWindowPreviewSurface>(),
-                (IntPtr)factoryArgs![0]!,
-                (Action<IntPtr>)factoryArgs[1]!))
+                (IntPtr)factoryArgs![0]!))
             .AddViewFor(ServiceLifetime.Singleton,
                 provider => new PageTintView(provider.GetRequiredService<IMonitorLocator>(),
                     provider.GetRequiredService<ITaskbarLocator>()),
@@ -121,7 +121,8 @@ public class ShellModule :
                     provider.GetRequiredService<ITrackedWindowCollection>(),
                     provider.GetRequiredService<IWindowSelector>(),
                     provider.GetRequiredService<IWindowFilterState>(),
-                    provider.GetRequiredService<IWindowFilterEffectController>(),
+                    provider.GetRequiredService<IWindowPeekController>(),
+                    provider.GetRequiredService<WindowPeekSource>(),
                     provider.GetRequiredService<IDesktopBackgroundController>(),
                     provider.GetRequiredService<IWindowPageCoordinator>(),
                     provider.GetRequiredService<INavigator>(),
