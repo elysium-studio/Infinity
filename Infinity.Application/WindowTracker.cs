@@ -149,7 +149,7 @@ public class WindowTracker(IWindowStore repository,
 
     private void HandleWindowLocationChanged(IntPtr windowHandle)
     {
-        if (moveGuard.IsSystemMove)
+        if (moveGuard.IsSystemMove && windowHandle != dragGuard.DraggingWindow)
         {
             return;
         }
