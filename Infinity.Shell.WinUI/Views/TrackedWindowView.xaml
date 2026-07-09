@@ -14,7 +14,7 @@
             Canvas.Top="{x:Bind ViewModel.Y, Mode=OneWay}"
             Width="{x:Bind ViewModel.Width, Mode=OneWay}"
             Height="{x:Bind ViewModel.Height, Mode=OneWay}"
-            CornerRadius="8"
+            CornerRadius="0"
             FocusVisualPrimaryThickness="0"
             FocusVisualSecondaryThickness="0"
             IsTabStop="False"
@@ -28,9 +28,11 @@
                 Translation="0,0,32">
                 <Border
                     x:Name="ThumbnailFrame"
+                    Margin="4"
+                    Background="Transparent"
                     BorderBrush="{ThemeResource ControlStrokeColorSecondaryBrush}"
                     BorderThickness="1"
-                    CornerRadius="8">
+                    CornerRadius="6">
                     <Border
                         x:Name="ThumbnailHost"
                         Background="Transparent"
@@ -47,7 +49,7 @@
                     x:Name="CloseButton"
                     Width="24"
                     Height="24"
-                    Margin="0,6,6,0"
+                    Margin="0,10,10,0"
                     Padding="0"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
@@ -110,4 +112,4 @@
             </Grid>
         </ItemContainer>
     </Canvas>
-</UserControl>
+</UserControl>  

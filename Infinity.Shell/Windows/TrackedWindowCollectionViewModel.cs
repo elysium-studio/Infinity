@@ -317,7 +317,7 @@ public partial class TrackedWindowCollectionViewModel :
         dispatcher.Dispatch(Refresh);
 
     private void HandleWindowStackRefreshed(object? sender, EventArgs args) =>
-        dispatcher.Dispatch(ReorderWindows);
+        dispatcher.Dispatch(RefreshWindowZIndexes);
 
     private void NavigateToWindowHandle(IntPtr handle)
     {
@@ -455,8 +455,19 @@ public partial class TrackedWindowCollectionViewModel :
             windowViewModel.Title = trackedWindow.Title;
             windowViewModel.IsFiltered = !filterState.IsMatch(windowViewModel.Title);
         }
+    }
 
-        ReorderWindows();
+    private void RefreshWindowZIndexes()
+    {
+        foreach (TrackedWindow trackedWindow in windowCollection.AllTrackedWindows)
+        {
+            if (!trackedWindowCollection.TryGet(trackedWindow.Handle, out ITrackedWindow? windowViewModel))
+            {
+                continue;
+            }
+
+            windowViewModel!.ZIndex = trackedWindow.ZIndex;
+        }
     }
 
     private void SynchroniseWindows()
@@ -555,26 +566,6 @@ public partial class TrackedWindowCollectionViewModel :
         }
     }
 
-    private void ReorderWindows()
-    {
-        List<ITrackedWindow> sorted = [.. this.OrderByDescending(window => window.ZIndex)];
-
-        for (int index = 0; index < sorted.Count; index++)
-        {
-            ITrackedWindow item = sorted[index];
-
-            if (!ReferenceEquals(this[index], item))
-            {
-                int currentIndex = IndexOf(item);
-
-                if (currentIndex >= 0)
-                {
-                    Receive(new MoveTo<ITrackedWindow>(currentIndex, index));
-                }
-            }
-        }
-    }
-
     private void ResetFilterState()
     {
         peekSource.Handle = default;
@@ -618,8 +609,8 @@ public partial class TrackedWindowCollectionViewModel :
     }
 
     [RelayCommand]
-    private void SelectNext() => selector.Step(forward: true, trackedWindowCollection);
+    private void SelectNext() => selector.Step(true, trackedWindowCollection);
 
     [RelayCommand]
-    private void SelectPrevious() => selector.Step(forward: false, trackedWindowCollection);
+    private void SelectPrevious() => selector.Step(false, trackedWindowCollection);
 }
