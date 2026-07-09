@@ -24,6 +24,8 @@ public sealed partial class TrackedWindowView :
     private IWindowPreview? subscribedPreview;
     private bool isLoaded;
     private bool isPreviewTargetQueued;
+    private double lastPreviewWidth;
+    private double lastPreviewHeight;
     private Storyboard? filterStateStoryboard;
 
     public TrackedWindowView()
@@ -53,11 +55,12 @@ public sealed partial class TrackedWindowView :
         {
             ElementCompositionPreview.SetIsTranslationEnabled(ThumbnailGrid, true);
 
-            Visual? thumbnailVisual = GetThumbnailVisual();
-            thumbnailVisual?.CenterPoint = new Vector3((float)(ThumbnailGrid.ActualWidth / 2), (float)(ThumbnailGrid.ActualHeight / 2), 0);
-
             Visual? closeButtonVisual = GetCloseButtonVisual();
-            closeButtonVisual?.Opacity = 0.0f;
+
+            if (closeButtonVisual is not null)
+            {
+                closeButtonVisual.Opacity = 0.0f;
+            }
         }
         catch
         {
@@ -77,23 +80,34 @@ public sealed partial class TrackedWindowView :
     {
         isLoaded = false;
         isPreviewTargetQueued = false;
+        lastPreviewWidth = 0.0;
+        lastPreviewHeight = 0.0;
 
         viewModel = null;
 
-        subscribedViewModel?.PropertyChanged -= HandleViewModelPropertyChanged;
-        subscribedViewModel = null;
+        if (subscribedViewModel is not null)
+        {
+            subscribedViewModel.PropertyChanged -= HandleViewModelPropertyChanged;
+            subscribedViewModel = null;
+        }
 
         UnsubscribeFromPreview();
     }
 
     private void HandleDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {
-        subscribedViewModel?.PropertyChanged -= HandleViewModelPropertyChanged;
-        subscribedViewModel = null;
+        if (subscribedViewModel is not null)
+        {
+            subscribedViewModel.PropertyChanged -= HandleViewModelPropertyChanged;
+            subscribedViewModel = null;
+        }
 
         viewModel = args.NewValue as TrackedWindowViewModel;
 
         SubscribeToPreview(viewModel?.Preview);
+
+        lastPreviewWidth = 0.0;
+        lastPreviewHeight = 0.0;
 
         if (viewModel is not null)
         {
@@ -154,11 +168,8 @@ public sealed partial class TrackedWindowView :
     private void HandleSizeChanged(object sender, SizeChangedEventArgs args) =>
         QueuePreviewTargetUpdate();
 
-    private void HandleThumbnailGridSizeChanged(object sender, SizeChangedEventArgs args)
-    {
-        UpdateThumbnailCenterPoint();
+    private void HandleThumbnailGridSizeChanged(object sender, SizeChangedEventArgs args) =>
         QueuePreviewTargetUpdate();
-    }
 
     private void HandleThumbnailHostSizeChanged(object sender, SizeChangedEventArgs args) =>
         QueuePreviewTargetUpdate();
@@ -166,12 +177,14 @@ public sealed partial class TrackedWindowView :
     private void HandleWindowContainerPointerEntered(object sender, PointerRoutedEventArgs args)
     {
         SetCloseButtonVisible(true);
+        AnimateHoverScale(true);
         viewModel?.BeginPeek();
     }
 
     private void HandleWindowContainerPointerExited(object sender, PointerRoutedEventArgs args)
     {
         SetCloseButtonVisible(false);
+        AnimateHoverScale(false);
         viewModel?.EndPeek();
     }
 
@@ -263,6 +276,11 @@ public sealed partial class TrackedWindowView :
         double width = ThumbnailHost.ActualWidth;
         double height = ThumbnailHost.ActualHeight;
 
+        if (Math.Abs(width - lastPreviewWidth) < 0.5 && Math.Abs(height - lastPreviewHeight) < 0.5)
+        {
+            return;
+        }
+
         for (int attempt = 0; attempt < 2; attempt++)
         {
             if (!ThumbnailProxyManager.TryAttach(preview, ThumbnailHost, out nint proxyHandle))
@@ -275,39 +293,23 @@ public sealed partial class TrackedWindowView :
                 continue;
             }
 
+            lastPreviewWidth = width;
+            lastPreviewHeight = height;
             viewModel!.SetPreviewTarget(proxyHandle, width, height);
             return;
         }
     }
 
-    private void UpdateThumbnailCenterPoint()
+    private Visual? GetContainerVisual()
     {
-        Visual? visual = GetThumbnailVisual();
-
-        if (visual is null)
-        {
-            return;
-        }
-
-        try
-        {
-            visual.CenterPoint = new Vector3((float)(ThumbnailGrid.ActualWidth / 2), (float)(ThumbnailGrid.ActualHeight / 2), 0);
-        }
-        catch
-        {
-        }
-    }
-
-    private Visual? GetThumbnailVisual()
-    {
-        if (!isLoaded || ThumbnailGrid is null)
+        if (!isLoaded || WindowContainer is null)
         {
             return null;
         }
 
         try
         {
-            return ElementCompositionPreview.GetElementVisual(ThumbnailGrid);
+            return ElementCompositionPreview.GetElementVisual(WindowContainer);
         }
         catch
         {
@@ -329,6 +331,37 @@ public sealed partial class TrackedWindowView :
         catch
         {
             return null;
+        }
+    }
+
+    private void AnimateHoverScale(bool entered)
+    {
+        Visual? visual = GetContainerVisual();
+
+        if (visual is null)
+        {
+            return;
+        }
+
+        try
+        {
+            visual.CenterPoint = new Vector3(
+                (float)(WindowContainer.ActualWidth / 2),
+                (float)(WindowContainer.ActualHeight / 2),
+                0);
+
+            visual.StopAnimation("Scale");
+
+            Compositor compositor = visual.Compositor;
+            Vector3KeyFrameAnimation scaleAnimation = compositor.CreateVector3KeyFrameAnimation();
+            float scale = entered ? 1.03f : 1.0f;
+            scaleAnimation.InsertKeyFrame(1.0f, new Vector3(scale, scale, 1.0f));
+            scaleAnimation.Duration = TimeSpan.FromMilliseconds(150);
+
+            visual.StartAnimation("Scale", scaleAnimation);
+        }
+        catch
+        {
         }
     }
 
@@ -354,13 +387,7 @@ public sealed partial class TrackedWindowView :
         try
         {
             visual.StopAnimation("Opacity");
-
-            Compositor compositor = visual.Compositor;
-            ScalarKeyFrameAnimation opacityAnimation = compositor.CreateScalarKeyFrameAnimation();
-            opacityAnimation.InsertKeyFrame(1.0f, visible ? 1.0f : 0.0f);
-            opacityAnimation.Duration = TimeSpan.FromMilliseconds(120);
-
-            visual.StartAnimation("Opacity", opacityAnimation);
+            visual.Opacity = visible ? 1.0f : 0.0f;
         }
         catch
         {

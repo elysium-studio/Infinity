@@ -7,12 +7,17 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Shell;
 
-public partial class TrackedWindowViewModel :
-    ObservableViewModel,
+public partial class TrackedWindowViewModel(IServiceProvider provider,
+    IServiceFactory factory,
+    IMessenger messenger,
+    IDisposer disposer,
+    IWindowController controller,
+    IWindowPreviewSurface windowPreviewSurface,
+    IntPtr handle) :
+    ObservableViewModel(provider, factory, messenger, disposer),
     ITrackedWindow
 {
-    private readonly IWindowPreview? preview;
-    private readonly IWindowController controller;
+    private readonly IWindowPreview? preview = windowPreviewSurface.CreatePreview(handle);
     private IntPtr previewTargetHandle;
     private double previewWidth;
     private double previewHeight;
@@ -48,20 +53,7 @@ public partial class TrackedWindowViewModel :
     [ObservableProperty]
     private int? zIndex;
 
-    public TrackedWindowViewModel(IServiceProvider provider,
-        IServiceFactory factory,
-        IMessenger messenger,
-        IDisposer disposer,
-        IWindowController controller,
-        IWindowPreviewSurface windowPreviewSurface,
-        IntPtr handle) : base(provider, factory, messenger, disposer)
-    {
-        this.controller = controller;
-        preview = windowPreviewSurface.CreatePreview(handle);
-        Handle = handle;
-    }
-
-    public IntPtr Handle { get; }
+    public IntPtr Handle { get; } = handle;
 
     public bool ShouldFadeThumb => IsFiltered;
 
@@ -79,6 +71,13 @@ public partial class TrackedWindowViewModel :
 
     public void SetPreviewTarget(IntPtr sharedTargetHandle, double width, double height)
     {
+        if (previewTargetHandle == sharedTargetHandle &&
+            Math.Abs(previewWidth - width) < 0.5 &&
+            Math.Abs(previewHeight - height) < 0.5)
+        {
+            return;
+        }
+
         previewTargetHandle = sharedTargetHandle;
         previewWidth = width;
         previewHeight = height;
@@ -88,6 +87,12 @@ public partial class TrackedWindowViewModel :
 
     public void SetPreviewPlacement(double x, double y, double width, double height)
     {
+        if (Math.Abs(previewWidth - width) < 0.5 &&
+            Math.Abs(previewHeight - height) < 0.5)
+        {
+            return;
+        }
+
         previewWidth = width;
         previewHeight = height;
 
