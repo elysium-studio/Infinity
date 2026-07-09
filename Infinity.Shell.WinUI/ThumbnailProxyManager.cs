@@ -10,6 +10,8 @@ namespace Infinity.Shell.WinUI;
 
 public static class ThumbnailProxyManager
 {
+    private const float DefaultThumbnailCornerRadius = 8.0f;
+
     public static bool TryAttach(IWindowPreview preview, FrameworkElement host, out nint proxyHandle)
     {
         proxyHandle = 0;
@@ -47,9 +49,14 @@ public static class ThumbnailProxyManager
 
         try
         {
+            float normalizedWidth = NormalizeLength(width);
+            float normalizedHeight = NormalizeLength(height);
+
             handle.Visual.Offset = new Vector3(0.0f, 0.0f, 0.0f);
-            handle.Visual.Size = new Vector2(NormalizeLength(width), NormalizeLength(height));
+            handle.Visual.Size = new Vector2(normalizedWidth, normalizedHeight);
             handle.Visual.Scale = new Vector3(1.0f, 1.0f, 1.0f);
+
+            ApplyClip(handle.Visual, normalizedWidth, normalizedHeight, DefaultThumbnailCornerRadius);
 
             return true;
         }
@@ -70,11 +77,7 @@ public static class ThumbnailProxyManager
         }
     }
 
-    private static bool TryAttachExisting(
-        ThumbnailProxyHandle existingHandle,
-        FrameworkElement host,
-        Compositor compositor,
-        out nint proxyHandle)
+    private static bool TryAttachExisting(ThumbnailProxyHandle existingHandle, FrameworkElement host, Compositor compositor, out nint proxyHandle)
     {
         proxyHandle = 0;
 
@@ -114,11 +117,7 @@ public static class ThumbnailProxyManager
         }
     }
 
-    private static bool TryCreateAndAttach(
-        IWindowPreview preview,
-        FrameworkElement host,
-        Compositor compositor,
-        out nint proxyHandle)
+    private static bool TryCreateAndAttach(IWindowPreview preview, FrameworkElement host, Compositor compositor, out nint proxyHandle)
     {
         proxyHandle = 0;
         ThumbnailProxyHandle? handle = null;
@@ -131,7 +130,8 @@ public static class ThumbnailProxyManager
             visual.Offset = new Vector3(0.0f, 0.0f, 0.0f);
             visual.Size = new Vector2(0.0f, 0.0f);
             visual.Scale = new Vector3(1.0f, 1.0f, 1.0f);
-            visual.Clip = compositor.CreateInsetClip();
+
+            ApplyClip(visual, 0.0f, 0.0f, DefaultThumbnailCornerRadius);
 
             handle = new ThumbnailProxyHandle(proxy, visual);
 
@@ -154,6 +154,41 @@ public static class ThumbnailProxyManager
             SafeDispose(handle);
             proxyHandle = 0;
             return false;
+        }
+    }
+
+    private static void ApplyClip(Visual visual, float width, float height, float cornerRadius)
+    {
+        try
+        {
+            Compositor compositor = visual.Compositor;
+
+            if (width <= 0.0f || height <= 0.0f)
+            {
+                visual.Clip = compositor.CreateInsetClip();
+                return;
+            }
+
+            if (cornerRadius <= 0.0f)
+            {
+                visual.Clip = compositor.CreateInsetClip();
+                return;
+            }
+
+            float normalizedCornerRadius = MathF.Min(
+                cornerRadius,
+                MathF.Min(width, height) / 2.0f);
+
+            CompositionRoundedRectangleGeometry geometry = compositor.CreateRoundedRectangleGeometry();
+            geometry.Offset = new Vector2(0.0f, 0.0f);
+            geometry.Size = new Vector2(width, height);
+            geometry.CornerRadius = new Vector2(normalizedCornerRadius, normalizedCornerRadius);
+
+            CompositionGeometricClip clip = compositor.CreateGeometricClip(geometry);
+            visual.Clip = clip;
+        }
+        catch
+        {
         }
     }
 

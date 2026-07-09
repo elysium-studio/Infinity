@@ -14,7 +14,7 @@
             Canvas.Top="{x:Bind ViewModel.Y, Mode=OneWay}"
             Width="{x:Bind ViewModel.Width, Mode=OneWay}"
             Height="{x:Bind ViewModel.Height, Mode=OneWay}"
-            CornerRadius="0"
+            Background="Transparent"
             FocusVisualPrimaryThickness="0"
             FocusVisualSecondaryThickness="0"
             IsTabStop="False"
@@ -22,17 +22,16 @@
             PointerExited="HandleWindowContainerPointerExited"
             Tapped="{x:Bind ViewModel.Navigate}"
             ToolTipService.ToolTip="{x:Bind ViewModel.Title}">
-            <Grid
-                x:Name="ThumbnailGrid"
-                Shadow="{StaticResource SharedShadow}"
-                Translation="0,0,32">
+            <ItemContainer.Resources>
+                <SolidColorBrush x:Key="ItemContainerPointerOverBackground" Color="Transparent" />
+            </ItemContainer.Resources>
+            <Grid x:Name="ThumbnailGrid">
                 <Border
-                    x:Name="ThumbnailFrame"
-                    Margin="4"
+                    x:Name="ThumbnailShadowHost"
+                    Margin="6"
                     Background="Transparent"
-                    BorderBrush="{ThemeResource ControlStrokeColorSecondaryBrush}"
-                    BorderThickness="1"
-                    CornerRadius="6">
+                    Shadow="{StaticResource SharedShadow}"
+                    Translation="0,0,32">
                     <Border
                         x:Name="ThumbnailHost"
                         Background="Transparent"
@@ -42,14 +41,14 @@
                     x:Name="SelectionBorder"
                     BorderBrush="{ThemeResource AccentAAFillColorDefaultBrush}"
                     BorderThickness="2"
-                    CornerRadius="8"
+                    CornerRadius="{StaticResource OverlayCornerRadius}"
                     IsHitTestVisible="False"
                     Visibility="{x:Bind ToSelectionVisibility(ViewModel.IsSelected), Mode=OneWay}" />
                 <Button
                     x:Name="CloseButton"
                     Width="24"
                     Height="24"
-                    Margin="0,10,10,0"
+                    Margin="0,8,8,0"
                     Padding="0"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
@@ -112,4 +111,4 @@
             </Grid>
         </ItemContainer>
     </Canvas>
-</UserControl>  
+</UserControl>

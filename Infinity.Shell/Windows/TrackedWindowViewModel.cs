@@ -71,9 +71,9 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
 
     public void SetPreviewTarget(IntPtr sharedTargetHandle, double width, double height)
     {
-        if (previewTargetHandle == sharedTargetHandle &&
-            Math.Abs(previewWidth - width) < 0.5 &&
-            Math.Abs(previewHeight - height) < 0.5)
+        if (previewTargetHandle == sharedTargetHandle
+            && Math.Abs(previewWidth - width) < 0.5
+            && Math.Abs(previewHeight - height) < 0.5)
         {
             return;
         }

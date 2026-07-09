@@ -5,7 +5,6 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Media.Animation;
 using System;
 using System.ComponentModel;
 using System.Numerics;
@@ -26,7 +25,6 @@ public sealed partial class TrackedWindowView :
     private bool isPreviewTargetQueued;
     private double lastPreviewWidth;
     private double lastPreviewHeight;
-    private Storyboard? filterStateStoryboard;
 
     public TrackedWindowView()
     {
@@ -38,6 +36,7 @@ public sealed partial class TrackedWindowView :
         SizeChanged += HandleSizeChanged;
 
         ThumbnailGrid.SizeChanged += HandleThumbnailGridSizeChanged;
+        ThumbnailShadowHost.SizeChanged += HandleThumbnailShadowHostSizeChanged;
         ThumbnailHost.SizeChanged += HandleThumbnailHostSizeChanged;
     }
 
@@ -54,6 +53,7 @@ public sealed partial class TrackedWindowView :
         try
         {
             ElementCompositionPreview.SetIsTranslationEnabled(ThumbnailGrid, true);
+            ElementCompositionPreview.SetIsTranslationEnabled(ThumbnailShadowHost, true);
 
             Visual? closeButtonVisual = GetCloseButtonVisual();
 
@@ -169,6 +169,9 @@ public sealed partial class TrackedWindowView :
         QueuePreviewTargetUpdate();
 
     private void HandleThumbnailGridSizeChanged(object sender, SizeChangedEventArgs args) =>
+        QueuePreviewTargetUpdate();
+
+    private void HandleThumbnailShadowHostSizeChanged(object sender, SizeChangedEventArgs args) =>
         QueuePreviewTargetUpdate();
 
     private void HandleThumbnailHostSizeChanged(object sender, SizeChangedEventArgs args) =>
@@ -406,51 +409,13 @@ public sealed partial class TrackedWindowView :
             if (viewModel.IsFiltered)
             {
                 SetCloseButtonVisible(false);
-            }
-
-            filterStateStoryboard?.Stop();
-
-            if (viewModel.IsFiltered)
-            {
-                DoubleAnimation opacityAnimation = new()
-                {
-                    To = 0.0,
-                    Duration = new Duration(TimeSpan.FromMilliseconds(300)),
-                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-                };
-
-                Storyboard.SetTarget(opacityAnimation, this);
-                Storyboard.SetTargetProperty(opacityAnimation, "Opacity");
-
-                filterStateStoryboard = new Storyboard();
-                filterStateStoryboard.Children.Add(opacityAnimation);
-                filterStateStoryboard.Completed += (sender, args) =>
-                {
-                    if (isLoaded && viewModel?.IsFiltered == true)
-                    {
-                        Visibility = Visibility.Collapsed;
-                    }
-                };
-                filterStateStoryboard.Begin();
+                Opacity = 0.0;
+                Visibility = Visibility.Collapsed;
             }
             else
             {
-                Opacity = 0.0;
                 Visibility = Visibility.Visible;
-
-                DoubleAnimation opacityAnimation = new()
-                {
-                    To = 1.0,
-                    Duration = new Duration(TimeSpan.FromMilliseconds(300)),
-                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-                };
-
-                Storyboard.SetTarget(opacityAnimation, this);
-                Storyboard.SetTargetProperty(opacityAnimation, "Opacity");
-
-                filterStateStoryboard = new Storyboard();
-                filterStateStoryboard.Children.Add(opacityAnimation);
-                filterStateStoryboard.Begin();
+                Opacity = 1.0;
             }
         }
         catch
