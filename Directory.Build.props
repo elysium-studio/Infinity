@@ -1,5 +1,5 @@
 <Project>
     <PropertyGroup>
-        <ElysiumBuildPath>$(MSBuildThisFileDirectory)..\Elysium\build\Release</ElysiumBuildPath>
+        <ElysiumVersion>0.1.0-preview.3</ElysiumVersion>
     </PropertyGroup>
 </Project>
