@@ -46,6 +46,9 @@ public partial class TrackedWindowCollectionViewModel :
     private readonly IApplicationLifetime lifetime;
 
     private bool preservePageOnFilterClear;
+    private bool filterSelectionResolved;
+    private string lastActivatedFilterText = string.Empty;
+    private IntPtr lastActivatedHandle;
     private long activationPeekSuppressUntilTicks;
 
     private const int ActivationPeekSuppressionMilliseconds = 300;
@@ -264,11 +267,13 @@ public partial class TrackedWindowCollectionViewModel :
 
         if (filterState.IsActive)
         {
-            filterState.RecordActivation(FilterText, handle);
+            lastActivatedFilterText = FilterText;
+            lastActivatedHandle = handle;
         }
         else
         {
-            filterState.ClearActivation();
+            lastActivatedFilterText = string.Empty;
+            lastActivatedHandle = default;
         }
 
         selector.Clear(trackedWindowCollection);
@@ -322,11 +327,11 @@ public partial class TrackedWindowCollectionViewModel :
         {
             preservePageOnFilterClear = false;
             coordinator.PageBeforeFilter = (int)Math.Round(state.Offset / ScreenWidth);
-            filterState.ResetSelectionResolved();
+            filterSelectionResolved = false;
             Messenger.Send(new FilterChangedEventArgs(true));
         }
 
-        filterState.Apply(trackedWindowCollection);
+        ApplyWindowFilter();
         selector.Clear(trackedWindowCollection);
 
         if (filterState.IsActive)
@@ -351,7 +356,7 @@ public partial class TrackedWindowCollectionViewModel :
             }
 
             coordinator.PageBeforeFilter = -1;
-            filterState.ResetSelectionResolved();
+            filterSelectionResolved = false;
             Messenger.Send(new FilterChangedEventArgs(false));
         }
     }
@@ -543,10 +548,10 @@ public partial class TrackedWindowCollectionViewModel :
         preservePageOnFilterClear = false;
         peekSource.Handle = default;
         filterState.Filter = string.Empty;
-        filterState.Apply(trackedWindowCollection);
+        ApplyWindowFilter();
         coordinator.PageBeforeFilter = -1;
         coordinator.NavigationTargetPage = -1;
-        filterState.ResetSelectionResolved();
+        filterSelectionResolved = false;
         ClearWindowFilterStates();
         peekController.Clear();
 
@@ -561,10 +566,10 @@ public partial class TrackedWindowCollectionViewModel :
     {
         ITrackedWindow? match = null;
 
-        if (!filterState.FilterSelectionResolved &&
-            string.Equals(FilterText, filterState.LastActivatedFilterText, StringComparison.OrdinalIgnoreCase) &&
-            filterState.LastActivatedHandle != default &&
-            trackedWindowCollection.TryGet(filterState.LastActivatedHandle, out ITrackedWindow? lastActivatedWindow) &&
+        if (!filterSelectionResolved &&
+            string.Equals(FilterText, lastActivatedFilterText, StringComparison.OrdinalIgnoreCase) &&
+            lastActivatedHandle != default &&
+            trackedWindowCollection.TryGet(lastActivatedHandle, out ITrackedWindow? lastActivatedWindow) &&
             !lastActivatedWindow!.IsFiltered)
         {
             match = lastActivatedWindow;
@@ -580,9 +585,17 @@ public partial class TrackedWindowCollectionViewModel :
             return;
         }
 
-        filterState.MarkSelectionResolved();
+        filterSelectionResolved = true;
         selector.Select(match);
         coordinator.NavigateToPage(match.Handle);
+    }
+
+    private void ApplyWindowFilter()
+    {
+        foreach (ITrackedWindow window in trackedWindowCollection)
+        {
+            window.IsFiltered = !filterState.IsMatch(window.Title);
+        }
     }
 
     [RelayCommand]

@@ -34,7 +34,7 @@ public class ShellModule :
                 provider.GetRequiredService<IScroller>(),
                 provider.GetRequiredService<IWorkspace>(),
                 provider.GetRequiredService<ILogger<Pager>>()))
-            .AddSingleton<ITrackedWindowFilter, TrackedWindowFilter>()
+            .AddSingleton<IWindowFilterState, TrackedWindowFilter>()
             .AddSingleton<IWindowPeekSource, WindowPeekSource>()
             .AddSingleton<IPeekSource>(provider =>
                 provider.GetRequiredService<IWindowPeekSource>())

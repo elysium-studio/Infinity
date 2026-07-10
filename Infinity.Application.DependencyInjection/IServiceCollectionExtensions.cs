@@ -59,7 +59,6 @@ public static class IServiceCollectionExtensions
                     provider.GetRequiredService<ILogger<Scroller>>());
             });
 
-            services.AddSingleton<IWindowFilterState, WindowFilterState>();
             services.AddSingleton<IWindowPageCoordinator, WindowPageCoordinator>();
             services.AddSingleton<ISelectionPreviewQueue, SelectionPreviewQueue>();
             services.AddSingleton<IWindowSelector, WindowSelector>();
