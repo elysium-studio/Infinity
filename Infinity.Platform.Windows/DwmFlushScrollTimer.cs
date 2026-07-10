@@ -1,4 +1,5 @@
 using Infinity.Platform.Abstractions;
+using Microsoft.Extensions.Logging;
 using Windows.Win32;
 
 namespace Infinity.Platform.Windows;
@@ -7,6 +8,7 @@ public class DwmFlushScrollTimer :
     IScrollTimer, 
     IDisposable
 {
+    private readonly ILogger<DwmFlushScrollTimer> logger;
     private readonly Lock lifecycleLock = new();
     private readonly Thread thread;
     private readonly ManualResetEventSlim activeEvent = new(false);
@@ -15,8 +17,9 @@ public class DwmFlushScrollTimer :
 
     public event EventHandler? Tick;
 
-    public DwmFlushScrollTimer()
+    public DwmFlushScrollTimer(ILogger<DwmFlushScrollTimer> logger)
     {
+        this.logger = logger;
         thread = new Thread(Run)
         {
             IsBackground = true,
@@ -81,8 +84,16 @@ public class DwmFlushScrollTimer :
                 return;
             }
 
-            PInvoke.DwmFlush();
-            Tick?.Invoke(this, EventArgs.Empty);
+            try
+            {
+                PInvoke.DwmFlush();
+                Tick?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, "Scroll timer callback failed");
+                activeEvent.Reset();
+            }
         }
     }
 }
