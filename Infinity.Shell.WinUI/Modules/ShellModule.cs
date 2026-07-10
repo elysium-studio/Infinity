@@ -59,7 +59,8 @@ public class ShellModule :
                 provider.GetRequiredService<IDesktopBackgroundSource>(),
                 provider.GetRequiredService<IDispatcher>()))
             .AddSingleton<IWindowSelector>(provider => new WindowSelector(
-                new SelectionPreviewQueue(provider.GetRequiredService<IWindowStack>()),
+                new SelectionPreviewQueue(provider.GetRequiredService<IWindowStack>(),
+                    provider.GetRequiredService<ILogger<SelectionPreviewQueue>>()),
                 provider.GetRequiredService<IWindowStore>(),
                 provider.GetRequiredService<IPager>(),
                 provider.GetRequiredService<IWorkspace>()))
