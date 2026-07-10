@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -294,7 +295,7 @@ public partial class WindowPreviewGridDebugWindow :
         return candidates;
     }
 
-    private static bool TryCreateWindowCandidate(nint windowHandle, nint ownerWindowHandle, out WindowCandidate? candidate)
+    private static bool TryCreateWindowCandidate(nint windowHandle, nint ownerWindowHandle, [NotNullWhen(true)] out WindowCandidate? candidate)
     {
         candidate = null;
 
