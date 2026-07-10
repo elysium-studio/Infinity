@@ -12,8 +12,11 @@ public class DwmWindowPreviewSurface :
 
     private readonly Dictionary<nint, DwmWindowPreview> previews = [];
     private readonly Lock syncLock = new();
+    private DwmThumbnailVisualItem[] renderItems = [];
+    private DwmWindowPreview?[] renderedPreviews = [];
 
     private bool isDisposed;
+    private bool? bridgeAvailable;
     private nint ownerWindowHandle;
     public bool IsAvailable
     {
@@ -308,11 +311,11 @@ public class DwmWindowPreviewSurface :
         }
     }
 
-    private static bool TryRenderBatch(nint ownerWindowHandle, DwmThumbnailVisualItem[] items)
+    private static bool TryRenderBatch(nint ownerWindowHandle, DwmThumbnailVisualItem[] items, int count)
     {
         try
         {
-            return DwmThumbnailVisual_RenderBatch(ownerWindowHandle, items, items.Length) == 0;
+            return DwmThumbnailVisual_RenderBatch(ownerWindowHandle, items, count) == 0;
         }
         catch (DllNotFoundException)
         {
@@ -331,13 +334,13 @@ public class DwmWindowPreviewSurface :
             return false;
         }
 
-        if (!TryIsAvailable())
+        if ((bridgeAvailable ??= TryIsAvailable()) is false)
         {
             return false;
         }
 
-        List<DwmThumbnailVisualItem> items = [];
-        List<DwmWindowPreview> includedPreviews = [];
+        EnsureRenderCapacity(previews.Count);
+        int itemCount = 0;
 
         foreach (DwmWindowPreview preview in previews.Values)
         {
@@ -346,28 +349,40 @@ public class DwmWindowPreviewSurface :
                 continue;
             }
 
-            items.Add(new DwmThumbnailVisualItem
+            renderItems[itemCount] = new DwmThumbnailVisualItem
             {
                 SourceWindowHandle = preview.WindowHandle,
                 SharedTargetHandle = preview.SharedTargetHandle,
                 Width = Math.Max(1, (int)Math.Round(preview.Width)),
                 Height = Math.Max(1, (int)Math.Round(preview.Height))
-            });
-
-            includedPreviews.Add(preview);
+            };
+            renderedPreviews[itemCount] = preview;
+            itemCount++;
         }
 
-        DwmThumbnailVisualItem[] itemsArray = [.. items];
+        bool result = TryRenderBatch(ownerWindowHandle, renderItems, itemCount);
 
-        bool result = TryRenderBatch(ownerWindowHandle, itemsArray);
-
-        for (int index = 0; index < itemsArray.Length; index++)
+        for (int index = 0; index < itemCount; index++)
         {
-            bool itemSucceeded = itemsArray[index].ResultHResult == 0;
-            includedPreviews[index].ReportRenderResult(itemSucceeded, itemsArray[index].ResultHResult);
+            bool itemSucceeded = renderItems[index].ResultHResult == 0;
+            renderedPreviews[index]!.ReportRenderResult(itemSucceeded, renderItems[index].ResultHResult);
+            renderedPreviews[index] = null;
+            renderItems[index] = default;
         }
 
         return result;
+    }
+
+    private void EnsureRenderCapacity(int count)
+    {
+        if (renderItems.Length >= count)
+        {
+            return;
+        }
+
+        int capacity = Math.Max(count, Math.Max(4, renderItems.Length * 2));
+        Array.Resize(ref renderItems, capacity);
+        Array.Resize(ref renderedPreviews, capacity);
     }
     [StructLayout(LayoutKind.Sequential)]
     private struct DwmThumbnailVisualItem

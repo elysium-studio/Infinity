@@ -14,6 +14,7 @@ public class PageGestureSource(IKeyboardInputSource keyboardInputSource,
     private readonly HashSet<int> triggerKeys = gestures.SelectMany(gesture => gesture.TriggerKeys).ToHashSet();
     private readonly HashSet<int> activeTriggerKeys = [];
     private bool sessionActive;
+    private bool isStarted;
 
     public event Action? SessionStarted;
 
@@ -21,6 +22,12 @@ public class PageGestureSource(IKeyboardInputSource keyboardInputSource,
 
     public void Start()
     {
+        if (isStarted)
+        {
+            return;
+        }
+
+        isStarted = true;
         keyboardInputSource.KeyDown += HandleKeyDown;
         keyboardInputSource.KeyUp += HandleKeyUp;
         modifierKeyState.StateChanged += HandleModifierStateChanged;
@@ -28,6 +35,12 @@ public class PageGestureSource(IKeyboardInputSource keyboardInputSource,
 
     public void Stop()
     {
+        if (!isStarted)
+        {
+            return;
+        }
+
+        isStarted = false;
         keyboardInputSource.KeyDown -= HandleKeyDown;
         keyboardInputSource.KeyUp -= HandleKeyUp;
         modifierKeyState.StateChanged -= HandleModifierStateChanged;

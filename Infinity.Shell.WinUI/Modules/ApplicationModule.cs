@@ -26,6 +26,12 @@ public class ApplicationModule(string applicationData,
             })
             .AddSingleton(new AppEnvironment(applicationData))
             .AddSingleton<IStartupManager>(new StartupManager(Environment.ProcessPath ?? string.Empty, "InfinityDesktop", "InfinityDesktop"))
-            .AddSingleton<IDispatcher>(new Dispatcher(args => dispatcherQueue.TryEnqueue(() => args())));
+            .AddSingleton<IDispatcher>(new Dispatcher(args =>
+            {
+                if (!dispatcherQueue.TryEnqueue(() => args()))
+                {
+                    throw new InvalidOperationException("The UI dispatcher queue rejected the operation.");
+                }
+            }));
     }
 }

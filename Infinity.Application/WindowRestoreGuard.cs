@@ -1,17 +1,43 @@
 ﻿using Infinity.Application.Abstractions;
 
+using System.Diagnostics;
+
 namespace Infinity.Application;
 
 public class WindowRestoreGuard :
     IWindowRestoreGuard
 {
-    private readonly HashSet<IntPtr> restoringWindows = [];
+    private static readonly long RestoreWindowDurationTicks = Stopwatch.Frequency / 2;
 
-    public bool IsRestoring(IntPtr windowHandle) => restoringWindows.Contains(windowHandle);
+    private readonly Lock syncRoot = new();
+    private readonly Dictionary<IntPtr, long> restoringWindows = [];
+
+    public bool IsRestoring(IntPtr windowHandle)
+    {
+        lock (syncRoot)
+        {
+            if (!restoringWindows.TryGetValue(windowHandle, out long expiresAt))
+            {
+                return false;
+            }
+
+            if (Stopwatch.GetTimestamp() < expiresAt)
+            {
+                return true;
+            }
+
+            restoringWindows.Remove(windowHandle);
+            return false;
+        }
+    }
 
     public void MarkRestoring(IntPtr windowHandle)
     {
-        restoringWindows.Add(windowHandle);
-        Task.Delay(500).ContinueWith(_ => restoringWindows.Remove(windowHandle));
+        long expiresAt = Stopwatch.GetTimestamp() + RestoreWindowDurationTicks;
+
+        lock (syncRoot)
+        {
+            restoringWindows[windowHandle] = expiresAt;
+        }
     }
 }

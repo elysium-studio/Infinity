@@ -23,6 +23,7 @@ public sealed partial class TrackedWindowView :
     private IWindowPreview? subscribedPreview;
     private bool isLoaded;
     private bool isPreviewTargetQueued;
+    private int previewUpdateGeneration;
     private double lastPreviewWidth;
     private double lastPreviewHeight;
 
@@ -79,6 +80,7 @@ public sealed partial class TrackedWindowView :
     private void HandleUnloaded(object sender, RoutedEventArgs args)
     {
         isLoaded = false;
+        previewUpdateGeneration++;
         isPreviewTargetQueued = false;
         lastPreviewWidth = 0.0;
         lastPreviewHeight = 0.0;
@@ -96,6 +98,9 @@ public sealed partial class TrackedWindowView :
 
     private void HandleDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {
+        previewUpdateGeneration++;
+        isPreviewTargetQueued = false;
+
         if (subscribedViewModel is not null)
         {
             subscribedViewModel.PropertyChanged -= HandleViewModelPropertyChanged;
@@ -253,9 +258,15 @@ public sealed partial class TrackedWindowView :
         }
 
         isPreviewTargetQueued = true;
+        int generation = previewUpdateGeneration;
 
-        DispatcherQueue.TryEnqueue(() =>
+        bool enqueued = DispatcherQueue.TryEnqueue(() =>
         {
+            if (generation != previewUpdateGeneration)
+            {
+                return;
+            }
+
             isPreviewTargetQueued = false;
 
             if (!isLoaded)
@@ -265,6 +276,11 @@ public sealed partial class TrackedWindowView :
 
             UpdatePreviewTarget();
         });
+
+        if (!enqueued && generation == previewUpdateGeneration)
+        {
+            isPreviewTargetQueued = false;
+        }
     }
 
     private void UpdatePreviewTarget()
