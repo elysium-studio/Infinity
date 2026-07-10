@@ -40,7 +40,7 @@ public class SystemVisualProxyVisualPrivate :
             ThrowIfFailed(DllGetActivationFactory(classId, out factory));
 
             Guid staticsId = SystemVisualProxyVisualPrivateStaticsId;
-            ThrowIfFailed(Marshal.QueryInterface(factory, ref staticsId, out statics));
+            ThrowIfFailed(Marshal.QueryInterface(factory, in staticsId, out statics));
 
             compositorReference = ((IWinRTObject)compositor).NativeObject;
 
@@ -48,7 +48,7 @@ public class SystemVisualProxyVisualPrivate :
             ThrowIfFailed(createProxy(statics, compositorReference.ThisPtr, out proxyUnknown));
 
             Guid visualId = VisualId;
-            ThrowIfFailed(Marshal.QueryInterface(proxyUnknown, ref visualId, out proxyVisual));
+            ThrowIfFailed(Marshal.QueryInterface(proxyUnknown, in visualId, out proxyVisual));
 
             Visual visual = Visual.FromAbi(proxyVisual);
             nint handle = GetHandle(proxyUnknown);
@@ -106,7 +106,7 @@ public class SystemVisualProxyVisualPrivate :
         try
         {
             Guid interopId = SystemVisualProxyVisualPrivateInteropId;
-            ThrowIfFailed(Marshal.QueryInterface(proxyUnknown, ref interopId, out interop));
+            ThrowIfFailed(Marshal.QueryInterface(proxyUnknown, in interopId, out interop));
 
             GetHandleDelegate getHandle = GetDelegate<GetHandleDelegate>(interop, 3);
             ThrowIfFailed(getHandle(interop, out nint handle));
