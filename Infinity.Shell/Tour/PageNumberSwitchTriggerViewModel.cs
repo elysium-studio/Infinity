@@ -27,11 +27,9 @@ public partial class PageNumberSwitchTriggerViewModel(IServiceProvider provider,
 
     public bool CanGoNext => false;
 
-    protected override void OnActivated()
-    {
-        ApplyModifiers(settings.ScrollModifierKeys);
-        base.OnActivated();
-    }
+    public override void Activated() => ApplyModifiers(settings.ScrollModifierKeys);
+
+    protected override void RegisterMessages() => Messenger.Register<OptionsChangedEventArgs<Settings>>(this);
 
     public void Receive(OptionsChangedEventArgs<Settings> message) => ApplyModifiers(message.Options.ScrollModifierKeys);
 
