@@ -7,9 +7,11 @@ public class DwmFlushScrollTimer :
     IScrollTimer, 
     IDisposable
 {
+    private readonly Lock lifecycleLock = new();
     private readonly Thread thread;
     private readonly ManualResetEventSlim activeEvent = new(false);
     private volatile bool running = true;
+    private bool disposed;
 
     public event EventHandler? Tick;
 
@@ -24,14 +26,46 @@ public class DwmFlushScrollTimer :
         thread.Start();
     }
 
-    public void Start() => activeEvent.Set();
+    public void Start()
+    {
+        lock (lifecycleLock)
+        {
+            ObjectDisposedException.ThrowIf(disposed, this);
+            activeEvent.Set();
+        }
+    }
 
-    public void Stop() => activeEvent.Reset();
+    public void Stop()
+    {
+        lock (lifecycleLock)
+        {
+            if (!disposed)
+            {
+                activeEvent.Reset();
+            }
+        }
+    }
 
     public void Dispose()
     {
-        running = false;
-        activeEvent.Set();
+        lock (lifecycleLock)
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            disposed = true;
+            running = false;
+            activeEvent.Set();
+        }
+
+        if (Thread.CurrentThread != thread)
+        {
+            thread.Join();
+        }
+
+        activeEvent.Dispose();
     }
 
     private void Run()
