@@ -78,8 +78,6 @@ public unsafe class WindowMover :
         pendingMoves.Clear();
     }
 
-    public void Flush() { }
-
     private void FallBackToIndividualMoves(HWND failedHwnd, int failedX, int failedY, int failedWidth, int failedHeight)
     {
         deferWindowPosHandle = default;

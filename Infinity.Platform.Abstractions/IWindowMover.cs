@@ -7,6 +7,4 @@ public interface IWindowMover
     void MoveTo(IntPtr windowHandle, int x, int y, int width, int height);
 
     void EndBatch();
-
-    void Flush();
 }
