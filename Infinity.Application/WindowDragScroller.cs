@@ -1,10 +1,8 @@
 ﻿using Elysium.Platform.Abstractions;
+using Elysium.Application.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
-using System.Runtime.InteropServices;
-
-using Elysium.Application.Abstractions;
 
 namespace Infinity.Application;
 
@@ -27,8 +25,6 @@ public class WindowDragScroller(IPointerInputSource pointer,
     private const double VelocityScale = 0.3;
     private const double DepthScale = 0.7;
     private const int VelocitySampleCount = 5;
-    private const int VirtualKeyLeftButton = 0x01;
-    private const int VirtualKeyRightButton = 0x02;
 
     private readonly record struct CursorSample(int X, long TimestampMs);
 
@@ -63,15 +59,6 @@ public class WindowDragScroller(IPointerInputSource pointer,
             }
         }
     }
-
-    [DllImport("user32.dll")]
-    private static extern short GetAsyncKeyState(int virtualKeyCode);
-
-    private static bool IsMouseButtonDown() =>
-        IsKeyDown(VirtualKeyLeftButton) || IsKeyDown(VirtualKeyRightButton);
-
-    private static bool IsKeyDown(int virtualKeyCode) =>
-        (GetAsyncKeyState(virtualKeyCode) & 0x8000) != 0;
 
     private static double GetSpeedMultiplier(DragScrollSpeed speed) => speed switch
     {
@@ -170,7 +157,7 @@ public class WindowDragScroller(IPointerInputSource pointer,
 
         isDragging = true;
 
-        logger.LogDebug("Drag started. IsAnyDragging={IsAnyDragging}, IsModifierActive={IsModifierActive}, MouseDown={MouseDown}", dragGuard.IsAnyDragging, modifierKeyState.IsActive, IsMouseButtonDown());
+        logger.LogDebug("Drag started. IsAnyDragging={IsAnyDragging}, IsModifierActive={IsModifierActive}", dragGuard.IsAnyDragging, modifierKeyState.IsActive);
 
         DragStarted?.Invoke();
     }
@@ -184,7 +171,7 @@ public class WindowDragScroller(IPointerInputSource pointer,
 
         isDragging = false;
 
-        logger.LogDebug("Drag stopped. IsAnyDragging={IsAnyDragging}, IsModifierActive={IsModifierActive}, MouseDown={MouseDown}", dragGuard.IsAnyDragging, modifierKeyState.IsActive, IsMouseButtonDown());
+        logger.LogDebug("Drag stopped. IsAnyDragging={IsAnyDragging}, IsModifierActive={IsModifierActive}", dragGuard.IsAnyDragging, modifierKeyState.IsActive);
 
         DragStopped?.Invoke();
     }
