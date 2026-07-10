@@ -47,10 +47,8 @@ public class UpdateModule :
                         {
                             dispatcherQueue.TryEnqueue(async () =>
                             {
-                                if (controller.ApplyAndRestart())
-                                {
-                                    await provider.GetRequiredService<IApplicationLifetime>().ExitAsync();
-                                }
+                                controller.ApplyOnExit();
+                                await provider.GetRequiredService<IApplicationLifetime>().ExitAsync();
                             });
                         }
                     });

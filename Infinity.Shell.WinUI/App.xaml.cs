@@ -18,6 +18,9 @@ namespace Infinity.Shell.WinUI;
 
 public partial class App
 {
+    private const string RestartForUpdateArgument = "update=restart";
+    private const string DismissUpdateArgument = "update=dismiss";
+
     private IHost? host;
 
     public App() => InitializeComponent();
@@ -63,6 +66,15 @@ public partial class App
 
         host.Start();
 
+        ToastContent content = new ToastBuilder()
+            .AddText("Update ready")
+            .AddText("Infinity update test.")
+            .AddText("Restart to finish updating.")
+            .SetLaunchArgument(RestartForUpdateArgument)
+            .AddButton("Restart", RestartForUpdateArgument)
+            .AddButton("Dismiss", DismissUpdateArgument)
+            .Build();
+
         if (host.Services.GetRequiredService<Settings>() is { ShowHintOnStartup: true })
         {
             if (host.Services.GetRequiredService<INavigator>() is Navigator navigator)
@@ -70,8 +82,5 @@ public partial class App
                 _ = navigator.NavigateAsync("TourWindow");
             }
         }
-
-
-
     }
 }
