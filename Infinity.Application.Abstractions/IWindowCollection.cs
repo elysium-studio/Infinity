@@ -1,6 +1,7 @@
 ﻿namespace Infinity.Application.Abstractions;
 
-public interface IWindowCollection
+public interface IWindowCollection :
+    IWindowCollectionLifetime
 {
     event EventHandler<TrackedWindow> WindowAdded;
 
@@ -19,10 +20,6 @@ public interface IWindowCollection
     IEnumerable<TrackedWindow> AllTrackedWindows { get; }
 
     bool TryGetTrackedWindow(IntPtr handle, out TrackedWindow? trackedWindow);
-
-    void Start();
-
-    void Stop();
 
     void Queue(bool clearFilter, bool refreshWindowStack);
 

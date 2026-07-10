@@ -14,7 +14,7 @@ public class WindowCollection(IWindowStore store,
     IWindowEventListener listener,
     IWorkspace workspace,
     IWindowFilterState filterState,
-    IWindowPageCoordinator coordinator,
+    IForegroundWindowCoordinator coordinator,
     ITrackedWindowCollection trackedWindowCollection,
     IDispatcher dispatcher,
     ILogger<WindowCollection> logger) :

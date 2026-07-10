@@ -34,10 +34,10 @@ public class ShellModule :
                 provider.GetRequiredService<IScroller>(),
                 provider.GetRequiredService<IWorkspace>(),
                 provider.GetRequiredService<ILogger<Pager>>()))
-            .AddSingleton<ITrackedWindowFilter, TrackedWindowFilter>()
-            .AddSingleton<WindowPeekSource>()
+            .AddSingleton<IWindowFilterState, TrackedWindowFilter>()
+            .AddSingleton<IWindowPeekSource, WindowPeekSource>()
             .AddSingleton<IPeekSource>(provider =>
-                provider.GetRequiredService<WindowPeekSource>())
+                provider.GetRequiredService<IWindowPeekSource>())
             .AddSingleton<IPeekSource>(provider =>
                 new FilterPeekSource(provider.GetRequiredService<IWindowFilterState>()))
             .AddSingleton<IWindowPeekController>(provider => new WindowPeekController(
@@ -47,24 +47,10 @@ public class ShellModule :
                 provider.GetRequiredService<IScroller>(),
                 () => provider.GetRequiredService<IOptionsMonitor<Settings>>().CurrentValue.HideFilteredWindows))
             .AddSingleton<ITrackedWindowCollection, TrackedWindowCollection>()
-            .AddSingleton<IWindowPageCoordinator>(provider => new WindowPageCoordinator(
-                provider.GetRequiredService<IWindowStore>(),
-                provider.GetRequiredService<IScroller>(),
-                provider.GetRequiredService<IWorkspace>(),
-                provider.GetRequiredService<IWindowActivator>(),
-                provider.GetRequiredService<IDispatcher>()))
-            .AddSingleton<IWindowFilterState>(provider => new WindowFilterState(
-                provider.GetRequiredService<ITrackedWindowFilter>()))
             .AddSingleton<IDesktopBackgroundController>(provider => new DesktopBackgroundController(
                 provider.GetRequiredService<IDesktopBackgroundSource>(),
                 provider.GetRequiredService<IDispatcher>()))
-            .AddSingleton<IWindowSelector>(provider => new WindowSelector(
-                new SelectionPreviewQueue(provider.GetRequiredService<IWindowStack>(),
-                    provider.GetRequiredService<ILogger<SelectionPreviewQueue>>()),
-                provider.GetRequiredService<IWindowStore>(),
-                provider.GetRequiredService<IPager>(),
-                provider.GetRequiredService<IWorkspace>()))
-            .AddSingleton<IWindowCollection>(provider => new WindowCollection(
+            .AddSingleton<WindowCollection>(provider => new WindowCollection(
                 provider.GetRequiredService<IWindowStore>(),
                 provider.GetRequiredService<IScrollTimer>(),
                 provider.GetRequiredService<IScroller>(),
@@ -73,10 +59,14 @@ public class ShellModule :
                 provider.GetRequiredService<IWindowEventListener>(),
                 provider.GetRequiredService<IWorkspace>(),
                 provider.GetRequiredService<IWindowFilterState>(),
-                provider.GetRequiredService<IWindowPageCoordinator>(),
+                provider.GetRequiredService<IForegroundWindowCoordinator>(),
                 provider.GetRequiredService<ITrackedWindowCollection>(),
                 provider.GetRequiredService<IDispatcher>(),
                 provider.GetRequiredService<ILogger<WindowCollection>>()))
+            .AddSingleton<IWindowCollection>(provider =>
+                provider.GetRequiredService<WindowCollection>())
+            .AddSingleton<IWindowCollectionLifetime>(provider =>
+                provider.GetRequiredService<WindowCollection>())
             .RegisterFactory((provider, factoryArgs) => new TrackedWindowViewModel(
                 provider,
                 provider.GetRequiredService<IServiceFactory>(),
@@ -139,9 +129,9 @@ public class ShellModule :
                     provider.GetRequiredService<IWindowSelector>(),
                     provider.GetRequiredService<IWindowFilterState>(),
                     provider.GetRequiredService<IWindowPeekController>(),
-                    provider.GetRequiredService<WindowPeekSource>(),
+                    provider.GetRequiredService<IWindowPeekSource>(),
                     provider.GetRequiredService<IDesktopBackgroundController>(),
-                    provider.GetRequiredService<IWindowPageCoordinator>(),
+                    provider.GetRequiredService<IWindowNavigationCoordinator>(),
                     provider.GetRequiredService<INavigator>(),
                     provider.GetRequiredService<IOptionsMonitor<Settings>>(),
                     provider.GetRequiredService<IApplicationLifetime>()))

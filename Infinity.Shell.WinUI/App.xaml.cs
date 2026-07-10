@@ -65,10 +65,7 @@ public partial class App
 
         if (host.Services.GetRequiredService<Settings>() is { ShowHintOnStartup: true })
         {
-            if (host.Services.GetRequiredService<INavigator>() is Navigator navigator)
-            {
-                _ = navigator.NavigateAsync("TourWindow");
-            }
+            _ = host.Services.GetRequiredService<INavigator>().NavigateAsync("TourWindow");
         }
     }
 }

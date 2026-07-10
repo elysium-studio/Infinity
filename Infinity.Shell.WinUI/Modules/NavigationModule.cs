@@ -4,7 +4,6 @@ using Elysium.Application.DependencyInjection;
 using Elysium.Presentation;
 using Elysium.Presentation.Abstractions;
 using Elysium.UI.WinUI;
-using Infinity.Application;
 using Infinity.Application.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
@@ -59,7 +58,7 @@ public class NavigationModule :
             .AddKeyedSingleton<INavigationHandler, WindowHandler>(typeof(Window))
             .AddKeyedSingleton<INavigationHandler, ContentDialogHandler>(typeof(ContentDialog))
             .AddKeyedSingleton<INavigationHandler, PopupHandler>(typeof(Popup))
-            .Subscribe<IWindowPageCoordinator>((provider, coordinator) =>
+            .Subscribe<IWindowNavigationCoordinator>((provider, coordinator) =>
             {
                 IMessenger messenger = provider.GetRequiredService<IMessenger>();
 

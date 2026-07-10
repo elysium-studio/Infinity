@@ -3,7 +3,7 @@
 namespace Infinity.Shell;
 
 public class TrackedWindowFilter :
-    ITrackedWindowFilter
+    IWindowFilterState
 {
     public string Filter { get; set; } = string.Empty;
 
@@ -20,8 +20,6 @@ public class TrackedWindowFilter :
 
         return filterWords.All(word => MatchesWord(title, word));
     }
-
-    public bool IsMatch(ITrackedWindow window) => IsMatch(window.Title);
 
     private static bool MatchesWord(string title, string word)
     {
