@@ -22,6 +22,7 @@ public class PagerLifetime(IWindowTracker tracker,
     IScroller coordinator,
     IPanState state,
     IWindowStore repository,
+    IWindowConcealmentRecovery concealmentRecovery,
     IWorkspace workspace,
     IPager pager,
     IWindowCollectionLifetime windowCollection,
@@ -35,6 +36,7 @@ public class PagerLifetime(IWindowTracker tracker,
 
         timer.Tick += HandleScrollTimerTick;
 
+        concealmentRecovery.RecoverStrandedWindows();
         enumerator.EnumerateVisible(windowHandle => tracker.TryRegister(windowHandle));
 
         TrackedWindow? fullyOffscreenWindow = repository
