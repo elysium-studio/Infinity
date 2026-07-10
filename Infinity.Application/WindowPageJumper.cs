@@ -17,9 +17,16 @@ public class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
 {
     private const int VirtualKeyRight = 0x27;
     private const int VirtualKey0 = 0x30;
+    private bool isStarted;
 
     public void Start()
     {
+        if (isStarted)
+        {
+            return;
+        }
+
+        isStarted = true;
         arrowSwitch.Invoked += HandleArrowSwitchGesture;
         arrowMove.Invoked += HandleArrowMoveGesture;
         numberSwitch.Invoked += HandleNumberSwitchGesture;
@@ -28,6 +35,12 @@ public class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
 
     public void Stop()
     {
+        if (!isStarted)
+        {
+            return;
+        }
+
+        isStarted = false;
         arrowSwitch.Invoked -= HandleArrowSwitchGesture;
         arrowMove.Invoked -= HandleArrowMoveGesture;
         numberSwitch.Invoked -= HandleNumberSwitchGesture;

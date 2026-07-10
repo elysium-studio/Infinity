@@ -37,6 +37,7 @@ public class Scroller(IPanState state,
     private double springPosition;
     private double springVelocity;
     private bool isSpinging;
+    private bool isStarted;
 
     private WindowMoveScope? activeMoveScope;
     private Timer? moveGuardReleaseTimer;
@@ -175,6 +176,12 @@ public class Scroller(IPanState state,
 
     public void Start()
     {
+        if (isStarted)
+        {
+            return;
+        }
+
+        isStarted = true;
         source.ScrollDeltaReceived += HandleScrollDeltaReceived;
         source.ScrollVelocityIdle += HandleScrollVelocityIdle;
         dragGuard.HoldStarted += HandleHoldStarted;
@@ -182,6 +189,12 @@ public class Scroller(IPanState state,
 
     public void Stop()
     {
+        if (!isStarted)
+        {
+            return;
+        }
+
+        isStarted = false;
         source.ScrollDeltaReceived -= HandleScrollDeltaReceived;
         source.ScrollVelocityIdle -= HandleScrollVelocityIdle;
         dragGuard.HoldStarted -= HandleHoldStarted;

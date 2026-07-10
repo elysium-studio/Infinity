@@ -14,6 +14,7 @@ public class Pager(IWindowStore repository,
     private int lastPage;
 
     private int? maxPages;
+    private bool isStarted;
 
     public event Action<int>? PageChanged;
 
@@ -60,6 +61,12 @@ public class Pager(IWindowStore repository,
 
     public void Start()
     {
+        if (isStarted)
+        {
+            return;
+        }
+
+        isStarted = true;
         logger.LogInformation("Pager started");
         lastPage = CurrentPage;
         state.OffsetChanged += HandleOffsetChanged;
@@ -67,6 +74,12 @@ public class Pager(IWindowStore repository,
 
     public void Stop()
     {
+        if (!isStarted)
+        {
+            return;
+        }
+
+        isStarted = false;
         logger.LogInformation("Pager stopped");
         state.OffsetChanged -= HandleOffsetChanged;
     }

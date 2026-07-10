@@ -8,12 +8,20 @@ public class ModifiedScrollInput(IPointerInputSource pointer,
     IModifierKeyState modifierKeyState) : 
     IScrollInputSource
 {
+    private bool isStarted;
+
     public event Action<int>? ScrollDeltaReceived;
     public event Action<double>? ScrollVelocityIdle;
     public event Action? MiddleButtonClicked;
 
     public void Start()
     {
+        if (isStarted)
+        {
+            return;
+        }
+
+        isStarted = true;
         pointer.ScrollDeltaReceived += HandleScrollDelta;
         pointer.ScrollVelocityIdle += HandleScrollVelocityIdle;
         pointer.MiddleButtonClicked += HandleMiddleButtonClicked;
@@ -21,6 +29,12 @@ public class ModifiedScrollInput(IPointerInputSource pointer,
 
     public void Stop()
     {
+        if (!isStarted)
+        {
+            return;
+        }
+
+        isStarted = false;
         pointer.ScrollDeltaReceived -= HandleScrollDelta;
         pointer.ScrollVelocityIdle -= HandleScrollVelocityIdle;
         pointer.MiddleButtonClicked -= HandleMiddleButtonClicked;
