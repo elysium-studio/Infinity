@@ -59,7 +59,7 @@ public class ShellModule :
                 provider.GetRequiredService<IWindowEventListener>(),
                 provider.GetRequiredService<IWorkspace>(),
                 provider.GetRequiredService<IWindowFilterState>(),
-                provider.GetRequiredService<IWindowPageCoordinator>(),
+                provider.GetRequiredService<IForegroundWindowCoordinator>(),
                 provider.GetRequiredService<ITrackedWindowCollection>(),
                 provider.GetRequiredService<IDispatcher>(),
                 provider.GetRequiredService<ILogger<WindowCollection>>()))
@@ -127,7 +127,7 @@ public class ShellModule :
                     provider.GetRequiredService<IWindowPeekController>(),
                     provider.GetRequiredService<IWindowPeekSource>(),
                     provider.GetRequiredService<IDesktopBackgroundController>(),
-                    provider.GetRequiredService<IWindowPageCoordinator>(),
+                    provider.GetRequiredService<IWindowNavigationCoordinator>(),
                     provider.GetRequiredService<INavigator>(),
                     provider.GetRequiredService<IOptionsMonitor<Settings>>(),
                     provider.GetRequiredService<IApplicationLifetime>()))

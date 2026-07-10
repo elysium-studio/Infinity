@@ -58,7 +58,7 @@ public class NavigationModule :
             .AddKeyedSingleton<INavigationHandler, WindowHandler>(typeof(Window))
             .AddKeyedSingleton<INavigationHandler, ContentDialogHandler>(typeof(ContentDialog))
             .AddKeyedSingleton<INavigationHandler, PopupHandler>(typeof(Popup))
-            .Subscribe<IWindowPageCoordinator>((provider, coordinator) =>
+            .Subscribe<IWindowNavigationCoordinator>((provider, coordinator) =>
             {
                 IMessenger messenger = provider.GetRequiredService<IMessenger>();
 

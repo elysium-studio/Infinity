@@ -40,7 +40,7 @@ public partial class TrackedWindowCollectionViewModel :
     private readonly IWindowPeekController peekController;
     private readonly IWindowPeekSource peekSource;
     private readonly IDesktopBackgroundController backgroundController;
-    private readonly IWindowPageCoordinator coordinator;
+    private readonly IWindowNavigationCoordinator coordinator;
     private readonly INavigator navigator;
     private readonly IOptionsMonitor<Settings> settings;
     private readonly IApplicationLifetime lifetime;
@@ -101,7 +101,7 @@ public partial class TrackedWindowCollectionViewModel :
         IWindowPeekController peekController,
         IWindowPeekSource peekSource,
         IDesktopBackgroundController backgroundController,
-        IWindowPageCoordinator coordinator,
+        IWindowNavigationCoordinator coordinator,
         INavigator navigator,
         IOptionsMonitor<Settings> settings,
         IApplicationLifetime lifetime) : base(provider, factory, messenger, disposer)
