@@ -1,5 +1,6 @@
 using Infinity.Platform.Abstractions;
 using Microsoft.UI.Composition;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
@@ -8,6 +9,7 @@ using Microsoft.UI.Xaml.Media;
 using System;
 using System.ComponentModel;
 using System.Numerics;
+using Windows.UI.ViewManagement;
 
 namespace Infinity.Shell.WinUI;
 
@@ -17,10 +19,14 @@ public sealed partial class TrackedWindowView :
     private const int SelectedZIndex = 1_000_000;
     private const int FilteredTierOffset = -100_000;
     private const int UntrackedOrderRank = -50_000;
+    private static readonly UISettings uiSettings = new();
 
     private TrackedWindowViewModel? viewModel;
     private TrackedWindowViewModel? subscribedViewModel;
     private IWindowPreview? subscribedPreview;
+    private DispatcherQueueTimer? peekTimer;
+    private TrackedWindowViewModel? pendingPeekViewModel;
+    private TrackedWindowViewModel? peekingViewModel;
     private bool isLoaded;
     private bool isPreviewTargetQueued;
     private int previewUpdateGeneration;
@@ -79,6 +85,10 @@ public sealed partial class TrackedWindowView :
 
     private void HandleUnloaded(object sender, RoutedEventArgs args)
     {
+        CancelPendingPeek();
+        EndPeek();
+        DisposePeekTimer();
+
         isLoaded = false;
         previewUpdateGeneration++;
         isPreviewTargetQueued = false;
@@ -98,6 +108,9 @@ public sealed partial class TrackedWindowView :
 
     private void HandleDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {
+        CancelPendingPeek();
+        EndPeek();
+
         previewUpdateGeneration++;
         isPreviewTargetQueued = false;
 
@@ -186,14 +199,83 @@ public sealed partial class TrackedWindowView :
     {
         SetCloseButtonVisible(true);
         AnimateHoverScale(true);
-        viewModel?.BeginPeek();
+        QueuePeek();
     }
 
     private void HandleWindowContainerPointerExited(object sender, PointerRoutedEventArgs args)
     {
         SetCloseButtonVisible(false);
         AnimateHoverScale(false);
-        viewModel?.EndPeek();
+        CancelPendingPeek();
+        EndPeek();
+    }
+
+    private void QueuePeek()
+    {
+        if (!isLoaded ||
+            viewModel is null ||
+            ReferenceEquals(pendingPeekViewModel, viewModel) ||
+            ReferenceEquals(peekingViewModel, viewModel))
+        {
+            return;
+        }
+
+        CancelPendingPeek();
+
+        peekTimer ??= CreatePeekTimer();
+        pendingPeekViewModel = viewModel;
+        peekTimer.Interval = TimeSpan.FromMilliseconds(uiSettings.MouseHoverTime);
+        peekTimer.Start();
+    }
+
+    private DispatcherQueueTimer CreatePeekTimer()
+    {
+        DispatcherQueueTimer timer = DispatcherQueue.CreateTimer();
+        timer.IsRepeating = false;
+        timer.Tick += HandlePeekTimerTick;
+        return timer;
+    }
+
+    private void HandlePeekTimerTick(DispatcherQueueTimer sender, object args)
+    {
+        sender.Stop();
+
+        TrackedWindowViewModel? pendingViewModel = pendingPeekViewModel;
+        pendingPeekViewModel = null;
+
+        if (!isLoaded || pendingViewModel is null || !ReferenceEquals(pendingViewModel, viewModel))
+        {
+            return;
+        }
+
+        EndPeek();
+        peekingViewModel = pendingViewModel;
+        peekingViewModel.BeginPeek();
+    }
+
+    private void CancelPendingPeek()
+    {
+        peekTimer?.Stop();
+        pendingPeekViewModel = null;
+    }
+
+    private void EndPeek()
+    {
+        TrackedWindowViewModel? activeViewModel = peekingViewModel;
+        peekingViewModel = null;
+        activeViewModel?.EndPeek();
+    }
+
+    private void DisposePeekTimer()
+    {
+        if (peekTimer is null)
+        {
+            return;
+        }
+
+        peekTimer.Stop();
+        peekTimer.Tick -= HandlePeekTimerTick;
+        peekTimer = null;
     }
 
     private void HandleCloseButtonPointerEntered(object sender, PointerRoutedEventArgs args) =>
