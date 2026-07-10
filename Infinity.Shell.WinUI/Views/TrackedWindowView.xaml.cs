@@ -13,7 +13,7 @@ using Windows.UI.ViewManagement;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed partial class TrackedWindowView :
+public partial class TrackedWindowView :
     UserControl
 {
     private const int SelectedZIndex = 1_000_000;

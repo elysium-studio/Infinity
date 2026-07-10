@@ -2,7 +2,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed partial class WindowPeekView :
+public partial class WindowPeekView :
     UserControl
 {
     public WindowPeekView() => InitializeComponent();

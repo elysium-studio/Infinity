@@ -34,3 +34,17 @@ When reporting a bug, please include:
 ## Useful links
 
 Website: https://elysiumstud.io
+
+## Development
+
+Infinity consumes pinned Elysium packages from the private Elysium Studio GitHub Packages feed. Before restoring the solution, add credentials to your user-level NuGet configuration:
+
+```powershell
+dotnet nuget add source "https://nuget.pkg.github.com/elysium-studio/index.json" `
+    --name "Elysium Studio" `
+    --username "YOUR_GITHUB_USERNAME" `
+    --password "YOUR_GITHUB_TOKEN" `
+    --store-password-in-clear-text
+```
+
+The token must be a classic personal access token with `read:packages`. Do not add credentials to the repository's `NuGet.config`; it contains only package sources and source mapping.

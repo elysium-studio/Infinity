@@ -41,6 +41,22 @@
 		<PackageReference Include="CommunityToolkit.WinUI.Behaviors" Version="8.3.260402-preview2" />
 		<PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.3.260402-preview2" />
 		<PackageReference Include="CommunityToolkit.WinUI.Triggers" Version="8.3.260402-preview2" />
+		<PackageReference Include="Elysium.Application" Version="$(ElysiumVersion)" />
+		<PackageReference Include="Elysium.Application.Abstractions" Version="$(ElysiumVersion)" />
+		<PackageReference Include="Elysium.Application.DependencyInjection" Version="$(ElysiumVersion)" />
+		<PackageReference Include="Elysium.Licensing" Version="$(ElysiumVersion)" />
+		<PackageReference Include="Elysium.Licensing.Abstractions" Version="$(ElysiumVersion)" />
+		<PackageReference Include="Elysium.Licensing.DependencyInjection" Version="$(ElysiumVersion)" />
+		<PackageReference Include="Elysium.Platform.Abstractions" Version="$(ElysiumVersion)" />
+		<PackageReference Include="Elysium.Platform.Windows" Version="$(ElysiumVersion)" />
+		<PackageReference Include="Elysium.Presentation" Version="$(ElysiumVersion)" />
+		<PackageReference Include="Elysium.Presentation.Abstractions" Version="$(ElysiumVersion)" />
+		<PackageReference Include="Elysium.Presentation.DependencyInjection" Version="$(ElysiumVersion)" />
+		<PackageReference Include="Elysium.UI.Controls.WinUI" Version="$(ElysiumVersion)" />
+		<PackageReference Include="Elysium.UI.WinUI" Version="$(ElysiumVersion)" />
+		<PackageReference Include="Elysium.Updates" Version="$(ElysiumVersion)" />
+		<PackageReference Include="Elysium.Updates.Abstractions" Version="$(ElysiumVersion)" />
+		<PackageReference Include="Elysium.Updates.DependencyInjection" Version="$(ElysiumVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.9" />
 		<PackageReference Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
 		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2270" />
@@ -48,11 +64,6 @@
 		<PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="3.0.1" />
 		<PackageReference Include="Velopack" Version="1.2.0" />
 		<PackageReference Include="WinUIEx" Version="2.9.1" />
-		<PackageDownload Include="System.Reactive" Version="[6.1.0]" />
-		<Reference Include="System.Reactive">
-			<HintPath>$(NuGetPackageRoot)system.reactive\6.1.0\lib\netstandard2.0\System.Reactive.dll</HintPath>
-			<Private>true</Private>
-		</Reference>
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Infinity.Application.DependencyInjection\Infinity.Application.DependencyInjection.csproj" />
@@ -64,56 +75,6 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 		</Content>
-	</ItemGroup>
-	<ItemGroup>
-		<Reference Include="Elysium.Application">
-			<HintPath>$(ElysiumBuildPath)\Elysium.Application.dll</HintPath>
-		</Reference>
-		<Reference Include="Elysium.Application.Abstractions">
-			<HintPath>$(ElysiumBuildPath)\Elysium.Application.Abstractions.dll</HintPath>
-		</Reference>
-		<Reference Include="Elysium.Application.DependencyInjection">
-			<HintPath>$(ElysiumBuildPath)\Elysium.Application.DependencyInjection.dll</HintPath>
-		</Reference>
-		<Reference Include="Elysium.Licensing">
-			<HintPath>$(ElysiumBuildPath)\Elysium.Licensing.dll</HintPath>
-		</Reference>
-		<Reference Include="Elysium.Licensing.Abstractions">
-			<HintPath>$(ElysiumBuildPath)\Elysium.Licensing.Abstractions.dll</HintPath>
-		</Reference>
-		<Reference Include="Elysium.Licensing.DependencyInjection">
-			<HintPath>$(ElysiumBuildPath)\Elysium.Licensing.DependencyInjection.dll</HintPath>
-		</Reference>
-		<Reference Include="Elysium.Platform.Abstractions">
-			<HintPath>$(ElysiumBuildPath)\Elysium.Platform.Abstractions.dll</HintPath>
-		</Reference>
-		<Reference Include="Elysium.Platform.Windows">
-			<HintPath>$(ElysiumBuildPath)\Elysium.Platform.Windows.dll</HintPath>
-		</Reference>
-		<Reference Include="Elysium.Presentation">
-			<HintPath>$(ElysiumBuildPath)\Elysium.Presentation.dll</HintPath>
-		</Reference>
-		<Reference Include="Elysium.Presentation.Abstractions">
-		  <HintPath>$(ElysiumBuildPath)\Elysium.Presentation.Abstractions.dll</HintPath>
-		</Reference>
-		<Reference Include="Elysium.Presentation.DependencyInjection">
-		  <HintPath>$(ElysiumBuildPath)\Elysium.Presentation.DependencyInjection.dll</HintPath>
-		</Reference>
-		<Reference Include="Elysium.UI.Controls.WinUI">
-			<HintPath>$(ElysiumBuildPath)\Elysium.UI.Controls.WinUI.dll</HintPath>
-		</Reference>
-		<Reference Include="Elysium.UI.WinUI">
-			<HintPath>$(ElysiumBuildPath)\Elysium.UI.WinUI.dll</HintPath>
-		</Reference>
-		<Reference Include="Elysium.Updates">
-			<HintPath>$(ElysiumBuildPath)\Elysium.Updates.dll</HintPath>
-		</Reference>
-		<Reference Include="Elysium.Updates.Abstractions">
-			<HintPath>$(ElysiumBuildPath)\Elysium.Updates.Abstractions.dll</HintPath>
-		</Reference>
-		<Reference Include="Elysium.Updates.DependencyInjection">
-			<HintPath>$(ElysiumBuildPath)\Elysium.Updates.DependencyInjection.dll</HintPath>
-		</Reference>
 	</ItemGroup>
 	<Target Name="CopyPriAndXbfToPublish" AfterTargets="Publish">
 		<ItemGroup>
