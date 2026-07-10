@@ -1,9 +1,11 @@
 ﻿using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
+using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public class SelectionPreviewQueue(IWindowStack stack) :
+public class SelectionPreviewQueue(IWindowStack stack,
+    ILogger<SelectionPreviewQueue> logger) :
     ISelectionPreviewQueue
 {
     private readonly object syncRoot = new();
@@ -12,17 +14,14 @@ public class SelectionPreviewQueue(IWindowStack stack) :
 
     public void Queue(IntPtr handle, Func<IntPtr> factory)
     {
-        CancellationTokenSource previous;
         CancellationTokenSource current = new();
 
         lock (syncRoot)
         {
-            previous = cancellation!;
+            cancellation?.Cancel();
             cancellation = current;
             pendingHandle = handle;
         }
-
-        previous?.Cancel();
 
         _ = ProcessAsync(factory, current);
     }
@@ -34,11 +33,10 @@ public class SelectionPreviewQueue(IWindowStack stack) :
         lock (syncRoot)
         {
             current = cancellation;
+            current?.Cancel();
             cancellation = null;
             pendingHandle = default;
         }
-
-        current?.Cancel();
     }
 
     private async Task ProcessAsync(Func<IntPtr> factory, CancellationTokenSource cancellationTokenSource)
@@ -70,6 +68,10 @@ public class SelectionPreviewQueue(IWindowStack stack) :
         }
         catch (OperationCanceledException)
         {
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Selection preview failed");
         }
         finally
         {
