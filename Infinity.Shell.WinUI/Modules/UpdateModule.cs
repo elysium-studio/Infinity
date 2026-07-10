@@ -15,6 +15,7 @@ public class UpdateModule :
 {
     private const string RestartForUpdateArgument = "update=restart";
     private const string DismissUpdateArgument = "update=dismiss";
+
     public void Register(IServiceCollection services)
     {
         DispatcherQueue dispatcherQueue = DispatcherQueue.GetForCurrentThread();
@@ -32,13 +33,15 @@ public class UpdateModule :
             {
                 dispatcherQueue.TryEnqueue(() =>
                 {
+                    IStringLocalizer localizer = provider.GetRequiredService<IStringLocalizer>();
+
                     ToastContent content = new ToastBuilder()
-                        .AddText("Update ready")
-                        .AddText($"Infinity {version} has been downloaded.")
-                        .AddText("Restart to finish updating.")
+                        .AddText(localizer.GetString("UpdateReadyToastTitle"))
+                        .AddText(localizer.GetString("UpdateReadyToastDownloaded", version))
+                        .AddText(localizer.GetString("UpdateReadyToastRestartRequired"))
                         .SetLaunchArgument(RestartForUpdateArgument)
-                        .AddButton("Restart", RestartForUpdateArgument)
-                        .AddButton("Dismiss", DismissUpdateArgument)
+                        .AddButton(localizer.GetString("UpdateReadyToastRestartButton"), RestartForUpdateArgument)
+                        .AddButton(localizer.GetString("UpdateReadyToastDismissButton"), DismissUpdateArgument)
                         .Build();
 
                     provider.GetRequiredService<AppToastNotifier>().Show(content, argument =>
