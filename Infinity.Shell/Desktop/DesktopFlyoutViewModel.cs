@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
 using Elysium.Presentation;
-using Infinity.Application;
 using Infinity.Application.Abstractions;
 using NavigationCompletedEventArgs = Infinity.Application.Abstractions.NavigationCompletedEventArgs;
 using NavigationStartedEventArgs = Infinity.Application.Abstractions.NavigationStartedEventArgs;

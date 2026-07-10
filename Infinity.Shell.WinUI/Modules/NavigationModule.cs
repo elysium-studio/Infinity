@@ -4,7 +4,6 @@ using Elysium.Application.DependencyInjection;
 using Elysium.Presentation;
 using Elysium.Presentation.Abstractions;
 using Elysium.UI.WinUI;
-using Infinity.Application;
 using Infinity.Application.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;

@@ -3,7 +3,7 @@
 namespace Infinity.Application;
 
 public class WindowPeekSource :
-    IPeekSource
+    IWindowPeekSource
 {
     public nint Handle { get; set; }
 

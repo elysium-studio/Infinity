@@ -5,7 +5,6 @@ using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
 using Elysium.Presentation;
 using Elysium.Presentation.Abstractions;
-using Infinity.Application;
 using Infinity.Application.Abstractions;
 using Microsoft.Extensions.Options;
 using NavigationCompletedEventArgs = Infinity.Application.Abstractions.NavigationCompletedEventArgs;
@@ -39,7 +38,7 @@ public partial class TrackedWindowCollectionViewModel :
     private readonly IWindowSelector selector;
     private readonly IWindowFilterState filterState;
     private readonly IWindowPeekController peekController;
-    private readonly WindowPeekSource peekSource;
+    private readonly IWindowPeekSource peekSource;
     private readonly IDesktopBackgroundController backgroundController;
     private readonly IWindowPageCoordinator coordinator;
     private readonly INavigator navigator;
@@ -97,7 +96,7 @@ public partial class TrackedWindowCollectionViewModel :
         IWindowSelector selector,
         IWindowFilterState filterState,
         IWindowPeekController peekController,
-        WindowPeekSource peekSource,
+        IWindowPeekSource peekSource,
         IDesktopBackgroundController backgroundController,
         IWindowPageCoordinator coordinator,
         INavigator navigator,

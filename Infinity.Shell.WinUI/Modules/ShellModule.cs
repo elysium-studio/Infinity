@@ -35,9 +35,9 @@ public class ShellModule :
                 provider.GetRequiredService<IWorkspace>(),
                 provider.GetRequiredService<ILogger<Pager>>()))
             .AddSingleton<ITrackedWindowFilter, TrackedWindowFilter>()
-            .AddSingleton<WindowPeekSource>()
+            .AddSingleton<IWindowPeekSource, WindowPeekSource>()
             .AddSingleton<IPeekSource>(provider =>
-                provider.GetRequiredService<WindowPeekSource>())
+                provider.GetRequiredService<IWindowPeekSource>())
             .AddSingleton<IPeekSource>(provider =>
                 new FilterPeekSource(provider.GetRequiredService<IWindowFilterState>()))
             .AddSingleton<IWindowPeekController>(provider => new WindowPeekController(
@@ -125,7 +125,7 @@ public class ShellModule :
                     provider.GetRequiredService<IWindowSelector>(),
                     provider.GetRequiredService<IWindowFilterState>(),
                     provider.GetRequiredService<IWindowPeekController>(),
-                    provider.GetRequiredService<WindowPeekSource>(),
+                    provider.GetRequiredService<IWindowPeekSource>(),
                     provider.GetRequiredService<IDesktopBackgroundController>(),
                     provider.GetRequiredService<IWindowPageCoordinator>(),
                     provider.GetRequiredService<INavigator>(),
