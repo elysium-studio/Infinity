@@ -4,7 +4,7 @@ using Windows.Graphics;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed partial class AboutWindow :
+public partial class AboutWindow :
     Window
 {
     private const int WindowWidth = 360;

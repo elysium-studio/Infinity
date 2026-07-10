@@ -2,7 +2,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed partial class DesktopView :
+public partial class DesktopView :
     UserControl
 {
     public DesktopView() => InitializeComponent();

@@ -366,7 +366,7 @@ public partial class WindowPreviewGridDebugWindow :
         return result == 0 && cloaked != 0;
     }
 
-    private sealed class WindowCandidate
+    private class WindowCandidate
     {
         public WindowCandidate(nint windowHandle, string title, int width, int height)
         {
@@ -385,7 +385,7 @@ public partial class WindowPreviewGridDebugWindow :
         public int Height { get; }
     }
 
-    private sealed class WindowPreviewItem :
+    private class WindowPreviewItem :
         IDisposable
     {
         public WindowPreviewItem(WindowCandidate candidate, IWindowPreview preview, Border itemBorder, Border thumbnailHost, SystemVisualProxyVisualPrivate thumbnailProxy)
