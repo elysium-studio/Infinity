@@ -40,18 +40,23 @@ public class PagerLifetime(IWindowTracker tracker,
         enumerator.EnumerateVisible(windowHandle => tracker.TryRegister(windowHandle));
 
         TrackedWindow? fullyOffscreenWindow = repository
+            .Where(window => window.CanvasY < workspace.Height &&
+                (long)window.CanvasY + window.Height > 0)
             .Where(window => (long)window.CanvasX + window.Width <= 0)
             .MinBy(window => (long)window.CanvasX + window.Width);
 
         if (fullyOffscreenWindow is not null)
         {
             long rightEdge = (long)fullyOffscreenWindow.CanvasX + fullyOffscreenWindow.Width;
+            long bottomEdge = (long)fullyOffscreenWindow.CanvasY + fullyOffscreenWindow.Height;
             int pageShift = checked((int)(((-rightEdge / workspace.Width) + 1) * workspace.Width));
             logger.LogInformation(
-                "Fully offscreen window detected during startup. Handle={WindowHandle}, Left={WindowLeft}, Right={WindowRight}, PageShift={PageShift}",
+                "Fully offscreen window detected during startup. Handle={WindowHandle}, Left={WindowLeft}, Top={WindowTop}, Right={WindowRight}, Bottom={WindowBottom}, PageShift={PageShift}",
                 fullyOffscreenWindow.Handle,
                 fullyOffscreenWindow.CanvasX,
+                fullyOffscreenWindow.CanvasY,
                 rightEdge,
+                bottomEdge,
                 pageShift);
 
             foreach (TrackedWindow trackedWindow in repository)
