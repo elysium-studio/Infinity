@@ -4,6 +4,8 @@ using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
 
+using Elysium.Application.Abstractions;
+
 namespace Infinity.Application;
 
 public class WindowDragScroller(IPointerInputSource pointer,
@@ -12,6 +14,7 @@ public class WindowDragScroller(IPointerInputSource pointer,
     IWorkspace workspace,
     IScroller scroller,
     IPanState state,
+    IDispatcher dispatcher,
     Func<WindowDragScrollerConfiguration> configurationFactory,
     ILogger<WindowDragScroller> logger) :
     IWindowDragScroller
@@ -30,14 +33,17 @@ public class WindowDragScroller(IPointerInputSource pointer,
     private readonly record struct CursorSample(int X, long TimestampMs);
 
     private readonly CursorSample[] velocitySamples = new CursorSample[VelocitySampleCount];
+    private readonly Lock scrollLock = new();
     private int velocitySampleIndex;
     private int velocitySampleCount;
 
     private CancellationTokenSource? scrollCancellation;
+    private int scrollGeneration;
     private bool atBoundary;
     private long currentScrollAmountBits;
     private volatile int scrollDirection;
     private bool isDragging;
+    private bool isStarted;
 
     public event Action? DragStarted;
 
@@ -47,7 +53,16 @@ public class WindowDragScroller(IPointerInputSource pointer,
 
     public event Action? DragStopped;
 
-    public bool IsAutoScrolling => scrollCancellation is not null;
+    public bool IsAutoScrolling
+    {
+        get
+        {
+            lock (scrollLock)
+            {
+                return scrollCancellation is not null;
+            }
+        }
+    }
 
     [DllImport("user32.dll")]
     private static extern short GetAsyncKeyState(int virtualKeyCode);
@@ -69,12 +84,24 @@ public class WindowDragScroller(IPointerInputSource pointer,
 
     public void Start()
     {
+        if (isStarted)
+        {
+            return;
+        }
+
+        isStarted = true;
         pointer.CursorMoved += HandleCursorMoved;
         modifierKeyState.StateChanged += HandleModifierStateChanged;
     }
 
     public void Stop()
     {
+        if (!isStarted)
+        {
+            return;
+        }
+
+        isStarted = false;
         pointer.CursorMoved -= HandleCursorMoved;
         modifierKeyState.StateChanged -= HandleModifierStateChanged;
         StopDragging();
@@ -174,7 +201,7 @@ public class WindowDragScroller(IPointerInputSource pointer,
         Interlocked.Exchange(ref currentScrollAmountBits, BitConverter.DoubleToInt64Bits(ComputeScrollAmount(distanceFromRight)));
         scrollDirection = 1;
 
-        if (scrollCancellation is null)
+        if (!IsAutoScrolling)
         {
             StartScroll();
         }
@@ -192,7 +219,7 @@ public class WindowDragScroller(IPointerInputSource pointer,
         Interlocked.Exchange(ref currentScrollAmountBits, BitConverter.DoubleToInt64Bits(ComputeScrollAmount(distanceFromLeft)));
         scrollDirection = -1;
 
-        if (scrollCancellation is null)
+        if (!IsAutoScrolling)
         {
             StartScroll();
         }
@@ -255,47 +282,103 @@ public class WindowDragScroller(IPointerInputSource pointer,
 
     private void StartScroll()
     {
-        scrollCancellation = new CancellationTokenSource();
-        CancellationToken token = scrollCancellation.Token;
-
-        _ = Task.Run(async () =>
+        lock (scrollLock)
         {
-            while (!token.IsCancellationRequested)
+            if (scrollCancellation is not null)
             {
-                double amount = BitConverter.Int64BitsToDouble(Interlocked.Read(ref currentScrollAmountBits)) * scrollDirection;
-                double current = state.Offset;
-
-                if (amount > 0 && current >= state.MaxOffset)
-                {
-                    scroller.Reset();
-                    break;
-                }
-
-                if (amount < 0 && current <= state.MinOffset)
-                {
-                    scroller.Reset();
-                    break;
-                }
-
-                double next = Math.Clamp(current + amount, state.MinOffset, state.MaxOffset);
-                scroller.ScrollTo(next, animate: false);
-                DragScrolled?.Invoke();
-
-                await Task.Delay(ScrollIntervalMs, token);
+                return;
             }
-        }, token);
+
+            CancellationTokenSource cancellation = new();
+            int generation = ++scrollGeneration;
+            scrollCancellation = cancellation;
+            _ = RunScrollLoopAsync(generation, cancellation);
+        }
     }
 
     private void CancelScroll()
     {
-        if (scrollCancellation is null)
+        CancellationTokenSource? cancellation;
+
+        lock (scrollLock)
         {
-            return;
+            cancellation = scrollCancellation;
+
+            if (cancellation is null)
+            {
+                return;
+            }
+
+            scrollCancellation = null;
+            scrollGeneration++;
         }
 
-        scrollCancellation.Cancel();
-        scrollCancellation.Dispose();
-        scrollCancellation = null;
+        cancellation.Cancel();
         scroller.Reset();
+    }
+
+    private async Task RunScrollLoopAsync(int generation, CancellationTokenSource cancellation)
+    {
+        try
+        {
+            while (true)
+            {
+                cancellation.Token.ThrowIfCancellationRequested();
+                dispatcher.Dispatch(() => ExecuteScrollTick(generation, cancellation));
+                await Task.Delay(ScrollIntervalMs, cancellation.Token).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Drag auto-scroll loop failed");
+        }
+        finally
+        {
+            lock (scrollLock)
+            {
+                if (ReferenceEquals(scrollCancellation, cancellation))
+                {
+                    scrollCancellation = null;
+                }
+            }
+
+            cancellation.Dispose();
+        }
+    }
+
+    private void ExecuteScrollTick(int generation, CancellationTokenSource cancellation)
+    {
+        lock (scrollLock)
+        {
+            if (generation != scrollGeneration || !ReferenceEquals(scrollCancellation, cancellation) || cancellation.IsCancellationRequested)
+            {
+                return;
+            }
+        }
+
+        try
+        {
+            double amount = BitConverter.Int64BitsToDouble(Interlocked.Read(ref currentScrollAmountBits)) * scrollDirection;
+            double current = state.Offset;
+
+            if ((amount > 0 && current >= state.MaxOffset) ||
+                (amount < 0 && current <= state.MinOffset))
+            {
+                CancelScroll();
+                return;
+            }
+
+            double next = Math.Clamp(current + amount, state.MinOffset, state.MaxOffset);
+            scroller.ScrollTo(next, animate: false);
+            DragScrolled?.Invoke();
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Drag auto-scroll tick failed");
+            CancelScroll();
+        }
     }
 }
