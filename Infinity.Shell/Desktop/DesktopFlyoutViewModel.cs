@@ -55,7 +55,21 @@ public partial class DesktopFlyoutViewModel :
         this.modifierKeyState = modifierKeyState;
 
         PreviewPosition = settings.PreviewPosition;
-        IsActive = true;
+        Activate();
+    }
+
+    protected override void RegisterMessages()
+    {
+        Messenger.Register<NavigationStartedEventArgs>(this);
+        Messenger.Register<NavigationCompletedEventArgs>(this);
+        Messenger.Register<WindowActivationRequestedEventArgs>(this);
+        Messenger.Register<OptionsChangedEventArgs<Settings>>(this);
+        Messenger.Register<PointerScrollDeltaReceivedEventArgs>(this);
+        Messenger.Register<PointerMiddleButtonClickedEventArgs>(this);
+        Messenger.Register<ScrollerScrollStartedEventArgs>(this);
+        Messenger.Register<WorkspaceLayoutChangedEventArgs>(this);
+        Messenger.Register<WindowDragStartedEventArgs>(this);
+        Messenger.Register<WindowDragStoppedEventArgs>(this);
     }
 
     public void Receive(NavigationStartedEventArgs args)

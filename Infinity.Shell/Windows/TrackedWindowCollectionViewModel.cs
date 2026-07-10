@@ -153,6 +153,24 @@ public partial class TrackedWindowCollectionViewModel :
 
     public override void Deactivated() => ResetFilterState();
 
+    protected override void RegisterMessages()
+    {
+        base.RegisterMessages();
+        Messenger.Register<OptionsChangedEventArgs<Settings>>(this);
+        Messenger.Register<WindowPeekChangedEventArgs>(this);
+        Messenger.Register<WindowNavigationRequestedEventArgs>(this);
+        Messenger.Register<DesktopFlyoutClosedEventArgs>(this);
+        Messenger.Register<TrackedWindowAddedEventArgs>(this);
+        Messenger.Register<TrackedWindowRemovedEventArgs>(this);
+        Messenger.Register<TrackedWindowChangedEventArgs>(this);
+        Messenger.Register<WindowStackRefreshedEventArgs>(this);
+        Messenger.Register<WindowCollectionWorkspaceLayoutChangedEventArgs>(this);
+        Messenger.Register<WindowCollectionRefreshRequestedEventArgs>(this);
+        Messenger.Register<WindowDragMovedEventArgs>(this);
+        Messenger.Register<WindowDragScrolledEventArgs>(this);
+        Messenger.Register<DesktopBackgroundChangedEventArgs>(this);
+    }
+
     public void ExitApplication() => _ = lifetime.ExitAsync();
 
     public async void NavigateToAbout() => await navigator.NavigateAsync("AboutWindow");

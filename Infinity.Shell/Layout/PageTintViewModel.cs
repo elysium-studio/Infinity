@@ -76,10 +76,18 @@ public partial class PageTintViewModel :
         gestureSource.SessionStarted += HandleGestureSessionStarted;
         gestureSource.SessionEnded += HandleGestureSessionEnded;
 
-        IsActive = true;
+        Activate();
     }
 
     public override void Activated() => PageTitle = ResolvePageTitle(pager.CurrentPage, settings.CurrentValue.PageTitles);
+
+    protected override void RegisterMessages()
+    {
+        Messenger.Register<NavigationCompletedEventArgs>(this);
+        Messenger.Register<WindowActivationRequestedEventArgs>(this);
+        Messenger.Register<FilterChangedEventArgs>(this);
+        Messenger.Register<OptionsChangedEventArgs<Settings>>(this);
+    }
 
     public void BeginEditing()
     {

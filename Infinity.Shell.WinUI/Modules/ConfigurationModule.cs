@@ -15,62 +15,56 @@ namespace Infinity.Shell.WinUI;
 public class ConfigurationModule :
     IModule
 {
-    public void Register(IServiceCollection services) => services
-            .AddWritableOptions<Settings>("Settings", "settings.dat",
-                builder =>
+    public void Register(IServiceCollection services)
+    {
+        WritableOptionsBuilder<Settings> builder = new(services, "Settings", "settings.dat");
+
+        builder.WithJsonOptions(new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNameCaseInsensitive = true,
+                TypeInfoResolverChain = { InfinityJsonContext.Default }
+            })
+            .UseJson()
+            .WithChangeHandler((provider, options, name) =>
+                provider.GetRequiredService<IMessenger>()
+                    .Send(new OptionsChangedEventArgs<Settings>(options)))
+            .WithChangeHandler((provider, options, _) =>
+                provider.GetRequiredService<ScrollerConfiguration>()
+                    .PixelsPerScrollNotch = options.ScrollSpeed.ToPixelsPerNotch())
+            .WithChangeHandler((provider, options, _) =>
+                provider.GetRequiredService<IModifierKeyState>()
+                    .SetKeys(options.ScrollModifierKeys))
+            .WithChangeHandler((provider, options, _) =>
+            {
+                IStartupManager startupManager = provider.GetRequiredService<IStartupManager>();
+
+                if (options.StartWithWindows)
                 {
-                    builder.WithJsonOptions(new JsonSerializerOptions
-                    {
-                        WriteIndented = true,
-                        PropertyNameCaseInsensitive = true,
-                        TypeInfoResolverChain = { InfinityJsonContext.Default }
-                    });
+                    startupManager.Enable();
+                }
+                else
+                {
+                    startupManager.Disable();
+                }
+            })
+            .WithChangeHandler((provider, options, _) =>
+            {
+                int? maxPages = options.VirtualPagesMode == VirtualPagesMode.Fixed
+                    ? (int?)options.VirtualPagesCount
+                    : null;
 
-                    builder.UseJson();
+                provider.GetRequiredService<IPager>()
+                    .SetMaxPages(maxPages);
 
-                    builder.WithChangeHandler((provider, options, name) =>
-                        provider.GetRequiredService<IMessenger>()
-                            .Send(new OptionsChangedEventArgs<Settings>(options)));
+                provider.GetRequiredService<IPanState>()
+                    .SetMaxOffset(maxPages.HasValue ? (maxPages.Value - 1) * (double)DisplayArea.Primary.WorkArea.Width : double.MaxValue);
+            })
+            .WithChangeHandler((provider, options, _) =>
+                provider.GetRequiredService<WindowDragScrollerConfiguration>()
+                    .SpeedLevel = options.DragScrollSpeed);
 
-                    builder.WithChangeHandler((provider, options, _) =>
-                        provider.GetRequiredService<ScrollerConfiguration>()
-                            .PixelsPerScrollNotch = options.ScrollSpeed.ToPixelsPerNotch());
-
-                    builder.WithChangeHandler((provider, options, _) =>
-                        provider.GetRequiredService<IModifierKeyState>()
-                            .SetKeys(options.ScrollModifierKeys));
-
-                    builder.WithChangeHandler((provider, options, _) =>
-                    {
-                        IStartupManager startupManager = provider.GetRequiredService<IStartupManager>();
-
-                        if (options.StartWithWindows)
-                        {
-                            startupManager.Enable();
-                        }
-                        else
-                        {
-                            startupManager.Disable();
-                        }
-                    });
-
-                    builder.WithChangeHandler((provider, options, _) =>
-                    {
-                        int? maxPages = options.VirtualPagesMode == VirtualPagesMode.Fixed
-                            ? (int?)options.VirtualPagesCount
-                            : null;
-
-                        provider.GetRequiredService<IPager>()
-                            .SetMaxPages(maxPages);
-
-                        provider.GetRequiredService<IPanState>()
-                            .SetMaxOffset(maxPages.HasValue ? (maxPages.Value - 1) * (double)DisplayArea.Primary.WorkArea.Width : double.MaxValue);
-                    });
-
-                    builder.WithChangeHandler((provider, options, _) =>
-                        provider.GetRequiredService<WindowDragScrollerConfiguration>()
-                            .SpeedLevel = options.DragScrollSpeed);
-                })
+        services
             .AddSingleton(provider =>
                 new ScrollerConfiguration
                 {
@@ -93,4 +87,5 @@ public class ConfigurationModule :
 
                 return configBuilder.Build();
             });
+    }
 }
