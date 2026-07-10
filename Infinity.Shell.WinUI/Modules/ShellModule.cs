@@ -47,23 +47,9 @@ public class ShellModule :
                 provider.GetRequiredService<IScroller>(),
                 () => provider.GetRequiredService<IOptionsMonitor<Settings>>().CurrentValue.HideFilteredWindows))
             .AddSingleton<ITrackedWindowCollection, TrackedWindowCollection>()
-            .AddSingleton<IWindowPageCoordinator>(provider => new WindowPageCoordinator(
-                provider.GetRequiredService<IWindowStore>(),
-                provider.GetRequiredService<IScroller>(),
-                provider.GetRequiredService<IWorkspace>(),
-                provider.GetRequiredService<IWindowActivator>(),
-                provider.GetRequiredService<IDispatcher>()))
-            .AddSingleton<IWindowFilterState>(provider => new WindowFilterState(
-                provider.GetRequiredService<ITrackedWindowFilter>()))
             .AddSingleton<IDesktopBackgroundController>(provider => new DesktopBackgroundController(
                 provider.GetRequiredService<IDesktopBackgroundSource>(),
                 provider.GetRequiredService<IDispatcher>()))
-            .AddSingleton<IWindowSelector>(provider => new WindowSelector(
-                new SelectionPreviewQueue(provider.GetRequiredService<IWindowStack>(),
-                    provider.GetRequiredService<ILogger<SelectionPreviewQueue>>()),
-                provider.GetRequiredService<IWindowStore>(),
-                provider.GetRequiredService<IPager>(),
-                provider.GetRequiredService<IWorkspace>()))
             .AddSingleton<IWindowCollection>(provider => new WindowCollection(
                 provider.GetRequiredService<IWindowStore>(),
                 provider.GetRequiredService<IScrollTimer>(),
