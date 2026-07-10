@@ -17,7 +17,16 @@ public partial class TrackedWindowCollectionViewModel :
     IRecipient<OptionsChangedEventArgs<Settings>>,
     IRecipient<WindowPeekChangedEventArgs>,
     IRecipient<WindowNavigationRequestedEventArgs>,
-    IRecipient<DesktopFlyoutClosedEventArgs>
+    IRecipient<DesktopFlyoutClosedEventArgs>,
+    IRecipient<TrackedWindowAddedEventArgs>,
+    IRecipient<TrackedWindowRemovedEventArgs>,
+    IRecipient<TrackedWindowChangedEventArgs>,
+    IRecipient<WindowStackRefreshedEventArgs>,
+    IRecipient<WindowCollectionWorkspaceLayoutChangedEventArgs>,
+    IRecipient<WindowCollectionRefreshRequestedEventArgs>,
+    IRecipient<WindowDragMovedEventArgs>,
+    IRecipient<WindowDragScrolledEventArgs>,
+    IRecipient<DesktopBackgroundChangedEventArgs>
 {
     private readonly IDispatcher dispatcher;
     private readonly IWorkspace workspace;
@@ -25,7 +34,6 @@ public partial class TrackedWindowCollectionViewModel :
     private readonly IPager pager;
     private readonly IPanState state;
     private readonly IScroller scroller;
-    private readonly IWindowDragScroller dragScroller;
     private readonly IWindowCollection windowCollection;
     private readonly ITrackedWindowCollection trackedWindowCollection;
     private readonly IWindowSelector selector;
@@ -39,7 +47,6 @@ public partial class TrackedWindowCollectionViewModel :
     private readonly IApplicationLifetime lifetime;
 
     private bool preservePageOnFilterClear;
-    private bool subscribed;
     private long activationPeekSuppressUntilTicks;
 
     private const int ActivationPeekSuppressionMilliseconds = 300;
@@ -85,7 +92,6 @@ public partial class TrackedWindowCollectionViewModel :
         IPager pager,
         IPanState state,
         IScroller scroller,
-        IWindowDragScroller dragScroller,
         IWindowCollection windowCollection,
         ITrackedWindowCollection trackedWindowCollection,
         IWindowSelector selector,
@@ -104,7 +110,6 @@ public partial class TrackedWindowCollectionViewModel :
         this.pager = pager;
         this.state = state;
         this.scroller = scroller;
-        this.dragScroller = dragScroller;
         this.windowCollection = windowCollection;
         this.trackedWindowCollection = trackedWindowCollection;
         this.selector = selector;
@@ -133,20 +138,6 @@ public partial class TrackedWindowCollectionViewModel :
         Settings current = settings.CurrentValue;
         PreviewSize = current.PreviewSize;
         ShowDesktopBackground = current.ShowDesktopBackground;
-
-        if (!subscribed)
-        {
-            subscribed = true;
-            windowCollection.WindowAdded += HandleWindowAdded;
-            windowCollection.WindowRemoved += HandleWindowRemoved;
-            windowCollection.WindowChanged += HandleWindowChanged;
-            windowCollection.WindowStackRefreshed += HandleWindowStackRefreshed;
-            windowCollection.WorkspaceLayoutChanged += HandleWorkspaceLayoutChanged;
-            windowCollection.RefreshRequested += HandleRefreshRequested;
-            dragScroller.DragMoved += HandleDragMoved;
-            dragScroller.DragScrolled += HandleDragScrolled;
-            backgroundController.BackgroundChanged += HandleBackgroundChanged;
-        }
 
         ResetFilterState();
         Refresh();
@@ -235,6 +226,33 @@ public partial class TrackedWindowCollectionViewModel :
     public void Receive(DesktopFlyoutClosedEventArgs message) =>
         dispatcher.Dispatch(() => FilterText = string.Empty);
 
+    public void Receive(TrackedWindowAddedEventArgs message) =>
+        dispatcher.Dispatch(Refresh);
+
+    public void Receive(TrackedWindowRemovedEventArgs message) =>
+        dispatcher.Dispatch(Refresh);
+
+    public void Receive(TrackedWindowChangedEventArgs message) =>
+        dispatcher.Dispatch(Refresh);
+
+    public void Receive(WindowStackRefreshedEventArgs message) =>
+        dispatcher.Dispatch(RefreshWindowZIndexes);
+
+    public void Receive(WindowCollectionWorkspaceLayoutChangedEventArgs message) =>
+        dispatcher.Dispatch(Refresh);
+
+    public void Receive(WindowCollectionRefreshRequestedEventArgs message) =>
+        dispatcher.Dispatch(Refresh);
+
+    public void Receive(WindowDragMovedEventArgs message) =>
+        dispatcher.Dispatch(Refresh);
+
+    public void Receive(WindowDragScrolledEventArgs message) =>
+        dispatcher.Dispatch(Refresh);
+
+    public void Receive(DesktopBackgroundChangedEventArgs message) =>
+        dispatcher.Dispatch(ApplyBackground);
+
     [RelayCommand]
     private void ActivateSelected()
     {
@@ -271,33 +289,6 @@ public partial class TrackedWindowCollectionViewModel :
             window.IsFiltered = false;
         }
     }
-
-    private void HandleBackgroundChanged(object? sender, EventArgs args) =>
-        dispatcher.Dispatch(ApplyBackground);
-
-    private void HandleDragMoved() =>
-        dispatcher.Dispatch(Refresh);
-
-    private void HandleDragScrolled() =>
-        dispatcher.Dispatch(Refresh);
-
-    private void HandleRefreshRequested(object? sender, EventArgs args) =>
-        dispatcher.Dispatch(Refresh);
-
-    private void HandleWindowAdded(object? sender, TrackedWindow trackedWindow) =>
-        dispatcher.Dispatch(Refresh);
-
-    private void HandleWindowChanged(object? sender, TrackedWindow trackedWindow) =>
-        dispatcher.Dispatch(Refresh);
-
-    private void HandleWindowRemoved(object? sender, IntPtr handle) =>
-        dispatcher.Dispatch(Refresh);
-
-    private void HandleWorkspaceLayoutChanged(object? sender, EventArgs args) =>
-        dispatcher.Dispatch(Refresh);
-
-    private void HandleWindowStackRefreshed(object? sender, EventArgs args) =>
-        dispatcher.Dispatch(RefreshWindowZIndexes);
 
     private void NavigateToWindowHandle(IntPtr handle)
     {
@@ -423,7 +414,12 @@ public partial class TrackedWindowCollectionViewModel :
                 }
             }
 
-            ShellWindowLayout layout = calculator.Calculate(trackedWindow, scroller.VisualOffset, workspace.WorkAreaX, ScaleFactor, ScreenWidth, ScreenHeight);
+            ShellWindowLayout layout = calculator.Calculate(trackedWindow,
+                scroller.VisualOffset,
+                workspace.WorkAreaX,
+                ScaleFactor,
+                ScreenWidth,
+                ScreenHeight);
 
             windowViewModel!.X = layout.X;
             windowViewModel.Y = layout.Y;
@@ -486,7 +482,9 @@ public partial class TrackedWindowCollectionViewModel :
         }
         else
         {
-            foreach (ITrackedWindow duplicateWindow in this.Where(window => window.Handle == trackedWindow.Handle && !ReferenceEquals(window, windowViewModel)).ToList())
+            foreach (ITrackedWindow duplicateWindow in this.Where(window =>
+                         window.Handle == trackedWindow.Handle &&
+                         !ReferenceEquals(window, windowViewModel)).ToList())
             {
                 Remove(duplicateWindow);
             }
@@ -564,14 +562,19 @@ public partial class TrackedWindowCollectionViewModel :
     {
         ITrackedWindow? match = null;
 
-        if (!filterState.FilterSelectionResolved && string.Equals(FilterText, filterState.LastActivatedFilterText, StringComparison.OrdinalIgnoreCase) &&
-                filterState.LastActivatedHandle != default && trackedWindowCollection.TryGet(filterState.LastActivatedHandle,
-                    out ITrackedWindow? lastActivatedWindow) && !lastActivatedWindow!.IsFiltered)
+        if (!filterState.FilterSelectionResolved &&
+            string.Equals(FilterText, filterState.LastActivatedFilterText, StringComparison.OrdinalIgnoreCase) &&
+            filterState.LastActivatedHandle != default &&
+            trackedWindowCollection.TryGet(filterState.LastActivatedHandle, out ITrackedWindow? lastActivatedWindow) &&
+            !lastActivatedWindow!.IsFiltered)
         {
             match = lastActivatedWindow;
         }
 
-        match ??= trackedWindowCollection.Where(window => !window.IsFiltered).OrderBy(window => window.X).FirstOrDefault();
+        match ??= trackedWindowCollection
+            .Where(window => !window.IsFiltered)
+            .OrderBy(window => window.X)
+            .FirstOrDefault();
 
         if (match is null)
         {

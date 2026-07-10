@@ -9,8 +9,7 @@ public interface IPageGesture
     void Invoke(int virtualKeyCode);
 }
 
-
-public class PointerScrollDeltaReceivedEventArgs(int delta) : 
+public class PointerScrollDeltaReceivedEventArgs(int delta) :
     EventArgs
 {
     public int Delta { get; } = delta;
@@ -19,14 +18,50 @@ public class PointerScrollDeltaReceivedEventArgs(int delta) :
 public class PointerMiddleButtonClickedEventArgs :
     EventArgs;
 
-public class WorkspaceLayoutChangedEventArgs : 
+public class WorkspaceLayoutChangedEventArgs :
     EventArgs;
 
-public class WindowDragStartedEventArgs : 
+public class WindowDragStartedEventArgs :
     EventArgs;
 
 public class WindowDragStoppedEventArgs :
     EventArgs;
 
 public class ScrollerScrollStartedEventArgs :
+    EventArgs;
+
+public class TrackedWindowAddedEventArgs(TrackedWindow trackedWindow) :
+    EventArgs
+{
+    public TrackedWindow TrackedWindow { get; } = trackedWindow;
+}
+
+public class TrackedWindowRemovedEventArgs(IntPtr handle) :
+    EventArgs
+{
+    public IntPtr Handle { get; } = handle;
+}
+
+public class TrackedWindowChangedEventArgs(TrackedWindow trackedWindow) :
+    EventArgs
+{
+    public TrackedWindow TrackedWindow { get; } = trackedWindow;
+}
+
+public class WindowStackRefreshedEventArgs :
+    EventArgs;
+
+public class WindowCollectionWorkspaceLayoutChangedEventArgs :
+    EventArgs;
+
+public class WindowCollectionRefreshRequestedEventArgs :
+    EventArgs;
+
+public class WindowDragMovedEventArgs :
+    EventArgs;
+
+public class WindowDragScrolledEventArgs :
+    EventArgs;
+
+public class DesktopBackgroundChangedEventArgs :
     EventArgs;
