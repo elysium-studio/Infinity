@@ -96,11 +96,8 @@ public class ShellModule :
                     provider.GetRequiredService<IMessenger>(),
                     provider.GetRequiredService<IDisposer>(),
                     provider.GetRequiredService<IDispatcher>(),
-                    provider.GetRequiredService<IScroller>(),
                     provider.GetRequiredService<IWorkspace>(),
-                    provider.GetRequiredService<IPointerInputSource>(),
                     provider.GetRequiredService<IModifierKeyState>(),
-                    provider.GetRequiredService<IWindowDragScroller>(),
                     provider.GetRequiredService<Settings>()))
             .AddView(ServiceLifetime.Singleton,
                 provider => new ScrollTriggerView())
@@ -127,9 +124,72 @@ public class ShellModule :
                     provider.GetRequiredService<IWindowPageCoordinator>(),
                     provider.GetRequiredService<INavigator>(),
                     provider.GetRequiredService<IOptionsMonitor<Settings>>(),
-                    provider.GetRequiredService<IApplicationLifetime>(),
-                    provider.GetRequiredService<ILogger<TrackedWindowCollectionViewModel>>()))
+                    provider.GetRequiredService<IApplicationLifetime>()))
             .AddViewFor<TrackedWindowView, TrackedWindowViewModel>(ServiceLifetime.Transient,
                 provider => new TrackedWindowView());
+
+        services.Subscribe<IPointerInputSource>((provider, pointer) =>
+        {
+            IMessenger messenger = provider.GetRequiredService<IMessenger>();
+
+            void HandleScrollDeltaReceived(int delta) =>
+                messenger.Send(new PointerScrollDeltaReceivedEventArgs(delta));
+
+            void HandleMiddleButtonClicked() =>
+                messenger.Send(new PointerMiddleButtonClickedEventArgs());
+
+            pointer.ScrollDeltaReceived += HandleScrollDeltaReceived;
+            pointer.MiddleButtonClicked += HandleMiddleButtonClicked;
+
+            return () =>
+            {
+                pointer.ScrollDeltaReceived -= HandleScrollDeltaReceived;
+                pointer.MiddleButtonClicked -= HandleMiddleButtonClicked;
+            };
+        });
+
+        services.Subscribe<IScroller>((provider, scroller) =>
+        {
+            IMessenger messenger = provider.GetRequiredService<IMessenger>();
+
+            void HandleScrollStarted(object? sender, EventArgs args) =>
+                messenger.Send(new ScrollerScrollStartedEventArgs());
+
+            scroller.ScrollStarted += HandleScrollStarted;
+
+            return () => scroller.ScrollStarted -= HandleScrollStarted;
+        });
+
+        services.Subscribe<IWorkspace>((provider, workspace) =>
+        {
+            IMessenger messenger = provider.GetRequiredService<IMessenger>();
+
+            void HandleWorkspaceLayoutChanged(object? sender, EventArgs args) =>
+                messenger.Send(new WorkspaceLayoutChangedEventArgs());
+
+            workspace.WorkspaceLayoutChanged += HandleWorkspaceLayoutChanged;
+
+            return () => workspace.WorkspaceLayoutChanged -= HandleWorkspaceLayoutChanged;
+        });
+
+        services.Subscribe<IWindowDragScroller>((provider, dragScroller) =>
+        {
+            IMessenger messenger = provider.GetRequiredService<IMessenger>();
+
+            void HandleDragStarted() =>
+                messenger.Send(new WindowDragStartedEventArgs());
+
+            void HandleDragStopped() =>
+                messenger.Send(new WindowDragStoppedEventArgs());
+
+            dragScroller.DragStarted += HandleDragStarted;
+            dragScroller.DragStopped += HandleDragStopped;
+
+            return () =>
+            {
+                dragScroller.DragStarted -= HandleDragStarted;
+                dragScroller.DragStopped -= HandleDragStopped;
+            };
+        });
     }
 }

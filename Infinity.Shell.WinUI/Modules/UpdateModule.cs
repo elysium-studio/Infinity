@@ -22,8 +22,10 @@ public class UpdateModule :
         {
             configuration.FeedUrl = "https://elysiumstud.io/feeds/infinity";
         });
+
         services.AddSingleton(provider => new AppToastNotifier("ElysiumStudio.Infinity", "Infinity",
             Path.Combine(AppContext.BaseDirectory, "Assets", "Infinity.ico")));
+
         services.Subscribe<IUpdateController>((provider, controller) =>
         {
             void HandleUpdateReady(string version)

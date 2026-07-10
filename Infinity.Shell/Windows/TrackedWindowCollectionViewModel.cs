@@ -7,7 +7,6 @@ using Elysium.Presentation;
 using Elysium.Presentation.Abstractions;
 using Infinity.Application;
 using Infinity.Application.Abstractions;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NavigationCompletedEventArgs = Infinity.Application.Abstractions.NavigationCompletedEventArgs;
 
@@ -17,7 +16,8 @@ public partial class TrackedWindowCollectionViewModel :
     ObservableCollectionViewModel<ITrackedWindow>,
     IRecipient<OptionsChangedEventArgs<Settings>>,
     IRecipient<WindowPeekChangedEventArgs>,
-    IRecipient<WindowNavigationRequestedEventArgs>
+    IRecipient<WindowNavigationRequestedEventArgs>,
+    IRecipient<DesktopFlyoutClosedEventArgs>
 {
     private readonly IDispatcher dispatcher;
     private readonly IWorkspace workspace;
@@ -37,8 +37,8 @@ public partial class TrackedWindowCollectionViewModel :
     private readonly INavigator navigator;
     private readonly IOptionsMonitor<Settings> settings;
     private readonly IApplicationLifetime lifetime;
-    private readonly ILogger<TrackedWindowCollectionViewModel> logger;
-    private bool activatingSelection;
+
+    private bool preservePageOnFilterClear;
     private bool subscribed;
     private long activationPeekSuppressUntilTicks;
 
@@ -96,8 +96,7 @@ public partial class TrackedWindowCollectionViewModel :
         IWindowPageCoordinator coordinator,
         INavigator navigator,
         IOptionsMonitor<Settings> settings,
-        IApplicationLifetime lifetime,
-        ILogger<TrackedWindowCollectionViewModel> logger) : base(provider, factory, messenger, disposer)
+        IApplicationLifetime lifetime) : base(provider, factory, messenger, disposer)
     {
         this.dispatcher = dispatcher;
         this.workspace = workspace;
@@ -117,7 +116,6 @@ public partial class TrackedWindowCollectionViewModel :
         this.navigator = navigator;
         this.settings = settings;
         this.lifetime = lifetime;
-        this.logger = logger;
 
         IsActive = true;
     }
@@ -148,7 +146,6 @@ public partial class TrackedWindowCollectionViewModel :
             dragScroller.DragMoved += HandleDragMoved;
             dragScroller.DragScrolled += HandleDragScrolled;
             backgroundController.BackgroundChanged += HandleBackgroundChanged;
-            logger.LogInformation("Window collection subscribed");
         }
 
         ResetFilterState();
@@ -161,35 +158,15 @@ public partial class TrackedWindowCollectionViewModel :
         }
     }
 
-    public override void Deactivated()
-    {
-        logger.LogInformation("Window collection deactivated");
-        ResetFilterState();
-    }
+    public override void Deactivated() => ResetFilterState();
 
-    public void ExitApplication()
-    {
-        logger.LogInformation("Exiting application");
-        _ = lifetime.ExitAsync();
-    }
+    public void ExitApplication() => _ = lifetime.ExitAsync();
 
-    public async void NavigateToAbout()
-    {
-        logger.LogInformation("Navigating to About");
-        await navigator.NavigateAsync("AboutWindow");
-    }
+    public async void NavigateToAbout() => await navigator.NavigateAsync("AboutWindow");
 
-    public async void NavigateToTour()
-    {
-        logger.LogInformation("Navigating to Tour");
-        await navigator.NavigateAsync("TourWindow");
-    }
+    public async void NavigateToTour() => await navigator.NavigateAsync("TourWindow");
 
-    public async void NavigateToSettings()
-    {
-        logger.LogInformation("Navigating to Settings");
-        await navigator.NavigateAsync("SettingsWindow");
-    }
+    public async void NavigateToSettings() => await navigator.NavigateAsync("SettingsWindow");
 
     public void NavigateToPage(int page)
     {
@@ -254,6 +231,9 @@ public partial class TrackedWindowCollectionViewModel :
 
     public void Receive(WindowNavigationRequestedEventArgs message) =>
         dispatcher.Dispatch(() => NavigateToWindowHandle(message.Handle));
+
+    public void Receive(DesktopFlyoutClosedEventArgs message) =>
+        dispatcher.Dispatch(() => FilterText = string.Empty);
 
     [RelayCommand]
     private void ActivateSelected()
@@ -321,15 +301,13 @@ public partial class TrackedWindowCollectionViewModel :
 
     private void NavigateToWindowHandle(IntPtr handle)
     {
-        logger.LogInformation("Navigating to window: {Handle}", handle);
         peekSource.Handle = default;
         peekController.Apply();
 
         activationPeekSuppressUntilTicks = Environment.TickCount64 + ActivationPeekSuppressionMilliseconds;
+        preservePageOnFilterClear = filterState.IsActive;
 
-        activatingSelection = true;
         coordinator.NavigateTo(handle);
-        activatingSelection = false;
     }
 
     partial void OnContentHeightChanged(double value)
@@ -352,6 +330,7 @@ public partial class TrackedWindowCollectionViewModel :
 
         if (!wasFilterActive && filterState.IsActive)
         {
+            preservePageOnFilterClear = false;
             coordinator.PageBeforeFilter = (int)Math.Round(state.Offset / ScreenWidth);
             filterState.ResetSelectionResolved();
             Messenger.Send(new FilterChangedEventArgs(true));
@@ -365,22 +344,22 @@ public partial class TrackedWindowCollectionViewModel :
             peekController.Apply();
             ScrollToMatch();
         }
-        else if (coordinator.PageBeforeFilter >= 0 && !activatingSelection)
-        {
-            peekController.Clear();
-            ClearWindowFilterStates();
-            double targetOffset = coordinator.PageBeforeFilter * (double)ScreenWidth;
-            coordinator.NavigationTargetPage = coordinator.PageBeforeFilter;
-            coordinator.NavigationTargetOffset = targetOffset;
-            pager.NavigateToPage(coordinator.PageBeforeFilter);
-            coordinator.PageBeforeFilter = -1;
-            filterState.ResetSelectionResolved();
-            Messenger.Send(new FilterChangedEventArgs(false));
-        }
         else
         {
+            bool shouldPreservePage = preservePageOnFilterClear;
+            preservePageOnFilterClear = false;
+
             peekController.Clear();
             ClearWindowFilterStates();
+
+            if (coordinator.PageBeforeFilter >= 0 && !shouldPreservePage)
+            {
+                double targetOffset = coordinator.PageBeforeFilter * (double)ScreenWidth;
+                coordinator.NavigationTargetPage = coordinator.PageBeforeFilter;
+                coordinator.NavigationTargetOffset = targetOffset;
+                pager.NavigateToPage(coordinator.PageBeforeFilter);
+            }
+
             coordinator.PageBeforeFilter = -1;
             filterState.ResetSelectionResolved();
             Messenger.Send(new FilterChangedEventArgs(false));
@@ -500,8 +479,6 @@ public partial class TrackedWindowCollectionViewModel :
                 Remove(orphanedWindow);
             }
 
-            logger.LogInformation("Window added: {Title} ({Handle})", trackedWindow.Title, trackedWindow.Handle);
-
             windowViewModel = Factory!.Create<TrackedWindowViewModel>(trackedWindow.Handle);
 
             trackedWindowCollection.Add(trackedWindow.Handle, windowViewModel);
@@ -536,8 +513,6 @@ public partial class TrackedWindowCollectionViewModel :
             return;
         }
 
-        logger.LogInformation("Window removed: {Handle}", handle);
-
         if (handle == selector.SelectedHandle)
         {
             selector.Clear(trackedWindowCollection);
@@ -568,6 +543,7 @@ public partial class TrackedWindowCollectionViewModel :
 
     private void ResetFilterState()
     {
+        preservePageOnFilterClear = false;
         peekSource.Handle = default;
         filterState.Filter = string.Empty;
         filterState.Apply(trackedWindowCollection);
@@ -588,8 +564,7 @@ public partial class TrackedWindowCollectionViewModel :
     {
         ITrackedWindow? match = null;
 
-        if (!filterState.FilterSelectionResolved &&
-                string.Equals(FilterText, filterState.LastActivatedFilterText, StringComparison.OrdinalIgnoreCase) &&
+        if (!filterState.FilterSelectionResolved && string.Equals(FilterText, filterState.LastActivatedFilterText, StringComparison.OrdinalIgnoreCase) &&
                 filterState.LastActivatedHandle != default && trackedWindowCollection.TryGet(filterState.LastActivatedHandle,
                     out ITrackedWindow? lastActivatedWindow) && !lastActivatedWindow!.IsFiltered)
         {

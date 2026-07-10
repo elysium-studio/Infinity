@@ -5,7 +5,6 @@ using Elysium.Platform.Abstractions;
 using Elysium.Presentation;
 using Infinity.Application;
 using Infinity.Application.Abstractions;
-using Infinity.Platform.Abstractions;
 using NavigationCompletedEventArgs = Infinity.Application.Abstractions.NavigationCompletedEventArgs;
 using NavigationStartedEventArgs = Infinity.Application.Abstractions.NavigationStartedEventArgs;
 
@@ -16,7 +15,13 @@ public partial class DesktopFlyoutViewModel :
     IRecipient<NavigationStartedEventArgs>,
     IRecipient<NavigationCompletedEventArgs>,
     IRecipient<WindowActivationRequestedEventArgs>,
-    IRecipient<OptionsChangedEventArgs<Settings>>
+    IRecipient<OptionsChangedEventArgs<Settings>>,
+    IRecipient<PointerScrollDeltaReceivedEventArgs>,
+    IRecipient<PointerMiddleButtonClickedEventArgs>,
+    IRecipient<ScrollerScrollStartedEventArgs>,
+    IRecipient<WorkspaceLayoutChangedEventArgs>,
+    IRecipient<WindowDragStartedEventArgs>,
+    IRecipient<WindowDragStoppedEventArgs>
 {
     private readonly IDispatcher dispatcher;
     private readonly IWorkspace workspace;
@@ -42,23 +47,15 @@ public partial class DesktopFlyoutViewModel :
         IMessenger messenger,
         IDisposer disposer,
         IDispatcher dispatcher,
-        IScroller scroller,
         IWorkspace workspace,
-        IPointerInputSource pointer,
         IModifierKeyState modifierKeyState,
-        IWindowDragScroller dragScroller,
         Settings settings) : base(provider, factory, messenger, disposer)
     {
         this.dispatcher = dispatcher;
         this.workspace = workspace;
         this.modifierKeyState = modifierKeyState;
+
         PreviewPosition = settings.PreviewPosition;
-        pointer.ScrollDeltaReceived += HandleScrollDeltaReceived;
-        pointer.MiddleButtonClicked += HandleMiddleButtonClicked;
-        scroller.ScrollStarted += HandleScrollStarted;
-        workspace.WorkspaceLayoutChanged += HandleWorkspaceLayoutChanged;
-        dragScroller.DragStarted += HandleDragStarted;
-        dragScroller.DragStopped += HandleDragStopped;
         IsActive = true;
     }
 
@@ -84,6 +81,43 @@ public partial class DesktopFlyoutViewModel :
     public void Receive(OptionsChangedEventArgs<Settings> message) =>
         dispatcher.Dispatch(() => PreviewPosition = message.Options.PreviewPosition);
 
+    public void Receive(PointerScrollDeltaReceivedEventArgs args)
+    {
+        if (modifierKeyState.IsActive)
+        {
+            dispatcher.Dispatch(OpenOnCurrentWorkspace);
+        }
+    }
+
+    public void Receive(PointerMiddleButtonClickedEventArgs args)
+    {
+        if (modifierKeyState.IsActive)
+        {
+            dispatcher.Dispatch(OpenOnCurrentWorkspace);
+        }
+    }
+
+    public void Receive(ScrollerScrollStartedEventArgs args) =>
+        dispatcher.Dispatch(() => userDismissed = false);
+
+    public void Receive(WorkspaceLayoutChangedEventArgs args) =>
+        dispatcher.Dispatch(() => currentWorkspace = workspace.GetCurrentWorkspace());
+
+    public void Receive(WindowDragStartedEventArgs args) =>
+        dispatcher.Dispatch(() =>
+        {
+            userDismissed = false;
+            StaysOpen = true;
+            OpenOnCurrentWorkspace();
+        });
+
+    public void Receive(WindowDragStoppedEventArgs args) =>
+        dispatcher.Dispatch(() =>
+        {
+            StaysOpen = false;
+            IsOpen = false;
+        });
+
     partial void OnIsOpenChanged(bool value)
     {
         if (value)
@@ -94,39 +128,9 @@ public partial class DesktopFlyoutViewModel :
         {
             userDismissed = true;
             StaysOpen = false;
+            Messenger.Send(new DesktopFlyoutClosedEventArgs());
         }
     }
-
-    private void HandleScrollDeltaReceived(int delta)
-    {
-        if (modifierKeyState.IsActive)
-        {
-            dispatcher.Dispatch(OpenOnCurrentWorkspace);
-        }
-    }
-
-    private void HandleMiddleButtonClicked()
-    {
-        if (modifierKeyState.IsActive)
-        {
-            dispatcher.Dispatch(OpenOnCurrentWorkspace);
-        }
-    }
-
-    private void HandleDragStarted() =>
-        dispatcher.Dispatch(() =>
-        {
-            userDismissed = false;
-            StaysOpen = true;
-            OpenOnCurrentWorkspace();
-        });
-
-    private void HandleDragStopped() =>
-        dispatcher.Dispatch(() =>
-        {
-            StaysOpen = false;
-            IsOpen = false;
-        });
 
     private void OpenOnCurrentWorkspace()
     {
@@ -138,11 +142,6 @@ public partial class DesktopFlyoutViewModel :
         IsOpen = true;
     }
 
-    private void HandleScrollStarted(object? sender, EventArgs args)
-    {
-        userDismissed = false;
-    }
-
     private void HandleScrollTick(object? sender, EventArgs args)
     {
         if (!userDismissed)
@@ -150,7 +149,4 @@ public partial class DesktopFlyoutViewModel :
             dispatcher.Dispatch(OpenOnCurrentWorkspace);
         }
     }
-
-    private void HandleWorkspaceLayoutChanged(object? sender, EventArgs args) =>
-        currentWorkspace = workspace.GetCurrentWorkspace();
 }
