@@ -37,15 +37,20 @@ public class PagerLifetime(IWindowTracker tracker,
 
         enumerator.EnumerateVisible(windowHandle => tracker.TryRegister(windowHandle));
 
-        int minCanvasX = repository
-            .Select(window => window.CanvasX)
-            .DefaultIfEmpty(0)
-            .Min();
+        TrackedWindow? fullyOffscreenWindow = repository
+            .Where(window => (long)window.CanvasX + window.Width <= 0)
+            .MinBy(window => (long)window.CanvasX + window.Width);
 
-        if (minCanvasX < 0)
+        if (fullyOffscreenWindow is not null)
         {
-            int pageShift = (int)Math.Ceiling(Math.Abs((double)minCanvasX) / workspace.Width) * workspace.Width;
-            logger.LogInformation("Negative canvas offset detected, shifting pages by {PageShift}px", pageShift);
+            long rightEdge = (long)fullyOffscreenWindow.CanvasX + fullyOffscreenWindow.Width;
+            int pageShift = checked((int)(((-rightEdge / workspace.Width) + 1) * workspace.Width));
+            logger.LogInformation(
+                "Fully offscreen window detected during startup. Handle={WindowHandle}, Left={WindowLeft}, Right={WindowRight}, PageShift={PageShift}",
+                fullyOffscreenWindow.Handle,
+                fullyOffscreenWindow.CanvasX,
+                rightEdge,
+                pageShift);
 
             foreach (TrackedWindow trackedWindow in repository)
             {
