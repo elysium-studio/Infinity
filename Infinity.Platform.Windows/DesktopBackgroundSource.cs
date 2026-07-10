@@ -1,6 +1,7 @@
 ﻿using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
 
@@ -73,13 +74,14 @@ public unsafe partial class DesktopBackgroundSource :
  out nint ppv);
 
     private readonly BlockingCollection<Action> workQueue = new();
+    private readonly Lock lifecycleLock = new();
     private readonly Thread comThread;
     private readonly System.Threading.Timer changeTimer;
     private readonly ILogger<DesktopBackgroundSource> logger;
     private IDesktopWallpaper? wallpaper;
     private string lastWallpaperPath = string.Empty;
     private uint lastColour;
-    private bool disposed;
+    private volatile bool disposed;
 
     public event EventHandler? BackgroundChanged;
 
@@ -147,29 +149,36 @@ public unsafe partial class DesktopBackgroundSource :
 
     private T RunOnComThread<T>(Func<T> func)
     {
-        if (disposed)
-        {
-            return default!;
-        }
-
         T result = default!;
-        ManualResetEventSlim completed = new(false);
+        Exception? error = null;
+        using ManualResetEventSlim completed = new(false);
 
-        try
+        lock (lifecycleLock)
         {
+            ObjectDisposedException.ThrowIf(disposed, this);
+
             workQueue.Add(() =>
             {
-                result = func();
-                completed.Set();
+                try
+                {
+                    result = func();
+                }
+                catch (Exception exception)
+                {
+                    error = exception;
+                }
+                finally
+                {
+                    completed.Set();
+                }
             });
+        }
 
-            completed.Wait();
-        }
-        catch (InvalidOperationException)
+        completed.Wait();
+
+        if (error is not null)
         {
-        }
-        catch (OperationCanceledException)
-        {
+            ExceptionDispatchInfo.Capture(error).Throw();
         }
 
         return result;
@@ -230,8 +239,24 @@ public unsafe partial class DesktopBackgroundSource :
 
     public void Dispose()
     {
-        disposed = true;
-        changeTimer.Dispose();
-        workQueue.CompleteAdding();
+        lock (lifecycleLock)
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            disposed = true;
+            changeTimer.Dispose();
+            workQueue.Add(() => wallpaper = null);
+            workQueue.CompleteAdding();
+        }
+
+        if (Thread.CurrentThread != comThread)
+        {
+            comThread.Join();
+        }
+
+        workQueue.Dispose();
     }
 }
