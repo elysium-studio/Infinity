@@ -7,6 +7,8 @@ namespace Infinity.Platform.Windows;
 public class WindowGeometryReader : 
     IWindowGeometryReader
 {
+    private const int OffscreenParkingCoordinate = -32000;
+
     public bool IsMinimised(nint windowHandle) =>
         PInvoke.IsIconic(new HWND(windowHandle));
 
@@ -22,6 +24,9 @@ public class WindowGeometryReader :
         width = rect.right - rect.left;
         height = rect.bottom - rect.top;
 
-        return success && width >= 10 && height >= 10;
+        bool isOffscreenParked = rect.left == OffscreenParkingCoordinate &&
+            rect.top == OffscreenParkingCoordinate;
+
+        return success && !isOffscreenParked && width >= 10 && height >= 10;
     }
 }
