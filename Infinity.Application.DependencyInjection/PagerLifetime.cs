@@ -24,7 +24,7 @@ public class PagerLifetime(IWindowTracker tracker,
     IWindowStore repository,
     IWorkspace workspace,
     IPager pager,
-    IWindowCollection windowCollection,
+    IWindowCollectionLifetime windowCollection,
     IScrollTimer timer,
     ILogger<PagerLifetime> logger) :
     IHostedService

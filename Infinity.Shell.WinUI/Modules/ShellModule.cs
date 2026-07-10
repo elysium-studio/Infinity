@@ -50,7 +50,7 @@ public class ShellModule :
             .AddSingleton<IDesktopBackgroundController>(provider => new DesktopBackgroundController(
                 provider.GetRequiredService<IDesktopBackgroundSource>(),
                 provider.GetRequiredService<IDispatcher>()))
-            .AddSingleton<IWindowCollection>(provider => new WindowCollection(
+            .AddSingleton<WindowCollection>(provider => new WindowCollection(
                 provider.GetRequiredService<IWindowStore>(),
                 provider.GetRequiredService<IScrollTimer>(),
                 provider.GetRequiredService<IScroller>(),
@@ -63,6 +63,10 @@ public class ShellModule :
                 provider.GetRequiredService<ITrackedWindowCollection>(),
                 provider.GetRequiredService<IDispatcher>(),
                 provider.GetRequiredService<ILogger<WindowCollection>>()))
+            .AddSingleton<IWindowCollection>(provider =>
+                provider.GetRequiredService<WindowCollection>())
+            .AddSingleton<IWindowCollectionLifetime>(provider =>
+                provider.GetRequiredService<WindowCollection>())
             .RegisterFactory((provider, factoryArgs) => new TrackedWindowViewModel(
                 provider,
                 provider.GetRequiredService<IServiceFactory>(),
