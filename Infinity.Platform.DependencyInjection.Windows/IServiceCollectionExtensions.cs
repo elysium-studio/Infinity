@@ -45,7 +45,9 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<IWindowEnumerator, WindowEnumerator>();
             services.AddSingleton<IWindowGeometryReader, WindowGeometryReader>();
             services.AddSingleton<IWindowMover, WindowMover>();
-            services.AddSingleton<IWindowConcealer, WindowConcealer>();
+            services.AddSingleton<WindowConcealer>();
+            services.AddSingleton<IWindowConcealer>(provider => provider.GetRequiredService<WindowConcealer>());
+            services.AddSingleton<IWindowConcealmentRecovery>(provider => provider.GetRequiredService<WindowConcealer>());
             services.AddSingleton<IWindowPreviewSurface, DwmWindowPreviewSurface>();
             services.AddSingleton<IWindowTitleReader, WindowTitleReader>();
 
