@@ -172,6 +172,7 @@ Performance evidence for P1 is structural and call-count based:
 Final managed validation:
 
 - `dotnet build Infinity.Shell.WinUI/Infinity.Shell.WinUI.csproj -c Release -p:Platform=x64 --no-restore`: succeeded with 0 warnings and 0 errors. This transitively built all eight managed projects.
+- `dotnet publish Infinity.Shell.WinUI/Infinity.Shell.WinUI.csproj -c Release -p:Platform=x64 --no-restore`: completed and generated native code and publish output. The publish reported pre-existing trim/AOT warnings from external `Elysium`, Windows Desktop runtime assemblies, and CommunityToolkit `ObservableRecipient` activation paths in tour view models. These are not suppressed: proving or replacing the external messenger-registration path requires changes to the external framework and product-level activation testing, so they remain a documented risk rather than a speculative local rewrite.
 - No test projects exist in the repository, so there were no baseline automated tests to run.
 - The native C++ build reached `CL.exe` after resolving all ignored package dependencies, then failed in the local MSBuild host before compilation because the process environment contains duplicate case-variant `Path` and `PATH` keys (`MSB6001`). This environment failure also occurs without source changes and is recorded as a validation limitation rather than modified around in the repository.
 
