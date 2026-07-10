@@ -154,3 +154,31 @@ The solution contains eight managed projects and one native C++ project. There a
 - HWND values in application contracts are represented as `nint`/`IntPtr`, not Win32 `HWND`, so platform-native structs do not leak into platform-independent layers.
 - The native composition module uses process-lifetime cached devices and a singleton managed surface. Its global state is currently serialized by that owner; speculative multi-surface support is not introduced.
 - Empty WinUI composition catches are recorded for manual diagnostics review, but are not automatically changed where best-effort visual behavior is intentional and no functional contract is lost.
+
+## Resolution and final evidence
+
+All confirmed findings above were addressed on the rollup branch. During validation, four additional confirmed build/runtime-contract issues were found and fixed:
+
+- The composition root manually constructed `SelectionPreviewQueue`; it now supplies the queue's logger, preserving explicit constructor injection.
+- The shared `IDispatcher` adapter silently discarded rejected `DispatcherQueue` work even though background coordinators already handle `InvalidOperationException`; rejection now surfaces through that established contract.
+- The debug window's try-pattern lacked a `[NotNullWhen(true)]` contract, producing a nullable warning at its only caller.
+- `PreviewPositionView` used reflective `SelectedValuePath` lookup. It now uses a compiled `SelectedIndex` mapping, preserving the displayed order and values while removing the Native AOT/trimming warning without suppression.
+
+Performance evidence for P1 is structural and call-count based:
+
+- **Before:** every `RenderCore` call allocated two `List<T>` instances plus one copied array and called `DwmThumbnailVisual_IsAvailable` once.
+- **After:** render buffers grow geometrically and are reused under the existing surface lock, resulting in zero steady-state render-buffer allocations after capacity is reached; bridge availability is probed once per surface instead of once per render. The batch still reports each native item HRESULT and clears retained preview references after every call.
+
+Final managed validation:
+
+- `dotnet build Infinity.Shell.WinUI/Infinity.Shell.WinUI.csproj -c Release -p:Platform=x64 --no-restore`: succeeded with 0 warnings and 0 errors. This transitively built all eight managed projects.
+- No test projects exist in the repository, so there were no baseline automated tests to run.
+- The native C++ build reached `CL.exe` after resolving all ignored package dependencies, then failed in the local MSBuild host before compilation because the process environment contains duplicate case-variant `Path` and `PATH` keys (`MSB6001`). This environment failure also occurs without source changes and is recorded as a validation limitation rather than modified around in the repository.
+
+Manual validation still required on a normal desktop session:
+
+- Repeated drag-to-edge scrolling, direction changes, boundary cancellation, and shutdown during auto-scroll.
+- Wallpaper path/colour refresh and shutdown while a background query is pending.
+- Thumbnail creation, resize, recycling, unload/reload, DWM bridge failure, and multi-window render batches.
+- Update-ready toast activation, restart acceptance, and dispatcher shutdown rejection.
+- Preview-position selection persistence across Auto, Top, and Bottom.
