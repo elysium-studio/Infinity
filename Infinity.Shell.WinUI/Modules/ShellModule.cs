@@ -134,7 +134,8 @@ public class ShellModule :
                     provider.GetRequiredService<IWindowNavigationCoordinator>(),
                     provider.GetRequiredService<INavigator>(),
                     provider.GetRequiredService<IOptionsMonitor<Settings>>(),
-                    provider.GetRequiredService<IApplicationLifetime>()))
+                    provider.GetRequiredService<IApplicationLifetime>(),
+                    provider.GetRequiredService<ILogger<TrackedWindowCollectionViewModel>>()))
             .AddViewFor<TrackedWindowView, TrackedWindowViewModel>(
                 ServiceLifetime.Transient,
                 provider => new TrackedWindowView());
