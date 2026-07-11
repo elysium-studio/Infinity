@@ -1,0 +1,26 @@
+version: 2
+
+registries:
+  elysium-studio:
+    type: nuget-feed
+    url: https://nuget.pkg.github.com/elysium-studio/index.json
+    token: ${{secrets.ELYSIUM_PACKAGES_TOKEN}}
+
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    registries:
+      - elysium-studio
+    schedule:
+      interval: daily
+      time: "06:00"
+      timezone: Europe/London
+    allow:
+      - dependency-name: "Elysium.*"
+    groups:
+      elysium-packages:
+        patterns:
+          - "Elysium.*"
+    open-pull-requests-limit: 1
+    commit-message:
+      prefix: deps
