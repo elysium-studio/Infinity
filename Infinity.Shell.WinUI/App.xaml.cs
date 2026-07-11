@@ -8,17 +8,23 @@ using Infinity.Application.DependencyInjection;
 using Infinity.Platform.Windows.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using IApplicationLifetime = Elysium.Application.Abstractions.IApplicationLifetime;
 
 namespace Infinity.Shell.WinUI;
 
 public partial class App
 {
+    private readonly object shutdownLock = new();
+
     private IHost? host;
+    private Task? shutdownTask;
+    private Task? startupNavigationTask;
 
     public App() => InitializeComponent();
 
@@ -31,16 +37,7 @@ public partial class App
         host = Host.CreateDefaultBuilder()
             .UseWritableContentRoot(applicationData)
             .ConfigureServices(services => services
-                .AddSingleton<IApplicationLifetime>(new ApplicationLifetime(async () =>
-                {
-                    if (host is not null)
-                    {
-                        await host.StopAsync();
-                        host.Dispose();
-                    }
-
-                    Current.Exit();
-                }))
+                .AddSingleton<IApplicationLifetime>(new ApplicationLifetime(ShutdownAsync))
                 .AddInfinityApplication()
                 .AddInfinityPlatform()
                 .AddApplication()
@@ -65,7 +62,48 @@ public partial class App
 
         if (host.Services.GetRequiredService<Settings>() is { ShowHintOnStartup: true })
         {
-            _ = host.Services.GetRequiredService<INavigator>().NavigateAsync("TourWindow");
+            startupNavigationTask = NavigateToStartupTourAsync(
+                host.Services.GetRequiredService<INavigator>(),
+                host.Services.GetRequiredService<ILogger<App>>());
+        }
+    }
+
+    private Task ShutdownAsync()
+    {
+        lock (shutdownLock)
+        {
+            return shutdownTask ??= ShutdownCoreAsync();
+        }
+    }
+
+    private async Task ShutdownCoreAsync()
+    {
+        IHost? currentHost = host;
+
+        if (currentHost is not null)
+        {
+            if (startupNavigationTask is not null)
+            {
+                await startupNavigationTask;
+            }
+
+            await currentHost.StopAsync();
+            currentHost.Dispose();
+            host = null;
+        }
+
+        Current.Exit();
+    }
+
+    private static async Task NavigateToStartupTourAsync(INavigator navigator, ILogger logger)
+    {
+        try
+        {
+            await navigator.NavigateAsync("TourWindow");
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Failed to navigate to the startup tour");
         }
     }
 }

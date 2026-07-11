@@ -6,6 +6,7 @@ using Elysium.Platform.Abstractions;
 using Elysium.Presentation;
 using Elysium.Presentation.Abstractions;
 using Infinity.Application.Abstractions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NavigationCompletedEventArgs = Infinity.Application.Abstractions.NavigationCompletedEventArgs;
 
@@ -44,7 +45,9 @@ public partial class TrackedWindowCollectionViewModel :
     private readonly INavigator navigator;
     private readonly IOptionsMonitor<Settings> settings;
     private readonly IApplicationLifetime lifetime;
+    private readonly ILogger<TrackedWindowCollectionViewModel> logger;
 
+    private bool isExitRequested;
     private bool preservePageOnFilterClear;
     private bool filterSelectionResolved;
     private string lastActivatedFilterText = string.Empty;
@@ -104,7 +107,8 @@ public partial class TrackedWindowCollectionViewModel :
         IWindowNavigationCoordinator coordinator,
         INavigator navigator,
         IOptionsMonitor<Settings> settings,
-        IApplicationLifetime lifetime) : base(provider, factory, messenger, disposer)
+        IApplicationLifetime lifetime,
+        ILogger<TrackedWindowCollectionViewModel> logger) : base(provider, factory, messenger, disposer)
     {
         this.dispatcher = dispatcher;
         this.workspace = workspace;
@@ -123,6 +127,7 @@ public partial class TrackedWindowCollectionViewModel :
         this.navigator = navigator;
         this.settings = settings;
         this.lifetime = lifetime;
+        this.logger = logger;
 
         IsActive = true;
     }
@@ -171,13 +176,31 @@ public partial class TrackedWindowCollectionViewModel :
         Messenger.Register<DesktopBackgroundChangedEventArgs>(this);
     }
 
-    public void ExitApplication() => _ = lifetime.ExitAsync();
+    public async void ExitApplication()
+    {
+        if (isExitRequested)
+        {
+            return;
+        }
 
-    public async void NavigateToAbout() => await navigator.NavigateAsync("AboutWindow");
+        isExitRequested = true;
 
-    public async void NavigateToTour() => await navigator.NavigateAsync("TourWindow");
+        try
+        {
+            await lifetime.ExitAsync();
+        }
+        catch (Exception exception)
+        {
+            isExitRequested = false;
+            logger.LogError(exception, "Failed to exit the application");
+        }
+    }
 
-    public async void NavigateToSettings() => await navigator.NavigateAsync("SettingsWindow");
+    public async void NavigateToAbout() => await NavigateAsync("AboutWindow");
+
+    public async void NavigateToTour() => await NavigateAsync("TourWindow");
+
+    public async void NavigateToSettings() => await NavigateAsync("SettingsWindow");
 
     public void NavigateToPage(int page)
     {
@@ -321,6 +344,18 @@ public partial class TrackedWindowCollectionViewModel :
         preservePageOnFilterClear = filterState.IsActive;
 
         coordinator.NavigateTo(handle);
+    }
+
+    private async Task NavigateAsync(string key)
+    {
+        try
+        {
+            await navigator.NavigateAsync(key);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Failed to navigate to {NavigationKey}", key);
+        }
     }
 
     partial void OnContentHeightChanged(double value)

@@ -2,6 +2,7 @@
 using Elysium.Application.Abstractions;
 using Elysium.Presentation;
 using Elysium.Presentation.Abstractions;
+using Microsoft.Extensions.Logging;
 using System.ComponentModel;
 
 namespace Infinity.Shell;
@@ -11,9 +12,12 @@ public class TourViewModel(IServiceProvider provider,
     IMessenger messenger,
     IDisposer disposer,
     IWritableOptions<Settings> writer,
+    ILogger<TourViewModel> logger,
     IEnumerable<ITourViewModel> items) :
     ObservableCollectionViewModel<ITourViewModel>(provider, factory, messenger, disposer, items)
 {
+    private bool isFinishing;
+
     public event EventHandler? Finished;
 
     public event EventHandler? Cancelled;
@@ -83,15 +87,30 @@ public class TourViewModel(IServiceProvider provider,
         }
     }
 
-    public void Finish()
+    public async void Finish()
     {
-        _ = MarkCompletedAsync();
-        Finished?.Invoke(this, EventArgs.Empty);
+        if (isFinishing)
+        {
+            return;
+        }
+
+        isFinishing = true;
+
+        try
+        {
+            await writer.WriteAsync(settings => settings.ShowHintOnStartup = false);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Failed to persist tour completion");
+        }
+        finally
+        {
+            Finished?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     public void Cancel() => Cancelled?.Invoke(this, EventArgs.Empty);
-
-    private async Task MarkCompletedAsync() => await writer.WriteAsync(settings => settings.ShowHintOnStartup = false);
 
     protected override void OnPropertyChanged(PropertyChangedEventArgs args)
     {

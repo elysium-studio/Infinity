@@ -4,6 +4,7 @@ using Elysium.Application.DependencyInjection;
 using Elysium.Presentation.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 
@@ -22,6 +23,7 @@ public class TourModule :
                     provider.GetRequiredService<IMessenger>(),
                     provider.GetRequiredService<IDisposer>(),
                     provider.GetRequiredService<IWritableOptions<Settings>>(),
+                    provider.GetRequiredService<ILogger<TourViewModel>>(),
                     provider.GetRequiredService<IEnumerable<ITourViewModel>>()))
             .AddViewFor<WelcomeView, ITourViewModel, WelcomeViewModel>(ServiceLifetime.Transient,
                 provider => new WelcomeView(),
