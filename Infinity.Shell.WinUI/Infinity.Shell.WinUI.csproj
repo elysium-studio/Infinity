@@ -61,6 +61,7 @@
 		<PackageReference Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
 		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2270" />
 		<PackageReference Include="Microsoft.WindowsAppSDK" Version="2.2.0" />
+		<PackageReference Include="Microsoft.WindowsAppSDK.Runtime" Version="2.2.0" GeneratePathProperty="true" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="3.0.1" />
 		<PackageReference Include="Velopack" Version="1.2.0" />
 		<PackageReference Include="WinUIEx" Version="2.9.1" />
@@ -83,5 +84,46 @@
 		</ItemGroup>
 		<Copy SourceFiles="@(PriFiles)" DestinationFolder="$(PublishDir)" />
 		<Copy SourceFiles="@(XbfFiles)" DestinationFolder="$(PublishDir)" />
+	</Target>
+	<UsingTask TaskName="ExtractWindowsAppRuntimeInsightsResource"
+		TaskFactory="RoslynCodeTaskFactory"
+		AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+		<ParameterGroup>
+			<ArchivePath ParameterType="System.String" Required="true" />
+			<OutputPath ParameterType="System.String" Required="true" />
+		</ParameterGroup>
+		<Task>
+			<Using Namespace="System.IO" />
+			<Using Namespace="System.IO.Compression" />
+			<Code Type="Fragment" Language="cs"><![CDATA[
+                const string entryName = "Microsoft.WindowsAppRuntime.Insights.Resource.dll";
+                using (ZipArchive archive = ZipFile.OpenRead(ArchivePath))
+                {
+                    ZipArchiveEntry entry = archive.GetEntry(entryName);
+                    if (entry == null)
+                    {
+                        Log.LogError($"{entryName} was not found in {ArchivePath}.");
+                    }
+                    else
+                    {
+                        Directory.CreateDirectory(Path.GetDirectoryName(OutputPath) ?? ".");
+                        entry.ExtractToFile(OutputPath, true);
+                    }
+                }
+            ]]></Code>
+		</Task>
+	</UsingTask>
+	<!-- Work around https://github.com/microsoft/WindowsAppSDK/issues/6071 for self-contained app notifications. -->
+	<Target Name="CopyWindowsAppRuntimeInsightsResourceToPublish"
+		AfterTargets="Publish"
+		Condition="'$(WindowsAppSDKSelfContained)' == 'true'">
+		<PropertyGroup>
+			<WindowsAppRuntimeFrameworkMsix>$(PkgMicrosoft_WindowsAppSDK_Runtime)\tools\MSIX\win10-x64\Microsoft.WindowsAppRuntime.2.msix</WindowsAppRuntimeFrameworkMsix>
+		</PropertyGroup>
+		<Error Condition="!Exists('$(WindowsAppRuntimeFrameworkMsix)')"
+			Text="Windows App Runtime framework package was not found at $(WindowsAppRuntimeFrameworkMsix)." />
+		<ExtractWindowsAppRuntimeInsightsResource
+			ArchivePath="$(WindowsAppRuntimeFrameworkMsix)"
+			OutputPath="$(PublishDir)Microsoft.WindowsAppRuntime.Insights.Resource.dll" />
 	</Target>
 </Project>

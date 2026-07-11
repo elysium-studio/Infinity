@@ -45,6 +45,7 @@ public partial class App
                 .AddModules(new ApplicationModule(applicationData, dispatcherQueue,
                                 flush => UnhandledException += (_, args) => flush(args.Exception)),
                             new ConfigurationModule(),
+                            new LocalizationModule(),
                             new NavigationModule(),
                             new ShellModule(),
                             new SettingsModule(),
