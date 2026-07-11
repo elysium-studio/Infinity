@@ -129,7 +129,8 @@ jobs:
         run: |
           $requiredFiles = @(
             "artifacts/native-aot/Infinity.exe",
-            "artifacts/native-aot/Infinity.Platform.Windows.Native.dll"
+            "artifacts/native-aot/Infinity.Platform.Windows.Native.dll",
+            "artifacts/native-aot/Microsoft.WindowsAppRuntime.Insights.Resource.dll"
           )
 
           foreach ($requiredFile in $requiredFiles) {
