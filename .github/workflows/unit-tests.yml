@@ -1,0 +1,73 @@
+name: Unit tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Unit tests (.NET 10)
+    runs-on: windows-latest
+
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_NOLOGO: true
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Configure private Elysium feed
+        shell: pwsh
+        env:
+          ELYSIUM_PACKAGES_TOKEN: ${{ secrets.ELYSIUM_PACKAGES_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          $token = if ([string]::IsNullOrWhiteSpace($env:ELYSIUM_PACKAGES_TOKEN)) {
+            $env:GITHUB_TOKEN
+          }
+          else {
+            $env:ELYSIUM_PACKAGES_TOKEN
+          }
+
+          dotnet nuget update source "Elysium Studio" `
+            --username $env:GITHUB_REPOSITORY_OWNER `
+            --password $token `
+            --store-password-in-clear-text `
+            --configfile NuGet.config
+
+      - name: Restore unit tests
+        run: dotnet restore Infinity.Tests/Infinity.Tests.csproj -p:Platform=x64
+
+      - name: Build unit tests
+        run: dotnet build Infinity.Tests/Infinity.Tests.csproj -c Release -p:Platform=x64 --no-restore -warnaserror
+
+      - name: Run unit tests
+        run: dotnet test Infinity.Tests/Infinity.Tests.csproj -c Release -p:Platform=x64 --no-build --no-restore --logger "trx;LogFileName=unit-tests.trx" --collect "XPlat Code Coverage" --results-directory TestResults
+
+      - name: Upload test results and coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: TestResults
+          if-no-files-found: warn
+          retention-days: 14

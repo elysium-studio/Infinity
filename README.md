@@ -48,3 +48,12 @@ dotnet nuget add source "https://nuget.pkg.github.com/elysium-studio/index.json"
 ```
 
 The token must be a classic personal access token with `read:packages`. Do not add credentials to the repository's `NuGet.config`; it contains only package sources and source mapping.
+
+Run the unit tests from the repository root:
+
+```powershell
+dotnet restore Infinity.Tests/Infinity.Tests.csproj -p:Platform=x64
+dotnet test Infinity.Tests/Infinity.Tests.csproj -c Release -p:Platform=x64 --no-restore
+```
+
+GitHub Actions runs the same tests for every pull request and every push to `main`, and retains the TRX results and Cobertura coverage report for 14 days. The workflow uses the `ELYSIUM_PACKAGES_TOKEN` repository secret for the private Elysium feed, falling back to the workflow `GITHUB_TOKEN` when package access has been granted directly to the Infinity repository.
