@@ -1,0 +1,139 @@
+name: Native builds
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native-build:
+    name: Native C++ build (x64)
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Set up MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Restore native packages
+        run: >-
+          nuget restore Infinity.Platform.Windows.Native/packages.config
+          -PackagesDirectory packages
+          -Source https://api.nuget.org/v3/index.json
+          -NonInteractive
+
+      - name: Build native component
+        run: >-
+          msbuild Infinity.Platform.Windows.Native/Infinity.Platform.Windows.Native.vcxproj
+          /p:Configuration=Release
+          /p:Platform=x64
+          /m
+          /nologo
+
+      - name: Verify native output
+        shell: pwsh
+        run: |
+          $nativeDll = "Infinity.Platform.Windows.Native/x64/Release/Infinity.Platform.Windows.Native.dll"
+
+          if (-not (Test-Path -LiteralPath $nativeDll -PathType Leaf)) {
+            throw "Native build did not produce $nativeDll"
+          }
+
+      - name: Upload native component
+        uses: actions/upload-artifact@v4
+        with:
+          name: infinity-native-x64
+          path: Infinity.Platform.Windows.Native/x64/Release/Infinity.Platform.Windows.Native.dll
+          if-no-files-found: error
+          retention-days: 1
+
+  native-aot:
+    name: WinUI Native AOT publish (x64)
+    needs: native-build
+    runs-on: windows-latest
+
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_NOLOGO: true
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Download native component
+        uses: actions/download-artifact@v4
+        with:
+          name: infinity-native-x64
+          path: Infinity.Platform.Windows.Native/x64/Release
+
+      - name: Configure private Elysium feed
+        shell: pwsh
+        env:
+          ELYSIUM_PACKAGES_TOKEN: ${{ secrets.ELYSIUM_PACKAGES_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          $token = if ([string]::IsNullOrWhiteSpace($env:ELYSIUM_PACKAGES_TOKEN)) {
+            $env:GITHUB_TOKEN
+          }
+          else {
+            $env:ELYSIUM_PACKAGES_TOKEN
+          }
+
+          dotnet nuget update source "Elysium Studio" `
+            --username $env:GITHUB_REPOSITORY_OWNER `
+            --password $token `
+            --store-password-in-clear-text `
+            --configfile NuGet.config
+
+      - name: Publish Native AOT application
+        shell: pwsh
+        run: |
+          dotnet publish Infinity.Shell.WinUI/Infinity.Shell.WinUI.csproj `
+            --configuration Release `
+            --runtime win-x64 `
+            --output artifacts/native-aot `
+            --self-contained true `
+            --property:Platform=x64 `
+            --property:WindowsAppSDKSelfContained=true `
+            --property:PublishAot=true `
+            --property:TrimmerSingleWarn=false `
+            --property:DebugType=None `
+            --property:DebugSymbols=false `
+            --property:StripSymbols=true `
+            --warnaserror
+
+      - name: Verify Native AOT output
+        shell: pwsh
+        run: |
+          $requiredFiles = @(
+            "artifacts/native-aot/Infinity.exe",
+            "artifacts/native-aot/Infinity.Platform.Windows.Native.dll"
+          )
+
+          foreach ($requiredFile in $requiredFiles) {
+            if (-not (Test-Path -LiteralPath $requiredFile -PathType Leaf)) {
+              throw "Native AOT publish did not produce $requiredFile"
+            }
+          }
