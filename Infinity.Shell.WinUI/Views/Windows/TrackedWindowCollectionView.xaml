@@ -60,10 +60,10 @@
                     </Grid.ColumnDefinitions>
                     <Grid Grid.Column="1" VerticalAlignment="Center">
                         <TextBox
+                            x:Uid="WindowSearchBox"
                             Padding="44,5,6,6"
                             HorizontalAlignment="Stretch"
                             CornerRadius="16"
-                            PlaceholderText="Find a desktop window..."
                             Text="{x:Bind ViewModel.FilterText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                             <TextBox.Resources>
                                 <ResourceDictionary>
@@ -99,9 +99,9 @@
                     </Grid>
                 </Grid>
                 <Button
+                    x:Uid="WindowOptionsButton"
                     VerticalAlignment="Center"
-                    IsTabStop="False"
-                    ToolTipService.ToolTip="Options">
+                    IsTabStop="False">
                     <Button.Resources>
                         <SolidColorBrush x:Key="ButtonBackground" Color="Transparent" />
                         <SolidColorBrush x:Key="ButtonBackgroundDisabled" Color="Transparent" />
@@ -124,23 +124,23 @@
                     </Button.Style>
                     <Button.Flyout>
                         <MenuFlyout Placement="Bottom">
-                            <MenuFlyoutItem Click="{x:Bind ViewModel.NavigateToSettings}" Text="Settings">
+                            <MenuFlyoutItem x:Uid="WindowSettingsMenuItem" Click="{x:Bind ViewModel.NavigateToSettings}">
                                 <MenuFlyoutItem.Icon>
                                     <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE713;" />
                                 </MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
-                            <MenuFlyoutItem Click="{x:Bind ViewModel.NavigateToTour}" Text="Take a tour">
+                            <MenuFlyoutItem x:Uid="WindowTourMenuItem" Click="{x:Bind ViewModel.NavigateToTour}">
                                 <MenuFlyoutItem.Icon>
                                     <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE7BE;" />
                                 </MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
-                            <MenuFlyoutItem Click="{x:Bind ViewModel.NavigateToAbout}" Text="About">
+                            <MenuFlyoutItem x:Uid="WindowAboutMenuItem" Click="{x:Bind ViewModel.NavigateToAbout}">
                                 <MenuFlyoutItem.Icon>
                                     <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE946;" />
                                 </MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                             <MenuFlyoutSeparator />
-                            <MenuFlyoutItem Click="{x:Bind ViewModel.ExitApplication}" Text="Exit">
+                            <MenuFlyoutItem x:Uid="WindowExitMenuItem" Click="{x:Bind ViewModel.ExitApplication}">
                                 <MenuFlyoutItem.Icon>
                                     <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE7E8;" />
                                 </MenuFlyoutItem.Icon>

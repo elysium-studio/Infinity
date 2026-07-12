@@ -5,12 +5,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:CommunityToolkit="using:CommunityToolkit.WinUI.Controls"
     Loaded="{x:Bind ViewModel.Activate}">
-    <CommunityToolkit:SettingsCard Description="How fast the desktop scrolls when dragging a window to the screen edge" Header="Drag Scroll Speed">
+    <CommunityToolkit:SettingsCard x:Uid="DragScrollSpeedCard">
         <ComboBox SelectedIndex="{x:Bind ViewModel.Value, Mode=TwoWay}">
-            <ComboBoxItem Content="Slow" />
-            <ComboBoxItem Content="Normal" />
-            <ComboBoxItem Content="Fast" />
-            <ComboBoxItem Content="Turbo" />
+            <ComboBoxItem x:Uid="SpeedSlowOption" />
+            <ComboBoxItem x:Uid="SpeedNormalOption" />
+            <ComboBoxItem x:Uid="SpeedFastOption" />
+            <ComboBoxItem x:Uid="SpeedTurboOption" />
         </ComboBox>
     </CommunityToolkit:SettingsCard>
 </UserControl>

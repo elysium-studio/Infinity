@@ -56,15 +56,15 @@
             </Grid>
             <StackPanel Spacing="8">
                 <TextBlock
+                    x:Uid="TourWelcomeTitle"
                     x:Name="HeadingText"
                     Style="{StaticResource TitleLargeTextBlockStyle}"
-                    Text="Welcome to Infinity"
                     TextAlignment="Center"
                     TextWrapping="Wrap" />
                 <TextBlock
+                    x:Uid="TourWelcomeDescription"
                     x:Name="BodyText"
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    Text="Infinity turns your desktop into an endless, scrollable canvas of pages. This quick walkthrough covers the basics of moving around and customizing how it feels."
                     TextAlignment="Center"
                     TextWrapping="Wrap" />
             </StackPanel>

@@ -58,6 +58,7 @@
                             CornerRadius="12"
                             Opacity="0" />
                         <TextBlock
+                            x:Uid="TourShiftKeyLabel"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             FontSize="15"
@@ -125,7 +126,7 @@
                             FontSize="15"
                             FontWeight="SemiBold"
                             Foreground="{ThemeResource TextFillColorPrimaryBrush}"
-                            Text="Shift" />
+                            />
                     </Grid>
                     <StackPanel
                         Grid.Row="1"
@@ -157,11 +158,12 @@
                                 Glyph="&#xF0B0;" />
                         </Grid>
                         <TextBlock
+                            x:Uid="TourOrLabel"
                             VerticalAlignment="Center"
                             FontSize="16"
                             FontWeight="SemiBold"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                            Text="or" />
+                            />
                         <Grid
                             x:Name="RightArrowKeyCard"
                             Width="64"
@@ -281,19 +283,19 @@
         </Border>
         <StackPanel x:Name="HeadingGroup" Spacing="8">
             <TextBlock
+                x:Uid="TourWindowJumpTitle"
                 Style="{StaticResource TitleTextBlockStyle}"
-                Text="Sending a window to another page"
                 TextAlignment="Center"
                 TextWrapping="Wrap" />
             <TextBlock
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                 TextAlignment="Center"
                 TextWrapping="Wrap">
-                <Run Text="Hold " />
+                <Run x:Uid="TourWindowJumpInstructionPrefix" />
                 <Run Text="{x:Bind ViewModel.FirstModifier, Mode=OneWay}" />
                 <Run Text="+" />
                 <Run Text="{x:Bind ViewModel.SecondModifier, Mode=OneWay}" />
-                <Run Text="+Shift and press the Left or Right arrow key. The window in focus jumps straight to the page beside it, so you can reorganize without touching the mouse. Drop Shift and the same combo just switches pages, leaving the window where it is." />
+                <Run x:Uid="TourWindowJumpInstructionSuffix" />
             </TextBlock>
         </StackPanel>
     </StackPanel>

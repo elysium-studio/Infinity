@@ -6,10 +6,10 @@
     xmlns:CommunityToolkit="using:CommunityToolkit.WinUI.Controls"
     Loaded="{x:Bind ViewModel.Activate}"
     Unloaded="{x:Bind ViewModel.Deactivate}">
-    <CommunityToolkit:SettingsCard Description="Automatically launch Infinity when you sign in" Header="Start with Windows">
+    <CommunityToolkit:SettingsCard x:Uid="StartWithWindowsCard">
         <ToggleSwitch
+            x:Uid="BooleanToggle"
             IsOn="{x:Bind ViewModel.Value, Mode=TwoWay}"
-            OffContent="No"
-            OnContent="Yes" />
+            />
     </CommunityToolkit:SettingsCard>
 </UserControl>

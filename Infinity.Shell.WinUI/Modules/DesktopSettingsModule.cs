@@ -71,7 +71,8 @@ public class DesktopSettingsModule :
                     (config, scrollModifierKeys) => config.ScrollModifierKeys = scrollModifierKeys!,
                     provider.GetRequiredService<IHotKeysBuilder>(),
                     provider.GetRequiredService<HotKeysBuilderOptions>(),
-                    provider.GetRequiredService<IKeyLabelProvider>()))
+                    provider.GetRequiredService<IKeyLabelProvider>(),
+                    provider.GetRequiredService<ITextLocalizer>()))
             .AddViewFor<WindowPeekView, IDesktopViewModel, WindowPeekViewModel>(ServiceLifetime.Transient,
                 provider => new WindowPeekView(),
                 provider => new WindowPeekViewModel(provider,

@@ -22,6 +22,7 @@ public partial class PageTintViewModel :
     private readonly IOptionsMonitor<Settings> settings;
     private readonly IWritableOptions<Settings> writableOptions;
     private readonly IPager pager;
+    private readonly ITextLocalizer localizer;
     private bool filterActive;
 
     [ObservableProperty]
@@ -57,13 +58,15 @@ public partial class PageTintViewModel :
         IOptionsMonitor<Settings> settings,
         IWritableOptions<Settings> writableOptions,
         IPager pager,
-        IPanState panState) : base(provider, factory, messenger, disposer)
+        IPanState panState,
+        ITextLocalizer localizer) : base(provider, factory, messenger, disposer)
     {
         this.dispatcher = dispatcher;
         this.modifierKeyState = modifierKeyState;
         this.settings = settings;
         this.writableOptions = writableOptions;
         this.pager = pager;
+        this.localizer = localizer;
 
         isBlurEnabled = settings.CurrentValue.DesktopBlur;
         previewPosition = settings.CurrentValue.PreviewPosition;
@@ -214,6 +217,8 @@ public partial class PageTintViewModel :
         }
     }
 
-    private static string ResolvePageTitle(int page, Dictionary<int, string>? pageTitles) =>
-        pageTitles?.TryGetValue(page, out string? title) == true ? title : $"Page {page + 1}";
+    private string ResolvePageTitle(int page, Dictionary<int, string>? pageTitles) =>
+        pageTitles?.TryGetValue(page, out string? title) == true
+            ? title
+            : localizer.GetText("PageTitle", page + 1);
 }

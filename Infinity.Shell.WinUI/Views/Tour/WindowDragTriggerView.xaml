@@ -184,19 +184,19 @@
         </Border>
         <StackPanel x:Name="HeadingGroup" Spacing="8">
             <TextBlock
+                x:Uid="TourWindowDragTitle"
                 Style="{StaticResource TitleTextBlockStyle}"
-                Text="Dragging a window to another page"
                 TextAlignment="Center"
                 TextWrapping="Wrap" />
             <TextBlock
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                 TextAlignment="Center"
                 TextWrapping="Wrap">
-                <Run Text="Hold " />
+                <Run x:Uid="TourWindowDragInstructionPrefix" />
                 <Run Text="{x:Bind ViewModel.FirstModifier, Mode=OneWay}" />
                 <Run Text="+" />
                 <Run Text="{x:Bind ViewModel.SecondModifier, Mode=OneWay}" />
-                <Run Text=" and drag a window's title bar toward the edge of the screen to move it onto the next page." />
+                <Run x:Uid="TourWindowDragInstructionSuffix" />
             </TextBlock>
         </StackPanel>
     </StackPanel>

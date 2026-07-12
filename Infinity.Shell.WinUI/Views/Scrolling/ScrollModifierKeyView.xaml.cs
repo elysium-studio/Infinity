@@ -13,9 +13,6 @@ public partial class ScrollModifierKeyView :
 
     public ScrollModifierKeyViewModel? ViewModel => DataContext as ScrollModifierKeyViewModel;
 
-    public string ToHintText(bool isRecording, int count) =>
-        isRecording && count == 0 ? "Press shortcut keys..." : string.Empty;
-
     public Visibility ToHintVisibility(int count, bool isRecording) =>
         isRecording && count == 0 ? Visibility.Visible : Visibility.Collapsed;
 

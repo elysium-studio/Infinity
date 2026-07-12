@@ -46,6 +46,7 @@
                     Visibility="{x:Bind ToSelectionVisibility(ViewModel.IsSelected), Mode=OneWay}" />
                 <Button
                     x:Name="CloseButton"
+                    x:Uid="CloseWindowButton"
                     Width="24"
                     Height="24"
                     Margin="0,8,8,0"
@@ -56,8 +57,7 @@
                     CornerRadius="4"
                     IsTabStop="False"
                     PointerEntered="HandleCloseButtonPointerEntered"
-                    PointerExited="HandleCloseButtonPointerExited"
-                    ToolTipService.ToolTip="Close window">
+                    PointerExited="HandleCloseButtonPointerExited">
                     <Button.Resources>
                         <ResourceDictionary>
                             <ResourceDictionary.ThemeDictionaries>

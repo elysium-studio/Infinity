@@ -1,64 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- 
-    Microsoft ResX Schema 
-    
-    Version 2.0
-    
-    The primary goals of this format is to allow a simple XML format 
-    that is mostly human readable. The generation and parsing of the 
-    various data types are done through the TypeConverter classes 
-    associated with the data types.
-    
-    Example:
-    
-    ... ado.net/XML headers & schema ...
-    <resheader name="resmimetype">text/microsoft-resx</resheader>
-    <resheader name="version">2.0</resheader>
-    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
-    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
-    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
-    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
-    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
-        <value>[base64 mime encoded serialized .NET Framework object]</value>
-    </data>
-    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
-        <comment>This is a comment</comment>
-    </data>
-                
-    There are any number of "resheader" rows that contain simple 
-    name/value pairs.
-    
-    Each data row contains a name, and value. The row also contains a 
-    type or mimetype. Type corresponds to a .NET class that support 
-    text/value conversion through the TypeConverter architecture. 
-    Classes that don't support this are serialized and stored with the 
-    mimetype set.
-    
-    The mimetype is used for serialized objects, and tells the 
-    ResXResourceReader how to depersist the object. This is currently not 
-    extensible. For a given mimetype the value must be set accordingly:
-    
-    Note - application/x-microsoft.net.object.binary.base64 is the format 
-    that the ResXResourceWriter will generate, however the reader can 
-    read any of the formats listed below.
-    
-    mimetype: application/x-microsoft.net.object.binary.base64
-    value   : The object must be serialized with 
-            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
-            : and then encoded with base64 encoding.
-    
-    mimetype: application/x-microsoft.net.object.soap.base64
-    value   : The object must be serialized with 
-            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
-            : and then encoded with base64 encoding.
-
-    mimetype: application/x-microsoft.net.object.bytearray.base64
-    value   : The object must be serialized into a byte array 
-            : using a System.ComponentModel.TypeConverter
-            : and then encoded with base64 encoding.
-    -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -131,5 +72,266 @@
   </data>
   <data name="UpdateReadyToastTitle" xml:space="preserve">
     <value>Update ready</value>
+  </data>
+  <data name="AboutTitleBar.Title" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="BooleanToggle.OffContent" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="BooleanToggle.OnContent" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="CloseWindowButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Close window</value>
+  </data>
+  <data name="DesktopBlurCard.Description" xml:space="preserve">
+    <value>Blur the background during scrolling and filtering</value>
+  </data>
+  <data name="DesktopBlurCard.Header" xml:space="preserve">
+    <value>Background Blur</value>
+  </data>
+  <data name="DesktopSectionTitle.Text" xml:space="preserve">
+    <value>Desktop</value>
+  </data>
+  <data name="DragScrollSpeedCard.Description" xml:space="preserve">
+    <value>How fast the desktop scrolls when dragging a window to the screen edge</value>
+  </data>
+  <data name="DragScrollSpeedCard.Header" xml:space="preserve">
+    <value>Drag Scroll Speed</value>
+  </data>
+  <data name="PreviewBackgroundCard.Description" xml:space="preserve">
+    <value>Show your desktop background in the preview bar</value>
+  </data>
+  <data name="PreviewBackgroundCard.Header" xml:space="preserve">
+    <value>Desktop Background</value>
+  </data>
+  <data name="PreviewDebugWaitingText.Text" xml:space="preserve">
+    <value>Waiting...</value>
+  </data>
+  <data name="PreviewDebugWindow.Title" xml:space="preserve">
+    <value>Window preview grid</value>
+  </data>
+  <data name="PreviewPositionAutoOption.Content" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="PreviewPositionBottomOption.Content" xml:space="preserve">
+    <value>Bottom</value>
+  </data>
+  <data name="PreviewPositionCard.Description" xml:space="preserve">
+    <value>Where the preview bar appears on screen</value>
+  </data>
+  <data name="PreviewPositionCard.Header" xml:space="preserve">
+    <value>Preview Position</value>
+  </data>
+  <data name="PreviewPositionTopOption.Content" xml:space="preserve">
+    <value>Top</value>
+  </data>
+  <data name="PreviewSectionTitle.Text" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="PreviewSizeCard.Description" xml:space="preserve">
+    <value>Controls how tall the preview bar appears at the bottom of your screen</value>
+  </data>
+  <data name="PreviewSizeCard.Header" xml:space="preserve">
+    <value>Preview Size</value>
+  </data>
+  <data name="PreviewSizeCompactOption.Content" xml:space="preserve">
+    <value>Compact</value>
+  </data>
+  <data name="PreviewSizeDefaultOption.Content" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="PreviewSizeLargeOption.Content" xml:space="preserve">
+    <value>Large</value>
+  </data>
+  <data name="PageTitle" xml:space="preserve">
+    <value>Page {0}</value>
+  </data>
+  <data name="ScrollShortcutCancelButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ScrollShortcutCard.Description" xml:space="preserve">
+    <value>The shortcut used to trigger desktop scrolling</value>
+  </data>
+  <data name="ScrollShortcutCard.Header" xml:space="preserve">
+    <value>Scroll Shortcut</value>
+  </data>
+  <data name="ScrollShortcutEditButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="ScrollShortcutRecordingHint.Text" xml:space="preserve">
+    <value>Press shortcut keys...</value>
+  </data>
+  <data name="ScrollShortcutPressKeysToSave" xml:space="preserve">
+    <value>Press {0} keys to save this shortcut.</value>
+  </data>
+  <data name="ScrollShortcutPressMoreKeys" xml:space="preserve">
+    <value>Press {0} more keys.</value>
+  </data>
+  <data name="ScrollShortcutRecorderUnavailable" xml:space="preserve">
+    <value>The keyboard recorder could not be started.</value>
+  </data>
+  <data name="ScrollShortcutSaveButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="ScrollShortcutStartWithModifier" xml:space="preserve">
+    <value>Start with Ctrl, Alt, Shift or Win.</value>
+  </data>
+  <data name="ScrollShortcutUnavailable" xml:space="preserve">
+    <value>That shortcut is already used by Windows or another app.</value>
+  </data>
+  <data name="ScrollSpeedCard.Description" xml:space="preserve">
+    <value>How fast windows move when you scroll</value>
+  </data>
+  <data name="ScrollSpeedCard.Header" xml:space="preserve">
+    <value>Scroll Speed</value>
+  </data>
+  <data name="SettingsTitleBar.Title" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SpeedFastOption.Content" xml:space="preserve">
+    <value>Fast</value>
+  </data>
+  <data name="SpeedNormalOption.Content" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="SpeedSlowOption.Content" xml:space="preserve">
+    <value>Slow</value>
+  </data>
+  <data name="SpeedTurboOption.Content" xml:space="preserve">
+    <value>Turbo</value>
+  </data>
+  <data name="SpeedVeryFastOption.Content" xml:space="preserve">
+    <value>Very Fast</value>
+  </data>
+  <data name="StartWithWindowsCard.Description" xml:space="preserve">
+    <value>Automatically launch Infinity when you sign in</value>
+  </data>
+  <data name="StartWithWindowsCard.Header" xml:space="preserve">
+    <value>Start with Windows</value>
+  </data>
+  <data name="TourBackButton.Content" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="TourFinishButton.Content" xml:space="preserve">
+    <value>Finish</value>
+  </data>
+  <data name="TourNextButton.Content" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="TourOrLabel.Text" xml:space="preserve">
+    <value>or</value>
+  </data>
+  <data name="TourOverviewInstructionPrefix.Text" xml:space="preserve">
+    <value>Hold </value>
+  </data>
+  <data name="TourOverviewInstructionSuffix.Text" xml:space="preserve">
+    <value> and scroll your mouse wheel anywhere on the desktop. This opens an overview of every page so you can see what's open and jump straight to it.</value>
+  </data>
+  <data name="TourOverviewTitle.Text" xml:space="preserve">
+    <value>Bringing up the page overview</value>
+  </data>
+  <data name="TourPageNumberInstructionPrefix.Text" xml:space="preserve">
+    <value>Hold </value>
+  </data>
+  <data name="TourPageNumberInstructionSuffix.Text" xml:space="preserve">
+    <value> and press a number key, with no other key. 1 through 9, then 0 for the tenth page, takes the view straight there — but every window, including the one in focus, stays exactly where it is.</value>
+  </data>
+  <data name="TourPageNumberTitle.Text" xml:space="preserve">
+    <value>Switching straight to a numbered page</value>
+  </data>
+  <data name="TourPageSwitchInstructionPrefix.Text" xml:space="preserve">
+    <value>Hold </value>
+  </data>
+  <data name="TourPageSwitchInstructionSuffix.Text" xml:space="preserve">
+    <value> and press the Left or Right arrow key, with no other key. The view pans to the next page, but every window — including the one in focus — stays exactly where you left it.</value>
+  </data>
+  <data name="TourPageSwitchTitle.Text" xml:space="preserve">
+    <value>Switching pages without moving anything</value>
+  </data>
+  <data name="TourShiftKeyLabel.Text" xml:space="preserve">
+    <value>Shift</value>
+  </data>
+  <data name="TourTitleBar.Title" xml:space="preserve">
+    <value>Getting Started</value>
+  </data>
+  <data name="TourWelcomeDescription.Text" xml:space="preserve">
+    <value>Infinity turns your desktop into an endless, scrollable canvas of pages. This quick walkthrough covers the basics of moving around and customizing how it feels.</value>
+  </data>
+  <data name="TourWelcomeTitle.Text" xml:space="preserve">
+    <value>Welcome to Infinity</value>
+  </data>
+  <data name="TourWindowDragInstructionPrefix.Text" xml:space="preserve">
+    <value>Hold </value>
+  </data>
+  <data name="TourWindowDragInstructionSuffix.Text" xml:space="preserve">
+    <value> and drag a window's title bar toward the edge of the screen to move it onto the next page.</value>
+  </data>
+  <data name="TourWindowDragTitle.Text" xml:space="preserve">
+    <value>Dragging a window to another page</value>
+  </data>
+  <data name="TourWindowJumpInstructionPrefix.Text" xml:space="preserve">
+    <value>Hold </value>
+  </data>
+  <data name="TourWindowJumpInstructionSuffix.Text" xml:space="preserve">
+    <value>+Shift and press the Left or Right arrow key. The window in focus jumps straight to the page beside it, so you can reorganize without touching the mouse. Drop Shift and the same combo just switches pages, leaving the window where it is.</value>
+  </data>
+  <data name="TourWindowJumpTitle.Text" xml:space="preserve">
+    <value>Sending a window to another page</value>
+  </data>
+  <data name="TourWindowNumberInstructionPrefix.Text" xml:space="preserve">
+    <value>Hold </value>
+  </data>
+  <data name="TourWindowNumberInstructionSuffix.Text" xml:space="preserve">
+    <value>+Shift and press a number key. 1 through 9, then 0 for the tenth page, sends the window in focus straight to that page, no matter how far away it is. Drop Shift and the same combo just takes you to that page, leaving the window where it is.</value>
+  </data>
+  <data name="TourWindowNumberTitle.Text" xml:space="preserve">
+    <value>Jumping straight to a numbered page</value>
+  </data>
+  <data name="VirtualPagesCard.Description" xml:space="preserve">
+    <value>Choose how many pages your desktop spans. Set a fixed number or let it grow as you move windows across</value>
+  </data>
+  <data name="VirtualPagesCard.Header" xml:space="preserve">
+    <value>Virtual Pages</value>
+  </data>
+  <data name="VirtualPagesCountCard.Description" xml:space="preserve">
+    <value>Set the maximum number of pages</value>
+  </data>
+  <data name="VirtualPagesCountCard.Header" xml:space="preserve">
+    <value>Number of Pages</value>
+  </data>
+  <data name="VirtualPagesFixedOption.Content" xml:space="preserve">
+    <value>Fixed</value>
+  </data>
+  <data name="VirtualPagesUnlimitedOption.Content" xml:space="preserve">
+    <value>Unlimited</value>
+  </data>
+  <data name="WindowAboutMenuItem.Text" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="WindowExitMenuItem.Text" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="WindowOptionsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="WindowPeekCard.Description" xml:space="preserve">
+    <value>When hovering a window thumbnail or applying a filter, hide all other windows so only the matching one (or ones) stay visible.</value>
+  </data>
+  <data name="WindowPeekCard.Header" xml:space="preserve">
+    <value>Window Peek</value>
+  </data>
+  <data name="WindowSearchBox.PlaceholderText" xml:space="preserve">
+    <value>Find a desktop window...</value>
+  </data>
+  <data name="WindowsSectionTitle.Text" xml:space="preserve">
+    <value>Windows</value>
+  </data>
+  <data name="WindowSettingsMenuItem.Text" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="WindowTourMenuItem.Text" xml:space="preserve">
+    <value>Take a tour</value>
   </data>
 </root>

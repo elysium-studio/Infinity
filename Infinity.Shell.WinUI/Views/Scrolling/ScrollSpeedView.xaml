@@ -6,12 +6,12 @@
     xmlns:CommunityToolkit="using:CommunityToolkit.WinUI.Controls"
     Loaded="{x:Bind ViewModel.Activate}"
     Unloaded="{x:Bind ViewModel.Deactivate}">
-    <CommunityToolkit:SettingsCard Description="How fast windows move when you scroll" Header="Scroll Speed">
+    <CommunityToolkit:SettingsCard x:Uid="ScrollSpeedCard">
         <ComboBox SelectedIndex="{x:Bind ViewModel.Value, Mode=TwoWay}">
-            <ComboBoxItem Content="Slow" />
-            <ComboBoxItem Content="Normal" />
-            <ComboBoxItem Content="Fast" />
-            <ComboBoxItem Content="Very Fast" />
+            <ComboBoxItem x:Uid="SpeedSlowOption" />
+            <ComboBoxItem x:Uid="SpeedNormalOption" />
+            <ComboBoxItem x:Uid="SpeedFastOption" />
+            <ComboBoxItem x:Uid="SpeedVeryFastOption" />
         </ComboBox>
     </CommunityToolkit:SettingsCard>
 </UserControl>

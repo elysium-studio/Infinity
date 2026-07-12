@@ -6,19 +6,19 @@
     xmlns:CommunityToolkit="using:CommunityToolkit.WinUI.Controls"
     Loaded="{x:Bind ViewModel.Activate}"
     Unloaded="{x:Bind ViewModel.Deactivate}">
-    <CommunityToolkit:SettingsCard Description="Where the preview bar appears on screen" Header="Preview Position">
+    <CommunityToolkit:SettingsCard x:Uid="PreviewPositionCard">
         <ComboBox SelectedIndex="{x:Bind SelectedPositionIndex, Mode=TwoWay}">
-            <ComboBoxItem Content="Auto">
+            <ComboBoxItem x:Uid="PreviewPositionAutoOption">
                 <ComboBoxItem.Tag>
                     <x:Int32>2</x:Int32>
                 </ComboBoxItem.Tag>
             </ComboBoxItem>
-            <ComboBoxItem Content="Top">
+            <ComboBoxItem x:Uid="PreviewPositionTopOption">
                 <ComboBoxItem.Tag>
                     <x:Int32>0</x:Int32>
                 </ComboBoxItem.Tag>
             </ComboBoxItem>
-            <ComboBoxItem Content="Bottom">
+            <ComboBoxItem x:Uid="PreviewPositionBottomOption">
                 <ComboBoxItem.Tag>
                     <x:Int32>1</x:Int32>
                 </ComboBoxItem.Tag>

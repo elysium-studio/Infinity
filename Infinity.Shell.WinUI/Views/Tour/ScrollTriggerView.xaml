@@ -136,19 +136,19 @@
         </Border>
         <StackPanel x:Name="HeadingGroup" Spacing="8">
             <TextBlock
+                x:Uid="TourOverviewTitle"
                 Style="{StaticResource TitleTextBlockStyle}"
-                Text="Bringing up the page overview"
                 TextAlignment="Center"
                 TextWrapping="Wrap" />
             <TextBlock
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                 TextAlignment="Center"
                 TextWrapping="Wrap">
-                <Run Text="Hold " />
+                <Run x:Uid="TourOverviewInstructionPrefix" />
                 <Run Text="{x:Bind ViewModel.FirstModifier, Mode=OneWay}" />
                 <Run Text="+" />
                 <Run Text="{x:Bind ViewModel.SecondModifier, Mode=OneWay}" />
-                <Run Text=" and scroll your mouse wheel anywhere on the desktop. This opens an overview of every page so you can see what's open and jump straight to it." />
+                <Run x:Uid="TourOverviewInstructionSuffix" />
             </TextBlock>
         </StackPanel>
     </StackPanel>

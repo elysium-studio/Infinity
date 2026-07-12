@@ -6,10 +6,10 @@
     xmlns:CommunityToolkit="using:CommunityToolkit.WinUI.Controls"
     Loaded="{x:Bind ViewModel.Activate}"
     Unloaded="{x:Bind ViewModel.Deactivate}">
-    <CommunityToolkit:SettingsCard Description="Blur the background during scrolling and filtering" Header="Background Blur">
+    <CommunityToolkit:SettingsCard x:Uid="DesktopBlurCard">
         <ToggleSwitch
+            x:Uid="BooleanToggle"
             IsOn="{x:Bind ViewModel.Value, Mode=TwoWay}"
-            OffContent="No"
-            OnContent="Yes" />
+            />
     </CommunityToolkit:SettingsCard>
 </UserControl>

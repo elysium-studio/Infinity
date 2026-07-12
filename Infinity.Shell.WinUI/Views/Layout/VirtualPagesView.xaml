@@ -6,10 +6,10 @@
     xmlns:CommunityToolkit="using:CommunityToolkit.WinUI.Controls"
     Loaded="{x:Bind ViewModel.Activate}"
     Unloaded="{x:Bind ViewModel.Deactivate}">
-    <CommunityToolkit:SettingsCard Description="Choose how many pages your desktop spans. Set a fixed number or let it grow as you move windows across" Header="Virtual Pages">
+    <CommunityToolkit:SettingsCard x:Uid="VirtualPagesCard">
         <ComboBox SelectedIndex="{x:Bind ViewModel.Value, Mode=TwoWay}">
-            <ComboBoxItem Content="Unlimited" />
-            <ComboBoxItem Content="Fixed" />
+            <ComboBoxItem x:Uid="VirtualPagesUnlimitedOption" />
+            <ComboBoxItem x:Uid="VirtualPagesFixedOption" />
         </ComboBox>
     </CommunityToolkit:SettingsCard>
 </UserControl>

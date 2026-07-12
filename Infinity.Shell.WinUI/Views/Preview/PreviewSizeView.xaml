@@ -6,11 +6,11 @@
     xmlns:CommunityToolkit="using:CommunityToolkit.WinUI.Controls"
     Loaded="{x:Bind ViewModel.Activate}"
     Unloaded="{x:Bind ViewModel.Deactivate}">
-    <CommunityToolkit:SettingsCard Description="Controls how tall the preview bar appears at the bottom of your screen" Header="Preview Size">
+    <CommunityToolkit:SettingsCard x:Uid="PreviewSizeCard">
         <ComboBox SelectedIndex="{x:Bind ViewModel.Value, Mode=TwoWay}">
-            <ComboBoxItem Content="Compact " />
-            <ComboBoxItem Content="Default" />
-            <ComboBoxItem Content="Large" />
+            <ComboBoxItem x:Uid="PreviewSizeCompactOption" />
+            <ComboBoxItem x:Uid="PreviewSizeDefaultOption" />
+            <ComboBoxItem x:Uid="PreviewSizeLargeOption" />
         </ComboBox>
     </CommunityToolkit:SettingsCard>
 </UserControl>

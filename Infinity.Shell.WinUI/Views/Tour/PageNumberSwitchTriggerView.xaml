@@ -269,19 +269,19 @@
         </Border>
         <StackPanel x:Name="HeadingGroup" Spacing="8">
             <TextBlock
+                x:Uid="TourPageNumberTitle"
                 Style="{StaticResource TitleTextBlockStyle}"
-                Text="Switching straight to a numbered page"
                 TextAlignment="Center"
                 TextWrapping="Wrap" />
             <TextBlock
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                 TextAlignment="Center"
                 TextWrapping="Wrap">
-                <Run Text="Hold " />
+                <Run x:Uid="TourPageNumberInstructionPrefix" />
                 <Run Text="{x:Bind ViewModel.FirstModifier, Mode=OneWay}" />
                 <Run Text="+" />
                 <Run Text="{x:Bind ViewModel.SecondModifier, Mode=OneWay}" />
-                <Run Text=" and press a number key, with no other key. 1 through 9, then 0 for the tenth page, takes the view straight there — but every window, including the one in focus, stays exactly where it is." />
+                <Run x:Uid="TourPageNumberInstructionSuffix" />
             </TextBlock>
         </StackPanel>
     </StackPanel>

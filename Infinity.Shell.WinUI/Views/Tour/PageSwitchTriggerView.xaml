@@ -64,6 +64,7 @@
                             Text="{x:Bind ViewModel.FirstModifier, Mode=OneWay}" />
                     </Grid>
                     <TextBlock
+                        x:Uid="TourOrLabel"
                         Grid.Row="0"
                         Grid.Column="1"
                         HorizontalAlignment="Center"
@@ -124,7 +125,7 @@
                         FontSize="16"
                         FontWeight="SemiBold"
                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                        Text="or" />
+                        />
                     <Grid
                         x:Name="RightArrowKeyCard"
                         Grid.Row="1"
@@ -241,19 +242,19 @@
         </Border>
         <StackPanel x:Name="HeadingGroup" Spacing="8">
             <TextBlock
+                x:Uid="TourPageSwitchTitle"
                 Style="{StaticResource TitleTextBlockStyle}"
-                Text="Switching pages without moving anything"
                 TextAlignment="Center"
                 TextWrapping="Wrap" />
             <TextBlock
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                 TextAlignment="Center"
                 TextWrapping="Wrap">
-                <Run Text="Hold " />
+                <Run x:Uid="TourPageSwitchInstructionPrefix" />
                 <Run Text="{x:Bind ViewModel.FirstModifier, Mode=OneWay}" />
                 <Run Text="+" />
                 <Run Text="{x:Bind ViewModel.SecondModifier, Mode=OneWay}" />
-                <Run Text=" and press the Left or Right arrow key, with no other key. The view pans to the next page, but every window — including the one in focus — stays exactly where you left it." />
+                <Run x:Uid="TourPageSwitchInstructionSuffix" />
             </TextBlock>
         </StackPanel>
     </StackPanel>

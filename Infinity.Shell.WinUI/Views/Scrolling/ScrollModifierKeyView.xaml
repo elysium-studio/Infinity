@@ -9,7 +9,7 @@
     Loaded="{x:Bind ViewModel.Activate}"
     Unloaded="{x:Bind ViewModel.Deactivate}">
     <StackPanel Spacing="8">
-        <CommunityToolkit:SettingsCard Description="The shortcut used to trigger desktop scrolling" Header="Scroll Shortcut">
+        <CommunityToolkit:SettingsCard x:Uid="ScrollShortcutCard">
             <StackPanel
                 VerticalAlignment="Center"
                 Orientation="Horizontal"
@@ -43,14 +43,14 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
                 <TextBlock
+                    x:Uid="ScrollShortcutRecordingHint"
                     VerticalAlignment="Center"
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    Text="{x:Bind ToHintText(ViewModel.IsRecording, ViewModel.Labels.Count), Mode=OneWay}"
                     Visibility="{x:Bind ToHintVisibility(ViewModel.Labels.Count, ViewModel.IsRecording), Mode=OneWay}" />
                 <Button
+                    x:Uid="ScrollShortcutEditButton"
                     Click="{x:Bind ViewModel.StartRecording}"
                     Content="&#xE70F;"
-                    ToolTipService.ToolTip="Edit"
                     Visibility="{x:Bind ToEditVisibility(ViewModel.IsRecording), Mode=OneWay}">
                     <Button.Style>
                         <Style BasedOn="{StaticResource DefaultButtonStyle}" TargetType="Button">
@@ -66,9 +66,9 @@
                     </Button.Style>
                 </Button>
                 <Button
+                    x:Uid="ScrollShortcutCancelButton"
                     Click="{x:Bind ViewModel.CancelRecording}"
                     Content="&#xE711;"
-                    ToolTipService.ToolTip="Cancel"
                     Visibility="{x:Bind ToRecordingVisibility(ViewModel.IsRecording), Mode=OneWay}">
                     <Button.Style>
                         <Style BasedOn="{StaticResource DefaultButtonStyle}" TargetType="Button">
@@ -84,10 +84,10 @@
                     </Button.Style>
                 </Button>
                 <Button
+                    x:Uid="ScrollShortcutSaveButton"
                     Click="{x:Bind ViewModel.SaveRecording}"
                     Content="&#xE73E;"
                     IsEnabled="{x:Bind ViewModel.CanSave, Mode=OneWay}"
-                    ToolTipService.ToolTip="Save"
                     Visibility="{x:Bind ToRecordingVisibility(ViewModel.IsRecording), Mode=OneWay}">
                     <Button.Style>
                         <Style BasedOn="{StaticResource DefaultButtonStyle}" TargetType="Button">

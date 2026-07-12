@@ -11,6 +11,7 @@ public class LocalizationModule :
     public void Register(IServiceCollection services)
     {
         services.AddSingleton<IStringLocalizer, ResourceStringLocalizer>();
+        services.AddSingleton<ITextLocalizer, ResourceTextLocalizer>();
 
         services.Subscribe<IStringLocalizer>((provider, localizer) =>
         {

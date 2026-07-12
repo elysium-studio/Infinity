@@ -60,6 +60,7 @@
                                 Text="{x:Bind ViewModel.FirstModifier, Mode=OneWay}" />
                         </Grid>
                         <TextBlock
+                            x:Uid="TourShiftKeyLabel"
                             VerticalAlignment="Center"
                             FontSize="18"
                             FontWeight="SemiBold"
@@ -113,7 +114,7 @@
                                 FontSize="15"
                                 FontWeight="SemiBold"
                                 Foreground="{ThemeResource TextFillColorPrimaryBrush}"
-                                Text="Shift" />
+                            />
                         </Grid>
                     </StackPanel>
                     <Grid
@@ -291,19 +292,19 @@
         </Border>
         <StackPanel x:Name="HeadingGroup" Spacing="8">
             <TextBlock
+                x:Uid="TourWindowNumberTitle"
                 Style="{StaticResource TitleTextBlockStyle}"
-                Text="Jumping straight to a numbered page"
                 TextAlignment="Center"
                 TextWrapping="Wrap" />
             <TextBlock
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                 TextAlignment="Center"
                 TextWrapping="Wrap">
-                <Run Text="Hold " />
+                <Run x:Uid="TourWindowNumberInstructionPrefix" />
                 <Run Text="{x:Bind ViewModel.FirstModifier, Mode=OneWay}" />
                 <Run Text="+" />
                 <Run Text="{x:Bind ViewModel.SecondModifier, Mode=OneWay}" />
-                <Run Text="+Shift and press a number key. 1 through 9, then 0 for the tenth page, sends the window in focus straight to that page, no matter how far away it is. Drop Shift and the same combo just takes you to that page, leaving the window where it is." />
+                <Run x:Uid="TourWindowNumberInstructionSuffix" />
             </TextBlock>
         </StackPanel>
     </StackPanel>

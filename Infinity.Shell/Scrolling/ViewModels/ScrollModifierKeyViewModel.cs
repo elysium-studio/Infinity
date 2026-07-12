@@ -18,7 +18,8 @@ public partial class ScrollModifierKeyViewModel(IServiceProvider provider,
     Action<Settings, List<List<int>>?> write,
     IHotKeysBuilder builder,
     HotKeysBuilderOptions builderOptions,
-    IKeyLabelProvider labelProvider) :
+    IKeyLabelProvider labelProvider,
+    ITextLocalizer localizer) :
     ObservableReadWriteViewModel<Settings, List<List<int>>>(provider, factory, messenger, disposer, dispatcher, settings, writer, read, write),
     IDesktopViewModel
 {
@@ -80,7 +81,7 @@ public partial class ScrollModifierKeyViewModel(IServiceProvider provider,
             CanSave = false;
             Labels = [];
             IsValidationOpen = true;
-            ValidationMessage = "Start with Ctrl, Alt, Shift or Win.";
+            ValidationMessage = localizer.GetText("ScrollShortcutStartWithModifier");
         });
 
         if (!builder.Start())
@@ -90,7 +91,7 @@ public partial class ScrollModifierKeyViewModel(IServiceProvider provider,
                 IsRecording = false;
                 CanSave = false;
                 IsValidationOpen = true;
-                ValidationMessage = "The keyboard recorder could not be started.";
+                ValidationMessage = localizer.GetText("ScrollShortcutRecorderUnavailable");
             });
         }
     }
@@ -123,7 +124,7 @@ public partial class ScrollModifierKeyViewModel(IServiceProvider provider,
             {
                 CanSave = false;
                 IsValidationOpen = true;
-                ValidationMessage = $"Press {RequiredKeyCount} keys to save this shortcut.";
+                ValidationMessage = localizer.GetText("ScrollShortcutPressKeysToSave", RequiredKeyCount);
             });
 
             return;
@@ -161,7 +162,7 @@ public partial class ScrollModifierKeyViewModel(IServiceProvider provider,
 
             CanSave = false;
             IsValidationOpen = true;
-            ValidationMessage = "That shortcut is already used by Windows or another app.";
+            ValidationMessage = localizer.GetText("ScrollShortcutUnavailable");
         });
     }
 
@@ -184,21 +185,21 @@ public partial class ScrollModifierKeyViewModel(IServiceProvider provider,
             if (snapshot.Keys.Count == 0)
             {
                 IsValidationOpen = true;
-                ValidationMessage = "Start with Ctrl, Alt, Shift or Win.";
+                ValidationMessage = localizer.GetText("ScrollShortcutStartWithModifier");
                 return;
             }
 
             if (snapshot.Keys.Count < RequiredKeyCount)
             {
                 IsValidationOpen = true;
-                ValidationMessage = $"Press {RequiredKeyCount - snapshot.Keys.Count} more key.";
+                ValidationMessage = localizer.GetText("ScrollShortcutPressMoreKeys", RequiredKeyCount - snapshot.Keys.Count);
                 return;
             }
 
             if (!builder.IsComplete)
             {
                 IsValidationOpen = true;
-                ValidationMessage = "That shortcut is already used by Windows or another app.";
+                ValidationMessage = localizer.GetText("ScrollShortcutUnavailable");
                 return;
             }
 

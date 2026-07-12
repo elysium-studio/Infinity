@@ -6,10 +6,10 @@
     xmlns:CommunityToolkit="using:CommunityToolkit.WinUI.Controls"
     Loaded="{x:Bind ViewModel.Activate}"
     Unloaded="{x:Bind ViewModel.Deactivate}">
-    <CommunityToolkit:SettingsCard Description="When hovering a window thumbnail or applying a filter, hide all other windows so only the matching one (or ones) stay visible." Header="Window Peek">
+    <CommunityToolkit:SettingsCard x:Uid="WindowPeekCard">
         <ToggleSwitch
+            x:Uid="BooleanToggle"
             IsOn="{x:Bind ViewModel.Value, Mode=TwoWay}"
-            OffContent="No"
-            OnContent="Yes" />
+            />
     </CommunityToolkit:SettingsCard>
 </UserControl>

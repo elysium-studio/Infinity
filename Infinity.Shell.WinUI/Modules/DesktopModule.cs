@@ -41,7 +41,8 @@ public class DesktopModule :
                     provider.GetRequiredService<IOptionsMonitor<Settings>>(),
                     provider.GetRequiredService<IWritableOptions<Settings>>(),
                     provider.GetRequiredService<IPager>(),
-                    provider.GetRequiredService<IPanState>()))
+                    provider.GetRequiredService<IPanState>(),
+                    provider.GetRequiredService<ITextLocalizer>()))
             .AddViewFor(
                 ServiceLifetime.Singleton,
                 provider => new DesktopFlyoutView(provider.GetRequiredService<IWindowPreviewSurface>()),
