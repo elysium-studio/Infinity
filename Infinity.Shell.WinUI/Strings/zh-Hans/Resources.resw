@@ -334,4 +334,19 @@
   <data name="WindowTourMenuItem.Text" xml:space="preserve">
     <value>参观一下</value>
   </data>
+  <data name="AlwaysOpenApplicationOnPageMenuItem" xml:space="preserve">
+    <value>始终在此页面打开此应用</value>
+  </data>
+  <data name="MoveWindowToPageMenuItem" xml:space="preserve">
+    <value>将窗口移至</value>
+  </data>
+  <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
+    <value>删除打开页面规则</value>
+  </data>
+  <data name="NewPageTitle" xml:space="preserve">
+    <value>新页面 — 第 {0} 页</value>
+  </data>
+  <data name="PageWithTitle" xml:space="preserve">
+    <value>第 {0} 页 — {1}</value>
+  </data>
 </root>

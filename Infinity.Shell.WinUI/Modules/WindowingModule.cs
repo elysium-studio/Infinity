@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Application.DependencyInjection;
 using Elysium.Presentation.Abstractions;
+using Elysium.UI.WinUI;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Infinity.Platform.Windows;
@@ -20,6 +21,7 @@ public class WindowingModule :
     {
         services
             .AddSingleton<IWindowFilterState, TrackedWindowFilter>()
+            .AddSingleton<IWindowPlacementRules, WindowPlacementRules>()
             .AddSingleton<IWindowPeekSource, ApplicationServices.WindowPeekSource>()
             .AddSingleton<IPeekSource>(provider => provider.GetRequiredService<IWindowPeekSource>())
             .AddSingleton<IPeekSource>(provider => new ApplicationServices.FilterPeekSource(
@@ -52,10 +54,16 @@ public class WindowingModule :
                 provider.GetRequiredService<IDisposer>(),
                 provider.GetRequiredService<IWindowController>(),
                 provider.GetRequiredService<IWindowPreviewSurface>(),
+                provider.GetRequiredService<IWindowPageMover>(),
+                provider.GetRequiredService<IWindowPlacementRules>(),
+                provider.GetRequiredService<IPager>(),
+                provider.GetRequiredService<IOptionsMonitor<Settings>>(),
+                provider.GetRequiredService<ITextLocalizer>(),
+                provider.GetRequiredService<ILogger<TrackedWindowViewModel>>(),
                 (IntPtr)factoryArgs![0]!))
             .AddViewFor<TrackedWindowView, TrackedWindowViewModel>(
                 ServiceLifetime.Transient,
-                provider => new TrackedWindowView());
+                provider => new TrackedWindowView(provider.GetRequiredService<IStringLocalizer>()));
 
         services.Subscribe<IWindowCollection>((provider, windowCollection) =>
         {

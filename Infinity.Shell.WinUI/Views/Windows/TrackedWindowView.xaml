@@ -20,6 +20,7 @@
             IsTabStop="False"
             PointerEntered="HandleWindowContainerPointerEntered"
             PointerExited="HandleWindowContainerPointerExited"
+            RightTapped="HandleWindowContainerRightTapped"
             Tapped="{x:Bind ViewModel.Navigate}"
             ToolTipService.ToolTip="{x:Bind ViewModel.Title}">
             <ItemContainer.Resources>

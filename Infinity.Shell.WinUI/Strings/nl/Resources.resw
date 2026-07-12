@@ -334,4 +334,19 @@
   <data name="WindowTourMenuItem.Text" xml:space="preserve">
     <value>Volg een rondleiding</value>
   </data>
+  <data name="AlwaysOpenApplicationOnPageMenuItem" xml:space="preserve">
+    <value>Deze app altijd openen op</value>
+  </data>
+  <data name="MoveWindowToPageMenuItem" xml:space="preserve">
+    <value>Venster verplaatsen naar</value>
+  </data>
+  <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
+    <value>Openingsregel verwijderen</value>
+  </data>
+  <data name="NewPageTitle" xml:space="preserve">
+    <value>Nieuwe pagina — Pagina {0}</value>
+  </data>
+  <data name="PageWithTitle" xml:space="preserve">
+    <value>Pagina {0} — {1}</value>
+  </data>
 </root>

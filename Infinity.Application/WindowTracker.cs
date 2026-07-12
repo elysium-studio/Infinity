@@ -10,11 +10,15 @@ public class WindowTracker(IWindowStore repository,
     IWindowFilter filter,
     IWindowAncestorResolver ancestorResolver,
     IWindowRestoreGuard restoreGuard,
+    IWindowPlacementRules placementRules,
     IWindowMoveGuard moveGuard,
+    IWindowMover mover,
     IWindowConcealer concealer,
     IWindowDragGuard dragGuard,
     IWindowEnumerator enumerator,
     IWindowEventListener listener,
+    IWorkspace workspace,
+    IPager pager,
     IPanState state,
     IDispatcher dispatcher,
     IntPtr handle) :
@@ -110,10 +114,11 @@ public class WindowTracker(IWindowStore repository,
         }
 
         int canvasX = isRestore ? previousCanvasX : x + (int)Math.Round(state.Offset);
+        bool placementRuleApplied = !isRestore && TryApplyPlacementRule(windowHandle, ref canvasX);
         int lastPlacedX = canvasX - (int)Math.Round(state.Offset);
         int zIndex = windowStackIndexMap is not null && windowStackIndexMap.TryGetValue(windowHandle, out int mappedZIndex) ? mappedZIndex : GetZIndex(windowHandle);
 
-        repository.Add(new TrackedWindow
+        TrackedWindow trackedWindow = new()
         {
             Handle = windowHandle,
             CanvasX = canvasX,
@@ -123,7 +128,14 @@ public class WindowTracker(IWindowStore repository,
             LastPlacedX = lastPlacedX,
             LastPlacedY = y,
             ZIndex = zIndex
-        });
+        };
+
+        repository.Add(trackedWindow);
+
+        if (placementRuleApplied)
+        {
+            MoveWindowToTrackedPosition(trackedWindow);
+        }
     }
 
     private void HandleWindowCreated(IntPtr windowHandle) => TryRegister(windowHandle);
@@ -460,6 +472,50 @@ public class WindowTracker(IWindowStore repository,
         Dictionary<IntPtr, int> windowStackIndexMap = BuildWindowStackIndexMap();
 
         return windowStackIndexMap.TryGetValue(windowHandle, out int zIndex) ? zIndex : int.MaxValue;
+    }
+
+    private bool TryApplyPlacementRule(IntPtr windowHandle, ref int canvasX)
+    {
+        if (!placementRules.TryGetTargetPage(windowHandle, out int targetPage) || workspace.Width <= 0)
+        {
+            return false;
+        }
+
+        targetPage = Math.Max(0, targetPage);
+
+        if (pager.MaxPages is int maxPages)
+        {
+            if (maxPages <= 0)
+            {
+                return false;
+            }
+
+            targetPage = Math.Min(targetPage, maxPages - 1);
+        }
+
+        int currentPage = (int)Math.Floor(canvasX / (double)workspace.Width);
+        long positionWithinPage = (long)canvasX - (long)currentPage * workspace.Width;
+        long targetCanvasX = (long)targetPage * workspace.Width + positionWithinPage;
+
+        if (targetCanvasX is < int.MinValue or > int.MaxValue)
+        {
+            return false;
+        }
+
+        canvasX = (int)targetCanvasX;
+        return currentPage != targetPage;
+    }
+
+    private void MoveWindowToTrackedPosition(TrackedWindow trackedWindow)
+    {
+        using WindowMoveScope scope = moveGuard.Begin();
+        mover.BeginBatch(1);
+        mover.MoveTo(trackedWindow.Handle,
+            trackedWindow.LastPlacedX,
+            trackedWindow.LastPlacedY,
+            trackedWindow.Width,
+            trackedWindow.Height);
+        mover.EndBatch();
     }
 
     private static void TryCancel(CancellationTokenSource cancellationTokenSource)

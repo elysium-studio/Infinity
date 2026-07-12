@@ -1,3 +1,4 @@
+using Elysium.UI.WinUI;
 using Infinity.Platform.Abstractions;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Dispatching;
@@ -7,6 +8,7 @@ using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Numerics;
 using Windows.UI.ViewManagement;
@@ -33,8 +35,11 @@ public partial class TrackedWindowView :
     private double lastPreviewWidth;
     private double lastPreviewHeight;
 
-    public TrackedWindowView()
+    private readonly IStringLocalizer localizer;
+
+    public TrackedWindowView(IStringLocalizer localizer)
     {
+        this.localizer = localizer;
         InitializeComponent();
 
         DataContextChanged += HandleDataContextChanged;
@@ -208,6 +213,70 @@ public partial class TrackedWindowView :
         AnimateHoverScale(false);
         CancelPendingPeek();
         EndPeek();
+    }
+
+    private void HandleWindowContainerRightTapped(object sender, RightTappedRoutedEventArgs args)
+    {
+        args.Handled = true;
+        CancelPendingPeek();
+        EndPeek();
+
+        TrackedWindowViewModel currentViewModel = ViewModel;
+        IReadOnlyList<WindowPageTarget> targets = currentViewModel.GetPageTargets();
+        int? currentPage = currentViewModel.GetCurrentPage();
+        int? openingPage = currentViewModel.GetOpeningPage();
+        MenuFlyout menu = new();
+        MenuFlyoutSubItem moveSubMenu = new()
+        {
+            Text = localizer.GetString("MoveWindowToPageMenuItem")
+        };
+
+        foreach (WindowPageTarget target in targets)
+        {
+            ToggleMenuFlyoutItem item = new()
+            {
+                Text = target.DisplayName,
+                IsChecked = target.Page == currentPage
+            };
+            item.Click += (_, _) => currentViewModel.MoveToPage(target.Page);
+            moveSubMenu.Items.Add(item);
+        }
+
+        menu.Items.Add(moveSubMenu);
+
+        if (currentViewModel.CanCreatePlacementRule)
+        {
+            MenuFlyoutSubItem ruleSubMenu = new()
+            {
+                Text = localizer.GetString("AlwaysOpenApplicationOnPageMenuItem")
+            };
+
+            foreach (WindowPageTarget target in targets)
+            {
+                ToggleMenuFlyoutItem item = new()
+                {
+                    Text = target.DisplayName,
+                    IsChecked = target.Page == openingPage
+                };
+                item.Click += async (_, _) => await currentViewModel.SetOpeningPageAsync(target.Page);
+                ruleSubMenu.Items.Add(item);
+            }
+
+            menu.Items.Add(ruleSubMenu);
+
+            if (openingPage.HasValue)
+            {
+                MenuFlyoutItem removeRuleItem = new()
+                {
+                    Text = localizer.GetString("RemoveApplicationPageRuleMenuItem")
+                };
+                removeRuleItem.Click += async (_, _) => await currentViewModel.RemoveOpeningPageRuleAsync();
+                menu.Items.Add(new MenuFlyoutSeparator());
+                menu.Items.Add(removeRuleItem);
+            }
+        }
+
+        menu.ShowAt(WindowContainer, args.GetPosition(WindowContainer));
     }
 
     private void QueuePeek()

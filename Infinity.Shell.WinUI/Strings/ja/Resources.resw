@@ -334,4 +334,19 @@
   <data name="WindowTourMenuItem.Text" xml:space="preserve">
     <value>ツアーに参加する</value>
   </data>
+  <data name="AlwaysOpenApplicationOnPageMenuItem" xml:space="preserve">
+    <value>このアプリを常に次のページで開く</value>
+  </data>
+  <data name="MoveWindowToPageMenuItem" xml:space="preserve">
+    <value>ウィンドウの移動先</value>
+  </data>
+  <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
+    <value>起動ページのルールを削除</value>
+  </data>
+  <data name="NewPageTitle" xml:space="preserve">
+    <value>新しいページ — ページ {0}</value>
+  </data>
+  <data name="PageWithTitle" xml:space="preserve">
+    <value>ページ {0} — {1}</value>
+  </data>
 </root>
