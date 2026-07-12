@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="UpdateReadyToastDismissButton" xml:space="preserve">
+    <value>Schließen</value>
+  </data>
+  <data name="UpdateReadyToastDownloaded" xml:space="preserve">
+    <value>Infinity {0} wurde heruntergeladen.</value>
+  </data>
+  <data name="UpdateReadyToastRestartButton" xml:space="preserve">
+    <value>Neustart</value>
+  </data>
+  <data name="UpdateReadyToastRestartRequired" xml:space="preserve">
+    <value>Starten Sie neu, um die Aktualisierung abzuschließen.</value>
+  </data>
+  <data name="UpdateReadyToastTitle" xml:space="preserve">
+    <value>Update bereit</value>
+  </data>
+  <data name="AboutTitleBar.Title" xml:space="preserve">
+    <value>Über</value>
+  </data>
+  <data name="BooleanToggle.OffContent" xml:space="preserve">
+    <value>Nein</value>
+  </data>
+  <data name="BooleanToggle.OnContent" xml:space="preserve">
+    <value>Ja</value>
+  </data>
+  <data name="CloseWindowButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Fenster schließen</value>
+  </data>
+  <data name="DesktopBlurCard.Description" xml:space="preserve">
+    <value>Verwischen Sie den Hintergrund beim Scrollen und Filtern</value>
+  </data>
+  <data name="DesktopBlurCard.Header" xml:space="preserve">
+    <value>Hintergrundunschärfe</value>
+  </data>
+  <data name="DesktopSectionTitle.Text" xml:space="preserve">
+    <value>Desktop</value>
+  </data>
+  <data name="DragScrollSpeedCard.Description" xml:space="preserve">
+    <value>Wie schnell der Desktop scrollt, wenn ein Fenster an den Bildschirmrand gezogen wird</value>
+  </data>
+  <data name="DragScrollSpeedCard.Header" xml:space="preserve">
+    <value>Scrollgeschwindigkeit ziehen</value>
+  </data>
+  <data name="PreviewBackgroundCard.Description" xml:space="preserve">
+    <value>Zeigen Sie Ihren Desktop-Hintergrund in der Vorschauleiste an</value>
+  </data>
+  <data name="PreviewBackgroundCard.Header" xml:space="preserve">
+    <value>Desktop-Hintergrund</value>
+  </data>
+  <data name="PreviewDebugWaitingText.Text" xml:space="preserve">
+    <value>Warten...</value>
+  </data>
+  <data name="PreviewDebugWindow.Title" xml:space="preserve">
+    <value>Fenstervorschauraster</value>
+  </data>
+  <data name="PreviewPositionAutoOption.Content" xml:space="preserve">
+    <value>Automatisch</value>
+  </data>
+  <data name="PreviewPositionBottomOption.Content" xml:space="preserve">
+    <value>Unten</value>
+  </data>
+  <data name="PreviewPositionCard.Description" xml:space="preserve">
+    <value>Wo die Vorschauleiste auf dem Bildschirm erscheint</value>
+  </data>
+  <data name="PreviewPositionCard.Header" xml:space="preserve">
+    <value>Vorschauposition</value>
+  </data>
+  <data name="PreviewPositionTopOption.Content" xml:space="preserve">
+    <value>Top</value>
+  </data>
+  <data name="PreviewSectionTitle.Text" xml:space="preserve">
+    <value>Vorschau</value>
+  </data>
+  <data name="PreviewSizeCard.Description" xml:space="preserve">
+    <value>Steuert, wie hoch die Vorschauleiste am unteren Bildschirmrand angezeigt wird</value>
+  </data>
+  <data name="PreviewSizeCard.Header" xml:space="preserve">
+    <value>Vorschaugröße</value>
+  </data>
+  <data name="PreviewSizeCompactOption.Content" xml:space="preserve">
+    <value>Kompakt</value>
+  </data>
+  <data name="PreviewSizeDefaultOption.Content" xml:space="preserve">
+    <value>Standard</value>
+  </data>
+  <data name="PreviewSizeLargeOption.Content" xml:space="preserve">
+    <value>Groß</value>
+  </data>
+  <data name="PageTitle" xml:space="preserve">
+    <value>Seite {0}</value>
+  </data>
+  <data name="ScrollShortcutCancelButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Abbrechen</value>
+  </data>
+  <data name="ScrollShortcutCard.Description" xml:space="preserve">
+    <value>Die Tastenkombination zum Scrollen des Desktops</value>
+  </data>
+  <data name="ScrollShortcutCard.Header" xml:space="preserve">
+    <value>Scroll-Tastenkombination</value>
+  </data>
+  <data name="ScrollShortcutEditButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Bearbeiten</value>
+  </data>
+  <data name="ScrollShortcutRecordingHint.Text" xml:space="preserve">
+    <value>Tastenkombinationen drücken...</value>
+  </data>
+  <data name="ScrollShortcutPressKeysToSave" xml:space="preserve">
+    <value>Drücken Sie {0} Tasten, um diese Tastenkombination zu speichern.</value>
+  </data>
+  <data name="ScrollShortcutPressMoreKeys" xml:space="preserve">
+    <value>Drücken Sie {0} weitere Tasten.</value>
+  </data>
+  <data name="ScrollShortcutRecorderUnavailable" xml:space="preserve">
+    <value>Der Tastaturrekorder konnte nicht gestartet werden.</value>
+  </data>
+  <data name="ScrollShortcutSaveButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Speichern</value>
+  </data>
+  <data name="ScrollShortcutStartWithModifier" xml:space="preserve">
+    <value>Beginnen Sie mit Strg, Alt, Umschalt oder Win.</value>
+  </data>
+  <data name="ScrollShortcutUnavailable" xml:space="preserve">
+    <value>Diese Tastenkombination wird bereits von Windows oder einer anderen App verwendet.</value>
+  </data>
+  <data name="ScrollSpeedCard.Description" xml:space="preserve">
+    <value>Wie schnell sich Fenster beim Scrollen bewegen</value>
+  </data>
+  <data name="ScrollSpeedCard.Header" xml:space="preserve">
+    <value>Scrollgeschwindigkeit</value>
+  </data>
+  <data name="SettingsTitleBar.Title" xml:space="preserve">
+    <value>Einstellungen</value>
+  </data>
+  <data name="SpeedFastOption.Content" xml:space="preserve">
+    <value>Schnell</value>
+  </data>
+  <data name="SpeedNormalOption.Content" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="SpeedSlowOption.Content" xml:space="preserve">
+    <value>Langsam</value>
+  </data>
+  <data name="SpeedTurboOption.Content" xml:space="preserve">
+    <value>Turbo</value>
+  </data>
+  <data name="SpeedVeryFastOption.Content" xml:space="preserve">
+    <value>Sehr schnell</value>
+  </data>
+  <data name="StartWithWindowsCard.Description" xml:space="preserve">
+    <value>Starten Sie Infinity automatisch, wenn Sie sich anmelden</value>
+  </data>
+  <data name="StartWithWindowsCard.Header" xml:space="preserve">
+    <value>Mit Windows starten</value>
+  </data>
+  <data name="TourBackButton.Content" xml:space="preserve">
+    <value>Zurück</value>
+  </data>
+  <data name="TourFinishButton.Content" xml:space="preserve">
+    <value>Fertig</value>
+  </data>
+  <data name="TourNextButton.Content" xml:space="preserve">
+    <value>Als nächstes</value>
+  </data>
+  <data name="TourOrLabel.Text" xml:space="preserve">
+    <value>oder</value>
+  </data>
+  <data name="TourOverviewInstructionPrefix.Text" xml:space="preserve">
+    <value>Halten Sie </value>
+  </data>
+  <data name="TourOverviewInstructionSuffix.Text" xml:space="preserve">
+    <value> und scrollen Sie mit dem Mausrad an eine beliebige Stelle auf dem Desktop. Dadurch wird eine Übersicht über jede Seite geöffnet, sodass Sie sehen können, was geöffnet ist, und direkt dorthin springen können.</value>
+  </data>
+  <data name="TourOverviewTitle.Text" xml:space="preserve">
+    <value>Seitenübersicht aufrufen</value>
+  </data>
+  <data name="TourPageNumberInstructionPrefix.Text" xml:space="preserve">
+    <value>Halten Sie </value>
+  </data>
+  <data name="TourPageNumberInstructionSuffix.Text" xml:space="preserve">
+    <value> und drücken Sie eine Zifferntaste, keine andere Taste. 1 bis 9, dann 0 für die zehnte Seite, bringt den Blick direkt dorthin – aber jedes Fenster, auch das im Fokus, bleibt genau dort, wo es ist.</value>
+  </data>
+  <data name="TourPageNumberTitle.Text" xml:space="preserve">
+    <value>Direkter Wechsel zu einer nummerierten Seite</value>
+  </data>
+  <data name="TourPageSwitchInstructionPrefix.Text" xml:space="preserve">
+    <value>Halten Sie </value>
+  </data>
+  <data name="TourPageSwitchInstructionSuffix.Text" xml:space="preserve">
+    <value> und drücken Sie die linke oder rechte Pfeiltaste, ohne eine andere Taste. Die Ansicht schwenkt zur nächsten Seite, aber jedes Fenster – einschließlich des fokussierten – bleibt genau dort, wo Sie es verlassen haben.</value>
+  </data>
+  <data name="TourPageSwitchTitle.Text" xml:space="preserve">
+    <value>Seitenwechsel ohne etwas zu bewegen</value>
+  </data>
+  <data name="TourShiftKeyLabel.Text" xml:space="preserve">
+    <value>Umschalt</value>
+  </data>
+  <data name="TourTitleBar.Title" xml:space="preserve">
+    <value>Erste Schritte</value>
+  </data>
+  <data name="TourWelcomeDescription.Text" xml:space="preserve">
+    <value>Infinity verwandelt Ihren Desktop in eine endlose, scrollbare Seitenfläche. Diese kurze Anleitung behandelt die Grundlagen der Fortbewegung und der individuellen Anpassung des Bewegungsgefühls.</value>
+  </data>
+  <data name="TourWelcomeTitle.Text" xml:space="preserve">
+    <value>Willkommen bei Infinity</value>
+  </data>
+  <data name="TourWindowDragInstructionPrefix.Text" xml:space="preserve">
+    <value>Halten Sie </value>
+  </data>
+  <data name="TourWindowDragInstructionSuffix.Text" xml:space="preserve">
+    <value> und ziehen Sie die Titelleiste eines Fensters zum Rand des Bildschirms, um es auf die nächste Seite zu verschieben.</value>
+  </data>
+  <data name="TourWindowDragTitle.Text" xml:space="preserve">
+    <value>Ein Fenster auf eine andere Seite ziehen</value>
+  </data>
+  <data name="TourWindowJumpInstructionPrefix.Text" xml:space="preserve">
+    <value>Halten Sie </value>
+  </data>
+  <data name="TourWindowJumpInstructionSuffix.Text" xml:space="preserve">
+    <value>+Shift und drücken Sie die linke oder rechte Pfeiltaste. Das fokussierte Fenster springt direkt auf die benachbarte Seite, sodass Sie es ohne Maus neu anordnen können. Lassen Sie Shift los, um mit derselben Tastenkombination nur die Seite zu wechseln; das Fenster bleibt an seinem Platz.</value>
+  </data>
+  <data name="TourWindowJumpTitle.Text" xml:space="preserve">
+    <value>Ein Fenster an eine andere Seite senden</value>
+  </data>
+  <data name="TourWindowNumberInstructionPrefix.Text" xml:space="preserve">
+    <value>Halten Sie </value>
+  </data>
+  <data name="TourWindowNumberInstructionSuffix.Text" xml:space="preserve">
+    <value>+Shift und drücken Sie eine Zifferntaste. 1 bis 9 und anschließend 0 für die zehnte Seite verschieben das fokussierte Fenster direkt auf die entsprechende Seite, unabhängig von der Entfernung. Lassen Sie Shift los, um mit derselben Tastenkombination nur zu dieser Seite zu wechseln; das Fenster bleibt an seinem Platz.</value>
+  </data>
+  <data name="TourWindowNumberTitle.Text" xml:space="preserve">
+    <value>Direkter Sprung zu einer nummerierten Seite</value>
+  </data>
+  <data name="VirtualPagesCard.Description" xml:space="preserve">
+    <value>Wählen Sie aus, wie viele Seiten Ihr Desktop umfasst. Legen Sie eine feste Zahl fest oder lassen Sie sie wachsen, wenn Sie Fenster verschieben</value>
+  </data>
+  <data name="VirtualPagesCard.Header" xml:space="preserve">
+    <value>Virtuelle Seiten</value>
+  </data>
+  <data name="VirtualPagesCountCard.Description" xml:space="preserve">
+    <value>Legen Sie die maximale Seitenanzahl fest</value>
+  </data>
+  <data name="VirtualPagesCountCard.Header" xml:space="preserve">
+    <value>Anzahl der Seiten</value>
+  </data>
+  <data name="VirtualPagesFixedOption.Content" xml:space="preserve">
+    <value>Behoben</value>
+  </data>
+  <data name="VirtualPagesUnlimitedOption.Content" xml:space="preserve">
+    <value>Unbegrenzt</value>
+  </data>
+  <data name="WindowAboutMenuItem.Text" xml:space="preserve">
+    <value>Über</value>
+  </data>
+  <data name="WindowExitMenuItem.Text" xml:space="preserve">
+    <value>Ausstieg</value>
+  </data>
+  <data name="WindowOptionsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Optionen</value>
+  </data>
+  <data name="WindowPeekCard.Description" xml:space="preserve">
+    <value>Wenn Sie den Mauszeiger über eine Miniaturansicht eines Fensters bewegen oder einen Filter anwenden, blenden Sie alle anderen Fenster aus, sodass nur das passende Fenster sichtbar bleibt.</value>
+  </data>
+  <data name="WindowPeekCard.Header" xml:space="preserve">
+    <value>Window Peek</value>
+  </data>
+  <data name="WindowSearchBox.PlaceholderText" xml:space="preserve">
+    <value>Suchen Sie ein Desktop-Fenster...</value>
+  </data>
+  <data name="WindowsSectionTitle.Text" xml:space="preserve">
+    <value>Windows</value>
+  </data>
+  <data name="WindowSettingsMenuItem.Text" xml:space="preserve">
+    <value>Einstellungen</value>
+  </data>
+  <data name="WindowTourMenuItem.Text" xml:space="preserve">
+    <value>Machen Sie eine Tour</value>
+  </data>
+</root>

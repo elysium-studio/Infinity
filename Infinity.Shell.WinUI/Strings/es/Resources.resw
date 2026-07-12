@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="UpdateReadyToastDismissButton" xml:space="preserve">
+    <value>Descartar</value>
+  </data>
+  <data name="UpdateReadyToastDownloaded" xml:space="preserve">
+    <value>Se ha descargado Infinity {0}.</value>
+  </data>
+  <data name="UpdateReadyToastRestartButton" xml:space="preserve">
+    <value>Reiniciar</value>
+  </data>
+  <data name="UpdateReadyToastRestartRequired" xml:space="preserve">
+    <value>Reinicie para finalizar la actualización.</value>
+  </data>
+  <data name="UpdateReadyToastTitle" xml:space="preserve">
+    <value>Actualización lista</value>
+  </data>
+  <data name="AboutTitleBar.Title" xml:space="preserve">
+    <value>Acerca de</value>
+  </data>
+  <data name="BooleanToggle.OffContent" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="BooleanToggle.OnContent" xml:space="preserve">
+    <value>Sí</value>
+  </data>
+  <data name="CloseWindowButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Cerrar ventana</value>
+  </data>
+  <data name="DesktopBlurCard.Description" xml:space="preserve">
+    <value>Desenfoque el fondo durante el desplazamiento y el filtrado</value>
+  </data>
+  <data name="DesktopBlurCard.Header" xml:space="preserve">
+    <value>Desenfoque de fondo</value>
+  </data>
+  <data name="DesktopSectionTitle.Text" xml:space="preserve">
+    <value>Escritorio</value>
+  </data>
+  <data name="DragScrollSpeedCard.Description" xml:space="preserve">
+    <value>Qué tan rápido se desplaza el escritorio al arrastrar una ventana al borde de la pantalla</value>
+  </data>
+  <data name="DragScrollSpeedCard.Header" xml:space="preserve">
+    <value>Velocidad de desplazamiento de arrastre</value>
+  </data>
+  <data name="PreviewBackgroundCard.Description" xml:space="preserve">
+    <value>Muestra el fondo de tu escritorio en la barra de vista previa</value>
+  </data>
+  <data name="PreviewBackgroundCard.Header" xml:space="preserve">
+    <value>Fondo de escritorio</value>
+  </data>
+  <data name="PreviewDebugWaitingText.Text" xml:space="preserve">
+    <value>Esperando...</value>
+  </data>
+  <data name="PreviewDebugWindow.Title" xml:space="preserve">
+    <value>Cuadrícula de vista previa de ventana</value>
+  </data>
+  <data name="PreviewPositionAutoOption.Content" xml:space="preserve">
+    <value>Automático</value>
+  </data>
+  <data name="PreviewPositionBottomOption.Content" xml:space="preserve">
+    <value>Abajo</value>
+  </data>
+  <data name="PreviewPositionCard.Description" xml:space="preserve">
+    <value>Dónde aparece la barra de vista previa en la pantalla</value>
+  </data>
+  <data name="PreviewPositionCard.Header" xml:space="preserve">
+    <value>Vista previa de posición</value>
+  </data>
+  <data name="PreviewPositionTopOption.Content" xml:space="preserve">
+    <value>Arriba</value>
+  </data>
+  <data name="PreviewSectionTitle.Text" xml:space="preserve">
+    <value>Vista previa</value>
+  </data>
+  <data name="PreviewSizeCard.Description" xml:space="preserve">
+    <value>Controla la altura que aparece la barra de vista previa en la parte inferior de la pantalla</value>
+  </data>
+  <data name="PreviewSizeCard.Header" xml:space="preserve">
+    <value>Tamaño de vista previa</value>
+  </data>
+  <data name="PreviewSizeCompactOption.Content" xml:space="preserve">
+    <value>Compacto</value>
+  </data>
+  <data name="PreviewSizeDefaultOption.Content" xml:space="preserve">
+    <value>Predeterminado</value>
+  </data>
+  <data name="PreviewSizeLargeOption.Content" xml:space="preserve">
+    <value>Grande</value>
+  </data>
+  <data name="PageTitle" xml:space="preserve">
+    <value>Página {0}</value>
+  </data>
+  <data name="ScrollShortcutCancelButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="ScrollShortcutCard.Description" xml:space="preserve">
+    <value>El acceso directo utilizado para activar el desplazamiento del escritorio</value>
+  </data>
+  <data name="ScrollShortcutCard.Header" xml:space="preserve">
+    <value>Acceso directo de desplazamiento</value>
+  </data>
+  <data name="ScrollShortcutEditButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Editar</value>
+  </data>
+  <data name="ScrollShortcutRecordingHint.Text" xml:space="preserve">
+    <value>Presione las teclas de acceso directo...</value>
+  </data>
+  <data name="ScrollShortcutPressKeysToSave" xml:space="preserve">
+    <value>Presione las teclas {0} para guardar este acceso directo.</value>
+  </data>
+  <data name="ScrollShortcutPressMoreKeys" xml:space="preserve">
+    <value>Pulsa {0} teclas más.</value>
+  </data>
+  <data name="ScrollShortcutRecorderUnavailable" xml:space="preserve">
+    <value>No se pudo iniciar la grabadora del teclado.</value>
+  </data>
+  <data name="ScrollShortcutSaveButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Guardar</value>
+  </data>
+  <data name="ScrollShortcutStartWithModifier" xml:space="preserve">
+    <value>Comience con Ctrl, Alt, Shift o Win.</value>
+  </data>
+  <data name="ScrollShortcutUnavailable" xml:space="preserve">
+    <value>Ese acceso directo ya lo utiliza Windows u otra aplicación.</value>
+  </data>
+  <data name="ScrollSpeedCard.Description" xml:space="preserve">
+    <value>¿Qué tan rápido se mueven las ventanas cuando te desplazas?</value>
+  </data>
+  <data name="ScrollSpeedCard.Header" xml:space="preserve">
+    <value>Velocidad de desplazamiento</value>
+  </data>
+  <data name="SettingsTitleBar.Title" xml:space="preserve">
+    <value>Configuración</value>
+  </data>
+  <data name="SpeedFastOption.Content" xml:space="preserve">
+    <value>Rápido</value>
+  </data>
+  <data name="SpeedNormalOption.Content" xml:space="preserve">
+    <value>normales</value>
+  </data>
+  <data name="SpeedSlowOption.Content" xml:space="preserve">
+    <value>Lento</value>
+  </data>
+  <data name="SpeedTurboOption.Content" xml:space="preserve">
+    <value>Turbo</value>
+  </data>
+  <data name="SpeedVeryFastOption.Content" xml:space="preserve">
+    <value>muy rapido</value>
+  </data>
+  <data name="StartWithWindowsCard.Description" xml:space="preserve">
+    <value>Inicie Infinity automáticamente al iniciar sesión</value>
+  </data>
+  <data name="StartWithWindowsCard.Header" xml:space="preserve">
+    <value>Iniciar con Windows</value>
+  </data>
+  <data name="TourBackButton.Content" xml:space="preserve">
+    <value>Atrás</value>
+  </data>
+  <data name="TourFinishButton.Content" xml:space="preserve">
+    <value>Finalizar</value>
+  </data>
+  <data name="TourNextButton.Content" xml:space="preserve">
+    <value>Siguiente</value>
+  </data>
+  <data name="TourOrLabel.Text" xml:space="preserve">
+    <value>o</value>
+  </data>
+  <data name="TourOverviewInstructionPrefix.Text" xml:space="preserve">
+    <value>Mantenga pulsado </value>
+  </data>
+  <data name="TourOverviewInstructionSuffix.Text" xml:space="preserve">
+    <value> y desplace la rueda del mouse a cualquier parte del escritorio. Esto abre una descripción general de cada página para que pueda ver qué está abierto y saltar directamente a ella.</value>
+  </data>
+  <data name="TourOverviewTitle.Text" xml:space="preserve">
+    <value>Abrir la descripción general de la página</value>
+  </data>
+  <data name="TourPageNumberInstructionPrefix.Text" xml:space="preserve">
+    <value>Mantenga pulsado </value>
+  </data>
+  <data name="TourPageNumberInstructionSuffix.Text" xml:space="preserve">
+    <value> y presione una tecla numérica, sin otra tecla. Del 1 al 9, luego 0 para la décima página, lleva la vista directamente allí, pero cada ventana, incluida la que está enfocada, permanece exactamente donde está.</value>
+  </data>
+  <data name="TourPageNumberTitle.Text" xml:space="preserve">
+    <value>Cambiar directamente a una página numerada</value>
+  </data>
+  <data name="TourPageSwitchInstructionPrefix.Text" xml:space="preserve">
+    <value>Mantenga pulsado </value>
+  </data>
+  <data name="TourPageSwitchInstructionSuffix.Text" xml:space="preserve">
+    <value> y presione la tecla de flecha izquierda o derecha, sin otra tecla. La vista pasa a la página siguiente, pero cada ventana, incluida la que está enfocada, permanece exactamente donde la dejó.</value>
+  </data>
+  <data name="TourPageSwitchTitle.Text" xml:space="preserve">
+    <value>Cambiar de página sin mover nada</value>
+  </data>
+  <data name="TourShiftKeyLabel.Text" xml:space="preserve">
+    <value>Mayús</value>
+  </data>
+  <data name="TourTitleBar.Title" xml:space="preserve">
+    <value>Empezando</value>
+  </data>
+  <data name="TourWelcomeDescription.Text" xml:space="preserve">
+    <value>Infinity convierte su escritorio en un lienzo de páginas infinitas y desplazables. Este rápido tutorial cubre los conceptos básicos para moverse y personalizar cómo se siente.</value>
+  </data>
+  <data name="TourWelcomeTitle.Text" xml:space="preserve">
+    <value>Bienvenido a Infinity</value>
+  </data>
+  <data name="TourWindowDragInstructionPrefix.Text" xml:space="preserve">
+    <value>Mantenga pulsado </value>
+  </data>
+  <data name="TourWindowDragInstructionSuffix.Text" xml:space="preserve">
+    <value> y arrastre la barra de título de una ventana hacia el borde de la pantalla para moverla a la página siguiente.</value>
+  </data>
+  <data name="TourWindowDragTitle.Text" xml:space="preserve">
+    <value>Arrastrar una ventana a otra página</value>
+  </data>
+  <data name="TourWindowJumpInstructionPrefix.Text" xml:space="preserve">
+    <value>Mantenga pulsado </value>
+  </data>
+  <data name="TourWindowJumpInstructionSuffix.Text" xml:space="preserve">
+    <value>+Mayús y presione la tecla de flecha izquierda o derecha. La ventana activa salta directamente a la página contigua para que pueda reorganizarla sin usar el mouse. Suelte Mayús para que el mismo atajo solo cambie de página y deje la ventana en su sitio.</value>
+  </data>
+  <data name="TourWindowJumpTitle.Text" xml:space="preserve">
+    <value>Enviar una ventana a otra página</value>
+  </data>
+  <data name="TourWindowNumberInstructionPrefix.Text" xml:space="preserve">
+    <value>Mantenga pulsado </value>
+  </data>
+  <data name="TourWindowNumberInstructionSuffix.Text" xml:space="preserve">
+    <value>+Mayús y presione una tecla numérica. Del 1 al 9, y luego 0 para la décima página, envía la ventana activa directamente a esa página sin importar la distancia. Suelte Mayús para que el mismo atajo solo abra esa página y deje la ventana en su sitio.</value>
+  </data>
+  <data name="TourWindowNumberTitle.Text" xml:space="preserve">
+    <value>Saltar directamente a una página numerada</value>
+  </data>
+  <data name="VirtualPagesCard.Description" xml:space="preserve">
+    <value>Elija cuántas páginas abarca su escritorio. Establece un número fijo o déjalo crecer a medida que mueves las ventanas</value>
+  </data>
+  <data name="VirtualPagesCard.Header" xml:space="preserve">
+    <value>Páginas virtuales</value>
+  </data>
+  <data name="VirtualPagesCountCard.Description" xml:space="preserve">
+    <value>Establecer el número máximo de páginas</value>
+  </data>
+  <data name="VirtualPagesCountCard.Header" xml:space="preserve">
+    <value>Número de páginas</value>
+  </data>
+  <data name="VirtualPagesFixedOption.Content" xml:space="preserve">
+    <value>Fijo</value>
+  </data>
+  <data name="VirtualPagesUnlimitedOption.Content" xml:space="preserve">
+    <value>Ilimitado</value>
+  </data>
+  <data name="WindowAboutMenuItem.Text" xml:space="preserve">
+    <value>Acerca de</value>
+  </data>
+  <data name="WindowExitMenuItem.Text" xml:space="preserve">
+    <value>Salir</value>
+  </data>
+  <data name="WindowOptionsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Opciones</value>
+  </data>
+  <data name="WindowPeekCard.Description" xml:space="preserve">
+    <value>Al pasar el cursor sobre la miniatura de una ventana o aplicar un filtro, oculte todas las demás ventanas para que solo la (o las) coincidentes permanezcan visibles.</value>
+  </data>
+  <data name="WindowPeekCard.Header" xml:space="preserve">
+    <value>Window Peek</value>
+  </data>
+  <data name="WindowSearchBox.PlaceholderText" xml:space="preserve">
+    <value>Encuentra una ventana de escritorio...</value>
+  </data>
+  <data name="WindowsSectionTitle.Text" xml:space="preserve">
+    <value>ventanas</value>
+  </data>
+  <data name="WindowSettingsMenuItem.Text" xml:space="preserve">
+    <value>Configuración</value>
+  </data>
+  <data name="WindowTourMenuItem.Text" xml:space="preserve">
+    <value>hacer un recorrido</value>
+  </data>
+</root>

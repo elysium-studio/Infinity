@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="UpdateReadyToastDismissButton" xml:space="preserve">
+    <value>Ignorer</value>
+  </data>
+  <data name="UpdateReadyToastDownloaded" xml:space="preserve">
+    <value>Infinity {0} a été téléchargé.</value>
+  </data>
+  <data name="UpdateReadyToastRestartButton" xml:space="preserve">
+    <value>Redémarrer</value>
+  </data>
+  <data name="UpdateReadyToastRestartRequired" xml:space="preserve">
+    <value>Redémarrez pour terminer la mise à jour.</value>
+  </data>
+  <data name="UpdateReadyToastTitle" xml:space="preserve">
+    <value>Mise à jour prête</value>
+  </data>
+  <data name="AboutTitleBar.Title" xml:space="preserve">
+    <value>À propos</value>
+  </data>
+  <data name="BooleanToggle.OffContent" xml:space="preserve">
+    <value>Non</value>
+  </data>
+  <data name="BooleanToggle.OnContent" xml:space="preserve">
+    <value>Oui</value>
+  </data>
+  <data name="CloseWindowButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Fermer la fenêtre</value>
+  </data>
+  <data name="DesktopBlurCard.Description" xml:space="preserve">
+    <value>Flou l'arrière-plan pendant le défilement et le filtrage</value>
+  </data>
+  <data name="DesktopBlurCard.Header" xml:space="preserve">
+    <value>Flou d'arrière-plan</value>
+  </data>
+  <data name="DesktopSectionTitle.Text" xml:space="preserve">
+    <value>Bureau</value>
+  </data>
+  <data name="DragScrollSpeedCard.Description" xml:space="preserve">
+    <value>À quelle vitesse le bureau défile lorsque vous faites glisser une fenêtre vers le bord de l'écran</value>
+  </data>
+  <data name="DragScrollSpeedCard.Header" xml:space="preserve">
+    <value>Vitesse de défilement du glisser-déposer</value>
+  </data>
+  <data name="PreviewBackgroundCard.Description" xml:space="preserve">
+    <value>Afficher l'arrière-plan de votre bureau dans la barre d'aperçu</value>
+  </data>
+  <data name="PreviewBackgroundCard.Header" xml:space="preserve">
+    <value>Fond d'écran</value>
+  </data>
+  <data name="PreviewDebugWaitingText.Text" xml:space="preserve">
+    <value>En attendant...</value>
+  </data>
+  <data name="PreviewDebugWindow.Title" xml:space="preserve">
+    <value>Grille d'aperçu de la fenêtre</value>
+  </data>
+  <data name="PreviewPositionAutoOption.Content" xml:space="preserve">
+    <value>Automatique</value>
+  </data>
+  <data name="PreviewPositionBottomOption.Content" xml:space="preserve">
+    <value>En bas</value>
+  </data>
+  <data name="PreviewPositionCard.Description" xml:space="preserve">
+    <value>Où la barre d'aperçu apparaît à l'écran</value>
+  </data>
+  <data name="PreviewPositionCard.Header" xml:space="preserve">
+    <value>Aperçu de la position</value>
+  </data>
+  <data name="PreviewPositionTopOption.Content" xml:space="preserve">
+    <value>Haut</value>
+  </data>
+  <data name="PreviewSectionTitle.Text" xml:space="preserve">
+    <value>Aperçu</value>
+  </data>
+  <data name="PreviewSizeCard.Description" xml:space="preserve">
+    <value>Contrôle la hauteur de la barre d'aperçu qui apparaît en bas de votre écran</value>
+  </data>
+  <data name="PreviewSizeCard.Header" xml:space="preserve">
+    <value>Taille de l'aperçu</value>
+  </data>
+  <data name="PreviewSizeCompactOption.Content" xml:space="preserve">
+    <value>Compacte</value>
+  </data>
+  <data name="PreviewSizeDefaultOption.Content" xml:space="preserve">
+    <value>Par défaut</value>
+  </data>
+  <data name="PreviewSizeLargeOption.Content" xml:space="preserve">
+    <value>Grand</value>
+  </data>
+  <data name="PageTitle" xml:space="preserve">
+    <value>Page {0}</value>
+  </data>
+  <data name="ScrollShortcutCancelButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Annuler</value>
+  </data>
+  <data name="ScrollShortcutCard.Description" xml:space="preserve">
+    <value>Le raccourci utilisé pour déclencher le défilement du bureau</value>
+  </data>
+  <data name="ScrollShortcutCard.Header" xml:space="preserve">
+    <value>Raccourci de défilement</value>
+  </data>
+  <data name="ScrollShortcutEditButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Modifier</value>
+  </data>
+  <data name="ScrollShortcutRecordingHint.Text" xml:space="preserve">
+    <value>Appuyez sur les touches de raccourci...</value>
+  </data>
+  <data name="ScrollShortcutPressKeysToSave" xml:space="preserve">
+    <value>Appuyez sur les touches {0} pour enregistrer ce raccourci.</value>
+  </data>
+  <data name="ScrollShortcutPressMoreKeys" xml:space="preserve">
+    <value>Appuyez sur {0} touches supplémentaires.</value>
+  </data>
+  <data name="ScrollShortcutRecorderUnavailable" xml:space="preserve">
+    <value>L'enregistreur de clavier n'a pas pu démarrer.</value>
+  </data>
+  <data name="ScrollShortcutSaveButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Enregistrer</value>
+  </data>
+  <data name="ScrollShortcutStartWithModifier" xml:space="preserve">
+    <value>Commencez par Ctrl, Alt, Shift ou Win.</value>
+  </data>
+  <data name="ScrollShortcutUnavailable" xml:space="preserve">
+    <value>Ce raccourci est déjà utilisé par Windows ou une autre application.</value>
+  </data>
+  <data name="ScrollSpeedCard.Description" xml:space="preserve">
+    <value>À quelle vitesse les fenêtres se déplacent lorsque vous faites défiler</value>
+  </data>
+  <data name="ScrollSpeedCard.Header" xml:space="preserve">
+    <value>Vitesse de défilement</value>
+  </data>
+  <data name="SettingsTitleBar.Title" xml:space="preserve">
+    <value>Paramètres</value>
+  </data>
+  <data name="SpeedFastOption.Content" xml:space="preserve">
+    <value>Rapide</value>
+  </data>
+  <data name="SpeedNormalOption.Content" xml:space="preserve">
+    <value>Normale</value>
+  </data>
+  <data name="SpeedSlowOption.Content" xml:space="preserve">
+    <value>Lent</value>
+  </data>
+  <data name="SpeedTurboOption.Content" xml:space="preserve">
+    <value>Turbo</value>
+  </data>
+  <data name="SpeedVeryFastOption.Content" xml:space="preserve">
+    <value>Très rapide</value>
+  </data>
+  <data name="StartWithWindowsCard.Description" xml:space="preserve">
+    <value>Lancez automatiquement Infinity lorsque vous vous connectez</value>
+  </data>
+  <data name="StartWithWindowsCard.Header" xml:space="preserve">
+    <value>Démarrer avec Windows</value>
+  </data>
+  <data name="TourBackButton.Content" xml:space="preserve">
+    <value>Retour</value>
+  </data>
+  <data name="TourFinishButton.Content" xml:space="preserve">
+    <value>Terminer</value>
+  </data>
+  <data name="TourNextButton.Content" xml:space="preserve">
+    <value>Suivant</value>
+  </data>
+  <data name="TourOrLabel.Text" xml:space="preserve">
+    <value>ou</value>
+  </data>
+  <data name="TourOverviewInstructionPrefix.Text" xml:space="preserve">
+    <value>Maintenez </value>
+  </data>
+  <data name="TourOverviewInstructionSuffix.Text" xml:space="preserve">
+    <value> et faites défiler la molette de votre souris n'importe où sur le bureau. Cela ouvre un aperçu de chaque page afin que vous puissiez voir ce qui est ouvert et y accéder directement.</value>
+  </data>
+  <data name="TourOverviewTitle.Text" xml:space="preserve">
+    <value>Afficher l'aperçu de la page</value>
+  </data>
+  <data name="TourPageNumberInstructionPrefix.Text" xml:space="preserve">
+    <value>Maintenez </value>
+  </data>
+  <data name="TourPageNumberInstructionSuffix.Text" xml:space="preserve">
+    <value> et appuyez sur une touche numérique, sans autre touche. 1 à 9, puis 0 pour la dixième page, amène la vue directement là – mais chaque fenêtre, y compris celle mise au point, reste exactement là où elle se trouve.</value>
+  </data>
+  <data name="TourPageNumberTitle.Text" xml:space="preserve">
+    <value>Passer directement à une page numérotée</value>
+  </data>
+  <data name="TourPageSwitchInstructionPrefix.Text" xml:space="preserve">
+    <value>Maintenez </value>
+  </data>
+  <data name="TourPageSwitchInstructionSuffix.Text" xml:space="preserve">
+    <value> et appuyez sur la touche fléchée Gauche ou Droite, sans autre touche. La vue passe à la page suivante, mais chaque fenêtre, y compris celle mise au point, reste exactement là où vous l'avez laissée.</value>
+  </data>
+  <data name="TourPageSwitchTitle.Text" xml:space="preserve">
+    <value>Changer de page sans rien déplacer</value>
+  </data>
+  <data name="TourShiftKeyLabel.Text" xml:space="preserve">
+    <value>Maj</value>
+  </data>
+  <data name="TourTitleBar.Title" xml:space="preserve">
+    <value>Commencer</value>
+  </data>
+  <data name="TourWelcomeDescription.Text" xml:space="preserve">
+    <value>Infinity transforme votre bureau en un canevas de pages défilant sans fin. Cette procédure pas à pas rapide couvre les bases du déplacement et de la personnalisation de la sensation.</value>
+  </data>
+  <data name="TourWelcomeTitle.Text" xml:space="preserve">
+    <value>Bienvenue dans Infinity</value>
+  </data>
+  <data name="TourWindowDragInstructionPrefix.Text" xml:space="preserve">
+    <value>Maintenez </value>
+  </data>
+  <data name="TourWindowDragInstructionSuffix.Text" xml:space="preserve">
+    <value> et faites glisser la barre de titre d'une fenêtre vers le bord de l'écran pour la déplacer sur la page suivante.</value>
+  </data>
+  <data name="TourWindowDragTitle.Text" xml:space="preserve">
+    <value>Faire glisser une fenêtre vers une autre page</value>
+  </data>
+  <data name="TourWindowJumpInstructionPrefix.Text" xml:space="preserve">
+    <value>Maintenez </value>
+  </data>
+  <data name="TourWindowJumpInstructionSuffix.Text" xml:space="preserve">
+    <value>+Maj et appuyez sur la flèche gauche ou droite. La fenêtre active passe directement à la page voisine, ce qui permet de la réorganiser sans utiliser la souris. Relâchez Maj pour que le même raccourci change uniquement de page en laissant la fenêtre à sa place.</value>
+  </data>
+  <data name="TourWindowJumpTitle.Text" xml:space="preserve">
+    <value>Envoi d'une fenêtre vers une autre page</value>
+  </data>
+  <data name="TourWindowNumberInstructionPrefix.Text" xml:space="preserve">
+    <value>Maintenez </value>
+  </data>
+  <data name="TourWindowNumberInstructionSuffix.Text" xml:space="preserve">
+    <value>+Maj et appuyez sur une touche numérique. Les touches 1 à 9, puis 0 pour la dixième page, déplacent directement la fenêtre active vers cette page, quelle que soit la distance. Relâchez Maj pour que le même raccourci ouvre uniquement cette page en laissant la fenêtre à sa place.</value>
+  </data>
+  <data name="TourWindowNumberTitle.Text" xml:space="preserve">
+    <value>Passer directement à une page numérotée</value>
+  </data>
+  <data name="VirtualPagesCard.Description" xml:space="preserve">
+    <value>Choisissez le nombre de pages que couvre votre bureau. Définissez un nombre fixe ou laissez-le augmenter à mesure que vous déplacez les fenêtres</value>
+  </data>
+  <data name="VirtualPagesCard.Header" xml:space="preserve">
+    <value>Pages virtuelles</value>
+  </data>
+  <data name="VirtualPagesCountCard.Description" xml:space="preserve">
+    <value>Définir le nombre maximum de pages</value>
+  </data>
+  <data name="VirtualPagesCountCard.Header" xml:space="preserve">
+    <value>Nombre de pages</value>
+  </data>
+  <data name="VirtualPagesFixedOption.Content" xml:space="preserve">
+    <value>Corrigé</value>
+  </data>
+  <data name="VirtualPagesUnlimitedOption.Content" xml:space="preserve">
+    <value>Illimité</value>
+  </data>
+  <data name="WindowAboutMenuItem.Text" xml:space="preserve">
+    <value>À propos</value>
+  </data>
+  <data name="WindowExitMenuItem.Text" xml:space="preserve">
+    <value>Quitter</value>
+  </data>
+  <data name="WindowOptionsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Possibilités</value>
+  </data>
+  <data name="WindowPeekCard.Description" xml:space="preserve">
+    <value>Lorsque vous survolez une vignette de fenêtre ou appliquez un filtre, masquez toutes les autres fenêtres afin que seule celle (ou celles) correspondante(s) reste visible.</value>
+  </data>
+  <data name="WindowPeekCard.Header" xml:space="preserve">
+    <value>Window Peek</value>
+  </data>
+  <data name="WindowSearchBox.PlaceholderText" xml:space="preserve">
+    <value>Trouver une fenêtre de bureau...</value>
+  </data>
+  <data name="WindowsSectionTitle.Text" xml:space="preserve">
+    <value>Fenêtres</value>
+  </data>
+  <data name="WindowSettingsMenuItem.Text" xml:space="preserve">
+    <value>Paramètres</value>
+  </data>
+  <data name="WindowTourMenuItem.Text" xml:space="preserve">
+    <value>Faites un tour</value>
+  </data>
+</root>

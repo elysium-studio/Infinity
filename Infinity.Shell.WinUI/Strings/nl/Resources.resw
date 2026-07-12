@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="UpdateReadyToastDismissButton" xml:space="preserve">
+    <value>Negeren</value>
+  </data>
+  <data name="UpdateReadyToastDownloaded" xml:space="preserve">
+    <value>Infinity {0} is gedownload.</value>
+  </data>
+  <data name="UpdateReadyToastRestartButton" xml:space="preserve">
+    <value>Opnieuw opstarten</value>
+  </data>
+  <data name="UpdateReadyToastRestartRequired" xml:space="preserve">
+    <value>Start opnieuw op om het updaten te voltooien.</value>
+  </data>
+  <data name="UpdateReadyToastTitle" xml:space="preserve">
+    <value>Update gereed</value>
+  </data>
+  <data name="AboutTitleBar.Title" xml:space="preserve">
+    <value>Over</value>
+  </data>
+  <data name="BooleanToggle.OffContent" xml:space="preserve">
+    <value>Nee</value>
+  </data>
+  <data name="BooleanToggle.OnContent" xml:space="preserve">
+    <value>Ja</value>
+  </data>
+  <data name="CloseWindowButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Sluit venster</value>
+  </data>
+  <data name="DesktopBlurCard.Description" xml:space="preserve">
+    <value>Vervaag de achtergrond tijdens het scrollen en filteren</value>
+  </data>
+  <data name="DesktopBlurCard.Header" xml:space="preserve">
+    <value>Achtergrondvervaging</value>
+  </data>
+  <data name="DesktopSectionTitle.Text" xml:space="preserve">
+    <value>Bureaublad</value>
+  </data>
+  <data name="DragScrollSpeedCard.Description" xml:space="preserve">
+    <value>Hoe snel het bureaublad scrolt wanneer u een venster naar de schermrand sleept</value>
+  </data>
+  <data name="DragScrollSpeedCard.Header" xml:space="preserve">
+    <value>Sleep de scrollsnelheid</value>
+  </data>
+  <data name="PreviewBackgroundCard.Description" xml:space="preserve">
+    <value>Toon uw bureaubladachtergrond in de voorbeeldbalk</value>
+  </data>
+  <data name="PreviewBackgroundCard.Header" xml:space="preserve">
+    <value>Bureaubladachtergrond</value>
+  </data>
+  <data name="PreviewDebugWaitingText.Text" xml:space="preserve">
+    <value>Wachten...</value>
+  </data>
+  <data name="PreviewDebugWindow.Title" xml:space="preserve">
+    <value>Venstervoorbeeldraster</value>
+  </data>
+  <data name="PreviewPositionAutoOption.Content" xml:space="preserve">
+    <value>Automatisch</value>
+  </data>
+  <data name="PreviewPositionBottomOption.Content" xml:space="preserve">
+    <value>Onderkant</value>
+  </data>
+  <data name="PreviewPositionCard.Description" xml:space="preserve">
+    <value>Waar de voorbeeldbalk op het scherm verschijnt</value>
+  </data>
+  <data name="PreviewPositionCard.Header" xml:space="preserve">
+    <value>Voorbeeldpositie</value>
+  </data>
+  <data name="PreviewPositionTopOption.Content" xml:space="preserve">
+    <value>Boven</value>
+  </data>
+  <data name="PreviewSectionTitle.Text" xml:space="preserve">
+    <value>Voorbeeld</value>
+  </data>
+  <data name="PreviewSizeCard.Description" xml:space="preserve">
+    <value>Bepaalt hoe groot de voorbeeldbalk onder aan uw scherm wordt weergegeven</value>
+  </data>
+  <data name="PreviewSizeCard.Header" xml:space="preserve">
+    <value>Voorbeeldgrootte</value>
+  </data>
+  <data name="PreviewSizeCompactOption.Content" xml:space="preserve">
+    <value>Compact</value>
+  </data>
+  <data name="PreviewSizeDefaultOption.Content" xml:space="preserve">
+    <value>Standaard</value>
+  </data>
+  <data name="PreviewSizeLargeOption.Content" xml:space="preserve">
+    <value>Groot</value>
+  </data>
+  <data name="PageTitle" xml:space="preserve">
+    <value>Pagina {0}</value>
+  </data>
+  <data name="ScrollShortcutCancelButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Annuleer</value>
+  </data>
+  <data name="ScrollShortcutCard.Description" xml:space="preserve">
+    <value>De sneltoets waarmee u door het bureaublad scrolt</value>
+  </data>
+  <data name="ScrollShortcutCard.Header" xml:space="preserve">
+    <value>Sneltoets voor scrollen</value>
+  </data>
+  <data name="ScrollShortcutEditButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Bewerken</value>
+  </data>
+  <data name="ScrollShortcutRecordingHint.Text" xml:space="preserve">
+    <value>Druk op sneltoetsen...</value>
+  </data>
+  <data name="ScrollShortcutPressKeysToSave" xml:space="preserve">
+    <value>Druk op {0} toetsen om deze sneltoets op te slaan.</value>
+  </data>
+  <data name="ScrollShortcutPressMoreKeys" xml:space="preserve">
+    <value>Druk op nog {0} toetsen.</value>
+  </data>
+  <data name="ScrollShortcutRecorderUnavailable" xml:space="preserve">
+    <value>De toetsenbordrecorder kan niet worden gestart.</value>
+  </data>
+  <data name="ScrollShortcutSaveButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Opslaan</value>
+  </data>
+  <data name="ScrollShortcutStartWithModifier" xml:space="preserve">
+    <value>Begin met Ctrl, Alt, Shift of Win.</value>
+  </data>
+  <data name="ScrollShortcutUnavailable" xml:space="preserve">
+    <value>Deze sneltoets wordt al gebruikt door Windows of een andere app.</value>
+  </data>
+  <data name="ScrollSpeedCard.Description" xml:space="preserve">
+    <value>Hoe snel vensters bewegen als je scrollt</value>
+  </data>
+  <data name="ScrollSpeedCard.Header" xml:space="preserve">
+    <value>Scrollsnelheid</value>
+  </data>
+  <data name="SettingsTitleBar.Title" xml:space="preserve">
+    <value>Instellingen</value>
+  </data>
+  <data name="SpeedFastOption.Content" xml:space="preserve">
+    <value>Snel</value>
+  </data>
+  <data name="SpeedNormalOption.Content" xml:space="preserve">
+    <value>Normaal</value>
+  </data>
+  <data name="SpeedSlowOption.Content" xml:space="preserve">
+    <value>Langzaam</value>
+  </data>
+  <data name="SpeedTurboOption.Content" xml:space="preserve">
+    <value>Turbo</value>
+  </data>
+  <data name="SpeedVeryFastOption.Content" xml:space="preserve">
+    <value>Zeer snel</value>
+  </data>
+  <data name="StartWithWindowsCard.Description" xml:space="preserve">
+    <value>Start Infinity automatisch wanneer u zich aanmeldt</value>
+  </data>
+  <data name="StartWithWindowsCard.Header" xml:space="preserve">
+    <value>Starten met Windows</value>
+  </data>
+  <data name="TourBackButton.Content" xml:space="preserve">
+    <value>Terug</value>
+  </data>
+  <data name="TourFinishButton.Content" xml:space="preserve">
+    <value>Afwerking</value>
+  </data>
+  <data name="TourNextButton.Content" xml:space="preserve">
+    <value>Volgende</value>
+  </data>
+  <data name="TourOrLabel.Text" xml:space="preserve">
+    <value>of</value>
+  </data>
+  <data name="TourOverviewInstructionPrefix.Text" xml:space="preserve">
+    <value>Houd </value>
+  </data>
+  <data name="TourOverviewInstructionSuffix.Text" xml:space="preserve">
+    <value> en scroll met uw muiswiel waar dan ook op het bureaublad. Hierdoor wordt een overzicht van elke pagina geopend, zodat u kunt zien wat er openstaat en er meteen naartoe kunt gaan.</value>
+  </data>
+  <data name="TourOverviewTitle.Text" xml:space="preserve">
+    <value>Het paginaoverzicht openen</value>
+  </data>
+  <data name="TourPageNumberInstructionPrefix.Text" xml:space="preserve">
+    <value>Houd </value>
+  </data>
+  <data name="TourPageNumberInstructionSuffix.Text" xml:space="preserve">
+    <value> en druk op een cijfertoets, zonder andere toets. 1 tot en met 9, en vervolgens 0 voor de tiende pagina, kijken daar recht naar toe, maar elk venster, inclusief het venster dat in focus is, blijft precies waar het is.</value>
+  </data>
+  <data name="TourPageNumberTitle.Text" xml:space="preserve">
+    <value>Direct naar een genummerde pagina gaan</value>
+  </data>
+  <data name="TourPageSwitchInstructionPrefix.Text" xml:space="preserve">
+    <value>Houd </value>
+  </data>
+  <data name="TourPageSwitchInstructionSuffix.Text" xml:space="preserve">
+    <value> en druk op de pijl-links of pijl-rechts, zonder andere toets. De weergave schuift naar de volgende pagina, maar elk venster (inclusief het venster dat in focus is) blijft precies waar u het verliet.</value>
+  </data>
+  <data name="TourPageSwitchTitle.Text" xml:space="preserve">
+    <value>Van pagina wisselen zonder iets te verplaatsen</value>
+  </data>
+  <data name="TourShiftKeyLabel.Text" xml:space="preserve">
+    <value>Shift</value>
+  </data>
+  <data name="TourTitleBar.Title" xml:space="preserve">
+    <value>Aan de slag</value>
+  </data>
+  <data name="TourWelcomeDescription.Text" xml:space="preserve">
+    <value>Infinity verandert uw bureaublad in een eindeloos, scrollbaar canvas van pagina's. Deze snelle walkthrough behandelt de basisprincipes van bewegen en het aanpassen van hoe het voelt.</value>
+  </data>
+  <data name="TourWelcomeTitle.Text" xml:space="preserve">
+    <value>Welkom bij Infinity</value>
+  </data>
+  <data name="TourWindowDragInstructionPrefix.Text" xml:space="preserve">
+    <value>Houd </value>
+  </data>
+  <data name="TourWindowDragInstructionSuffix.Text" xml:space="preserve">
+    <value> en sleep de titelbalk van een venster naar de rand van het scherm om deze naar de volgende pagina te verplaatsen.</value>
+  </data>
+  <data name="TourWindowDragTitle.Text" xml:space="preserve">
+    <value>Een venster naar een andere pagina slepen</value>
+  </data>
+  <data name="TourWindowJumpInstructionPrefix.Text" xml:space="preserve">
+    <value>Houd </value>
+  </data>
+  <data name="TourWindowJumpInstructionSuffix.Text" xml:space="preserve">
+    <value>+Shift en druk op de pijl-links of pijl-rechts. Het actieve venster springt rechtstreeks naar de aangrenzende pagina, zodat u het zonder de muis kunt ordenen. Laat Shift los om met dezelfde sneltoets alleen van pagina te wisselen en het venster op zijn plaats te laten.</value>
+  </data>
+  <data name="TourWindowJumpTitle.Text" xml:space="preserve">
+    <value>Een venster naar een andere pagina verzenden</value>
+  </data>
+  <data name="TourWindowNumberInstructionPrefix.Text" xml:space="preserve">
+    <value>Houd </value>
+  </data>
+  <data name="TourWindowNumberInstructionSuffix.Text" xml:space="preserve">
+    <value>+Shift en druk op een cijfertoets. Met 1 tot en met 9, en daarna 0 voor de tiende pagina, verplaatst u het actieve venster rechtstreeks naar de gekozen pagina, ongeacht de afstand. Laat Shift los om met dezelfde sneltoets alleen die pagina te openen en het venster op zijn plaats te laten.</value>
+  </data>
+  <data name="TourWindowNumberTitle.Text" xml:space="preserve">
+    <value>Direct naar een genummerde pagina springen</value>
+  </data>
+  <data name="VirtualPagesCard.Description" xml:space="preserve">
+    <value>Kies hoeveel pagina's uw bureaublad beslaat. Stel een vast aantal in of laat het groeien naarmate u vensters verplaatst</value>
+  </data>
+  <data name="VirtualPagesCard.Header" xml:space="preserve">
+    <value>Virtuele pagina's</value>
+  </data>
+  <data name="VirtualPagesCountCard.Description" xml:space="preserve">
+    <value>Stel het maximale aantal pagina's in</value>
+  </data>
+  <data name="VirtualPagesCountCard.Header" xml:space="preserve">
+    <value>Aantal pagina's</value>
+  </data>
+  <data name="VirtualPagesFixedOption.Content" xml:space="preserve">
+    <value>Vast</value>
+  </data>
+  <data name="VirtualPagesUnlimitedOption.Content" xml:space="preserve">
+    <value>Onbeperkt</value>
+  </data>
+  <data name="WindowAboutMenuItem.Text" xml:space="preserve">
+    <value>Over</value>
+  </data>
+  <data name="WindowExitMenuItem.Text" xml:space="preserve">
+    <value>Afsluiten</value>
+  </data>
+  <data name="WindowOptionsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Opties</value>
+  </data>
+  <data name="WindowPeekCard.Description" xml:space="preserve">
+    <value>Wanneer u de muisaanwijzer op een vensterminiatuur beweegt of een filter toepast, verberg dan alle andere vensters zodat alleen de overeenkomende vensters zichtbaar blijven.</value>
+  </data>
+  <data name="WindowPeekCard.Header" xml:space="preserve">
+    <value>Window Peek</value>
+  </data>
+  <data name="WindowSearchBox.PlaceholderText" xml:space="preserve">
+    <value>Zoek een bureaubladvenster...</value>
+  </data>
+  <data name="WindowsSectionTitle.Text" xml:space="preserve">
+    <value>Ramen</value>
+  </data>
+  <data name="WindowSettingsMenuItem.Text" xml:space="preserve">
+    <value>Instellingen</value>
+  </data>
+  <data name="WindowTourMenuItem.Text" xml:space="preserve">
+    <value>Volg een rondleiding</value>
+  </data>
+</root>

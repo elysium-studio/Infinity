@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="UpdateReadyToastDismissButton" xml:space="preserve">
+    <value>[!! Ðîšɱîšš ~~~ !!]</value>
+  </data>
+  <data name="UpdateReadyToastDownloaded" xml:space="preserve">
+    <value>[!! Infinity {0} ħàš ƀëëñ ðôŵñļôàðëð. ~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="UpdateReadyToastRestartButton" xml:space="preserve">
+    <value>[!! Ŕëšţàŕţ ~~~ !!]</value>
+  </data>
+  <data name="UpdateReadyToastRestartRequired" xml:space="preserve">
+    <value>[!! Ŕëšţàŕţ ţô ƒîñîšħ ûþðàţîñĝ. ~~~~~~~~~ !!]</value>
+  </data>
+  <data name="UpdateReadyToastTitle" xml:space="preserve">
+    <value>[!! Ûþðàţë ŕëàðÿ ~~~~ !!]</value>
+  </data>
+  <data name="AboutTitleBar.Title" xml:space="preserve">
+    <value>[!! Àƀôûţ ~~~ !!]</value>
+  </data>
+  <data name="BooleanToggle.OffContent" xml:space="preserve">
+    <value>[!! Ñô ~~~ !!]</value>
+  </data>
+  <data name="BooleanToggle.OnContent" xml:space="preserve">
+    <value>[!! Ÿëš ~~~ !!]</value>
+  </data>
+  <data name="CloseWindowButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>[!! Çļôšë ŵîñðôŵ ~~~~ !!]</value>
+  </data>
+  <data name="DesktopBlurCard.Description" xml:space="preserve">
+    <value>[!! Ɓļûŕ ţħë ƀàçķĝŕôûñð ðûŕîñĝ šçŕôļļîñĝ àñð ƒîļţëŕîñĝ ~~~~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="DesktopBlurCard.Header" xml:space="preserve">
+    <value>[!! Ɓàçķĝŕôûñð Ɓļûŕ ~~~~~ !!]</value>
+  </data>
+  <data name="DesktopSectionTitle.Text" xml:space="preserve">
+    <value>[!! Ðëšķţôþ ~~~ !!]</value>
+  </data>
+  <data name="DragScrollSpeedCard.Description" xml:space="preserve">
+    <value>[!! Ħôŵ ƒàšţ ţħë ðëšķţôþ šçŕôļļš ŵħëñ ðŕàĝĝîñĝ à ŵîñðôŵ ţô ţħë šçŕëëñ ëðĝë ~~~~~~~~~~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="DragScrollSpeedCard.Header" xml:space="preserve">
+    <value>[!! Ðŕàĝ Šçŕôļļ Šþëëð ~~~~~~ !!]</value>
+  </data>
+  <data name="PreviewBackgroundCard.Description" xml:space="preserve">
+    <value>[!! Šħôŵ ÿôûŕ ðëšķţôþ ƀàçķĝŕôûñð îñ ţħë þŕëṽîëŵ ƀàŕ ~~~~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="PreviewBackgroundCard.Header" xml:space="preserve">
+    <value>[!! Ðëšķţôþ Ɓàçķĝŕôûñð ~~~~~~ !!]</value>
+  </data>
+  <data name="PreviewDebugWaitingText.Text" xml:space="preserve">
+    <value>[!! Ŵàîţîñĝ... ~~~ !!]</value>
+  </data>
+  <data name="PreviewDebugWindow.Title" xml:space="preserve">
+    <value>[!! Ŵîñðôŵ þŕëṽîëŵ ĝŕîð ~~~~~~ !!]</value>
+  </data>
+  <data name="PreviewPositionAutoOption.Content" xml:space="preserve">
+    <value>[!! Àûţô ~~~ !!]</value>
+  </data>
+  <data name="PreviewPositionBottomOption.Content" xml:space="preserve">
+    <value>[!! Ɓôţţôɱ ~~~ !!]</value>
+  </data>
+  <data name="PreviewPositionCard.Description" xml:space="preserve">
+    <value>[!! Ŵħëŕë ţħë þŕëṽîëŵ ƀàŕ àþþëàŕš ôñ šçŕëëñ ~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="PreviewPositionCard.Header" xml:space="preserve">
+    <value>[!! Þŕëṽîëŵ Þôšîţîôñ ~~~~~ !!]</value>
+  </data>
+  <data name="PreviewPositionTopOption.Content" xml:space="preserve">
+    <value>[!! Ţôþ ~~~ !!]</value>
+  </data>
+  <data name="PreviewSectionTitle.Text" xml:space="preserve">
+    <value>[!! Þŕëṽîëŵ ~~~ !!]</value>
+  </data>
+  <data name="PreviewSizeCard.Description" xml:space="preserve">
+    <value>[!! Çôñţŕôļš ħôŵ ţàļļ ţħë þŕëṽîëŵ ƀàŕ àþþëàŕš àţ ţħë ƀôţţôɱ ôƒ ÿôûŕ šçŕëëñ ~~~~~~~~~~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="PreviewSizeCard.Header" xml:space="preserve">
+    <value>[!! Þŕëṽîëŵ Šîžë ~~~~ !!]</value>
+  </data>
+  <data name="PreviewSizeCompactOption.Content" xml:space="preserve">
+    <value>[!! Çôɱþàçţ ~~~ !!]</value>
+  </data>
+  <data name="PreviewSizeDefaultOption.Content" xml:space="preserve">
+    <value>[!! Ðëƒàûļţ ~~~ !!]</value>
+  </data>
+  <data name="PreviewSizeLargeOption.Content" xml:space="preserve">
+    <value>[!! Ļàŕĝë ~~~ !!]</value>
+  </data>
+  <data name="PageTitle" xml:space="preserve">
+    <value>[!! Þàĝë {0} ~~~ !!]</value>
+  </data>
+  <data name="ScrollShortcutCancelButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>[!! Çàñçëļ ~~~ !!]</value>
+  </data>
+  <data name="ScrollShortcutCard.Description" xml:space="preserve">
+    <value>[!! Ţħë šħôŕţçûţ ûšëð ţô ţŕîĝĝëŕ ðëšķţôþ šçŕôļļîñĝ ~~~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="ScrollShortcutCard.Header" xml:space="preserve">
+    <value>[!! Šçŕôļļ Šħôŕţçûţ ~~~~~ !!]</value>
+  </data>
+  <data name="ScrollShortcutEditButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>[!! Ëðîţ ~~~ !!]</value>
+  </data>
+  <data name="ScrollShortcutRecordingHint.Text" xml:space="preserve">
+    <value>[!! Þŕëšš šħôŕţçûţ ķëÿš... ~~~~~~~ !!]</value>
+  </data>
+  <data name="ScrollShortcutPressKeysToSave" xml:space="preserve">
+    <value>[!! Þŕëšš {0} ķëÿš ţô šàṽë ţħîš šħôŕţçûţ. ~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="ScrollShortcutPressMoreKeys" xml:space="preserve">
+    <value>[!! Þŕëšš {0} ɱôŕë ķëÿš. ~~~~~~ !!]</value>
+  </data>
+  <data name="ScrollShortcutRecorderUnavailable" xml:space="preserve">
+    <value>[!! Ţħë ķëÿƀôàŕð ŕëçôŕðëŕ çôûļð ñôţ ƀë šţàŕţëð. ~~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="ScrollShortcutSaveButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>[!! Šàṽë ~~~ !!]</value>
+  </data>
+  <data name="ScrollShortcutStartWithModifier" xml:space="preserve">
+    <value>[!! Šţàŕţ ŵîţħ Çţŕļ, Àļţ, Šħîƒţ ôŕ Ŵîñ. ~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="ScrollShortcutUnavailable" xml:space="preserve">
+    <value>[!! Ţħàţ šħôŕţçûţ îš àļŕëàðÿ ûšëð ƀÿ Ŵîñðôŵš ôŕ àñôţħëŕ àþþ. ~~~~~~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="ScrollSpeedCard.Description" xml:space="preserve">
+    <value>[!! Ħôŵ ƒàšţ ŵîñðôŵš ɱôṽë ŵħëñ ÿôû šçŕôļļ ~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="ScrollSpeedCard.Header" xml:space="preserve">
+    <value>[!! Šçŕôļļ Šþëëð ~~~~ !!]</value>
+  </data>
+  <data name="SettingsTitleBar.Title" xml:space="preserve">
+    <value>[!! Šëţţîñĝš ~~~ !!]</value>
+  </data>
+  <data name="SpeedFastOption.Content" xml:space="preserve">
+    <value>[!! Ƒàšţ ~~~ !!]</value>
+  </data>
+  <data name="SpeedNormalOption.Content" xml:space="preserve">
+    <value>[!! Ñôŕɱàļ ~~~ !!]</value>
+  </data>
+  <data name="SpeedSlowOption.Content" xml:space="preserve">
+    <value>[!! Šļôŵ ~~~ !!]</value>
+  </data>
+  <data name="SpeedTurboOption.Content" xml:space="preserve">
+    <value>[!! Ţûŕƀô ~~~ !!]</value>
+  </data>
+  <data name="SpeedVeryFastOption.Content" xml:space="preserve">
+    <value>[!! Ṽëŕÿ Ƒàšţ ~~~ !!]</value>
+  </data>
+  <data name="StartWithWindowsCard.Description" xml:space="preserve">
+    <value>[!! Àûţôɱàţîçàļļÿ ļàûñçħ Infinity ŵħëñ ÿôû šîĝñ îñ ~~~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="StartWithWindowsCard.Header" xml:space="preserve">
+    <value>[!! Šţàŕţ ŵîţħ Ŵîñðôŵš ~~~~~~ !!]</value>
+  </data>
+  <data name="TourBackButton.Content" xml:space="preserve">
+    <value>[!! Ɓàçķ ~~~ !!]</value>
+  </data>
+  <data name="TourFinishButton.Content" xml:space="preserve">
+    <value>[!! Ƒîñîšħ ~~~ !!]</value>
+  </data>
+  <data name="TourNextButton.Content" xml:space="preserve">
+    <value>[!! Ñëẋţ ~~~ !!]</value>
+  </data>
+  <data name="TourOrLabel.Text" xml:space="preserve">
+    <value>[!! ôŕ ~~~ !!]</value>
+  </data>
+  <data name="TourOverviewInstructionPrefix.Text" xml:space="preserve">
+    <value>[!! Ħôļð ~~~ !!] </value>
+  </data>
+  <data name="TourOverviewInstructionSuffix.Text" xml:space="preserve">
+    <value> [!! àñð šçŕôļļ ÿôûŕ ɱôûšë ŵħëëļ àñÿŵħëŕë ôñ ţħë ðëšķţôþ. Ţħîš ôþëñš àñ ôṽëŕṽîëŵ ôƒ ëṽëŕÿ þàĝë šô ÿôû çàñ šëë ŵħàţ'š ôþëñ àñð ĵûɱþ šţŕàîĝħţ ţô îţ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="TourOverviewTitle.Text" xml:space="preserve">
+    <value>[!! Ɓŕîñĝîñĝ ûþ ţħë þàĝë ôṽëŕṽîëŵ ~~~~~~~~~ !!]</value>
+  </data>
+  <data name="TourPageNumberInstructionPrefix.Text" xml:space="preserve">
+    <value>[!! Ħôļð ~~~ !!] </value>
+  </data>
+  <data name="TourPageNumberInstructionSuffix.Text" xml:space="preserve">
+    <value> [!! àñð þŕëšš à ñûɱƀëŕ ķëÿ, ŵîţħ ñô ôţħëŕ ķëÿ. 1 ţħŕôûĝħ 9, ţħëñ 0 ƒôŕ ţħë ţëñţħ þàĝë, ţàķëš ţħë ṽîëŵ šţŕàîĝħţ ţħëŕë — ƀûţ ëṽëŕÿ ŵîñðôŵ, îñçļûðîñĝ ţħë ôñë îñ ƒôçûš, šţàÿš ëẋàçţļÿ ŵħëŕë îţ îš. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="TourPageNumberTitle.Text" xml:space="preserve">
+    <value>[!! Šŵîţçħîñĝ šţŕàîĝħţ ţô à ñûɱƀëŕëð þàĝë ~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="TourPageSwitchInstructionPrefix.Text" xml:space="preserve">
+    <value>[!! Ħôļð ~~~ !!] </value>
+  </data>
+  <data name="TourPageSwitchInstructionSuffix.Text" xml:space="preserve">
+    <value> [!! àñð þŕëšš ţħë Ļëƒţ ôŕ Ŕîĝħţ àŕŕôŵ ķëÿ, ŵîţħ ñô ôţħëŕ ķëÿ. Ţħë ṽîëŵ þàñš ţô ţħë ñëẋţ þàĝë, ƀûţ ëṽëŕÿ ŵîñðôŵ — îñçļûðîñĝ ţħë ôñë îñ ƒôçûš — šţàÿš ëẋàçţļÿ ŵħëŕë ÿôû ļëƒţ îţ. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="TourPageSwitchTitle.Text" xml:space="preserve">
+    <value>[!! Šŵîţçħîñĝ þàĝëš ŵîţħôûţ ɱôṽîñĝ àñÿţħîñĝ ~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="TourShiftKeyLabel.Text" xml:space="preserve">
+    <value>[!! Šħîƒţ ~~~ !!]</value>
+  </data>
+  <data name="TourTitleBar.Title" xml:space="preserve">
+    <value>[!! Ĝëţţîñĝ Šţàŕţëð ~~~~~ !!]</value>
+  </data>
+  <data name="TourWelcomeDescription.Text" xml:space="preserve">
+    <value>[!! Infinity ţûŕñš ÿôûŕ ðëšķţôþ îñţô àñ ëñðļëšš, šçŕôļļàƀļë çàñṽàš ôƒ þàĝëš. Ţħîš ɋûîçķ ŵàļķţħŕôûĝħ çôṽëŕš ţħë ƀàšîçš ôƒ ɱôṽîñĝ àŕôûñð àñð çûšţôɱîžîñĝ ħôŵ îţ ƒëëļš. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="TourWelcomeTitle.Text" xml:space="preserve">
+    <value>[!! Ŵëļçôɱë ţô Infinity ~~~~~~ !!]</value>
+  </data>
+  <data name="TourWindowDragInstructionPrefix.Text" xml:space="preserve">
+    <value>[!! Ħôļð ~~~ !!] </value>
+  </data>
+  <data name="TourWindowDragInstructionSuffix.Text" xml:space="preserve">
+    <value> [!! àñð ðŕàĝ à ŵîñðôŵ'š ţîţļë ƀàŕ ţôŵàŕð ţħë ëðĝë ôƒ ţħë šçŕëëñ ţô ɱôṽë îţ ôñţô ţħë ñëẋţ þàĝë. ~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="TourWindowDragTitle.Text" xml:space="preserve">
+    <value>[!! Ðŕàĝĝîñĝ à ŵîñðôŵ ţô àñôţħëŕ þàĝë ~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="TourWindowJumpInstructionPrefix.Text" xml:space="preserve">
+    <value>[!! Ħôļð ~~~ !!] </value>
+  </data>
+  <data name="TourWindowJumpInstructionSuffix.Text" xml:space="preserve">
+    <value>[!! +Šħîƒţ àñð þŕëšš ţħë Ļëƒţ ôŕ Ŕîĝħţ àŕŕôŵ ķëÿ. Ţħë ŵîñðôŵ îñ ƒôçûš ĵûɱþš šţŕàîĝħţ ţô ţħë þàĝë ƀëšîðë îţ, šô ÿôû çàñ ŕëôŕĝàñîžë ŵîţħôûţ ţôûçħîñĝ ţħë ɱôûšë. Ðŕôþ Šħîƒţ àñð ţħë šàɱë çôɱƀô ĵûšţ šŵîţçħëš þàĝëš, ļëàṽîñĝ ţħë ŵîñðôŵ ŵħëŕë îţ îš. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="TourWindowJumpTitle.Text" xml:space="preserve">
+    <value>[!! Šëñðîñĝ à ŵîñðôŵ ţô àñôţħëŕ þàĝë ~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="TourWindowNumberInstructionPrefix.Text" xml:space="preserve">
+    <value>[!! Ħôļð ~~~ !!] </value>
+  </data>
+  <data name="TourWindowNumberInstructionSuffix.Text" xml:space="preserve">
+    <value>[!! +Šħîƒţ àñð þŕëšš à ñûɱƀëŕ ķëÿ. 1 ţħŕôûĝħ 9, ţħëñ 0 ƒôŕ ţħë ţëñţħ þàĝë, šëñðš ţħë ŵîñðôŵ îñ ƒôçûš šţŕàîĝħţ ţô ţħàţ þàĝë, ñô ɱàţţëŕ ħôŵ ƒàŕ àŵàÿ îţ îš. Ðŕôþ Šħîƒţ àñð ţħë šàɱë çôɱƀô ĵûšţ ţàķëš ÿôû ţô ţħàţ þàĝë, ļëàṽîñĝ ţħë ŵîñðôŵ ŵħëŕë îţ îš. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="TourWindowNumberTitle.Text" xml:space="preserve">
+    <value>[!! Ĵûɱþîñĝ šţŕàîĝħţ ţô à ñûɱƀëŕëð þàĝë ~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="VirtualPagesCard.Description" xml:space="preserve">
+    <value>[!! Çħôôšë ħôŵ ɱàñÿ þàĝëš ÿôûŕ ðëšķţôþ šþàñš. Šëţ à ƒîẋëð ñûɱƀëŕ ôŕ ļëţ îţ ĝŕôŵ àš ÿôû ɱôṽë ŵîñðôŵš àçŕôšš ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="VirtualPagesCard.Header" xml:space="preserve">
+    <value>[!! Ṽîŕţûàļ Þàĝëš ~~~~ !!]</value>
+  </data>
+  <data name="VirtualPagesCountCard.Description" xml:space="preserve">
+    <value>[!! Šëţ ţħë ɱàẋîɱûɱ ñûɱƀëŕ ôƒ þàĝëš ~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="VirtualPagesCountCard.Header" xml:space="preserve">
+    <value>[!! Ñûɱƀëŕ ôƒ Þàĝëš ~~~~~ !!]</value>
+  </data>
+  <data name="VirtualPagesFixedOption.Content" xml:space="preserve">
+    <value>[!! Ƒîẋëð ~~~ !!]</value>
+  </data>
+  <data name="VirtualPagesUnlimitedOption.Content" xml:space="preserve">
+    <value>[!! Ûñļîɱîţëð ~~~ !!]</value>
+  </data>
+  <data name="WindowAboutMenuItem.Text" xml:space="preserve">
+    <value>[!! Àƀôûţ ~~~ !!]</value>
+  </data>
+  <data name="WindowExitMenuItem.Text" xml:space="preserve">
+    <value>[!! Ëẋîţ ~~~ !!]</value>
+  </data>
+  <data name="WindowOptionsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>[!! Ôþţîôñš ~~~ !!]</value>
+  </data>
+  <data name="WindowPeekCard.Description" xml:space="preserve">
+    <value>[!! Ŵħëñ ħôṽëŕîñĝ à ŵîñðôŵ ţħûɱƀñàîļ ôŕ àþþļÿîñĝ à ƒîļţëŕ, ħîðë àļļ ôţħëŕ ŵîñðôŵš šô ôñļÿ ţħë ɱàţçħîñĝ ôñë (ôŕ ôñëš) šţàÿ ṽîšîƀļë. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]</value>
+  </data>
+  <data name="WindowPeekCard.Header" xml:space="preserve">
+    <value>[!! Ŵîñðôŵ Þëëķ ~~~~ !!]</value>
+  </data>
+  <data name="WindowSearchBox.PlaceholderText" xml:space="preserve">
+    <value>[!! Ƒîñð à ðëšķţôþ ŵîñðôŵ... ~~~~~~~~ !!]</value>
+  </data>
+  <data name="WindowsSectionTitle.Text" xml:space="preserve">
+    <value>[!! Ŵîñðôŵš ~~~ !!]</value>
+  </data>
+  <data name="WindowSettingsMenuItem.Text" xml:space="preserve">
+    <value>[!! Šëţţîñĝš ~~~ !!]</value>
+  </data>
+  <data name="WindowTourMenuItem.Text" xml:space="preserve">
+    <value>[!! Ţàķë à ţôûŕ ~~~~ !!]</value>
+  </data>
+</root>
