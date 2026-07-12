@@ -5,7 +5,7 @@ using WinRT;
 
 namespace Infinity.Shell.WinUI;
 
-public class SystemVisualProxyVisualPrivate :
+public partial class SystemVisualProxyVisualPrivate :
     IDisposable
 {
     private static readonly Guid SystemVisualProxyVisualPrivateStaticsId = new("6efeef10-e0c5-5997-bcb7-c1644f1cab81");
@@ -32,8 +32,7 @@ public class SystemVisualProxyVisualPrivate :
         nint statics = 0;
         nint proxyUnknown = 0;
         nint proxyVisual = 0;
-        IObjectReference? compositorReference = null;
-
+        IObjectReference? compositorReference;
         try
         {
             classId = CreateHString("Microsoft.UI.Composition.Private.SystemVisualProxyVisualPrivate");
