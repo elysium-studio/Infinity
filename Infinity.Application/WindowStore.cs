@@ -6,7 +6,7 @@ namespace Infinity.Application;
 public class WindowStore :
     IWindowStore
 {
-    private readonly object syncRoot = new();
+    private readonly Lock syncRoot = new();
     private readonly Dictionary<IntPtr, TrackedWindow> lookup = new();
     private readonly List<TrackedWindow> ordered = new();
     private TrackedWindow[]? cachedAll;

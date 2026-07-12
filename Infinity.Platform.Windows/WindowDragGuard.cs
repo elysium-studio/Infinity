@@ -26,7 +26,7 @@ public class WindowDragGuard(IWindowEventListener listener,
     private const SET_WINDOW_POS_FLAGS SwpNoZOrder = SET_WINDOW_POS_FLAGS.SWP_NOZORDER;
     private const SET_WINDOW_POS_FLAGS SwpNoActivate = SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE;
 
-    private readonly object syncRoot = new();
+    private readonly Lock syncRoot = new();
     private readonly HashSet<nint> draggingWindows = [];
     private readonly HashSet<nint> resizingWindows = [];
     private readonly Dictionary<nint, RECT> dragStartBounds = new();

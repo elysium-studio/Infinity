@@ -26,7 +26,7 @@ public class WindowTracker(IWindowStore repository,
 
     private readonly Dictionary<IntPtr, int> suspendedCanvasPositions = [];
     private readonly Dictionary<IntPtr, CancellationTokenSource> pendingMinimizeSuspensions = [];
-    private readonly object minimizeSyncRoot = new();
+    private readonly Lock minimizeSyncRoot = new();
 
     private Timer? selfHealTimer;
     private int selfHealInProgress;
