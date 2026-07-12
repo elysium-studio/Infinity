@@ -13,7 +13,7 @@ public class WindowPlacementRulesTests
         TestIdentityProvider identityProvider = new("path:C:\\APPS\\EDITOR.EXE");
         TestOptionsMonitor options = new(new Settings());
         TestWritableOptions writer = new(options.CurrentValue);
-        using WindowPlacementRules rules = new(identityProvider, options, writer);
+        WindowPlacementRules rules = new(identityProvider, options, writer);
 
         bool saved = await rules.SetTargetPageAsync(new IntPtr(1), 4);
 
@@ -37,7 +37,7 @@ public class WindowPlacementRulesTests
         };
         TestOptionsMonitor options = new(settings);
         TestWritableOptions writer = new(settings);
-        using WindowPlacementRules rules = new(identityProvider, options, writer);
+        WindowPlacementRules rules = new(identityProvider, options, writer);
 
         bool removed = await rules.RemoveAsync(new IntPtr(1));
 
@@ -52,7 +52,7 @@ public class WindowPlacementRulesTests
         TestIdentityProvider identityProvider = new(null);
         TestOptionsMonitor options = new(new Settings());
         TestWritableOptions writer = new(options.CurrentValue);
-        using WindowPlacementRules rules = new(identityProvider, options, writer);
+        WindowPlacementRules rules = new(identityProvider, options, writer);
 
         bool saved = await rules.SetTargetPageAsync(new IntPtr(1), 2);
         bool removed = await rules.RemoveAsync(new IntPtr(1));
@@ -80,7 +80,8 @@ public class WindowPlacementRulesTests
 
         public Settings Get(string? name) => CurrentValue;
 
-        public IDisposable? OnChange(Action<Settings, string?> listener) => null;
+        public IDisposable? OnChange(Action<Settings, string?> listener) =>
+            throw new NotImplementedException();
     }
 
     private class TestWritableOptions(Settings value) : IWritableOptions<Settings>

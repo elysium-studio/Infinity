@@ -6,16 +6,13 @@ using Microsoft.Extensions.Options;
 namespace Infinity.Shell;
 
 public class WindowPlacementRules :
-    IWindowPlacementRules,
-    IDisposable
+    IWindowPlacementRules
 {
     private readonly IWindowApplicationIdentityProvider identityProvider;
     private readonly IWritableOptions<Settings> writer;
-    private readonly IDisposable? optionsSubscription;
     private readonly Lock syncRoot = new();
 
-    private Dictionary<string, int> rules;
-    private bool disposed;
+    private readonly Dictionary<string, int> rules;
 
     public WindowPlacementRules(IWindowApplicationIdentityProvider identityProvider,
         IOptionsMonitor<Settings> options,
@@ -24,7 +21,6 @@ public class WindowPlacementRules :
         this.identityProvider = identityProvider;
         this.writer = writer;
         rules = CopyRules(options.CurrentValue.ApplicationPageRules);
-        optionsSubscription = options.OnChange((settings, _) => ReplaceRules(settings.ApplicationPageRules));
     }
 
     public bool TryGetTargetPage(IntPtr windowHandle, out int targetPage)
@@ -46,8 +42,6 @@ public class WindowPlacementRules :
 
     public async Task<bool> SetTargetPageAsync(IntPtr windowHandle, int targetPage)
     {
-        ObjectDisposedException.ThrowIf(disposed, this);
-
         if (targetPage < 0 || !identityProvider.TryGetApplicationId(windowHandle, out string applicationId))
         {
             return false;
@@ -69,23 +63,17 @@ public class WindowPlacementRules :
 
     public async Task<bool> RemoveAsync(IntPtr windowHandle)
     {
-        ObjectDisposedException.ThrowIf(disposed, this);
-
         if (!identityProvider.TryGetApplicationId(windowHandle, out string applicationId))
         {
             return false;
         }
 
-        bool exists;
-
         lock (syncRoot)
         {
-            exists = rules.ContainsKey(applicationId);
-        }
-
-        if (!exists)
-        {
-            return false;
+            if (!rules.ContainsKey(applicationId))
+            {
+                return false;
+            }
         }
 
         await writer.WriteAsync(settings => settings.ApplicationPageRules?.Remove(applicationId));
@@ -96,33 +84,6 @@ public class WindowPlacementRules :
         }
 
         return true;
-    }
-
-    public void Dispose()
-    {
-        lock (syncRoot)
-        {
-            if (disposed)
-            {
-                return;
-            }
-
-            disposed = true;
-        }
-
-        optionsSubscription?.Dispose();
-        GC.SuppressFinalize(this);
-    }
-
-    private void ReplaceRules(Dictionary<string, int>? updatedRules)
-    {
-        lock (syncRoot)
-        {
-            if (!disposed)
-            {
-                rules = CopyRules(updatedRules);
-            }
-        }
     }
 
     private static Dictionary<string, int> CopyRules(Dictionary<string, int>? source) =>
