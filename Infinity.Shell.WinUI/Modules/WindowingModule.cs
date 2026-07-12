@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using ApplicationServices = Infinity.Application;
 
 namespace Infinity.Shell.WinUI;
 
@@ -19,18 +20,18 @@ public class WindowingModule :
     {
         services
             .AddSingleton<IWindowFilterState, TrackedWindowFilter>()
-            .AddSingleton<IWindowPeekSource, global::Infinity.Application.WindowPeekSource>()
+            .AddSingleton<IWindowPeekSource, ApplicationServices.WindowPeekSource>()
             .AddSingleton<IPeekSource>(provider => provider.GetRequiredService<IWindowPeekSource>())
-            .AddSingleton<IPeekSource>(provider => new global::Infinity.Application.FilterPeekSource(
+            .AddSingleton<IPeekSource>(provider => new ApplicationServices.FilterPeekSource(
                 provider.GetRequiredService<IWindowFilterState>()))
-            .AddSingleton<IWindowPeekController>(provider => new global::Infinity.Application.WindowPeekController(
+            .AddSingleton<IWindowPeekController>(provider => new ApplicationServices.WindowPeekController(
                 provider.GetRequiredService<IWindowStore>(),
                 provider.GetServices<IPeekSource>(),
                 provider.GetRequiredService<IWindowConcealer>(),
                 provider.GetRequiredService<IScroller>(),
                 () => provider.GetRequiredService<IOptionsMonitor<Settings>>().CurrentValue.HideFilteredWindows))
             .AddSingleton<ITrackedWindowCollection, TrackedWindowCollection>()
-            .AddSingleton<WindowCollection>(provider => new WindowCollection(
+            .AddSingleton<ApplicationServices.WindowCollection>(provider => new ApplicationServices.WindowCollection(
                 provider.GetRequiredService<IWindowStore>(),
                 provider.GetRequiredService<IScrollTimer>(),
                 provider.GetRequiredService<IScroller>(),
@@ -41,9 +42,9 @@ public class WindowingModule :
                 provider.GetRequiredService<IWindowFilterState>(),
                 provider.GetRequiredService<IForegroundWindowCoordinator>(),
                 provider.GetRequiredService<IDispatcher>(),
-                provider.GetRequiredService<ILogger<WindowCollection>>()))
-            .AddSingleton<IWindowCollection>(provider => provider.GetRequiredService<WindowCollection>())
-            .AddSingleton<IWindowCollectionLifetime>(provider => provider.GetRequiredService<WindowCollection>())
+                provider.GetRequiredService<ILogger<ApplicationServices.WindowCollection>>()))
+            .AddSingleton<IWindowCollection>(provider => provider.GetRequiredService<ApplicationServices.WindowCollection>())
+            .AddSingleton<IWindowCollectionLifetime>(provider => provider.GetRequiredService<ApplicationServices.WindowCollection>())
             .RegisterFactory((provider, factoryArgs) => new TrackedWindowViewModel(
                 provider,
                 provider.GetRequiredService<IServiceFactory>(),

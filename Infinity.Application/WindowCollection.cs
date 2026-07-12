@@ -4,7 +4,7 @@ using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
 
-namespace Infinity.Shell;
+namespace Infinity.Application;
 
 public class WindowCollection(IWindowStore store,
     IScrollTimer timer,
