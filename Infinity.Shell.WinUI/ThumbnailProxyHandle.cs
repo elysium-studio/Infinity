@@ -10,5 +10,9 @@ public partial class ThumbnailProxyHandle(SystemVisualProxyVisualPrivate proxy, 
 
     public Visual Visual { get; } = visual;
 
-    public void Dispose() => Proxy.Dispose();
+    public void Dispose()
+    {
+        Proxy.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }

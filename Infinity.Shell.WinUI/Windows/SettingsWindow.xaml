@@ -12,7 +12,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TitleBar x:Name="AppTitleBar" Title="Settings">
+        <TitleBar x:Name="AppTitleBar" x:Uid="SettingsTitleBar">
             <TitleBar.IconSource>
                 <ImageIconSource ImageSource="ms-appx:///Assets/Infinity.png" />
             </TitleBar.IconSource>

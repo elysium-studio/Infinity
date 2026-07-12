@@ -13,6 +13,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using IApplicationLifetime = Elysium.Application.Abstractions.IApplicationLifetime;
 
@@ -20,8 +21,9 @@ namespace Infinity.Shell.WinUI;
 
 public partial class App
 {
-    private readonly object shutdownLock = new();
+    private readonly Lock shutdownLock = new();
 
+    private DispatcherQueue? dispatcherQueue;
     private IHost? host;
     private Task? shutdownTask;
     private Task? startupNavigationTask;
@@ -32,7 +34,7 @@ public partial class App
     {
         string applicationData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Infinity");
 
-        DispatcherQueue dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+        dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
         host = Host.CreateDefaultBuilder()
             .UseWritableContentRoot(applicationData)
@@ -47,10 +49,15 @@ public partial class App
                             new ConfigurationModule(),
                             new LocalizationModule(),
                             new NavigationModule(),
+                            new DesktopSettingsModule(),
+                            new DesktopModule(),
+                            new PreviewSettingsModule(),
                             new ShellModule(),
                             new SettingsModule(),
                             new TourModule(),
-                            new UpdateModule()))
+                            new UpdateModule(),
+                            new WindowsSettingsModule(),
+                            new WindowingModule()))
             .Build();
 
         ViewExtension.DefaultProvider = host.Services;
@@ -89,10 +96,49 @@ public partial class App
             }
 
             await currentHost.StopAsync();
-            currentHost.Dispose();
-            host = null;
+            await CompleteShutdownAsync(currentHost);
+            return;
         }
 
+        Current.Exit();
+    }
+
+    private Task CompleteShutdownAsync(IHost currentHost)
+    {
+        DispatcherQueue currentDispatcherQueue = dispatcherQueue
+            ?? throw new InvalidOperationException("The application dispatcher is not available");
+
+        if (currentDispatcherQueue.HasThreadAccess)
+        {
+            CompleteShutdown(currentHost);
+            return Task.CompletedTask;
+        }
+
+        TaskCompletionSource completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        if (!currentDispatcherQueue.TryEnqueue(() =>
+        {
+            try
+            {
+                CompleteShutdown(currentHost);
+                completion.SetResult();
+            }
+            catch (Exception exception)
+            {
+                completion.SetException(exception);
+            }
+        }))
+        {
+            completion.SetException(new InvalidOperationException("The application dispatcher rejected the shutdown request"));
+        }
+
+        return completion.Task;
+    }
+
+    private void CompleteShutdown(IHost currentHost)
+    {
+        currentHost.Dispose();
+        host = null;
         Current.Exit();
     }
 

@@ -22,7 +22,7 @@ public class WindowPageCoordinator(IWindowStore store,
     private static readonly TimeSpan ForegroundFollowDeferDelay = TimeSpan.FromMilliseconds(80);
     private static readonly TimeSpan ForegroundFollowSuppressionWindow = TimeSpan.FromMilliseconds(900);
 
-    private readonly object syncRoot = new();
+    private readonly Lock syncRoot = new();
 
     private CancellationTokenSource? foregroundFollowCancellationTokenSource;
     private IntPtr expectedProgrammaticHandle;

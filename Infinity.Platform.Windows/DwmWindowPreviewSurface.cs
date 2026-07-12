@@ -148,6 +148,8 @@ public class DwmWindowPreviewSurface :
             ownerWindowHandle = 0;
             isDisposed = true;
         }
+
+        GC.SuppressFinalize(this);
     }
 
     public void Initialize(nint ownerWindowHandle)

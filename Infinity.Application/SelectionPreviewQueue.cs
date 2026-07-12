@@ -8,7 +8,7 @@ public class SelectionPreviewQueue(IWindowStack stack,
     ILogger<SelectionPreviewQueue> logger) :
     ISelectionPreviewQueue
 {
-    private readonly object syncRoot = new();
+    private readonly Lock syncRoot = new();
     private CancellationTokenSource? cancellation;
     private IntPtr pendingHandle;
 

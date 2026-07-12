@@ -258,5 +258,6 @@ public unsafe partial class DesktopBackgroundSource :
         }
 
         workQueue.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

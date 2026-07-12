@@ -35,17 +35,17 @@ public class ConfigurationModule :
             .WithChangeHandler((provider, options, _) =>
                 provider.GetRequiredService<IModifierKeyState>()
                     .SetKeys(options.ScrollModifierKeys))
-            .WithChangeHandler((provider, options, _) =>
+            .WithAsyncChangeHandler(async (provider, options, _) =>
             {
                 IStartupManager startupManager = provider.GetRequiredService<IStartupManager>();
 
                 if (options.StartWithWindows)
                 {
-                    startupManager.Enable();
+                    await startupManager.EnableAsync();
                 }
                 else
                 {
-                    startupManager.Disable();
+                    await startupManager.DisableAsync();
                 }
             })
             .WithChangeHandler((provider, options, _) =>

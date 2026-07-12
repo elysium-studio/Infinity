@@ -10,7 +10,7 @@
     <Grid>
         <TitleBar
             x:Name="AppTitleBar"
-            Title="Getting Started"
+            x:Uid="TourTitleBar"
             VerticalAlignment="Top">
             <TitleBar.IconSource>
                 <ImageIconSource ImageSource="ms-appx:///Assets/Infinity.png" />
@@ -57,14 +57,14 @@
                             x:Name="BackButton"
                             MinWidth="132"
                             Click="{x:Bind ViewModel.GoBack}"
-                            Content="Back"
+                            x:Uid="TourBackButton"
                             IsEnabled="{x:Bind ViewModel.CanGoBack, Mode=OneWay}" />
                         <Grid>
                             <Button
                                 x:Name="NextButton"
                                 MinWidth="132"
                                 Click="{x:Bind ViewModel.GoNext}"
-                                Content="Next"
+                                x:Uid="TourNextButton"
                                 IsEnabled="{x:Bind ViewModel.CanGoNext, Mode=OneWay}"
                                 Style="{StaticResource AccentButtonStyle}"
                                 Visibility="{x:Bind ToNextVisibility(ViewModel.IsLastStep), Mode=OneWay}" />
@@ -72,7 +72,7 @@
                                 x:Name="FinishButton"
                                 MinWidth="132"
                                 Click="{x:Bind ViewModel.Finish}"
-                                Content="Finish"
+                                x:Uid="TourFinishButton"
                                 Style="{StaticResource AccentButtonStyle}"
                                 Visibility="{x:Bind ToFinishVisibility(ViewModel.IsLastStep), Mode=OneWay}" />
                         </Grid>
