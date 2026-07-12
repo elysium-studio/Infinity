@@ -7,7 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
 using System;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace Infinity.Shell.WinUI;
@@ -26,8 +25,7 @@ public class UpdateModule :
             configuration.FeedUrl = "https://elysiumstud.io/feeds/infinity";
         });
 
-        services.AddSingleton(provider => new AppToastNotifier("ElysiumStudio.Infinity", "Infinity",
-            Path.Combine(AppContext.BaseDirectory, "Assets", "Infinity.ico")));
+        services.AddSingleton<AppToastNotifier>();
 
         services.Subscribe<IUpdateController>((provider, controller) =>
         {
