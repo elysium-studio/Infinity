@@ -23,6 +23,7 @@ public partial class App
 {
     private readonly Lock shutdownLock = new();
 
+    private DispatcherQueue? dispatcherQueue;
     private IHost? host;
     private Task? shutdownTask;
     private Task? startupNavigationTask;
@@ -33,7 +34,7 @@ public partial class App
     {
         string applicationData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Infinity");
 
-        DispatcherQueue dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+        dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
         host = Host.CreateDefaultBuilder()
             .UseWritableContentRoot(applicationData)
@@ -95,10 +96,49 @@ public partial class App
             }
 
             await currentHost.StopAsync();
-            currentHost.Dispose();
-            host = null;
+            await CompleteShutdownAsync(currentHost);
+            return;
         }
 
+        Current.Exit();
+    }
+
+    private Task CompleteShutdownAsync(IHost currentHost)
+    {
+        DispatcherQueue currentDispatcherQueue = dispatcherQueue
+            ?? throw new InvalidOperationException("The application dispatcher is not available");
+
+        if (currentDispatcherQueue.HasThreadAccess)
+        {
+            CompleteShutdown(currentHost);
+            return Task.CompletedTask;
+        }
+
+        TaskCompletionSource completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        if (!currentDispatcherQueue.TryEnqueue(() =>
+        {
+            try
+            {
+                CompleteShutdown(currentHost);
+                completion.SetResult();
+            }
+            catch (Exception exception)
+            {
+                completion.SetException(exception);
+            }
+        }))
+        {
+            completion.SetException(new InvalidOperationException("The application dispatcher rejected the shutdown request"));
+        }
+
+        return completion.Task;
+    }
+
+    private void CompleteShutdown(IHost currentHost)
+    {
+        currentHost.Dispose();
+        host = null;
         Current.Exit();
     }
 
