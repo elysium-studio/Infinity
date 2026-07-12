@@ -47,7 +47,11 @@ public class Scroller(IPanState state,
 
     public double VisualOffset => state.Offset + springPosition;
 
-    public void Dispose() => Stop();
+    public void Dispose()
+    {
+        Stop();
+        GC.SuppressFinalize(this);
+    }
 
     public void Reset()
     {

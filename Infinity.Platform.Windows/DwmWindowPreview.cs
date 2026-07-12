@@ -109,6 +109,7 @@ public class DwmWindowPreview(IDwmWindowPreviewSurface surface,
         InvalidateKeepAlive();
 
         surface.Remove(this);
+        GC.SuppressFinalize(this);
     }
 
     internal void MarkDisposed()
@@ -116,6 +117,7 @@ public class DwmWindowPreview(IDwmWindowPreviewSurface surface,
         isDisposed = true;
 
         InvalidateKeepAlive();
+        GC.SuppressFinalize(this);
     }
 
     private void InvalidateKeepAlive()

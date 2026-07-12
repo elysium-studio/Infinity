@@ -1,6 +1,7 @@
 ﻿using Microsoft.UI.Composition;
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 using WinRT;
 
 namespace Infinity.Shell.WinUI;
@@ -91,11 +92,14 @@ public partial class SystemVisualProxyVisualPrivate :
 
     public void Dispose()
     {
-        if (proxyUnknown != 0)
+        nint pointer = Interlocked.Exchange(ref proxyUnknown, 0);
+
+        if (pointer != 0)
         {
-            Marshal.Release(proxyUnknown);
-            proxyUnknown = 0;
+            Marshal.Release(pointer);
         }
+
+        GC.SuppressFinalize(this);
     }
 
     private static nint GetHandle(nint proxyUnknown)

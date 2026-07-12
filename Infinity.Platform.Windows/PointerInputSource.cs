@@ -20,6 +20,7 @@ public class PointerInputSource :
     private int velocitySampleIndex;
     private int velocitySampleCount;
     private bool isPrecisionGesture;
+    private bool isDisposed;
 
     public event Action<int, int>? CursorMoved;
     public event Action? LeftButtonClicked;
@@ -78,6 +79,11 @@ public class PointerInputSource :
     {
         lock (scrollGate)
         {
+            if (isDisposed)
+            {
+                return;
+            }
+
             if (delta % WheelDelta != 0)
             {
                 isPrecisionGesture = true;
@@ -109,6 +115,11 @@ public class PointerInputSource :
 
         lock (scrollGate)
         {
+            if (isDisposed)
+            {
+                return;
+            }
+
             shouldFire = isPrecisionGesture;
 
             if (shouldFire)
@@ -157,16 +168,24 @@ public class PointerInputSource :
 
     public void Dispose()
     {
+        lock (scrollGate)
+        {
+            if (isDisposed)
+            {
+                return;
+            }
+
+            isDisposed = true;
+            idleTimer?.Dispose();
+            idleTimer = null;
+        }
+
         mouseInputSource.LeftButtonDown -= HandleLeftButtonDown;
         mouseInputSource.MiddleButtonDown -= HandleMiddleButtonDown;
         mouseInputSource.RightButtonDown -= HandleRightButtonDown;
         mouseInputSource.MouseMoved -= HandleMouseMoved;
         mouseInputSource.WheelScrolled -= HandleWheelScrolled;
 
-        lock (scrollGate)
-        {
-            idleTimer?.Dispose();
-            idleTimer = null;
-        }
+        GC.SuppressFinalize(this);
     }
 }

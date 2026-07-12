@@ -180,6 +180,11 @@ public unsafe class WindowConcealer(IWindowEnumerator enumerator,
 
         lock (syncRoot)
         {
+            if (isDisposed)
+            {
+                return;
+            }
+
             isDisposed = true;
             strandedWindows = [.. concealedWindows];
             concealedWindows.Clear();
@@ -201,6 +206,8 @@ public unsafe class WindowConcealer(IWindowEnumerator enumerator,
                     Marshal.GetLastPInvokeError());
             }
         }
+
+        GC.SuppressFinalize(this);
     }
 
     private bool TryWriteRecoveryOrigin(HWND hwnd, WindowOrigin origin)

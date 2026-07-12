@@ -388,6 +388,8 @@ public partial class WindowPreviewGridDebugWindow :
     private class WindowPreviewItem :
         IDisposable
     {
+        private bool isDisposed;
+
         public WindowPreviewItem(WindowCandidate candidate, IWindowPreview preview, Border itemBorder, Border thumbnailHost, SystemVisualProxyVisualPrivate thumbnailProxy)
         {
             Candidate = candidate;
@@ -409,11 +411,18 @@ public partial class WindowPreviewGridDebugWindow :
 
         public void Dispose()
         {
+            if (isDisposed)
+            {
+                return;
+            }
+
+            isDisposed = true;
             Preview.Dispose();
 
             ElementCompositionPreview.SetElementChildVisual(ThumbnailHost, null);
 
             ThumbnailProxy.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 

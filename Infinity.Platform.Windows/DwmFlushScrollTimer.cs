@@ -69,6 +69,7 @@ public class DwmFlushScrollTimer :
         }
 
         activeEvent.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     private void Run()
