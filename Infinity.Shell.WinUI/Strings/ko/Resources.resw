@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="UpdateReadyToastDismissButton" xml:space="preserve">
+    <value>닫기</value>
+  </data>
+  <data name="UpdateReadyToastDownloaded" xml:space="preserve">
+    <value>Infinity {0}이(가) 다운로드되었습니다.</value>
+  </data>
+  <data name="UpdateReadyToastRestartButton" xml:space="preserve">
+    <value>다시 시작</value>
+  </data>
+  <data name="UpdateReadyToastRestartRequired" xml:space="preserve">
+    <value>업데이트를 완료하려면 다시 시작하세요.</value>
+  </data>
+  <data name="UpdateReadyToastTitle" xml:space="preserve">
+    <value>업데이트 준비됨</value>
+  </data>
+  <data name="AboutTitleBar.Title" xml:space="preserve">
+    <value>소개</value>
+  </data>
+  <data name="BooleanToggle.OffContent" xml:space="preserve">
+    <value>아니요</value>
+  </data>
+  <data name="BooleanToggle.OnContent" xml:space="preserve">
+    <value>예</value>
+  </data>
+  <data name="CloseWindowButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>창 닫기</value>
+  </data>
+  <data name="DesktopBlurCard.Description" xml:space="preserve">
+    <value>스크롤 및 필터링 중에 배경을 흐리게 합니다.</value>
+  </data>
+  <data name="DesktopBlurCard.Header" xml:space="preserve">
+    <value>배경 흐림</value>
+  </data>
+  <data name="DesktopSectionTitle.Text" xml:space="preserve">
+    <value>데스크탑</value>
+  </data>
+  <data name="DragScrollSpeedCard.Description" xml:space="preserve">
+    <value>창을 화면 가장자리로 끌 때 바탕 화면이 스크롤되는 속도</value>
+  </data>
+  <data name="DragScrollSpeedCard.Header" xml:space="preserve">
+    <value>드래그 스크롤 속도</value>
+  </data>
+  <data name="PreviewBackgroundCard.Description" xml:space="preserve">
+    <value>미리보기 표시줄에 바탕화면 배경 표시</value>
+  </data>
+  <data name="PreviewBackgroundCard.Header" xml:space="preserve">
+    <value>데스크탑 배경</value>
+  </data>
+  <data name="PreviewDebugWaitingText.Text" xml:space="preserve">
+    <value>기다리는 중...</value>
+  </data>
+  <data name="PreviewDebugWindow.Title" xml:space="preserve">
+    <value>창 미리보기 그리드</value>
+  </data>
+  <data name="PreviewPositionAutoOption.Content" xml:space="preserve">
+    <value>자동</value>
+  </data>
+  <data name="PreviewPositionBottomOption.Content" xml:space="preserve">
+    <value>바닥</value>
+  </data>
+  <data name="PreviewPositionCard.Description" xml:space="preserve">
+    <value>화면에 미리보기 표시줄이 나타나는 위치</value>
+  </data>
+  <data name="PreviewPositionCard.Header" xml:space="preserve">
+    <value>미리보기 위치</value>
+  </data>
+  <data name="PreviewPositionTopOption.Content" xml:space="preserve">
+    <value>탑</value>
+  </data>
+  <data name="PreviewSectionTitle.Text" xml:space="preserve">
+    <value>미리보기</value>
+  </data>
+  <data name="PreviewSizeCard.Description" xml:space="preserve">
+    <value>화면 하단에 표시되는 미리보기 막대의 높이를 제어합니다.</value>
+  </data>
+  <data name="PreviewSizeCard.Header" xml:space="preserve">
+    <value>미리보기 크기</value>
+  </data>
+  <data name="PreviewSizeCompactOption.Content" xml:space="preserve">
+    <value>콤팩트</value>
+  </data>
+  <data name="PreviewSizeDefaultOption.Content" xml:space="preserve">
+    <value>기본값</value>
+  </data>
+  <data name="PreviewSizeLargeOption.Content" xml:space="preserve">
+    <value>대형</value>
+  </data>
+  <data name="PageTitle" xml:space="preserve">
+    <value>페이지 {0}</value>
+  </data>
+  <data name="ScrollShortcutCancelButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>취소</value>
+  </data>
+  <data name="ScrollShortcutCard.Description" xml:space="preserve">
+    <value>데스크톱 스크롤을 실행하는 데 사용하는 단축키</value>
+  </data>
+  <data name="ScrollShortcutCard.Header" xml:space="preserve">
+    <value>스크롤 단축키</value>
+  </data>
+  <data name="ScrollShortcutEditButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>편집</value>
+  </data>
+  <data name="ScrollShortcutRecordingHint.Text" xml:space="preserve">
+    <value>단축키를 누르세요...</value>
+  </data>
+  <data name="ScrollShortcutPressKeysToSave" xml:space="preserve">
+    <value>이 단축키를 저장하려면 {0} 키를 누르세요.</value>
+  </data>
+  <data name="ScrollShortcutPressMoreKeys" xml:space="preserve">
+    <value>{0}개의 키를 더 누르세요.</value>
+  </data>
+  <data name="ScrollShortcutRecorderUnavailable" xml:space="preserve">
+    <value>키보드 레코더를 시작할 수 없습니다.</value>
+  </data>
+  <data name="ScrollShortcutSaveButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>저장</value>
+  </data>
+  <data name="ScrollShortcutStartWithModifier" xml:space="preserve">
+    <value>Ctrl, Alt, Shift 또는 Win으로 시작하세요.</value>
+  </data>
+  <data name="ScrollShortcutUnavailable" xml:space="preserve">
+    <value>해당 단축키는 Windows 또는 다른 앱에서 이미 사용 중입니다.</value>
+  </data>
+  <data name="ScrollSpeedCard.Description" xml:space="preserve">
+    <value>스크롤할 때 창이 움직이는 속도</value>
+  </data>
+  <data name="ScrollSpeedCard.Header" xml:space="preserve">
+    <value>스크롤 속도</value>
+  </data>
+  <data name="SettingsTitleBar.Title" xml:space="preserve">
+    <value>설정</value>
+  </data>
+  <data name="SpeedFastOption.Content" xml:space="preserve">
+    <value>빠르게</value>
+  </data>
+  <data name="SpeedNormalOption.Content" xml:space="preserve">
+    <value>보통</value>
+  </data>
+  <data name="SpeedSlowOption.Content" xml:space="preserve">
+    <value>느림</value>
+  </data>
+  <data name="SpeedTurboOption.Content" xml:space="preserve">
+    <value>터보</value>
+  </data>
+  <data name="SpeedVeryFastOption.Content" xml:space="preserve">
+    <value>매우 빠름</value>
+  </data>
+  <data name="StartWithWindowsCard.Description" xml:space="preserve">
+    <value>로그인하면 Infinity가 자동으로 실행됩니다.</value>
+  </data>
+  <data name="StartWithWindowsCard.Header" xml:space="preserve">
+    <value>Windows 시작 시 실행</value>
+  </data>
+  <data name="TourBackButton.Content" xml:space="preserve">
+    <value>뒤로</value>
+  </data>
+  <data name="TourFinishButton.Content" xml:space="preserve">
+    <value>마침</value>
+  </data>
+  <data name="TourNextButton.Content" xml:space="preserve">
+    <value>다음</value>
+  </data>
+  <data name="TourOrLabel.Text" xml:space="preserve">
+    <value>또는</value>
+  </data>
+  <data name="TourOverviewInstructionPrefix.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="TourOverviewInstructionSuffix.Text" xml:space="preserve">
+    <value> 키를 누른 상태에서 바탕 화면 어디에서나 마우스 휠을 스크롤하세요. 모든 페이지의 개요가 열려 실행 중인 항목을 확인하고 원하는 페이지로 바로 이동할 수 있습니다.</value>
+  </data>
+  <data name="TourOverviewTitle.Text" xml:space="preserve">
+    <value>페이지 개요 불러오기</value>
+  </data>
+  <data name="TourPageNumberInstructionPrefix.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="TourPageNumberInstructionSuffix.Text" xml:space="preserve">
+    <value> 키를 누른 상태에서 다른 키 없이 숫자 키를 누르세요. 1~9, 열 번째 페이지는 0을 누르면 해당 페이지로 바로 이동합니다. 초점이 있는 창을 포함한 모든 창은 원래 위치에 남습니다.</value>
+  </data>
+  <data name="TourPageNumberTitle.Text" xml:space="preserve">
+    <value>번호가 매겨진 페이지로 바로 전환</value>
+  </data>
+  <data name="TourPageSwitchInstructionPrefix.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="TourPageSwitchInstructionSuffix.Text" xml:space="preserve">
+    <value> 키를 누른 상태에서 다른 키 없이 왼쪽 또는 오른쪽 화살표 키를 누르세요. 화면은 옆 페이지로 이동하지만 초점이 있는 창을 포함한 모든 창은 원래 위치에 남습니다.</value>
+  </data>
+  <data name="TourPageSwitchTitle.Text" xml:space="preserve">
+    <value>아무것도 이동하지 않고 페이지 전환</value>
+  </data>
+  <data name="TourShiftKeyLabel.Text" xml:space="preserve">
+    <value>Shift</value>
+  </data>
+  <data name="TourTitleBar.Title" xml:space="preserve">
+    <value>시작하기</value>
+  </data>
+  <data name="TourWelcomeDescription.Text" xml:space="preserve">
+    <value>Infinity는 데스크탑을 끝없는 스크롤 가능한 페이지 캔버스로 바꿔줍니다. 이 빠른 연습에서는 이동하고 느낌을 사용자 정의하는 기본 사항을 다룹니다.</value>
+  </data>
+  <data name="TourWelcomeTitle.Text" xml:space="preserve">
+    <value>Infinity에 오신 것을 환영합니다</value>
+  </data>
+  <data name="TourWindowDragInstructionPrefix.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="TourWindowDragInstructionSuffix.Text" xml:space="preserve">
+    <value> 키를 누른 상태에서 창의 제목 표시줄을 화면 가장자리로 끌면 다음 페이지로 이동할 수 있습니다.</value>
+  </data>
+  <data name="TourWindowDragTitle.Text" xml:space="preserve">
+    <value>창을 다른 페이지로 드래그</value>
+  </data>
+  <data name="TourWindowJumpInstructionPrefix.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="TourWindowJumpInstructionSuffix.Text" xml:space="preserve">
+    <value>+Shift를 누른 상태에서 왼쪽 또는 오른쪽 화살표 키를 누르세요. 초점이 있는 창이 바로 옆 페이지로 이동하므로 마우스 없이 정리할 수 있습니다. Shift에서 손을 떼면 같은 단축키로 창은 그대로 둔 채 페이지만 전환합니다.</value>
+  </data>
+  <data name="TourWindowJumpTitle.Text" xml:space="preserve">
+    <value>창을 다른 페이지로 보내기</value>
+  </data>
+  <data name="TourWindowNumberInstructionPrefix.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="TourWindowNumberInstructionSuffix.Text" xml:space="preserve">
+    <value>+Shift를 누른 상태에서 숫자 키를 누르세요. 1~9, 열 번째 페이지는 0을 누르면 초점이 있는 창이 거리에 관계없이 해당 페이지로 바로 이동합니다. Shift에서 손을 떼면 같은 단축키로 창은 그대로 둔 채 해당 페이지로 이동합니다.</value>
+  </data>
+  <data name="TourWindowNumberTitle.Text" xml:space="preserve">
+    <value>번호가 매겨진 페이지로 바로 이동</value>
+  </data>
+  <data name="VirtualPagesCard.Description" xml:space="preserve">
+    <value>데스크탑이 몇 페이지에 걸쳐 있는지 선택하세요. 고정된 숫자를 설정하거나 창을 이동할 때 숫자가 늘어나도록 허용하세요.</value>
+  </data>
+  <data name="VirtualPagesCard.Header" xml:space="preserve">
+    <value>가상 페이지</value>
+  </data>
+  <data name="VirtualPagesCountCard.Description" xml:space="preserve">
+    <value>최대 페이지 수 설정</value>
+  </data>
+  <data name="VirtualPagesCountCard.Header" xml:space="preserve">
+    <value>페이지 수</value>
+  </data>
+  <data name="VirtualPagesFixedOption.Content" xml:space="preserve">
+    <value>고정</value>
+  </data>
+  <data name="VirtualPagesUnlimitedOption.Content" xml:space="preserve">
+    <value>무제한</value>
+  </data>
+  <data name="WindowAboutMenuItem.Text" xml:space="preserve">
+    <value>소개</value>
+  </data>
+  <data name="WindowExitMenuItem.Text" xml:space="preserve">
+    <value>종료</value>
+  </data>
+  <data name="WindowOptionsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>옵션</value>
+  </data>
+  <data name="WindowPeekCard.Description" xml:space="preserve">
+    <value>창 축소판을 가리키거나 필터를 적용할 때 일치하는 창만 표시되도록 다른 모든 창을 숨깁니다.</value>
+  </data>
+  <data name="WindowPeekCard.Header" xml:space="preserve">
+    <value>Window Peek</value>
+  </data>
+  <data name="WindowSearchBox.PlaceholderText" xml:space="preserve">
+    <value>데스크톱 창 찾기...</value>
+  </data>
+  <data name="WindowsSectionTitle.Text" xml:space="preserve">
+    <value>윈도우</value>
+  </data>
+  <data name="WindowSettingsMenuItem.Text" xml:space="preserve">
+    <value>설정</value>
+  </data>
+  <data name="WindowTourMenuItem.Text" xml:space="preserve">
+    <value>둘러보기</value>
+  </data>
+</root>

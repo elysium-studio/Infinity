@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="UpdateReadyToastDismissButton" xml:space="preserve">
+    <value>閉じる</value>
+  </data>
+  <data name="UpdateReadyToastDownloaded" xml:space="preserve">
+    <value>Infinity {0} がダウンロードされました。</value>
+  </data>
+  <data name="UpdateReadyToastRestartButton" xml:space="preserve">
+    <value>再起動</value>
+  </data>
+  <data name="UpdateReadyToastRestartRequired" xml:space="preserve">
+    <value>再起動してアップデートを完了します。</value>
+  </data>
+  <data name="UpdateReadyToastTitle" xml:space="preserve">
+    <value>アップデートの準備ができました</value>
+  </data>
+  <data name="AboutTitleBar.Title" xml:space="preserve">
+    <value>について</value>
+  </data>
+  <data name="BooleanToggle.OffContent" xml:space="preserve">
+    <value>いいえ</value>
+  </data>
+  <data name="BooleanToggle.OnContent" xml:space="preserve">
+    <value>はい</value>
+  </data>
+  <data name="CloseWindowButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>ウィンドウを閉じる</value>
+  </data>
+  <data name="DesktopBlurCard.Description" xml:space="preserve">
+    <value>スクロールやフィルタリング中に背景をぼかします</value>
+  </data>
+  <data name="DesktopBlurCard.Header" xml:space="preserve">
+    <value>背景ぼかし</value>
+  </data>
+  <data name="DesktopSectionTitle.Text" xml:space="preserve">
+    <value>デスクトップ</value>
+  </data>
+  <data name="DragScrollSpeedCard.Description" xml:space="preserve">
+    <value>ウィンドウを画面端にドラッグしたときのデスクトップのスクロール速度</value>
+  </data>
+  <data name="DragScrollSpeedCard.Header" xml:space="preserve">
+    <value>ドラッグスクロール速度</value>
+  </data>
+  <data name="PreviewBackgroundCard.Description" xml:space="preserve">
+    <value>プレビューバーにデスクトップの背景を表示する</value>
+  </data>
+  <data name="PreviewBackgroundCard.Header" xml:space="preserve">
+    <value>デスクトップの背景</value>
+  </data>
+  <data name="PreviewDebugWaitingText.Text" xml:space="preserve">
+    <value>待っています...</value>
+  </data>
+  <data name="PreviewDebugWindow.Title" xml:space="preserve">
+    <value>ウィンドウ プレビュー グリッド</value>
+  </data>
+  <data name="PreviewPositionAutoOption.Content" xml:space="preserve">
+    <value>自動</value>
+  </data>
+  <data name="PreviewPositionBottomOption.Content" xml:space="preserve">
+    <value>下</value>
+  </data>
+  <data name="PreviewPositionCard.Description" xml:space="preserve">
+    <value>画面上のプレビューバーが表示される場所</value>
+  </data>
+  <data name="PreviewPositionCard.Header" xml:space="preserve">
+    <value>プレビュー位置</value>
+  </data>
+  <data name="PreviewPositionTopOption.Content" xml:space="preserve">
+    <value>トップへ</value>
+  </data>
+  <data name="PreviewSectionTitle.Text" xml:space="preserve">
+    <value>プレビュー</value>
+  </data>
+  <data name="PreviewSizeCard.Description" xml:space="preserve">
+    <value>画面の下部に表示されるプレビュー バーの高さを制御します</value>
+  </data>
+  <data name="PreviewSizeCard.Header" xml:space="preserve">
+    <value>プレビューサイズ</value>
+  </data>
+  <data name="PreviewSizeCompactOption.Content" xml:space="preserve">
+    <value>コンパクト</value>
+  </data>
+  <data name="PreviewSizeDefaultOption.Content" xml:space="preserve">
+    <value>デフォルト</value>
+  </data>
+  <data name="PreviewSizeLargeOption.Content" xml:space="preserve">
+    <value>大</value>
+  </data>
+  <data name="PageTitle" xml:space="preserve">
+    <value>ページ {0}</value>
+  </data>
+  <data name="ScrollShortcutCancelButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
+  <data name="ScrollShortcutCard.Description" xml:space="preserve">
+    <value>デスクトップのスクロールをトリガーするために使用されるショートカット</value>
+  </data>
+  <data name="ScrollShortcutCard.Header" xml:space="preserve">
+    <value>スクロールショートカット</value>
+  </data>
+  <data name="ScrollShortcutEditButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>編集</value>
+  </data>
+  <data name="ScrollShortcutRecordingHint.Text" xml:space="preserve">
+    <value>ショートカットキーを押して…</value>
+  </data>
+  <data name="ScrollShortcutPressKeysToSave" xml:space="preserve">
+    <value>{0} キーを押してこのショートカットを保存します。</value>
+  </data>
+  <data name="ScrollShortcutPressMoreKeys" xml:space="preserve">
+    <value>さらに {0} 個のキーを押します。</value>
+  </data>
+  <data name="ScrollShortcutRecorderUnavailable" xml:space="preserve">
+    <value>キーボードレコーダーを起動できませんでした。</value>
+  </data>
+  <data name="ScrollShortcutSaveButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="ScrollShortcutStartWithModifier" xml:space="preserve">
+    <value>Ctrl、Alt、Shift、または Win を押して開始します。</value>
+  </data>
+  <data name="ScrollShortcutUnavailable" xml:space="preserve">
+    <value>そのショートカットは Windows または別のアプリですでに使用されています。</value>
+  </data>
+  <data name="ScrollSpeedCard.Description" xml:space="preserve">
+    <value>スクロール時にウィンドウが移動する速度</value>
+  </data>
+  <data name="ScrollSpeedCard.Header" xml:space="preserve">
+    <value>スクロール速度</value>
+  </data>
+  <data name="SettingsTitleBar.Title" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="SpeedFastOption.Content" xml:space="preserve">
+    <value>速い</value>
+  </data>
+  <data name="SpeedNormalOption.Content" xml:space="preserve">
+    <value>ノーマル</value>
+  </data>
+  <data name="SpeedSlowOption.Content" xml:space="preserve">
+    <value>遅い</value>
+  </data>
+  <data name="SpeedTurboOption.Content" xml:space="preserve">
+    <value>ターボ</value>
+  </data>
+  <data name="SpeedVeryFastOption.Content" xml:space="preserve">
+    <value>非常に速い</value>
+  </data>
+  <data name="StartWithWindowsCard.Description" xml:space="preserve">
+    <value>サインイン時に Infinity を自動的に起動する</value>
+  </data>
+  <data name="StartWithWindowsCard.Header" xml:space="preserve">
+    <value>Windows と同時に起動</value>
+  </data>
+  <data name="TourBackButton.Content" xml:space="preserve">
+    <value>戻る</value>
+  </data>
+  <data name="TourFinishButton.Content" xml:space="preserve">
+    <value>終了</value>
+  </data>
+  <data name="TourNextButton.Content" xml:space="preserve">
+    <value>次へ</value>
+  </data>
+  <data name="TourOrLabel.Text" xml:space="preserve">
+    <value>または</value>
+  </data>
+  <data name="TourOverviewInstructionPrefix.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="TourOverviewInstructionSuffix.Text" xml:space="preserve">
+    <value> を押しながら、デスクトップ上の任意の場所でマウスホイールを回します。すべてのページの概要が開き、開いている内容を確認して目的のページへ直接移動できます。</value>
+  </data>
+  <data name="TourOverviewTitle.Text" xml:space="preserve">
+    <value>ページ概要を表示する</value>
+  </data>
+  <data name="TourPageNumberInstructionPrefix.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="TourPageNumberInstructionSuffix.Text" xml:space="preserve">
+    <value> を押しながら、ほかのキーは押さずに数字キーを押します。1～9、10 ページ目は 0 を押すと、そのページへ直接移動します。フォーカスされているウィンドウを含むすべてのウィンドウは元の場所に残ります。</value>
+  </data>
+  <data name="TourPageNumberTitle.Text" xml:space="preserve">
+    <value>番号付きのページに直接切り替える</value>
+  </data>
+  <data name="TourPageSwitchInstructionPrefix.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="TourPageSwitchInstructionSuffix.Text" xml:space="preserve">
+    <value> を押しながら、ほかのキーは押さずに左または右矢印キーを押します。表示は隣のページへ移動しますが、フォーカスされているウィンドウを含むすべてのウィンドウは元の場所に残ります。</value>
+  </data>
+  <data name="TourPageSwitchTitle.Text" xml:space="preserve">
+    <value>何も移動せずにページを切り替える</value>
+  </data>
+  <data name="TourShiftKeyLabel.Text" xml:space="preserve">
+    <value>Shift</value>
+  </data>
+  <data name="TourTitleBar.Title" xml:space="preserve">
+    <value>はじめに</value>
+  </data>
+  <data name="TourWelcomeDescription.Text" xml:space="preserve">
+    <value>Infinity は、デスクトップを無限のスクロール可能なページのキャンバスに変えます。この簡単なチュートリアルでは、移動とその感触のカスタマイズの基本について説明します。</value>
+  </data>
+  <data name="TourWelcomeTitle.Text" xml:space="preserve">
+    <value>Infinity へようこそ</value>
+  </data>
+  <data name="TourWindowDragInstructionPrefix.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="TourWindowDragInstructionSuffix.Text" xml:space="preserve">
+    <value> を押しながら、ウィンドウのタイトルバーを画面の端へドラッグすると、次のページへ移動できます。</value>
+  </data>
+  <data name="TourWindowDragTitle.Text" xml:space="preserve">
+    <value>ウィンドウを別のページにドラッグする</value>
+  </data>
+  <data name="TourWindowJumpInstructionPrefix.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="TourWindowJumpInstructionSuffix.Text" xml:space="preserve">
+    <value>+Shift を押しながら左または右矢印キーを押します。フォーカスされているウィンドウが隣のページへ直接移動するため、マウスを使わずに整理できます。Shift を離すと、同じショートカットでウィンドウを残したままページだけを切り替えます。</value>
+  </data>
+  <data name="TourWindowJumpTitle.Text" xml:space="preserve">
+    <value>ウィンドウを別のページに送信する</value>
+  </data>
+  <data name="TourWindowNumberInstructionPrefix.Text" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="TourWindowNumberInstructionSuffix.Text" xml:space="preserve">
+    <value>+Shift を押しながら数字キーを押します。1～9、10 ページ目は 0 を押すと、フォーカスされているウィンドウが離れたページにも直接移動します。Shift を離すと、同じショートカットでウィンドウを残したままそのページへ移動します。</value>
+  </data>
+  <data name="TourWindowNumberTitle.Text" xml:space="preserve">
+    <value>番号の付いたページに直接ジャンプする</value>
+  </data>
+  <data name="VirtualPagesCard.Description" xml:space="preserve">
+    <value>デスクトップにまたがるページ数を選択します。固定数を設定するか、ウィンドウを移動するにつれて増加させます</value>
+  </data>
+  <data name="VirtualPagesCard.Header" xml:space="preserve">
+    <value>仮想ページ</value>
+  </data>
+  <data name="VirtualPagesCountCard.Description" xml:space="preserve">
+    <value>最大ページ数を設定する</value>
+  </data>
+  <data name="VirtualPagesCountCard.Header" xml:space="preserve">
+    <value>ページ数</value>
+  </data>
+  <data name="VirtualPagesFixedOption.Content" xml:space="preserve">
+    <value>修正済み</value>
+  </data>
+  <data name="VirtualPagesUnlimitedOption.Content" xml:space="preserve">
+    <value>無制限</value>
+  </data>
+  <data name="WindowAboutMenuItem.Text" xml:space="preserve">
+    <value>について</value>
+  </data>
+  <data name="WindowExitMenuItem.Text" xml:space="preserve">
+    <value>終了</value>
+  </data>
+  <data name="WindowOptionsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>オプション</value>
+  </data>
+  <data name="WindowPeekCard.Description" xml:space="preserve">
+    <value>ウィンドウのサムネールにカーソルを合わせるとき、またはフィルターを適用するときは、他のすべてのウィンドウを非表示にして、一致するウィンドウのみが表示されるようにします。</value>
+  </data>
+  <data name="WindowPeekCard.Header" xml:space="preserve">
+    <value>Window Peek</value>
+  </data>
+  <data name="WindowSearchBox.PlaceholderText" xml:space="preserve">
+    <value>デスクトップウィンドウを探します...</value>
+  </data>
+  <data name="WindowsSectionTitle.Text" xml:space="preserve">
+    <value>窓</value>
+  </data>
+  <data name="WindowSettingsMenuItem.Text" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="WindowTourMenuItem.Text" xml:space="preserve">
+    <value>ツアーに参加する</value>
+  </data>
+</root>

@@ -23,4 +23,9 @@
     <ProjectReference Include="..\Infinity.Application\Infinity.Application.csproj" />
     <ProjectReference Include="..\Infinity.Shell\Infinity.Shell.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Infinity.Shell.WinUI\Strings\**\Resources.resw"
+          Link="LocalizationResources\%(RecursiveDir)Resources.resw"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
