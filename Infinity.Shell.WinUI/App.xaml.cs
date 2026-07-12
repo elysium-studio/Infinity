@@ -13,6 +13,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using IApplicationLifetime = Elysium.Application.Abstractions.IApplicationLifetime;
 
@@ -20,7 +21,7 @@ namespace Infinity.Shell.WinUI;
 
 public partial class App
 {
-    private readonly object shutdownLock = new();
+    private readonly Lock shutdownLock = new();
 
     private IHost? host;
     private Task? shutdownTask;
@@ -45,12 +46,17 @@ public partial class App
                 .AddModules(new ApplicationModule(applicationData, dispatcherQueue,
                                 flush => UnhandledException += (_, args) => flush(args.Exception)),
                             new ConfigurationModule(),
+                            new DesktopSettingsModule(),
+                            new DesktopModule(),
                             new LocalizationModule(),
                             new NavigationModule(),
+                            new PreviewSettingsModule(),
                             new ShellModule(),
                             new SettingsModule(),
                             new TourModule(),
-                            new UpdateModule()))
+                            new UpdateModule(),
+                            new WindowsSettingsModule(),
+                            new WindowingModule()))
             .Build();
 
         ViewExtension.DefaultProvider = host.Services;

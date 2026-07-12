@@ -15,7 +15,6 @@ public class WindowCollection(IWindowStore store,
     IWorkspace workspace,
     IWindowFilterState filterState,
     IForegroundWindowCoordinator coordinator,
-    ITrackedWindowCollection trackedWindowCollection,
     IDispatcher dispatcher,
     ILogger<WindowCollection> logger) :
     IWindowCollection
@@ -61,14 +60,6 @@ public class WindowCollection(IWindowStore store,
         listener.MinimizeStarted += HandleWindowMinimizeStarted;
         listener.MinimizeEnded += HandleWindowMinimizeEnded;
         workspace.WorkspaceLayoutChanged += HandleWorkspaceLayoutChanged;
-
-        HashSet<IntPtr> activeHandles = [.. store.Select(trackedWindow => trackedWindow.Handle)];
-
-        foreach (IntPtr staleHandle in trackedWindowCollection.Select(trackedWindow => trackedWindow.Handle)
-            .Where(handle => !activeHandles.Contains(handle)).ToList())
-        {
-            WindowRemoved?.Invoke(this, staleHandle);
-        }
 
         windowStack.Refresh();
         Queue(false, false);
@@ -223,14 +214,6 @@ public class WindowCollection(IWindowStore store,
         lock (reorderSyncRoot)
         {
             reorderQueued = false;
-        }
-
-        foreach (TrackedWindow trackedWindow in store)
-        {
-            if (trackedWindowCollection.TryGet(trackedWindow.Handle, out ITrackedWindow? windowViewModel))
-            {
-                windowViewModel!.ZIndex = trackedWindow.ZIndex;
-            }
         }
 
         WindowStackRefreshed?.Invoke(this, EventArgs.Empty);
