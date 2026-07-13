@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Numerics;
+using System.Threading;
 using Windows.Foundation;
 using Windows.UI.ViewManagement;
 
@@ -47,14 +48,31 @@ public partial class TrackedWindowView :
     private double dragStartCanvasTop;
     private double dragHorizontalDelta;
     private double dragVerticalDelta;
+    private double dragGlobalScale;
+    private double dragGlobalStartHorizontalDelta;
+    private double dragGlobalStartVerticalDelta;
+    private double dragBoundaryPointerX;
+    private double dragBoundaryScreenLeft;
+    private double dragBoundaryScreenWidth;
+    private int dragGlobalStartX;
+    private int dragGlobalStartY;
+    private volatile int globalPointerGeneration;
+    private int pendingGlobalPointerGeneration;
+    private int globalPointerUpdateQueued;
+    private long pendingGlobalPointerPosition;
+    private bool isGlobalPointerBaselineInitialized;
+    private volatile bool isGlobalPointerTracking;
     private bool isThumbnailDragging;
     private bool isPointerOverWindow;
 
     private readonly IStringLocalizer localizer;
+    private readonly IPointerInputSource pointerInput;
 
-    public TrackedWindowView(IStringLocalizer localizer)
+    public TrackedWindowView(IStringLocalizer localizer,
+        IPointerInputSource pointerInput)
     {
         this.localizer = localizer;
+        this.pointerInput = pointerInput;
         InitializeComponent();
 
         DataContextChanged += HandleDataContextChanged;
@@ -325,6 +343,7 @@ public partial class TrackedWindowView :
             CancelPendingPeek();
             EndPeek();
             ResetHoverScale();
+            StartGlobalPointerTracking(args, horizontalDistance, verticalDistance);
         }
 
         double horizontalDelta = horizontalDistance;
@@ -333,20 +352,155 @@ public partial class TrackedWindowView :
         double horizontalPosition = dragScrollBoundary is not null && boundaryWidth > 0
             ? args.GetCurrentPoint(dragScrollBoundary).Position.X / boundaryWidth
             : double.NaN;
-        WindowContainer.Translation = new Vector3((float)horizontalDelta, (float)verticalDelta, 0);
 
-        if (draggedViewModel?.MoveThumbnail(horizontalDelta / dragScale,
-            verticalDelta / dragScale,
-            horizontalPosition) == true)
-        {
-            dragHorizontalDelta = horizontalDelta;
-            dragVerticalDelta = verticalDelta;
-        }
-        else
+        if (!UpdateThumbnailDrag(horizontalDelta, verticalDelta, horizontalPosition))
         {
             CompleteThumbnailDrag(false);
             WindowContainer.ReleasePointerCapture(args.Pointer);
         }
+    }
+
+    private bool UpdateThumbnailDrag(double horizontalDelta,
+        double verticalDelta,
+        double horizontalPosition)
+    {
+        WindowContainer.Translation = new Vector3((float)horizontalDelta, (float)verticalDelta, 0);
+
+        if (draggedViewModel?.MoveThumbnail(horizontalDelta / dragScale,
+            verticalDelta / dragScale,
+            horizontalPosition) != true)
+        {
+            return false;
+        }
+
+        dragHorizontalDelta = horizontalDelta;
+        dragVerticalDelta = verticalDelta;
+        return true;
+    }
+
+    private void StartGlobalPointerTracking(PointerRoutedEventArgs args,
+        double horizontalDelta,
+        double verticalDelta)
+    {
+        double rasterizationScale = XamlRoot?.RasterizationScale ?? 1.0;
+
+        if (!double.IsFinite(rasterizationScale) || rasterizationScale <= 0)
+        {
+            rasterizationScale = 1.0;
+        }
+
+        dragGlobalScale = rasterizationScale;
+        dragGlobalStartHorizontalDelta = horizontalDelta;
+        dragGlobalStartVerticalDelta = verticalDelta;
+        dragBoundaryPointerX = dragScrollBoundary is not null
+            ? args.GetCurrentPoint(dragScrollBoundary).Position.X
+            : 0.0;
+        dragBoundaryScreenWidth = (dragScrollBoundary?.ActualWidth ?? 0.0) * rasterizationScale;
+        isGlobalPointerBaselineInitialized = pointerInput.TryGetCursorPosition(out dragGlobalStartX, out dragGlobalStartY);
+
+        if (isGlobalPointerBaselineInitialized)
+        {
+            dragBoundaryScreenLeft = dragGlobalStartX - dragBoundaryPointerX * rasterizationScale;
+        }
+
+        globalPointerGeneration++;
+        isGlobalPointerTracking = true;
+        pointerInput.CursorMoved += HandleGlobalCursorMoved;
+    }
+
+    private void HandleGlobalCursorMoved(int x, int y)
+    {
+        if (!isGlobalPointerTracking)
+        {
+            return;
+        }
+
+        if (DispatcherQueue.HasThreadAccess)
+        {
+            UpdateFromGlobalPointer(x, y);
+            return;
+        }
+
+        long position = ((long)(uint)x << 32) | (uint)y;
+        Interlocked.Exchange(ref pendingGlobalPointerPosition, position);
+        Volatile.Write(ref pendingGlobalPointerGeneration, globalPointerGeneration);
+
+        if (Interlocked.Exchange(ref globalPointerUpdateQueued, 1) != 0)
+        {
+            return;
+        }
+
+        if (!DispatcherQueue.TryEnqueue(ProcessPendingGlobalPointerUpdate))
+        {
+            Interlocked.Exchange(ref globalPointerUpdateQueued, 0);
+        }
+    }
+
+    private void ProcessPendingGlobalPointerUpdate()
+    {
+        Interlocked.Exchange(ref globalPointerUpdateQueued, 0);
+
+        int generation = Volatile.Read(ref pendingGlobalPointerGeneration);
+
+        if (!isGlobalPointerTracking || generation != globalPointerGeneration)
+        {
+            return;
+        }
+
+        long position = Interlocked.Read(ref pendingGlobalPointerPosition);
+        int x = unchecked((int)(uint)(position >> 32));
+        int y = unchecked((int)(uint)position);
+        UpdateFromGlobalPointer(x, y);
+    }
+
+    private void UpdateFromGlobalPointer(int x, int y)
+    {
+        if (!isThumbnailDragging || draggedViewModel is null || dragGlobalScale <= 0)
+        {
+            return;
+        }
+
+        if (!isGlobalPointerBaselineInitialized)
+        {
+            dragGlobalStartX = x;
+            dragGlobalStartY = y;
+            dragGlobalStartHorizontalDelta = dragHorizontalDelta;
+            dragGlobalStartVerticalDelta = dragVerticalDelta;
+            dragBoundaryScreenLeft = x - dragBoundaryPointerX * dragGlobalScale;
+            isGlobalPointerBaselineInitialized = true;
+        }
+
+        double horizontalDelta = dragGlobalStartHorizontalDelta + (x - dragGlobalStartX) / dragGlobalScale;
+        double verticalDelta = dragGlobalStartVerticalDelta + (y - dragGlobalStartY) / dragGlobalScale;
+        double horizontalPosition = dragBoundaryScreenWidth > 0
+            ? (x - dragBoundaryScreenLeft) / dragBoundaryScreenWidth
+            : double.NaN;
+
+        if (!UpdateThumbnailDrag(horizontalDelta, verticalDelta, horizontalPosition))
+        {
+            CompleteThumbnailDrag(false);
+            WindowContainer.ReleasePointerCaptures();
+        }
+    }
+
+    private void StopGlobalPointerTracking()
+    {
+        if (isGlobalPointerTracking)
+        {
+            pointerInput.CursorMoved -= HandleGlobalCursorMoved;
+        }
+
+        isGlobalPointerTracking = false;
+        isGlobalPointerBaselineInitialized = false;
+        globalPointerGeneration++;
+        dragGlobalScale = 0;
+        dragGlobalStartHorizontalDelta = 0;
+        dragGlobalStartVerticalDelta = 0;
+        dragBoundaryPointerX = 0;
+        dragBoundaryScreenLeft = 0;
+        dragBoundaryScreenWidth = 0;
+        dragGlobalStartX = 0;
+        dragGlobalStartY = 0;
     }
 
     private void HandleWindowContainerPointerReleased(object sender, PointerRoutedEventArgs args)
@@ -397,6 +551,8 @@ public partial class TrackedWindowView :
     private void CompleteThumbnailDrag(bool commitVisualPosition = true)
     {
         TrackedWindowViewModel? activeViewModel = draggedViewModel;
+
+        StopGlobalPointerTracking();
 
         if (activeViewModel is not null && commitVisualPosition)
         {

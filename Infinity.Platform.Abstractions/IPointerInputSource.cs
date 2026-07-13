@@ -14,4 +14,6 @@ public interface IPointerInputSource :
     event Action<int>? ScrollDeltaReceived;
 
     event Action<double>? ScrollVelocityIdle;
+
+    bool TryGetCursorPosition(out int x, out int y);
 }

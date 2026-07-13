@@ -229,6 +229,13 @@ public class WindowDragScrollerTests
 
         public event Action<double>? ScrollVelocityIdle;
 
+        public bool TryGetCursorPosition(out int x, out int y)
+        {
+            x = 0;
+            y = 0;
+            return false;
+        }
+
         public void RaiseCursorMoved(int x, int y) => CursorMoved?.Invoke(x, y);
 
         public void Dispose()
