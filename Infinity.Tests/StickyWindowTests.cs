@@ -310,6 +310,8 @@ internal class TestScroller : IScroller
 
     public int RepositionCount { get; private set; }
 
+    public int ResetCount { get; private set; }
+
     public void Dispose()
     {
         GC.SuppressFinalize(this);
@@ -323,6 +325,7 @@ internal class TestScroller : IScroller
 
     public void Reset()
     {
+        ResetCount++;
     }
 
     public void ScrollBy(double delta)

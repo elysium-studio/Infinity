@@ -9,6 +9,7 @@ namespace Infinity.Application;
 public class WindowDragScroller(IPointerInputSource pointer,
     IModifierKeyState modifierKeyState,
     IWindowDragGuard dragGuard,
+    ITrackedWindowDragController trackedWindowDragController,
     IWorkspace workspace,
     IScroller scroller,
     IPanState state,
@@ -79,6 +80,7 @@ public class WindowDragScroller(IPointerInputSource pointer,
         isStarted = true;
         pointer.CursorMoved += HandleCursorMoved;
         modifierKeyState.StateChanged += HandleModifierStateChanged;
+        trackedWindowDragController.DragEnded += HandleTrackedWindowDragEnded;
     }
 
     public void Stop()
@@ -91,6 +93,7 @@ public class WindowDragScroller(IPointerInputSource pointer,
         isStarted = false;
         pointer.CursorMoved -= HandleCursorMoved;
         modifierKeyState.StateChanged -= HandleModifierStateChanged;
+        trackedWindowDragController.DragEnded -= HandleTrackedWindowDragEnded;
         StopDragging();
         CancelScroll();
     }
@@ -112,11 +115,20 @@ public class WindowDragScroller(IPointerInputSource pointer,
         atBoundary = false;
     }
 
+    private void HandleTrackedWindowDragEnded()
+    {
+        StopDragging();
+        CancelScroll();
+        atBoundary = false;
+    }
+
     private void HandleCursorMoved(int x, int y)
     {
         RecordVelocitySample(x);
 
-        bool modifierAndDrag = dragGuard.IsAnyDragging && modifierKeyState.IsActive;
+        bool isNativeWindowDragging = dragGuard.IsAnyDragging;
+        bool modifierAndDrag = (isNativeWindowDragging || trackedWindowDragController.DraggingWindow != IntPtr.Zero) &&
+            modifierKeyState.IsActive;
 
         if (!modifierAndDrag)
         {
@@ -127,7 +139,11 @@ public class WindowDragScroller(IPointerInputSource pointer,
         }
 
         StartDragging();
-        DragMoved?.Invoke();
+
+        if (isNativeWindowDragging)
+        {
+            DragMoved?.Invoke();
+        }
 
         int distanceFromRight = Math.Max(0, workspace.Width - x - SnapEdgePadding);
         int distanceFromLeft = Math.Max(0, x - workspace.WorkAreaX - SnapEdgePadding);
@@ -157,7 +173,10 @@ public class WindowDragScroller(IPointerInputSource pointer,
 
         isDragging = true;
 
-        logger.LogDebug("Drag started. IsAnyDragging={IsAnyDragging}, IsModifierActive={IsModifierActive}", dragGuard.IsAnyDragging, modifierKeyState.IsActive);
+        logger.LogDebug("Drag started. IsAnyDragging={IsAnyDragging}, IsTrackedWindowDragging={IsTrackedWindowDragging}, IsModifierActive={IsModifierActive}",
+            dragGuard.IsAnyDragging,
+            trackedWindowDragController.DraggingWindow != IntPtr.Zero,
+            modifierKeyState.IsActive);
 
         DragStarted?.Invoke();
     }
@@ -171,7 +190,10 @@ public class WindowDragScroller(IPointerInputSource pointer,
 
         isDragging = false;
 
-        logger.LogDebug("Drag stopped. IsAnyDragging={IsAnyDragging}, IsModifierActive={IsModifierActive}", dragGuard.IsAnyDragging, modifierKeyState.IsActive);
+        logger.LogDebug("Drag stopped. IsAnyDragging={IsAnyDragging}, IsTrackedWindowDragging={IsTrackedWindowDragging}, IsModifierActive={IsModifierActive}",
+            dragGuard.IsAnyDragging,
+            trackedWindowDragController.DraggingWindow != IntPtr.Zero,
+            modifierKeyState.IsActive);
 
         DragStopped?.Invoke();
     }

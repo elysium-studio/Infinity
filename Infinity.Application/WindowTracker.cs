@@ -15,6 +15,7 @@ public class WindowTracker(IWindowStore repository,
     IWindowMover mover,
     IWindowConcealer concealer,
     IWindowDragGuard dragGuard,
+    ITrackedWindowDragController trackedWindowDragController,
     IWindowEnumerator enumerator,
     IWindowEventListener listener,
     IWorkspace workspace,
@@ -201,6 +202,11 @@ public class WindowTracker(IWindowStore repository,
     private void HandleOffsetChanged()
     {
         IntPtr draggingWindow = dragGuard.DraggingWindow;
+
+        if (draggingWindow == IntPtr.Zero)
+        {
+            draggingWindow = trackedWindowDragController.DraggingWindow;
+        }
 
         if (draggingWindow == IntPtr.Zero)
         {

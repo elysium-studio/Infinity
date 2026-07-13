@@ -31,6 +31,7 @@ public static class IServiceCollectionExtensions
                     provider.GetRequiredService<IWindowMover>(),
                     provider.GetRequiredService<IWindowConcealer>(),
                     provider.GetRequiredService<IWindowDragGuard>(),
+                    provider.GetRequiredService<ITrackedWindowDragController>(),
                     provider.GetRequiredService<IWindowEnumerator>(),
                     provider.GetRequiredService<IWindowEventListener>(),
                     provider.GetRequiredService<IWorkspace>(),
@@ -77,6 +78,10 @@ public static class IServiceCollectionExtensions
                 provider.GetRequiredService<IWindowStore>(),
                 provider.GetRequiredService<IScroller>(),
                 provider.GetRequiredService<ILogger<StickyWindowController>>()));
+            services.AddSingleton<ITrackedWindowDragController>(provider => new TrackedWindowDragController(
+                provider.GetRequiredService<IWindowStore>(),
+                provider.GetRequiredService<IScroller>(),
+                provider.GetRequiredService<ILogger<TrackedWindowDragController>>()));
             services.AddSingleton<ISelectionPreviewQueue, SelectionPreviewQueue>();
             services.AddSingleton<IWindowSelector, WindowSelector>();
             services.AddSingleton<IWindowDragScroller, WindowDragScroller>();
