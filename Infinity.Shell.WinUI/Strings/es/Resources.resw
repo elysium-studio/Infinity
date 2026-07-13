@@ -343,4 +343,13 @@
   <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
     <value>Quitar regla de apertura</value>
   </data>
+  <data name="PinWindowMenuItem" xml:space="preserve">
+    <value>Anclar en todas las páginas</value>
+  </data>
+  <data name="UnpinWindowMenuItem" xml:space="preserve">
+    <value>Desanclar de todas las páginas</value>
+  </data>
+  <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Anclada en todas las páginas</value>
+  </data>
 </root>

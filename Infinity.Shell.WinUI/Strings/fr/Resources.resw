@@ -343,4 +343,13 @@
   <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
     <value>Supprimer la règle d’ouverture</value>
   </data>
+  <data name="PinWindowMenuItem" xml:space="preserve">
+    <value>Épingler sur toutes les pages</value>
+  </data>
+  <data name="UnpinWindowMenuItem" xml:space="preserve">
+    <value>Désépingler de toutes les pages</value>
+  </data>
+  <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Épinglée sur toutes les pages</value>
+  </data>
 </root>

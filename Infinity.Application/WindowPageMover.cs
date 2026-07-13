@@ -14,7 +14,9 @@ public class WindowPageMover(IWindowStore store,
     {
         int width = workspaceWidth();
 
-        if (width <= 0 || !store.TryGet(windowHandle, out TrackedWindow? trackedWindow))
+        if (width <= 0 ||
+            !store.TryGet(windowHandle, out TrackedWindow? trackedWindow) ||
+            trackedWindow.IsSticky)
         {
             page = 0;
             return false;
@@ -32,6 +34,11 @@ public class WindowPageMover(IWindowStore store,
         }
 
         if (!store.TryGet(windowHandle, out TrackedWindow? trackedWindow))
+        {
+            return false;
+        }
+
+        if (trackedWindow.IsSticky)
         {
             return false;
         }

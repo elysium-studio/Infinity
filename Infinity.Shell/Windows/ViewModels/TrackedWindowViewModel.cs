@@ -17,6 +17,7 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
     IWindowPreviewSurface windowPreviewSurface,
     IWindowPageMover pageMover,
     IWindowPlacementRules placementRules,
+    IStickyWindowController stickyWindowController,
     IPager pager,
     IOptionsMonitor<Settings> settings,
     ITextLocalizer localizer,
@@ -39,6 +40,9 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
 
     [ObservableProperty]
     private bool isSelected;
+
+    [ObservableProperty]
+    private bool isSticky;
 
     [ObservableProperty]
     private bool isVisible;
@@ -136,6 +140,18 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
         placementRules.TryGetTargetPage(Handle, out int page) ? page : null;
 
     public void MoveToPage(int page) => pageMover.MoveToPage(Handle, page);
+
+    public void ToggleSticky()
+    {
+        bool changed = IsSticky
+            ? stickyWindowController.Unpin(Handle)
+            : stickyWindowController.Pin(Handle);
+
+        if (changed)
+        {
+            IsSticky = stickyWindowController.IsSticky(Handle);
+        }
+    }
 
     public async Task RemoveOpeningPageRuleAsync()
     {
