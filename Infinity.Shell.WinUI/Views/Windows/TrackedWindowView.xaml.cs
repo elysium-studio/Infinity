@@ -1,4 +1,3 @@
-using Elysium.Platform.Abstractions;
 using Elysium.UI.WinUI;
 using Infinity.Platform.Abstractions;
 using Microsoft.UI.Composition;
@@ -40,28 +39,22 @@ public partial class TrackedWindowView :
     private double lastPreviewHeight;
     private uint? dragPointerId;
     private Point dragStartPoint;
-    private Point dragLastPoint;
     private UIElement? dragCoordinateRoot;
     private FrameworkElement? dragScrollBoundary;
     private TrackedWindowViewModel? draggedViewModel;
     private double dragScale;
     private double dragStartCanvasLeft;
     private double dragStartCanvasTop;
-    private double dragBoundaryPosition;
     private double dragHorizontalDelta;
     private double dragVerticalDelta;
-    private bool isDragBoundaryActive;
     private bool isThumbnailDragging;
     private bool isPointerOverWindow;
 
     private readonly IStringLocalizer localizer;
-    private readonly IModifierKeyState modifierKeyState;
 
-    public TrackedWindowView(IStringLocalizer localizer,
-        IModifierKeyState modifierKeyState)
+    public TrackedWindowView(IStringLocalizer localizer)
     {
         this.localizer = localizer;
-        this.modifierKeyState = modifierKeyState;
         InitializeComponent();
 
         DataContextChanged += HandleDataContextChanged;
@@ -276,17 +269,6 @@ public partial class TrackedWindowView :
         dragCoordinateRoot = coordinateRoot;
         dragScrollBoundary = FindDragScrollBoundary();
         dragStartPoint = args.GetCurrentPoint(coordinateRoot).Position;
-        dragLastPoint = dragStartPoint;
-
-        if (modifierKeyState.IsActive &&
-            dragScrollBoundary is not null &&
-            dragScrollBoundary.ActualWidth > 0)
-        {
-            double boundaryWidth = dragScrollBoundary.ActualWidth;
-            double boundaryX = args.GetCurrentPoint(dragScrollBoundary).Position.X;
-            dragBoundaryPosition = Math.Clamp(boundaryX, 0, boundaryWidth);
-            isDragBoundaryActive = true;
-        }
 
         args.Handled = true;
     }
@@ -345,37 +327,12 @@ public partial class TrackedWindowView :
             ResetHoverScale();
         }
 
-        double horizontalMovement = currentPoint.X - dragLastPoint.X;
-        double verticalMovement = currentPoint.Y - dragLastPoint.Y;
+        double horizontalDelta = horizontalDistance;
+        double verticalDelta = verticalDistance;
         double boundaryWidth = dragScrollBoundary?.ActualWidth ?? 0;
-        double horizontalPosition = double.NaN;
-        double nextBoundaryPosition = dragBoundaryPosition;
-
-        if (modifierKeyState.IsActive &&
-            dragScrollBoundary is not null &&
-            boundaryWidth > 0)
-        {
-            if (!isDragBoundaryActive)
-            {
-                double boundaryX = args.GetCurrentPoint(dragScrollBoundary).Position.X;
-                dragBoundaryPosition = Math.Clamp(boundaryX - horizontalMovement, 0, boundaryWidth);
-                isDragBoundaryActive = true;
-            }
-
-            nextBoundaryPosition = Math.Clamp(
-                dragBoundaryPosition + horizontalMovement,
-                0,
-                boundaryWidth);
-            horizontalMovement = nextBoundaryPosition - dragBoundaryPosition;
-            horizontalPosition = nextBoundaryPosition / boundaryWidth;
-        }
-        else
-        {
-            isDragBoundaryActive = false;
-        }
-
-        double horizontalDelta = dragHorizontalDelta + horizontalMovement;
-        double verticalDelta = dragVerticalDelta + verticalMovement;
+        double horizontalPosition = dragScrollBoundary is not null && boundaryWidth > 0
+            ? args.GetCurrentPoint(dragScrollBoundary).Position.X / boundaryWidth
+            : double.NaN;
         WindowContainer.Translation = new Vector3((float)horizontalDelta, (float)verticalDelta, 0);
 
         if (draggedViewModel?.MoveThumbnail(horizontalDelta / dragScale,
@@ -384,12 +341,6 @@ public partial class TrackedWindowView :
         {
             dragHorizontalDelta = horizontalDelta;
             dragVerticalDelta = verticalDelta;
-            dragLastPoint = currentPoint;
-
-            if (isDragBoundaryActive)
-            {
-                dragBoundaryPosition = nextBoundaryPosition;
-            }
         }
         else
         {
@@ -460,10 +411,8 @@ public partial class TrackedWindowView :
         dragScale = 0;
         dragStartCanvasLeft = 0;
         dragStartCanvasTop = 0;
-        dragBoundaryPosition = 0;
         dragHorizontalDelta = 0;
         dragVerticalDelta = 0;
-        isDragBoundaryActive = false;
         isThumbnailDragging = false;
         WindowContainer.Translation = Vector3.Zero;
         ApplyZIndex();

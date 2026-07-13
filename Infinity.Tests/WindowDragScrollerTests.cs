@@ -131,7 +131,7 @@ public class WindowDragScrollerTests
     }
 
     [Fact]
-    public void ManagedDragDoesNotScrollBeforePreviewEdge()
+    public void ManagedDragDoesNotScrollAwayFromPreviewEdge()
     {
         WindowDragScroller dragScroller = new(new TestPointerInputSource(),
             new TestModifierKeyState { IsActive = true },
@@ -147,9 +147,36 @@ public class WindowDragScrollerTests
 
         try
         {
-            dragScroller.UpdateTrackedWindowDragPosition(0.99);
+            dragScroller.UpdateTrackedWindowDragPosition(0.5);
 
             Assert.False(dragScroller.IsAutoScrolling);
+        }
+        finally
+        {
+            dragScroller.Stop();
+        }
+    }
+
+    [Fact]
+    public void ManagedDragUsesNativeEdgeThreshold()
+    {
+        WindowDragScroller dragScroller = new(new TestPointerInputSource(),
+            new TestModifierKeyState { IsActive = true },
+            new TestWindowDragGuard(),
+            new TestTrackedWindowDragController { DraggingWindow = new IntPtr(1) },
+            new TestWorkspace(),
+            new TestScroller(),
+            new PanState(),
+            new TestDispatcher(),
+            () => new WindowDragScrollerConfiguration { SpeedLevel = DragScrollSpeed.Normal },
+            NullLogger<WindowDragScroller>.Instance);
+        dragScroller.Start();
+
+        try
+        {
+            dragScroller.UpdateTrackedWindowDragPosition(0.9);
+
+            Assert.True(dragScroller.IsAutoScrolling);
         }
         finally
         {

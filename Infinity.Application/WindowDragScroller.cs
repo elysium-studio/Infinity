@@ -166,30 +166,20 @@ public class WindowDragScroller(IPointerInputSource pointer,
         if (isNativeWindowDragging)
         {
             DragMoved?.Invoke();
-
-            int distanceFromRight = Math.Max(0, workspace.Width - pointerX - SnapEdgePadding);
-            int distanceFromLeft = Math.Max(0, pointerX - SnapEdgePadding);
-
-            if (distanceFromRight <= EdgeThreshold)
-            {
-                ScrollRight(distanceFromRight);
-                return;
-            }
-
-            if (distanceFromLeft <= EdgeThreshold)
-            {
-                ScrollLeft(distanceFromLeft);
-                return;
-            }
         }
-        else if (pointerX >= workspace.Width)
+
+        int distanceFromRight = Math.Max(0, workspace.Width - pointerX - SnapEdgePadding);
+        int distanceFromLeft = Math.Max(0, pointerX - SnapEdgePadding);
+
+        if (distanceFromRight <= EdgeThreshold)
         {
-            ScrollRight(0);
+            ScrollRight(distanceFromRight);
             return;
         }
-        else if (pointerX <= 0)
+
+        if (distanceFromLeft <= EdgeThreshold)
         {
-            ScrollLeft(0);
+            ScrollLeft(distanceFromLeft);
             return;
         }
 
