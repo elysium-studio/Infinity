@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Application.DependencyInjection;
+using Elysium.Platform.Abstractions;
 using Elysium.Presentation.Abstractions;
 using Elysium.UI.WinUI;
 using Infinity.Application.Abstractions;
@@ -66,7 +67,9 @@ public class WindowingModule :
                 (IntPtr)factoryArgs![0]!))
             .AddViewFor<TrackedWindowView, TrackedWindowViewModel>(
                 ServiceLifetime.Transient,
-                provider => new TrackedWindowView(provider.GetRequiredService<IStringLocalizer>()));
+                provider => new TrackedWindowView(
+                    provider.GetRequiredService<IStringLocalizer>(),
+                    provider.GetRequiredService<IModifierKeyState>()));
 
         services.Subscribe<IWindowCollection>((provider, windowCollection) =>
         {
