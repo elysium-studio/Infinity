@@ -4,6 +4,8 @@ using Elysium.Application.Abstractions;
 using Elysium.Presentation;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Infinity.Shell;
 
@@ -13,6 +15,12 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
     IDisposer disposer,
     IWindowController controller,
     IWindowPreviewSurface windowPreviewSurface,
+    IWindowPageMover pageMover,
+    IWindowPlacementRules placementRules,
+    IPager pager,
+    IOptionsMonitor<Settings> settings,
+    ITextLocalizer localizer,
+    ILogger<TrackedWindowViewModel> logger,
     IntPtr handle) :
     ObservableViewModel(provider, factory, messenger, disposer),
     ITrackedWindow
@@ -61,6 +69,8 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
 
     public IWindowPreview? Preview1 => preview;
 
+    public bool CanCreatePlacementRule => placementRules.CanCreateRule(Handle);
+
     public void BeginPeek() => Messenger.Send(new WindowPeekChangedEventArgs(Handle, true));
 
     public void Close() => controller.Close(Handle);
@@ -68,6 +78,88 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
     public void EndPeek() => Messenger.Send(new WindowPeekChangedEventArgs(Handle, false));
 
     public void Navigate() => Messenger.Send(new WindowNavigationRequestedEventArgs(Handle));
+
+    public IReadOnlyList<WindowPageTarget> GetPageTargets(int? openingPage)
+    {
+        Dictionary<int, string>? pageTitles = settings.CurrentValue.PageTitles;
+        int existingPageCount = Math.Max(pager.PageCount, GetNamedPageCount(pageTitles));
+
+        if (openingPage is int savedPage && savedPage >= existingPageCount && savedPage < int.MaxValue)
+        {
+            existingPageCount = savedPage + 1;
+        }
+
+        int targetCount = pager.MaxPages ?? existingPageCount;
+        List<WindowPageTarget> targets = new(targetCount);
+
+        for (int page = 0; page < targetCount; page++)
+        {
+            string displayName;
+
+            if (pageTitles?.TryGetValue(page, out string? title) == true && !string.IsNullOrWhiteSpace(title))
+            {
+                displayName = title;
+            }
+            else
+            {
+                displayName = localizer.GetText("PageTitle", page + 1);
+            }
+
+            targets.Add(new WindowPageTarget(page, displayName));
+        }
+
+        return targets;
+    }
+
+    private static int GetNamedPageCount(Dictionary<int, string>? pageTitles)
+    {
+        int highestNamedPage = -1;
+
+        if (pageTitles is not null)
+        {
+            foreach ((int page, string title) in pageTitles)
+            {
+                if (page >= 0 && page < int.MaxValue && page > highestNamedPage && !string.IsNullOrWhiteSpace(title))
+                {
+                    highestNamedPage = page;
+                }
+            }
+        }
+
+        return highestNamedPage + 1;
+    }
+
+    public int? GetCurrentPage() =>
+        pageMover.TryGetPage(Handle, out int page) ? page : null;
+
+    public int? GetOpeningPage() =>
+        placementRules.TryGetTargetPage(Handle, out int page) ? page : null;
+
+    public void MoveToPage(int page) => pageMover.MoveToPage(Handle, page);
+
+    public async Task RemoveOpeningPageRuleAsync()
+    {
+        try
+        {
+            await placementRules.RemoveAsync(Handle);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Failed to remove the application page rule for window {Handle}", Handle);
+        }
+    }
+
+    public async Task SetOpeningPageAsync(int page)
+    {
+        try
+        {
+            await placementRules.SetTargetPageAsync(Handle, page);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Failed to save the application page rule for window {Handle}", Handle);
+        }
+    }
 
     public void SetPreviewTarget(IntPtr sharedTargetHandle, double width, double height)
     {

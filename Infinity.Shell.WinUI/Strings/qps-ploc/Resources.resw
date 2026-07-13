@@ -334,4 +334,13 @@
   <data name="WindowTourMenuItem.Text" xml:space="preserve">
     <value>[!! Ţàķë à ţôûŕ ~~~~ !!]</value>
   </data>
+  <data name="AlwaysOpenApplicationOnPageMenuItem" xml:space="preserve">
+    <value>[!! Àļŵàÿš ôþëñ ţħîš àþþ ôñ ~~~~~~~~~ !!]</value>
+  </data>
+  <data name="MoveWindowToPageMenuItem" xml:space="preserve">
+    <value>[!! Ṁôṽë ŵîñðôŵ ţô ~~~~~~ !!]</value>
+  </data>
+  <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
+    <value>[!! Ŕëɱôṽë ôþëñîñĝ ŕûļë ~~~~~~~~ !!]</value>
+  </data>
 </root>

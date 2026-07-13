@@ -334,4 +334,13 @@
   <data name="WindowTourMenuItem.Text" xml:space="preserve">
     <value>Take a tour</value>
   </data>
+  <data name="AlwaysOpenApplicationOnPageMenuItem" xml:space="preserve">
+    <value>Always open this app on</value>
+  </data>
+  <data name="MoveWindowToPageMenuItem" xml:space="preserve">
+    <value>Move window to</value>
+  </data>
+  <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
+    <value>Remove opening rule</value>
+  </data>
 </root>

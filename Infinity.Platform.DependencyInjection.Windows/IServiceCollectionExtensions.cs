@@ -41,6 +41,7 @@ public static class IServiceCollectionExtensions
 
             services.AddSingleton<IWindowController, WindowController>();
             services.AddSingleton<IWindowActivator, WindowActivator>();
+            services.AddSingleton<IWindowApplicationIdentityProvider, WindowApplicationIdentityProvider>();
             services.AddSingleton<IWindowAncestorResolver, WindowAncestorResolver>();
             services.AddSingleton<IWindowEnumerator, WindowEnumerator>();
             services.AddSingleton<IWindowGeometryReader, WindowGeometryReader>();

@@ -70,6 +70,7 @@ POINTER_TOUCH_INFO
 POINTER_INPUT_TYPE
 POINTER_FLAGS
 GetCurrentThreadId
+GetApplicationUserModelId
 CreateDIBSection
 GetAsyncKeyState
 GetWindowLongPtr

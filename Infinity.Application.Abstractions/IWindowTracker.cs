@@ -6,5 +6,5 @@ public interface IWindowTracker
 
     void Stop();
 
-    void TryRegister(IntPtr windowHandle);
+    void TryRegisterExisting(IntPtr windowHandle);
 }
