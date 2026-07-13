@@ -26,7 +26,6 @@
             PointerCanceled="HandleWindowContainerPointerCanceled"
             PointerCaptureLost="HandleWindowContainerPointerCaptureLost"
             RightTapped="HandleWindowContainerRightTapped"
-            Tapped="HandleWindowContainerTapped"
             ToolTipService.ToolTip="{x:Bind ViewModel.Title}">
             <ItemContainer.Resources>
                 <SolidColorBrush x:Key="ItemContainerPointerOverBackground" Color="Transparent" />
