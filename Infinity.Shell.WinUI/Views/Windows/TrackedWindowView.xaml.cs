@@ -39,6 +39,7 @@ public partial class TrackedWindowView :
     private uint? dragPointerId;
     private Point dragStartPoint;
     private UIElement? dragCoordinateRoot;
+    private FrameworkElement? dragScrollBoundary;
     private TrackedWindowViewModel? draggedViewModel;
     private double dragScale;
     private double dragStartLayoutX;
@@ -268,6 +269,7 @@ public partial class TrackedWindowView :
 
         dragPointerId = args.Pointer.PointerId;
         dragCoordinateRoot = coordinateRoot;
+        dragScrollBoundary = FindDragScrollBoundary();
         dragStartPoint = args.GetCurrentPoint(coordinateRoot).Position;
     }
 
@@ -312,8 +314,10 @@ public partial class TrackedWindowView :
             ResetHoverScale();
         }
 
-        double coordinateWidth = (dragCoordinateRoot as FrameworkElement)?.ActualWidth ?? 0;
-        double horizontalPosition = coordinateWidth > 0 ? currentPoint.X / coordinateWidth : double.NaN;
+        double boundaryWidth = dragScrollBoundary?.ActualWidth ?? 0;
+        double horizontalPosition = boundaryWidth > 0
+            ? args.GetCurrentPoint(dragScrollBoundary).Position.X / boundaryWidth
+            : double.NaN;
         WindowContainer.Translation = new Vector3((float)horizontalDelta, (float)verticalDelta, 0);
 
         if (draggedViewModel?.MoveThumbnail(horizontalDelta / dragScale,
@@ -395,6 +399,7 @@ public partial class TrackedWindowView :
         draggedViewModel = null;
         dragPointerId = null;
         dragCoordinateRoot = null;
+        dragScrollBoundary = null;
         dragScale = 0;
         double finalX = dragStartLayoutX + dragHorizontalDelta;
         double finalY = dragStartLayoutY + dragVerticalDelta;
@@ -405,6 +410,23 @@ public partial class TrackedWindowView :
         isThumbnailDragging = false;
         activeViewModel?.EndThumbnailDrag(finalX, finalY);
         WindowContainer.Translation = Vector3.Zero;
+    }
+
+    private FrameworkElement? FindDragScrollBoundary()
+    {
+        DependencyObject? current = this;
+
+        while (current is not null)
+        {
+            if (current is TrackedWindowCollectionView collectionView)
+            {
+                return collectionView.DragScrollBoundary;
+            }
+
+            current = VisualTreeHelper.GetParent(current);
+        }
+
+        return null;
     }
 
     private static bool IsButtonSource(object source)

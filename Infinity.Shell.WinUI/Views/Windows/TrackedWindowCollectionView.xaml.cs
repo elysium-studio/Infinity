@@ -28,6 +28,8 @@ public partial class TrackedWindowCollectionView :
 
     public TrackedWindowCollectionViewModel? ViewModel => DataContext as TrackedWindowCollectionViewModel;
 
+    internal FrameworkElement DragScrollBoundary => BackdropBorder;
+
     private void HandleBackdropSizeChanged(object sender, SizeChangedEventArgs args)
     {
         if (ViewModel is null)
