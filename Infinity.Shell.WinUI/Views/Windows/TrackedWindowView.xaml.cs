@@ -42,11 +42,10 @@ public partial class TrackedWindowView :
     private FrameworkElement? dragScrollBoundary;
     private TrackedWindowViewModel? draggedViewModel;
     private double dragScale;
-    private double dragStartLayoutX;
-    private double dragStartLayoutY;
     private double dragHorizontalDelta;
     private double dragVerticalDelta;
     private bool isThumbnailDragging;
+    private bool isDragVisualPendingReset;
     private bool isPointerOverWindow;
     private bool suppressNextTap;
 
@@ -106,7 +105,7 @@ public partial class TrackedWindowView :
 
     private void HandleUnloaded(object sender, RoutedEventArgs args)
     {
-        CompleteThumbnailDrag();
+        CompleteThumbnailDrag(false);
         WindowContainer.ReleasePointerCaptures();
         CancelPendingPeek();
         EndPeek();
@@ -132,7 +131,7 @@ public partial class TrackedWindowView :
 
     private void HandleDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {
-        CompleteThumbnailDrag();
+        CompleteThumbnailDrag(false);
         WindowContainer.ReleasePointerCaptures();
         CancelPendingPeek();
         EndPeek();
@@ -298,15 +297,13 @@ public partial class TrackedWindowView :
 
             if (!double.IsFinite(currentScale) || currentScale <= 0 || !currentViewModel.BeginThumbnailDrag())
             {
-                CompleteThumbnailDrag();
+                CompleteThumbnailDrag(false);
                 WindowContainer.ReleasePointerCapture(args.Pointer);
                 return;
             }
 
             draggedViewModel = currentViewModel;
             dragScale = currentScale;
-            dragStartLayoutX = currentViewModel.X;
-            dragStartLayoutY = currentViewModel.Y;
             isThumbnailDragging = true;
             suppressNextTap = true;
             CancelPendingPeek();
@@ -330,7 +327,7 @@ public partial class TrackedWindowView :
         }
         else
         {
-            CompleteThumbnailDrag();
+            CompleteThumbnailDrag(false);
             WindowContainer.ReleasePointerCapture(args.Pointer);
         }
     }
@@ -350,7 +347,6 @@ public partial class TrackedWindowView :
         if (wasDragging && isPointerOverWindow)
         {
             SetCloseButtonVisible(true);
-            AnimateHoverScale(true);
             QueuePeek();
         }
     }
@@ -393,7 +389,7 @@ public partial class TrackedWindowView :
         args.Handled = true;
     }
 
-    private void CompleteThumbnailDrag()
+    private void CompleteThumbnailDrag(bool preserveVisualUntilLayout = true)
     {
         TrackedWindowViewModel? activeViewModel = draggedViewModel;
         draggedViewModel = null;
@@ -401,14 +397,22 @@ public partial class TrackedWindowView :
         dragCoordinateRoot = null;
         dragScrollBoundary = null;
         dragScale = 0;
-        double finalX = dragStartLayoutX + dragHorizontalDelta;
-        double finalY = dragStartLayoutY + dragVerticalDelta;
-        dragStartLayoutX = 0;
-        dragStartLayoutY = 0;
+        bool hasVisualDelta = dragHorizontalDelta != 0 || dragVerticalDelta != 0;
         dragHorizontalDelta = 0;
         dragVerticalDelta = 0;
         isThumbnailDragging = false;
-        activeViewModel?.EndThumbnailDrag(finalX, finalY);
+        isDragVisualPendingReset = activeViewModel is not null && preserveVisualUntilLayout && hasVisualDelta;
+        activeViewModel?.EndThumbnailDrag();
+
+        if (!isDragVisualPendingReset)
+        {
+            ResetDragVisual();
+        }
+    }
+
+    private void ResetDragVisual()
+    {
+        isDragVisualPendingReset = false;
         WindowContainer.Translation = Vector3.Zero;
     }
 
@@ -638,6 +642,12 @@ public partial class TrackedWindowView :
 
     private void ApplyFromPropertyName(string? propertyName)
     {
+        if (isDragVisualPendingReset &&
+            (propertyName == nameof(TrackedWindowViewModel.X) || propertyName == nameof(TrackedWindowViewModel.Y)))
+        {
+            ResetDragVisual();
+        }
+
         if (propertyName == nameof(TrackedWindowViewModel.IsFiltered))
         {
             ApplyFilterState();

@@ -158,12 +158,7 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
         return true;
     }
 
-    public void EndThumbnailDrag(double x, double y)
-    {
-        X = x;
-        Y = y;
-        trackedWindowDragController.End(Handle);
-    }
+    public void EndThumbnailDrag() => trackedWindowDragController.End(Handle);
 
     public void ToggleSticky()
     {
