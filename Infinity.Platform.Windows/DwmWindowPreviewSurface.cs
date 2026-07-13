@@ -14,6 +14,7 @@ public class DwmWindowPreviewSurface :
     private readonly Lock syncLock = new();
     private DwmThumbnailVisualItem[] renderItems = [];
     private DwmWindowPreview?[] renderedPreviews = [];
+    private bool[] renderedPreviewOverlays = [];
 
     private bool isDisposed;
     private bool? bridgeAvailable;
@@ -341,25 +342,31 @@ public class DwmWindowPreviewSurface :
             return false;
         }
 
-        EnsureRenderCapacity(previews.Count);
+        EnsureRenderCapacity(previews.Count * 2);
         int itemCount = 0;
 
         foreach (DwmWindowPreview preview in previews.Values)
         {
-            if (!preview.HasTarget || !preview.IsVisible || preview.WindowHandle == 0 || preview.SharedTargetHandle == 0 || preview.Width <= 0.0 || preview.Height <= 0.0)
-            {
-                continue;
-            }
+            AddRenderItem(preview,
+                preview.SharedTargetHandle,
+                preview.Width,
+                preview.Height,
+                preview.IsVisible,
+                preview.HasTarget,
+                false,
+                ref itemCount);
+        }
 
-            renderItems[itemCount] = new DwmThumbnailVisualItem
-            {
-                SourceWindowHandle = preview.WindowHandle,
-                SharedTargetHandle = preview.SharedTargetHandle,
-                Width = Math.Max(1, (int)Math.Round(preview.Width)),
-                Height = Math.Max(1, (int)Math.Round(preview.Height))
-            };
-            renderedPreviews[itemCount] = preview;
-            itemCount++;
+        foreach (DwmWindowPreview preview in previews.Values)
+        {
+            AddRenderItem(preview,
+                preview.OverlayTargetHandle,
+                preview.OverlayWidth,
+                preview.OverlayHeight,
+                preview.IsOverlayVisible,
+                preview.HasOverlayTarget,
+                true,
+                ref itemCount);
         }
 
         bool result = TryRenderBatch(ownerWindowHandle, renderItems, itemCount);
@@ -367,8 +374,11 @@ public class DwmWindowPreviewSurface :
         for (int index = 0; index < itemCount; index++)
         {
             bool itemSucceeded = renderItems[index].ResultHResult == 0;
-            renderedPreviews[index]!.ReportRenderResult(itemSucceeded, renderItems[index].ResultHResult);
+            renderedPreviews[index]!.ReportRenderResult(itemSucceeded,
+                renderItems[index].ResultHResult,
+                renderedPreviewOverlays[index]);
             renderedPreviews[index] = null;
+            renderedPreviewOverlays[index] = false;
             renderItems[index] = default;
         }
 
@@ -385,6 +395,33 @@ public class DwmWindowPreviewSurface :
         int capacity = Math.Max(count, Math.Max(4, renderItems.Length * 2));
         Array.Resize(ref renderItems, capacity);
         Array.Resize(ref renderedPreviews, capacity);
+        Array.Resize(ref renderedPreviewOverlays, capacity);
+    }
+
+    private void AddRenderItem(DwmWindowPreview preview,
+        nint sharedTargetHandle,
+        double width,
+        double height,
+        bool isVisible,
+        bool hasTarget,
+        bool isOverlay,
+        ref int itemCount)
+    {
+        if (!hasTarget || !isVisible || preview.WindowHandle == 0 || sharedTargetHandle == 0 || width <= 0.0 || height <= 0.0)
+        {
+            return;
+        }
+
+        renderItems[itemCount] = new DwmThumbnailVisualItem
+        {
+            SourceWindowHandle = preview.WindowHandle,
+            SharedTargetHandle = sharedTargetHandle,
+            Width = Math.Max(1, (int)Math.Round(width)),
+            Height = Math.Max(1, (int)Math.Round(height))
+        };
+        renderedPreviews[itemCount] = preview;
+        renderedPreviewOverlays[itemCount] = isOverlay;
+        itemCount++;
     }
     [StructLayout(LayoutKind.Sequential)]
     private struct DwmThumbnailVisualItem

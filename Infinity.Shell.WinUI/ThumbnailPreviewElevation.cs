@@ -1,3 +1,4 @@
+using Infinity.Platform.Abstractions;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -12,7 +13,7 @@ internal class ThumbnailPreviewElevation :
     private readonly Canvas overlay;
     private readonly FrameworkElement sourceHost;
     private readonly Border overlayHost;
-    private readonly TrackedWindowViewModel viewModel;
+    private readonly IWindowPreviewOverlay previewOverlay;
     private readonly ThumbnailProxyHandle proxyHandle;
     private double previewWidth;
     private double previewHeight;
@@ -21,13 +22,13 @@ internal class ThumbnailPreviewElevation :
     private ThumbnailPreviewElevation(Canvas overlay,
         FrameworkElement sourceHost,
         Border overlayHost,
-        TrackedWindowViewModel viewModel,
+        IWindowPreviewOverlay previewOverlay,
         ThumbnailProxyHandle proxyHandle)
     {
         this.overlay = overlay;
         this.sourceHost = sourceHost;
         this.overlayHost = overlayHost;
-        this.viewModel = viewModel;
+        this.previewOverlay = previewOverlay;
         this.proxyHandle = proxyHandle;
 
         CompositionTarget.Rendering += HandleRendering;
@@ -37,7 +38,8 @@ internal class ThumbnailPreviewElevation :
         FrameworkElement sourceHost,
         TrackedWindowViewModel viewModel)
     {
-        if (viewModel.Preview?.KeepAlive is not ThumbnailProxyHandle ||
+        if (viewModel.Preview is not IWindowPreviewOverlay previewOverlay ||
+            viewModel.Preview.KeepAlive is not ThumbnailProxyHandle ||
             !TryGetBounds(sourceHost, overlay, out Rect bounds))
         {
             return null;
@@ -66,7 +68,7 @@ internal class ThumbnailPreviewElevation :
         ThumbnailPreviewElevation elevation = new(overlay,
             sourceHost,
             overlayHost,
-            viewModel,
+            previewOverlay,
             proxyHandle);
 
         try
@@ -112,7 +114,7 @@ internal class ThumbnailPreviewElevation :
 
         try
         {
-            viewModel.ClearPreviewTargetOverride();
+            previewOverlay.ClearOverlayTarget();
         }
         finally
         {
@@ -134,7 +136,7 @@ internal class ThumbnailPreviewElevation :
 
         previewWidth = width;
         previewHeight = height;
-        viewModel.SetPreviewTargetOverride(proxyHandle.Proxy.Handle, width, height);
+        previewOverlay.SetOverlayTarget(proxyHandle.Proxy.Handle, width, height, true);
     }
 
     private static bool TryGetBounds(FrameworkElement sourceHost,
