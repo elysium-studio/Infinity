@@ -50,6 +50,7 @@ public partial class TrackedWindowView :
     private double dragVerticalDelta;
     private UIElement? dragZIndexContainer;
     private int dragOriginalZIndex;
+    private ThumbnailPreviewElevation? dragPreviewElevation;
     private bool ownsDragScrollSession;
     private bool isThumbnailDragging;
     private bool isPointerOverWindow;
@@ -330,12 +331,14 @@ public partial class TrackedWindowView :
             isThumbnailDragging = true;
             ownsDragScrollSession = thumbnailDragScroller.Begin(currentViewModel.Handle);
             ElevateThumbnailZIndex();
+            dragPreviewElevation = FindWindowCollectionView()?.ElevateWindowPreview(currentViewModel, ThumbnailHost);
             CancelPendingPeek();
             EndPeek();
             ResetHoverScale();
         }
 
         WindowContainer.Translation = new Vector3((float)horizontalDistance, (float)verticalDistance, 0);
+        dragPreviewElevation?.Update();
 
         if (draggedViewModel?.MoveThumbnail(horizontalDistance / dragScale,
             verticalDistance / dragScale) == true)
@@ -424,6 +427,8 @@ public partial class TrackedWindowView :
         isThumbnailDragging = false;
         WindowContainer.Translation = Vector3.Zero;
         RestoreThumbnailZIndex();
+        dragPreviewElevation?.Dispose();
+        dragPreviewElevation = null;
         activeViewModel?.EndThumbnailDrag();
     }
 
@@ -970,13 +975,20 @@ public partial class TrackedWindowView :
 
     private UIElement? FindWindowItemContainer()
     {
+        TrackedWindowCollectionView? collectionView = FindWindowCollectionView();
+
+        return collectionView?.GetWindowItemContainer(ViewModel);
+    }
+
+    private TrackedWindowCollectionView? FindWindowCollectionView()
+    {
         DependencyObject? current = this;
 
         while (current is not null)
         {
             if (current is TrackedWindowCollectionView collectionView)
             {
-                return collectionView.GetWindowItemContainer(ViewModel);
+                return collectionView;
             }
 
             current = VisualTreeHelper.GetParent(current);

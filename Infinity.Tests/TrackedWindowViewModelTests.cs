@@ -41,13 +41,38 @@ public class TrackedWindowViewModelTests
         Assert.Equal(new WindowPageTarget(9, "Page 10"), targets[9]);
     }
 
-    private static TrackedWindowViewModel CreateViewModel(IPager pager, Settings settings) =>
+    [Fact]
+    public void PreviewTargetOverridePreservesLatestNormalTarget()
+    {
+        TestWindowPreview preview = new();
+        TrackedWindowViewModel viewModel = CreateViewModel(new TestPager(),
+            new Settings(),
+            new TestPreviewSurface(preview));
+
+        viewModel.SetPreviewTarget(new IntPtr(10), 100.0, 50.0);
+        viewModel.SetPreviewTargetOverride(new IntPtr(20), 120.0, 60.0);
+        viewModel.SetPreviewTarget(new IntPtr(30), 140.0, 70.0);
+
+        Assert.Equal(new IntPtr(20), preview.TargetHandle);
+        Assert.Equal(120.0, preview.Width);
+        Assert.Equal(60.0, preview.Height);
+
+        viewModel.ClearPreviewTargetOverride();
+
+        Assert.Equal(new IntPtr(30), preview.TargetHandle);
+        Assert.Equal(140.0, preview.Width);
+        Assert.Equal(70.0, preview.Height);
+    }
+
+    private static TrackedWindowViewModel CreateViewModel(IPager pager,
+        Settings settings,
+        IWindowPreviewSurface? previewSurface = null) =>
         new(new TestServiceProvider(),
             new TestServiceFactory(),
             new WeakReferenceMessenger(),
             new TestDisposer(),
             new TestWindowController(),
-            new TestPreviewSurface(),
+            previewSurface ?? new TestPreviewSurface(),
             new TestPageMover(),
             new TestPlacementRules(),
             new TestStickyWindowController(),
@@ -146,7 +171,7 @@ public class TrackedWindowViewModelTests
         }
     }
 
-    private class TestPreviewSurface : IWindowPreviewSurface
+    private class TestPreviewSurface(IWindowPreview? preview = null) : IWindowPreviewSurface
     {
         public bool IsAvailable => false;
 
@@ -162,7 +187,7 @@ public class TrackedWindowViewModelTests
         {
         }
 
-        public IWindowPreview? CreatePreview(IntPtr windowHandle) => null;
+        public IWindowPreview? CreatePreview(IntPtr windowHandle) => preview;
 
         public void Initialize(IntPtr ownerWindowHandle)
         {
@@ -170,6 +195,44 @@ public class TrackedWindowViewModelTests
 
         public void Render()
         {
+        }
+    }
+
+    private class TestWindowPreview : IWindowPreview
+    {
+        public IntPtr WindowHandle => new(1);
+
+        public object? KeepAlive { get; set; }
+
+        public IntPtr TargetHandle { get; private set; }
+
+        public double Width { get; private set; }
+
+        public double Height { get; private set; }
+
+        public event Action? PreviewInvalidated
+        {
+            add
+            {
+            }
+            remove
+            {
+            }
+        }
+
+        public void SetTarget(IntPtr sharedTargetHandle, double width, double height, bool isVisible)
+        {
+            TargetHandle = sharedTargetHandle;
+            Width = width;
+            Height = height;
+        }
+
+        public void SetPlacement(double x, double y, double width, double height, bool isVisible) =>
+            SetTarget(TargetHandle, width, height, isVisible);
+
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
         }
     }
 

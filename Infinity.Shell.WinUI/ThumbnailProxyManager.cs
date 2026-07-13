@@ -49,14 +49,7 @@ public static class ThumbnailProxyManager
 
         try
         {
-            float normalizedWidth = NormalizeLength(width);
-            float normalizedHeight = NormalizeLength(height);
-
-            handle.Visual.Offset = new Vector3(0.0f, 0.0f, 0.0f);
-            handle.Visual.Size = new Vector2(normalizedWidth, normalizedHeight);
-            handle.Visual.Scale = new Vector3(1.0f, 1.0f, 1.0f);
-
-            ApplyClip(handle.Visual, normalizedWidth, normalizedHeight, DefaultThumbnailCornerRadius);
+            UpdateSizeCore(handle, width, height);
 
             return true;
         }
@@ -75,6 +68,66 @@ public static class ThumbnailProxyManager
             ClearExisting(preview, null, handle);
             return false;
         }
+    }
+
+    internal static bool TryAttachTemporary(FrameworkElement host,
+        double width,
+        double height,
+        out ThumbnailProxyHandle? handle)
+    {
+        handle = null;
+
+        try
+        {
+            Compositor compositor = ElementCompositionPreview.GetElementVisual(host).Compositor;
+
+            if (!TryCreateAndAttach(host, compositor, out handle) || handle is null)
+            {
+                return false;
+            }
+
+            if (UpdateSize(handle, width, height))
+            {
+                return true;
+            }
+
+            ReleaseTemporary(host, handle);
+            handle = null;
+            return false;
+        }
+        catch
+        {
+            ReleaseTemporary(host, handle);
+            handle = null;
+            return false;
+        }
+    }
+
+    internal static bool UpdateSize(ThumbnailProxyHandle handle, double width, double height)
+    {
+        try
+        {
+            UpdateSizeCore(handle, width, height);
+            return true;
+        }
+        catch (ObjectDisposedException)
+        {
+            return false;
+        }
+        catch (COMException)
+        {
+            return false;
+        }
+        catch (InvalidOperationException)
+        {
+            return false;
+        }
+    }
+
+    internal static void ReleaseTemporary(FrameworkElement host, ThumbnailProxyHandle? handle)
+    {
+        TryClearChildVisual(host);
+        SafeDispose(handle);
     }
 
     private static bool TryAttachExisting(ThumbnailProxyHandle existingHandle, FrameworkElement host, Compositor compositor, out nint proxyHandle)
@@ -120,7 +173,23 @@ public static class ThumbnailProxyManager
     private static bool TryCreateAndAttach(IWindowPreview preview, FrameworkElement host, Compositor compositor, out nint proxyHandle)
     {
         proxyHandle = 0;
-        ThumbnailProxyHandle? handle = null;
+
+        if (!TryCreateAndAttach(host, compositor, out ThumbnailProxyHandle? handle) || handle is null)
+        {
+            return false;
+        }
+
+        proxyHandle = handle.Proxy.Handle;
+        preview.KeepAlive = handle;
+
+        return true;
+    }
+
+    private static bool TryCreateAndAttach(FrameworkElement host,
+        Compositor compositor,
+        out ThumbnailProxyHandle? handle)
+    {
+        handle = null;
 
         try
         {
@@ -137,24 +206,33 @@ public static class ThumbnailProxyManager
 
             ElementCompositionPreview.SetElementChildVisual(host, visual);
 
-            proxyHandle = proxy.Handle;
-
-            if (proxyHandle == 0)
+            if (proxy.Handle == 0)
             {
                 SafeDispose(handle);
+                handle = null;
                 return false;
             }
-
-            preview.KeepAlive = handle;
 
             return true;
         }
         catch
         {
             SafeDispose(handle);
-            proxyHandle = 0;
+            handle = null;
             return false;
         }
+    }
+
+    private static void UpdateSizeCore(ThumbnailProxyHandle handle, double width, double height)
+    {
+        float normalizedWidth = NormalizeLength(width);
+        float normalizedHeight = NormalizeLength(height);
+
+        handle.Visual.Offset = new Vector3(0.0f, 0.0f, 0.0f);
+        handle.Visual.Size = new Vector2(normalizedWidth, normalizedHeight);
+        handle.Visual.Scale = new Vector3(1.0f, 1.0f, 1.0f);
+
+        ApplyClip(handle.Visual, normalizedWidth, normalizedHeight, DefaultThumbnailCornerRadius);
     }
 
     private static void ApplyClip(Visual visual, float width, float height, float cornerRadius)
