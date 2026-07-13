@@ -52,7 +52,6 @@ public class TrackedWindowViewModelTests
             new TestPlacementRules(),
             new TestStickyWindowController(),
             new TestTrackedWindowDragController(),
-            new TestWindowDragScroller(),
             pager,
             new TestOptionsMonitor(settings),
             new TestLocalizer(),
@@ -121,37 +120,14 @@ public class TrackedWindowViewModelTests
 
     private class TestTrackedWindowDragController : ITrackedWindowDragController
     {
-        public event Action? DragEnded;
-
         public IntPtr DraggingWindow => IntPtr.Zero;
 
         public bool Begin(IntPtr windowHandle) => true;
 
         public bool Move(IntPtr windowHandle, double horizontalDelta, double verticalDelta) => true;
 
-        public void End(IntPtr windowHandle) => DragEnded?.Invoke();
-    }
-
-    private class TestWindowDragScroller : IWindowDragScroller
-    {
-        public event Action? DragStarted;
-
-        public event Action? DragMoved;
-
-        public event Action? DragScrolled;
-
-        public event Action? DragStopped;
-
-        public bool IsAutoScrolling => false;
-
-        public void Start() => DragStarted?.Invoke();
-
-        public void Stop() => DragStopped?.Invoke();
-
-        public void UpdateTrackedWindowDragPosition(double horizontalPosition)
+        public void End(IntPtr windowHandle)
         {
-            DragMoved?.Invoke();
-            DragScrolled?.Invoke();
         }
     }
 

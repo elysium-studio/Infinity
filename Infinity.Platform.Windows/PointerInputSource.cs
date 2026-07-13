@@ -17,8 +17,6 @@ public class PointerInputSource :
     private readonly Lock scrollGate = new();
     private readonly DeltaSample[] velocitySamples = new DeltaSample[VelocitySampleCount];
     private Timer? idleTimer;
-    private long cursorPosition;
-    private int hasCursorPosition;
     private int velocitySampleIndex;
     private int velocitySampleCount;
     private bool isPrecisionGesture;
@@ -51,31 +49,12 @@ public class PointerInputSource :
 
     private void HandleMouseMoved(object? sender, MouseMoveEventArgs args)
     {
-        long position = ((long)(uint)args.X << 32) | (uint)args.Y;
-        Interlocked.Exchange(ref cursorPosition, position);
-        Volatile.Write(ref hasCursorPosition, 1);
-
         if (!modifierKeyState.IsActive)
         {
             return;
         }
 
         CursorMoved?.Invoke(args.X, args.Y);
-    }
-
-    public bool TryGetCursorPosition(out int x, out int y)
-    {
-        if (Volatile.Read(ref hasCursorPosition) == 0)
-        {
-            x = 0;
-            y = 0;
-            return false;
-        }
-
-        long position = Interlocked.Read(ref cursorPosition);
-        x = unchecked((int)(uint)(position >> 32));
-        y = unchecked((int)(uint)position);
-        return true;
     }
 
     private void HandleWheelScrolled(object? sender, MouseWheelEventArgs args)

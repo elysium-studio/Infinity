@@ -19,7 +19,6 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
     IWindowPlacementRules placementRules,
     IStickyWindowController stickyWindowController,
     ITrackedWindowDragController trackedWindowDragController,
-    IWindowDragScroller windowDragScroller,
     IPager pager,
     IOptionsMonitor<Settings> settings,
     ITextLocalizer localizer,
@@ -147,16 +146,8 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
 
     public bool BeginThumbnailDrag() => trackedWindowDragController.Begin(Handle);
 
-    public bool MoveThumbnail(double horizontalDelta, double verticalDelta, double horizontalPosition)
-    {
-        if (!trackedWindowDragController.Move(Handle, horizontalDelta, verticalDelta))
-        {
-            return false;
-        }
-
-        windowDragScroller.UpdateTrackedWindowDragPosition(horizontalPosition);
-        return true;
-    }
+    public bool MoveThumbnail(double horizontalDelta, double verticalDelta) =>
+        trackedWindowDragController.Move(Handle, horizontalDelta, verticalDelta);
 
     public void EndThumbnailDrag() => trackedWindowDragController.End(Handle);
 

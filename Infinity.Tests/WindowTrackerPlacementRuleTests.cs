@@ -288,15 +288,15 @@ public class WindowTrackerPlacementRuleTests
 
     private class TestTrackedWindowDragController : ITrackedWindowDragController
     {
-        public event Action? DragEnded;
-
         public IntPtr DraggingWindow { get; set; }
 
         public bool Begin(IntPtr windowHandle) => true;
 
         public bool Move(IntPtr windowHandle, double horizontalDelta, double verticalDelta) => true;
 
-        public void End(IntPtr windowHandle) => DragEnded?.Invoke();
+        public void End(IntPtr windowHandle)
+        {
+        }
     }
 
     private class TestWindowEnumerator : IWindowEnumerator

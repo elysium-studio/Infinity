@@ -2,8 +2,6 @@ namespace Infinity.Application.Abstractions;
 
 public interface ITrackedWindowDragController
 {
-    event Action? DragEnded;
-
     IntPtr DraggingWindow { get; }
 
     bool Begin(IntPtr windowHandle);

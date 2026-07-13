@@ -37,24 +37,6 @@ public class TrackedWindowDragControllerTests
     }
 
     [Fact]
-    public void MoveKeepsWindowUnderPointerAfterPageScroll()
-    {
-        WindowStore store = new();
-        TrackedWindow window = CreateWindow(2250, 100);
-        store.Add(window);
-        TestScroller scroller = new() { VisualOffset = 2000 };
-        TrackedWindowDragController controller = new(store,
-            scroller,
-            NullLogger<TrackedWindowDragController>.Instance);
-
-        Assert.True(controller.Begin(window.Handle));
-        scroller.VisualOffset = 3000;
-
-        Assert.True(controller.Move(window.Handle, 100, 0));
-        Assert.Equal(3350, window.CanvasX);
-    }
-
-    [Fact]
     public void MoveUpdatesStickyWindowViewportAnchor()
     {
         WindowStore store = new();
@@ -76,7 +58,7 @@ public class TrackedWindowDragControllerTests
     }
 
     [Fact]
-    public void EndClearsOnlyMatchingDragAndRaisesCompletion()
+    public void EndClearsOnlyMatchingDrag()
     {
         WindowStore store = new();
         TrackedWindow window = CreateWindow(250, 100);
@@ -86,9 +68,6 @@ public class TrackedWindowDragControllerTests
         TrackedWindowDragController controller = new(store,
             new TestScroller(),
             NullLogger<TrackedWindowDragController>.Instance);
-        int endedCount = 0;
-        controller.DragEnded += () => endedCount++;
-
         Assert.True(controller.Begin(window.Handle));
         Assert.False(controller.Begin(new IntPtr(2)));
 
@@ -97,7 +76,6 @@ public class TrackedWindowDragControllerTests
 
         controller.End(window.Handle);
         Assert.Equal(IntPtr.Zero, controller.DraggingWindow);
-        Assert.Equal(1, endedCount);
     }
 
     [Fact]
@@ -109,15 +87,11 @@ public class TrackedWindowDragControllerTests
         TrackedWindowDragController controller = new(store,
             new TestScroller(),
             NullLogger<TrackedWindowDragController>.Instance);
-        int endedCount = 0;
-        controller.DragEnded += () => endedCount++;
-
         Assert.True(controller.Begin(window.Handle));
         store.Remove(window.Handle);
 
         Assert.False(controller.Move(window.Handle, 50, 0));
         Assert.Equal(IntPtr.Zero, controller.DraggingWindow);
-        Assert.Equal(1, endedCount);
     }
 
     [Fact]

@@ -11,8 +11,6 @@ public class TrackedWindowDragController(IWindowStore store,
     private readonly Lock syncRoot = new();
     private DragSession? session;
 
-    public event Action? DragEnded;
-
     public IntPtr DraggingWindow
     {
         get
@@ -127,7 +125,6 @@ public class TrackedWindowDragController(IWindowStore store,
 
         store.NotifyChanged(windowHandle);
         logger.LogDebug("Tracked window drag ended for {Handle}", windowHandle);
-        DragEnded?.Invoke();
     }
 
     private static bool TryRound(double value, out int roundedValue)

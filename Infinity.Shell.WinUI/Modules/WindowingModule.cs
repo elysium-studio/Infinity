@@ -58,7 +58,6 @@ public class WindowingModule :
                 provider.GetRequiredService<IWindowPlacementRules>(),
                 provider.GetRequiredService<IStickyWindowController>(),
                 provider.GetRequiredService<ITrackedWindowDragController>(),
-                provider.GetRequiredService<IWindowDragScroller>(),
                 provider.GetRequiredService<IPager>(),
                 provider.GetRequiredService<IOptionsMonitor<Settings>>(),
                 provider.GetRequiredService<ITextLocalizer>(),
@@ -66,9 +65,7 @@ public class WindowingModule :
                 (IntPtr)factoryArgs![0]!))
             .AddViewFor<TrackedWindowView, TrackedWindowViewModel>(
                 ServiceLifetime.Transient,
-                provider => new TrackedWindowView(
-                    provider.GetRequiredService<IStringLocalizer>(),
-                    provider.GetRequiredService<IPointerInputSource>()));
+                provider => new TrackedWindowView(provider.GetRequiredService<IStringLocalizer>()));
 
         services.Subscribe<IWindowCollection>((provider, windowCollection) =>
         {
