@@ -18,6 +18,7 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
     IWindowPageMover pageMover,
     IWindowPlacementRules placementRules,
     IStickyWindowController stickyWindowController,
+    ITrackedWindowDragController trackedWindowDragController,
     IPager pager,
     IOptionsMonitor<Settings> settings,
     ITextLocalizer localizer,
@@ -66,6 +67,8 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
     private int? zIndex;
 
     public IntPtr Handle { get; } = handle;
+
+    public double LayoutScale { get; set; }
 
     public bool ShouldFadeThumb => IsFiltered;
 
@@ -140,6 +143,13 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
         placementRules.TryGetTargetPage(Handle, out int page) ? page : null;
 
     public void MoveToPage(int page) => pageMover.MoveToPage(Handle, page);
+
+    public bool BeginThumbnailDrag() => trackedWindowDragController.Begin(Handle);
+
+    public bool MoveThumbnail(double horizontalDelta, double verticalDelta) =>
+        trackedWindowDragController.Move(Handle, horizontalDelta, verticalDelta);
+
+    public void EndThumbnailDrag() => trackedWindowDragController.End(Handle);
 
     public void ToggleSticky()
     {

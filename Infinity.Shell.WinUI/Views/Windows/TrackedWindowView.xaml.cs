@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Numerics;
+using Windows.Foundation;
 using Windows.UI.ViewManagement;
 
 namespace Infinity.Shell.WinUI;
@@ -21,6 +22,7 @@ public partial class TrackedWindowView :
     private const int SelectedZIndex = 1_000_000;
     private const int FilteredTierOffset = -100_000;
     private const int UntrackedOrderRank = -50_000;
+    private const double ThumbnailDragThreshold = 4.0;
     private static readonly UISettings uiSettings = new();
 
     private TrackedWindowViewModel? viewModel;
@@ -34,6 +36,14 @@ public partial class TrackedWindowView :
     private int previewUpdateGeneration;
     private double lastPreviewWidth;
     private double lastPreviewHeight;
+    private uint? dragPointerId;
+    private Point dragStartPoint;
+    private UIElement? dragCoordinateRoot;
+    private TrackedWindowViewModel? draggedViewModel;
+    private double dragScale;
+    private bool isThumbnailDragging;
+    private bool isPointerOverWindow;
+    private bool suppressNextTap;
 
     private readonly IStringLocalizer localizer;
 
@@ -90,11 +100,14 @@ public partial class TrackedWindowView :
 
     private void HandleUnloaded(object sender, RoutedEventArgs args)
     {
+        CompleteThumbnailDrag();
+        WindowContainer.ReleasePointerCaptures();
         CancelPendingPeek();
         EndPeek();
         DisposePeekTimer();
 
         isLoaded = false;
+        isPointerOverWindow = false;
         previewUpdateGeneration++;
         isPreviewTargetQueued = false;
         lastPreviewWidth = 0.0;
@@ -113,6 +126,8 @@ public partial class TrackedWindowView :
 
     private void HandleDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {
+        CompleteThumbnailDrag();
+        WindowContainer.ReleasePointerCaptures();
         CancelPendingPeek();
         EndPeek();
 
@@ -202,6 +217,13 @@ public partial class TrackedWindowView :
 
     private void HandleWindowContainerPointerEntered(object sender, PointerRoutedEventArgs args)
     {
+        isPointerOverWindow = true;
+
+        if (isThumbnailDragging)
+        {
+            return;
+        }
+
         SetCloseButtonVisible(true);
         AnimateHoverScale(true);
         QueuePeek();
@@ -209,10 +231,170 @@ public partial class TrackedWindowView :
 
     private void HandleWindowContainerPointerExited(object sender, PointerRoutedEventArgs args)
     {
+        isPointerOverWindow = false;
         SetCloseButtonVisible(false);
         AnimateHoverScale(false);
         CancelPendingPeek();
         EndPeek();
+    }
+
+    private void HandleWindowContainerPointerPressed(object sender, PointerRoutedEventArgs args)
+    {
+        suppressNextTap = false;
+
+        if (IsButtonSource(args.OriginalSource))
+        {
+            return;
+        }
+
+        var pointerPoint = args.GetCurrentPoint(WindowContainer);
+
+        if (!pointerPoint.Properties.IsLeftButtonPressed)
+        {
+            return;
+        }
+
+        UIElement coordinateRoot = XamlRoot?.Content as UIElement ?? this;
+
+        if (!WindowContainer.CapturePointer(args.Pointer))
+        {
+            return;
+        }
+
+        dragPointerId = args.Pointer.PointerId;
+        dragCoordinateRoot = coordinateRoot;
+        dragStartPoint = args.GetCurrentPoint(coordinateRoot).Position;
+    }
+
+    private void HandleWindowContainerPointerMoved(object sender, PointerRoutedEventArgs args)
+    {
+        if (dragPointerId != args.Pointer.PointerId || dragCoordinateRoot is null)
+        {
+            return;
+        }
+
+        Point currentPoint = args.GetCurrentPoint(dragCoordinateRoot).Position;
+        double horizontalDelta = currentPoint.X - dragStartPoint.X;
+        double verticalDelta = currentPoint.Y - dragStartPoint.Y;
+
+        if (!isThumbnailDragging)
+        {
+            double distance = Math.Sqrt(horizontalDelta * horizontalDelta + verticalDelta * verticalDelta);
+
+            if (distance < ThumbnailDragThreshold)
+            {
+                return;
+            }
+
+            TrackedWindowViewModel currentViewModel = ViewModel;
+            double currentScale = currentViewModel.LayoutScale;
+
+            if (!double.IsFinite(currentScale) || currentScale <= 0 || !currentViewModel.BeginThumbnailDrag())
+            {
+                CompleteThumbnailDrag();
+                WindowContainer.ReleasePointerCapture(args.Pointer);
+                return;
+            }
+
+            draggedViewModel = currentViewModel;
+            dragScale = currentScale;
+            isThumbnailDragging = true;
+            suppressNextTap = true;
+            CancelPendingPeek();
+            EndPeek();
+            AnimateHoverScale(false);
+        }
+
+        if (draggedViewModel?.MoveThumbnail(horizontalDelta / dragScale, verticalDelta / dragScale) == true)
+        {
+            args.Handled = true;
+        }
+    }
+
+    private void HandleWindowContainerPointerReleased(object sender, PointerRoutedEventArgs args)
+    {
+        if (dragPointerId != args.Pointer.PointerId)
+        {
+            return;
+        }
+
+        bool wasDragging = isThumbnailDragging;
+        CompleteThumbnailDrag();
+        WindowContainer.ReleasePointerCapture(args.Pointer);
+        args.Handled = wasDragging;
+
+        if (wasDragging && isPointerOverWindow)
+        {
+            SetCloseButtonVisible(true);
+            AnimateHoverScale(true);
+            QueuePeek();
+        }
+    }
+
+    private void HandleWindowContainerPointerCanceled(object sender, PointerRoutedEventArgs args)
+    {
+        if (dragPointerId != args.Pointer.PointerId)
+        {
+            return;
+        }
+
+        CompleteThumbnailDrag();
+        WindowContainer.ReleasePointerCapture(args.Pointer);
+        args.Handled = true;
+    }
+
+    private void HandleWindowContainerPointerCaptureLost(object sender, PointerRoutedEventArgs args)
+    {
+        if (dragPointerId == args.Pointer.PointerId)
+        {
+            CompleteThumbnailDrag();
+        }
+    }
+
+    private void HandleWindowContainerTapped(object sender, TappedRoutedEventArgs args)
+    {
+        if (suppressNextTap)
+        {
+            suppressNextTap = false;
+            args.Handled = true;
+            return;
+        }
+
+        if (IsButtonSource(args.OriginalSource))
+        {
+            return;
+        }
+
+        ViewModel.Navigate();
+        args.Handled = true;
+    }
+
+    private void CompleteThumbnailDrag()
+    {
+        TrackedWindowViewModel? activeViewModel = draggedViewModel;
+        draggedViewModel = null;
+        dragPointerId = null;
+        dragCoordinateRoot = null;
+        dragScale = 0;
+        isThumbnailDragging = false;
+        activeViewModel?.EndThumbnailDrag();
+    }
+
+    private static bool IsButtonSource(object source)
+    {
+        DependencyObject? current = source as DependencyObject;
+
+        while (current is not null)
+        {
+            if (current is Button)
+            {
+                return true;
+            }
+
+            current = VisualTreeHelper.GetParent(current);
+        }
+
+        return false;
     }
 
     private void HandleWindowContainerRightTapped(object sender, RightTappedRoutedEventArgs args)
@@ -305,6 +487,7 @@ public partial class TrackedWindowView :
     private void QueuePeek()
     {
         if (!isLoaded ||
+            isThumbnailDragging ||
             viewModel is null ||
             ReferenceEquals(pendingPeekViewModel, viewModel) ||
             ReferenceEquals(peekingViewModel, viewModel))

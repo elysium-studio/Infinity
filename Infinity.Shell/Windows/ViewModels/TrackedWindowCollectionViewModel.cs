@@ -487,6 +487,7 @@ public partial class TrackedWindowCollectionViewModel :
             windowViewModel.Title = trackedWindow.Title;
             windowViewModel.IsFiltered = !filterState.IsMatch(windowViewModel.Title);
             windowViewModel.IsSticky = trackedWindow.IsSticky;
+            windowViewModel.LayoutScale = ScaleFactor;
         }
     }
 

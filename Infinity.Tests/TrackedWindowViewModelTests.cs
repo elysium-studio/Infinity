@@ -51,6 +51,7 @@ public class TrackedWindowViewModelTests
             new TestPageMover(),
             new TestPlacementRules(),
             new TestStickyWindowController(),
+            new TestTrackedWindowDragController(),
             pager,
             new TestOptionsMonitor(settings),
             new TestLocalizer(),
@@ -115,6 +116,19 @@ public class TrackedWindowViewModelTests
         public bool Pin(IntPtr windowHandle) => true;
 
         public bool Unpin(IntPtr windowHandle) => true;
+    }
+
+    private class TestTrackedWindowDragController : ITrackedWindowDragController
+    {
+        public event Action? DragEnded;
+
+        public IntPtr DraggingWindow => IntPtr.Zero;
+
+        public bool Begin(IntPtr windowHandle) => true;
+
+        public bool Move(IntPtr windowHandle, double horizontalDelta, double verticalDelta) => true;
+
+        public void End(IntPtr windowHandle) => DragEnded?.Invoke();
     }
 
     private class TestWindowController : IWindowController
