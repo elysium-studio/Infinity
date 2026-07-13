@@ -31,9 +31,6 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
     private IntPtr previewTargetHandle;
     private double previewWidth;
     private double previewHeight;
-    private IntPtr previewTargetOverrideHandle;
-    private double previewTargetOverrideWidth;
-    private double previewTargetOverrideHeight;
 
     [ObservableProperty]
     private double height;
@@ -220,42 +217,14 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
         UpdatePreview();
     }
 
-    public void SetPreviewTargetOverride(IntPtr sharedTargetHandle, double width, double height)
-    {
-        previewTargetOverrideHandle = sharedTargetHandle;
-        previewTargetOverrideWidth = width;
-        previewTargetOverrideHeight = height;
-
-        UpdatePreview();
-    }
-
-    public void ClearPreviewTargetOverride()
-    {
-        previewTargetOverrideHandle = 0;
-        previewTargetOverrideWidth = 0.0;
-        previewTargetOverrideHeight = 0.0;
-
-        UpdatePreview();
-    }
-
     private void UpdatePreview()
     {
-        IntPtr targetHandle = previewTargetOverrideHandle != 0
-            ? previewTargetOverrideHandle
-            : previewTargetHandle;
-        double targetWidth = previewTargetOverrideHandle != 0
-            ? previewTargetOverrideWidth
-            : previewWidth;
-        double targetHeight = previewTargetOverrideHandle != 0
-            ? previewTargetOverrideHeight
-            : previewHeight;
-
-        if (targetHandle == 0 || targetWidth <= 0.0 || targetHeight <= 0.0)
+        if (previewTargetHandle == 0 || previewWidth <= 0.0 || previewHeight <= 0.0)
         {
             preview?.SetTarget(0, 0.0, 0.0, false);
             return;
         }
 
-        preview?.SetTarget(targetHandle, targetWidth, targetHeight, true);
+        preview?.SetTarget(previewTargetHandle, previewWidth, previewHeight, true);
     }
 }
