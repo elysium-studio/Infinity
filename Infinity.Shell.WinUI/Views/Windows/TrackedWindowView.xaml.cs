@@ -39,12 +39,15 @@ public partial class TrackedWindowView :
     private double lastPreviewHeight;
     private uint? dragPointerId;
     private Point dragStartPoint;
+    private Point dragLastPoint;
     private UIElement? dragCoordinateRoot;
     private FrameworkElement? dragScrollBoundary;
     private TrackedWindowViewModel? draggedViewModel;
     private double dragScale;
     private double dragStartCanvasLeft;
     private double dragStartCanvasTop;
+    private double dragLastBoundaryX;
+    private double dragBoundaryPosition;
     private double dragHorizontalDelta;
     private double dragVerticalDelta;
     private bool isThumbnailDragging;
@@ -269,6 +272,17 @@ public partial class TrackedWindowView :
         dragCoordinateRoot = coordinateRoot;
         dragScrollBoundary = FindDragScrollBoundary();
         dragStartPoint = args.GetCurrentPoint(coordinateRoot).Position;
+        dragLastPoint = dragStartPoint;
+
+        if (dragScrollBoundary is not null)
+        {
+            dragLastBoundaryX = args.GetCurrentPoint(dragScrollBoundary).Position.X;
+            double boundaryWidth = dragScrollBoundary.ActualWidth;
+            dragBoundaryPosition = boundaryWidth > 0
+                ? Math.Clamp(dragLastBoundaryX, 0, boundaryWidth)
+                : dragLastBoundaryX;
+        }
+
         args.Handled = true;
     }
 
@@ -282,12 +296,12 @@ public partial class TrackedWindowView :
         args.Handled = true;
 
         Point currentPoint = args.GetCurrentPoint(dragCoordinateRoot).Position;
-        double horizontalDelta = currentPoint.X - dragStartPoint.X;
-        double verticalDelta = currentPoint.Y - dragStartPoint.Y;
+        double horizontalDistance = currentPoint.X - dragStartPoint.X;
+        double verticalDistance = currentPoint.Y - dragStartPoint.Y;
 
         if (!isThumbnailDragging)
         {
-            double distance = Math.Sqrt(horizontalDelta * horizontalDelta + verticalDelta * verticalDelta);
+            double distance = Math.Sqrt(horizontalDistance * horizontalDistance + verticalDistance * verticalDistance);
 
             if (distance < ThumbnailDragThreshold)
             {
@@ -326,17 +340,26 @@ public partial class TrackedWindowView :
             ResetHoverScale();
         }
 
+        double horizontalMovement = currentPoint.X - dragLastPoint.X;
+        double verticalMovement = currentPoint.Y - dragLastPoint.Y;
         double boundaryWidth = dragScrollBoundary?.ActualWidth ?? 0;
         double horizontalPosition = double.NaN;
+        double currentBoundaryX = dragLastBoundaryX;
+        double nextBoundaryPosition = dragBoundaryPosition;
 
-        if (boundaryWidth > 0)
+        if (dragScrollBoundary is not null && boundaryWidth > 0)
         {
-            double boundaryX = args.GetCurrentPoint(dragScrollBoundary).Position.X;
-            double clampedBoundaryX = Math.Clamp(boundaryX, 0, boundaryWidth);
-            horizontalDelta += clampedBoundaryX - boundaryX;
-            horizontalPosition = clampedBoundaryX / boundaryWidth;
+            currentBoundaryX = args.GetCurrentPoint(dragScrollBoundary).Position.X;
+            nextBoundaryPosition = Math.Clamp(
+                dragBoundaryPosition + currentBoundaryX - dragLastBoundaryX,
+                0,
+                boundaryWidth);
+            horizontalMovement = nextBoundaryPosition - dragBoundaryPosition;
+            horizontalPosition = nextBoundaryPosition / boundaryWidth;
         }
 
+        double horizontalDelta = dragHorizontalDelta + horizontalMovement;
+        double verticalDelta = dragVerticalDelta + verticalMovement;
         WindowContainer.Translation = new Vector3((float)horizontalDelta, (float)verticalDelta, 0);
 
         if (draggedViewModel?.MoveThumbnail(horizontalDelta / dragScale,
@@ -345,6 +368,13 @@ public partial class TrackedWindowView :
         {
             dragHorizontalDelta = horizontalDelta;
             dragVerticalDelta = verticalDelta;
+            dragLastPoint = currentPoint;
+
+            if (dragScrollBoundary is not null && boundaryWidth > 0)
+            {
+                dragLastBoundaryX = currentBoundaryX;
+                dragBoundaryPosition = nextBoundaryPosition;
+            }
         }
         else
         {
@@ -415,6 +445,8 @@ public partial class TrackedWindowView :
         dragScale = 0;
         dragStartCanvasLeft = 0;
         dragStartCanvasTop = 0;
+        dragLastBoundaryX = 0;
+        dragBoundaryPosition = 0;
         dragHorizontalDelta = 0;
         dragVerticalDelta = 0;
         isThumbnailDragging = false;

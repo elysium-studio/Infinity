@@ -88,6 +88,49 @@ public class WindowDragScrollerTests
     }
 
     [Fact]
+    public void ManagedDragCanReverseAutoScrollDirection()
+    {
+        TestModifierKeyState modifier = new() { IsActive = true };
+        TestTrackedWindowDragController dragController = new() { DraggingWindow = new IntPtr(1) };
+        TestScroller scroller = new();
+        PanState state = new();
+        state.SetMaxOffset(10_000);
+        state.SetOffset(5_000);
+        WindowDragScroller dragScroller = new(new TestPointerInputSource(),
+            modifier,
+            new TestWindowDragGuard(),
+            dragController,
+            new TestWorkspace(),
+            scroller,
+            state,
+            new TestDispatcher(),
+            () => new WindowDragScrollerConfiguration { SpeedLevel = DragScrollSpeed.Normal },
+            NullLogger<WindowDragScroller>.Instance);
+        dragScroller.Start();
+
+        try
+        {
+            dragScroller.UpdateTrackedWindowDragPosition(1.0);
+
+            Assert.True(dragScroller.IsAutoScrolling);
+            Assert.True(scroller.VisualOffset > state.Offset);
+
+            dragScroller.UpdateTrackedWindowDragPosition(0.5);
+
+            Assert.False(dragScroller.IsAutoScrolling);
+
+            dragScroller.UpdateTrackedWindowDragPosition(0.0);
+
+            Assert.True(dragScroller.IsAutoScrolling);
+            Assert.True(scroller.VisualOffset < state.Offset);
+        }
+        finally
+        {
+            dragScroller.Stop();
+        }
+    }
+
+    [Fact]
     public void ManagedDragDoesNotScrollBeforePreviewEdge()
     {
         WindowDragScroller dragScroller = new(new TestPointerInputSource(),
