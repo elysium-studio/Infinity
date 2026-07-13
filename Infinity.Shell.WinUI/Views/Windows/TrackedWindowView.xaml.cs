@@ -276,6 +276,8 @@ public partial class TrackedWindowView :
         dragPointerId = args.Pointer.PointerId;
         dragCoordinateRoot = coordinateRoot;
         dragStartPoint = args.GetCurrentPoint(coordinateRoot).Position;
+        ElevateThumbnailZIndex();
+        dragPreviewElevation = FindWindowCollectionView()?.ElevateWindowPreview(ViewModel, ThumbnailHost);
 
         args.Handled = true;
     }
@@ -330,8 +332,6 @@ public partial class TrackedWindowView :
 
             isThumbnailDragging = true;
             ownsDragScrollSession = thumbnailDragScroller.Begin(currentViewModel.Handle);
-            ElevateThumbnailZIndex();
-            dragPreviewElevation = FindWindowCollectionView()?.ElevateWindowPreview(currentViewModel, ThumbnailHost);
             CancelPendingPeek();
             EndPeek();
             ResetHoverScale();
