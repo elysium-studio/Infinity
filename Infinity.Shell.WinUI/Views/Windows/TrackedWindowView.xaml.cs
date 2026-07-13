@@ -19,8 +19,8 @@ namespace Infinity.Shell.WinUI;
 public partial class TrackedWindowView :
     UserControl
 {
-    private const int SelectedZIndex = 1_000_000;
-    private const int DraggedZIndex = SelectedZIndex + 1;
+    private const int DraggedZIndex = 1_000_000;
+    private const int SelectedZIndex = DraggedZIndex - 1;
     private const int FilteredTierOffset = -100_000;
     private const int UntrackedOrderRank = -50_000;
     private const double ThumbnailDragThreshold = 4.0;
