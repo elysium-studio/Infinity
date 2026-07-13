@@ -343,10 +343,4 @@
   <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
     <value>Openingsregel verwijderen</value>
   </data>
-  <data name="NewPageTitle" xml:space="preserve">
-    <value>Nieuwe pagina — Pagina {0}</value>
-  </data>
-  <data name="PageWithTitle" xml:space="preserve">
-    <value>Pagina {0} — {1}</value>
-  </data>
 </root>

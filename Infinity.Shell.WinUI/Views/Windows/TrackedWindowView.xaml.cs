@@ -222,9 +222,9 @@ public partial class TrackedWindowView :
         EndPeek();
 
         TrackedWindowViewModel currentViewModel = ViewModel;
-        IReadOnlyList<WindowPageTarget> targets = currentViewModel.GetPageTargets();
         int? currentPage = currentViewModel.GetCurrentPage();
         int? openingPage = currentViewModel.GetOpeningPage();
+        IReadOnlyList<WindowPageTarget> targets = currentViewModel.GetPageTargets(openingPage);
         MenuFlyout menu = new();
         MenuFlyoutSubItem moveSubMenu = new()
         {

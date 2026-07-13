@@ -79,24 +79,26 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
 
     public void Navigate() => Messenger.Send(new WindowNavigationRequestedEventArgs(Handle));
 
-    public IReadOnlyList<WindowPageTarget> GetPageTargets()
+    public IReadOnlyList<WindowPageTarget> GetPageTargets(int? openingPage)
     {
-        int existingPageCount = pager.PageCount;
-        int targetCount = pager.MaxPages ?? existingPageCount + 1;
         Dictionary<int, string>? pageTitles = settings.CurrentValue.PageTitles;
+        int existingPageCount = Math.Max(pager.PageCount, GetNamedPageCount(pageTitles));
+
+        if (openingPage is int savedPage && savedPage >= existingPageCount && savedPage < int.MaxValue)
+        {
+            existingPageCount = savedPage + 1;
+        }
+
+        int targetCount = pager.MaxPages ?? existingPageCount;
         List<WindowPageTarget> targets = new(targetCount);
 
         for (int page = 0; page < targetCount; page++)
         {
             string displayName;
 
-            if (pager.MaxPages is null && page == existingPageCount)
+            if (pageTitles?.TryGetValue(page, out string? title) == true && !string.IsNullOrWhiteSpace(title))
             {
-                displayName = localizer.GetText("NewPageTitle", page + 1);
-            }
-            else if (pageTitles?.TryGetValue(page, out string? title) == true && !string.IsNullOrWhiteSpace(title))
-            {
-                displayName = localizer.GetText("PageWithTitle", page + 1, title);
+                displayName = title;
             }
             else
             {
@@ -107,6 +109,24 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
         }
 
         return targets;
+    }
+
+    private static int GetNamedPageCount(Dictionary<int, string>? pageTitles)
+    {
+        int highestNamedPage = -1;
+
+        if (pageTitles is not null)
+        {
+            foreach ((int page, string title) in pageTitles)
+            {
+                if (page >= 0 && page < int.MaxValue && page > highestNamedPage && !string.IsNullOrWhiteSpace(title))
+                {
+                    highestNamedPage = page;
+                }
+            }
+        }
+
+        return highestNamedPage + 1;
     }
 
     public int? GetCurrentPage() =>
