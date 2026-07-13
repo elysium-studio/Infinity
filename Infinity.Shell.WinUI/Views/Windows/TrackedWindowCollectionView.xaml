@@ -174,30 +174,33 @@
                     IsTabStop="False"
                     TabNavigation="Once"
                     VerticalScrollBarVisibility="Disabled">
-                    <ItemsControl
-                        Width="{x:Bind ViewModel.CanvasWidth, Mode=OneWay}"
-                        IsTabStop="False"
-                        ItemsSource="{x:Bind ViewModel, Mode=OneWay}"
-                        TabNavigation="Once">
-                        <ItemsControl.ItemContainerStyle>
-                            <Style TargetType="ContentPresenter">
-                                <Setter Property="IsTabStop" Value="False" />
-                            </Style>
-                        </ItemsControl.ItemContainerStyle>
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <Canvas />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="Shell:TrackedWindowViewModel">
-                                <ContentControl
-                                    Content="{WinUI:View Key=TrackedWindowView}"
-                                    IsTabStop="False"
-                                    TabNavigation="Once" />
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <Grid Width="{x:Bind ViewModel.CanvasWidth, Mode=OneWay}">
+                        <ItemsControl
+                            x:Name="WindowItems"
+                            IsTabStop="False"
+                            ItemsSource="{x:Bind ViewModel, Mode=OneWay}"
+                            TabNavigation="Once">
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="IsTabStop" Value="False" />
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <Canvas />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="Shell:TrackedWindowViewModel">
+                                    <ContentControl
+                                        Content="{WinUI:View Key=TrackedWindowView}"
+                                        IsTabStop="False"
+                                        TabNavigation="Once" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Canvas x:Name="ThumbnailPreviewOverlay" IsHitTestVisible="False" />
+                    </Grid>
                 </ScrollViewer>
                 <PipsPager
                     x:Name="PageIndicator"

@@ -1,4 +1,5 @@
 using Elysium.UI.WinUI;
+using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Dispatching;
@@ -40,20 +41,28 @@ public partial class TrackedWindowView :
     private uint? dragPointerId;
     private Point dragStartPoint;
     private UIElement? dragCoordinateRoot;
+    private FrameworkElement? dragScrollBoundary;
     private TrackedWindowViewModel? draggedViewModel;
     private double dragScale;
     private double dragStartCanvasLeft;
     private double dragStartCanvasTop;
     private double dragHorizontalDelta;
     private double dragVerticalDelta;
+    private UIElement? dragZIndexContainer;
+    private int dragOriginalZIndex;
+    private ThumbnailPreviewElevation? dragPreviewElevation;
+    private bool ownsDragScrollSession;
     private bool isThumbnailDragging;
     private bool isPointerOverWindow;
 
     private readonly IStringLocalizer localizer;
+    private readonly IThumbnailDragScroller thumbnailDragScroller;
 
-    public TrackedWindowView(IStringLocalizer localizer)
+    public TrackedWindowView(IStringLocalizer localizer,
+        IThumbnailDragScroller thumbnailDragScroller)
     {
         this.localizer = localizer;
+        this.thumbnailDragScroller = thumbnailDragScroller;
         InitializeComponent();
 
         DataContextChanged += HandleDataContextChanged;
@@ -305,6 +314,7 @@ public partial class TrackedWindowView :
 
             draggedViewModel = currentViewModel;
             dragScale = currentScale;
+            dragScrollBoundary = FindThumbnailDragScrollBoundary();
             dragStartCanvasLeft = Canvas.GetLeft(WindowContainer);
             dragStartCanvasTop = Canvas.GetTop(WindowContainer);
 
@@ -319,19 +329,23 @@ public partial class TrackedWindowView :
             }
 
             isThumbnailDragging = true;
-            SetCanvasZIndex(DraggedZIndex);
+            ownsDragScrollSession = thumbnailDragScroller.Begin(currentViewModel.Handle);
+            ElevateThumbnailZIndex();
+            dragPreviewElevation = FindWindowCollectionView()?.ElevateWindowPreview(currentViewModel, ThumbnailHost);
             CancelPendingPeek();
             EndPeek();
             ResetHoverScale();
         }
 
         WindowContainer.Translation = new Vector3((float)horizontalDistance, (float)verticalDistance, 0);
+        dragPreviewElevation?.Update();
 
         if (draggedViewModel?.MoveThumbnail(horizontalDistance / dragScale,
             verticalDistance / dragScale) == true)
         {
             dragHorizontalDelta = horizontalDistance;
             dragVerticalDelta = verticalDistance;
+            UpdateThumbnailDragScroll(args);
         }
         else
         {
@@ -389,6 +403,11 @@ public partial class TrackedWindowView :
     {
         TrackedWindowViewModel? activeViewModel = draggedViewModel;
 
+        if (activeViewModel is not null && ownsDragScrollSession)
+        {
+            thumbnailDragScroller.End(activeViewModel.Handle);
+        }
+
         if (activeViewModel is not null && commitVisualPosition)
         {
             Canvas.SetLeft(WindowContainer, dragStartCanvasLeft + dragHorizontalDelta);
@@ -398,15 +417,48 @@ public partial class TrackedWindowView :
         draggedViewModel = null;
         dragPointerId = null;
         dragCoordinateRoot = null;
+        dragScrollBoundary = null;
         dragScale = 0;
         dragStartCanvasLeft = 0;
         dragStartCanvasTop = 0;
         dragHorizontalDelta = 0;
         dragVerticalDelta = 0;
+        ownsDragScrollSession = false;
         isThumbnailDragging = false;
         WindowContainer.Translation = Vector3.Zero;
-        ApplyZIndex();
+        RestoreThumbnailZIndex();
+        dragPreviewElevation?.Dispose();
+        dragPreviewElevation = null;
         activeViewModel?.EndThumbnailDrag();
+    }
+
+    private void UpdateThumbnailDragScroll(PointerRoutedEventArgs args)
+    {
+        if (!ownsDragScrollSession || draggedViewModel is null || dragScrollBoundary is null)
+        {
+            return;
+        }
+
+        double viewportWidth = dragScrollBoundary.ActualWidth;
+        double pointerX = args.GetCurrentPoint(dragScrollBoundary).Position.X;
+        thumbnailDragScroller.Update(draggedViewModel.Handle, pointerX, viewportWidth);
+    }
+
+    private FrameworkElement? FindThumbnailDragScrollBoundary()
+    {
+        DependencyObject? current = this;
+
+        while (current is not null)
+        {
+            if (current is TrackedWindowCollectionView collectionView)
+            {
+                return collectionView.ThumbnailDragScrollBoundary;
+            }
+
+            current = VisualTreeHelper.GetParent(current);
+        }
+
+        return null;
     }
 
     private static bool IsButtonSource(object source)
@@ -880,19 +932,68 @@ public partial class TrackedWindowView :
 
     private void SetCanvasZIndex(int zIndex)
     {
+        UIElement? container = FindWindowItemContainer();
+
+        if (container is not null)
+        {
+            Canvas.SetZIndex(container, zIndex);
+        }
+    }
+
+    private void ElevateThumbnailZIndex()
+    {
+        if (dragZIndexContainer is not null)
+        {
+            return;
+        }
+
+        UIElement? container = FindWindowItemContainer();
+
+        if (container is null)
+        {
+            return;
+        }
+
+        dragZIndexContainer = container;
+        dragOriginalZIndex = Canvas.GetZIndex(container);
+        Canvas.SetZIndex(container, DraggedZIndex);
+    }
+
+    private void RestoreThumbnailZIndex()
+    {
+        UIElement? container = dragZIndexContainer;
+
+        if (container is null)
+        {
+            return;
+        }
+
+        dragZIndexContainer = null;
+        Canvas.SetZIndex(container, dragOriginalZIndex);
+        dragOriginalZIndex = 0;
+    }
+
+    private UIElement? FindWindowItemContainer()
+    {
+        TrackedWindowCollectionView? collectionView = FindWindowCollectionView();
+
+        return collectionView?.GetWindowItemContainer(ViewModel);
+    }
+
+    private TrackedWindowCollectionView? FindWindowCollectionView()
+    {
         DependencyObject? current = this;
 
         while (current is not null)
         {
-            DependencyObject? parent = VisualTreeHelper.GetParent(current);
-
-            if (parent is Canvas)
+            if (current is TrackedWindowCollectionView collectionView)
             {
-                Canvas.SetZIndex((UIElement)current, zIndex);
-                return;
+                return collectionView;
             }
 
-            current = parent;
+            current = VisualTreeHelper.GetParent(current);
         }
+
+        return null;
     }
 }

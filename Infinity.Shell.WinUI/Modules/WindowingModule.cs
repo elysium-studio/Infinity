@@ -65,7 +65,9 @@ public class WindowingModule :
                 (IntPtr)factoryArgs![0]!))
             .AddViewFor<TrackedWindowView, TrackedWindowViewModel>(
                 ServiceLifetime.Transient,
-                provider => new TrackedWindowView(provider.GetRequiredService<IStringLocalizer>()));
+                provider => new TrackedWindowView(
+                    provider.GetRequiredService<IStringLocalizer>(),
+                    provider.GetRequiredService<IThumbnailDragScroller>()));
 
         services.Subscribe<IWindowCollection>((provider, windowCollection) =>
         {
