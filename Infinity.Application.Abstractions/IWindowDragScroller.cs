@@ -15,4 +15,6 @@ public interface IWindowDragScroller
     void Start();
 
     void Stop();
+
+    void UpdateTrackedWindowDragPosition(double horizontalPosition);
 }

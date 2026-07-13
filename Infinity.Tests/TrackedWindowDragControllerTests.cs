@@ -27,9 +27,13 @@ public class TrackedWindowDragControllerTests
         Assert.Equal(window.Handle, controller.DraggingWindow);
         Assert.Equal(2750, window.CanvasX);
         Assert.Equal(150, window.CanvasY);
-        Assert.Equal(1, changedCount);
+        Assert.Equal(0, changedCount);
         Assert.Equal(1, scroller.ResetCount);
         Assert.Equal(1, scroller.RepositionCount);
+
+        controller.End(window.Handle);
+
+        Assert.Equal(1, changedCount);
     }
 
     [Fact]

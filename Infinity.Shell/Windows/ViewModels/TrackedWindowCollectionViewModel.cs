@@ -34,6 +34,7 @@ public partial class TrackedWindowCollectionViewModel :
     private readonly IPager pager;
     private readonly IPanState state;
     private readonly IScroller scroller;
+    private readonly ITrackedWindowDragController trackedWindowDragController;
     private readonly IWindowCollection windowCollection;
     private readonly ITrackedWindowCollection trackedWindowCollection;
     private readonly IWindowSelector selector;
@@ -97,6 +98,7 @@ public partial class TrackedWindowCollectionViewModel :
         IPager pager,
         IPanState state,
         IScroller scroller,
+        ITrackedWindowDragController trackedWindowDragController,
         IWindowCollection windowCollection,
         ITrackedWindowCollection trackedWindowCollection,
         IWindowSelector selector,
@@ -116,6 +118,7 @@ public partial class TrackedWindowCollectionViewModel :
         this.pager = pager;
         this.state = state;
         this.scroller = scroller;
+        this.trackedWindowDragController = trackedWindowDragController;
         this.windowCollection = windowCollection;
         this.trackedWindowCollection = trackedWindowCollection;
         this.selector = selector;
@@ -477,17 +480,22 @@ public partial class TrackedWindowCollectionViewModel :
                 ScaleFactor,
                 ScreenWidth,
                 ScreenHeight);
+            ITrackedWindow currentWindowViewModel = windowViewModel!;
 
-            windowViewModel!.X = layout.X;
-            windowViewModel.Y = layout.Y;
-            windowViewModel.Width = layout.Width;
-            windowViewModel.Height = layout.Height;
-            windowViewModel.IsVisible = layout.Width > 0 && layout.Height > 0;
-            windowViewModel.ZIndex = trackedWindow.ZIndex;
-            windowViewModel.Title = trackedWindow.Title;
-            windowViewModel.IsFiltered = !filterState.IsMatch(windowViewModel.Title);
-            windowViewModel.IsSticky = trackedWindow.IsSticky;
-            windowViewModel.LayoutScale = ScaleFactor;
+            if (trackedWindowDragController.DraggingWindow != trackedWindow.Handle)
+            {
+                currentWindowViewModel.X = layout.X;
+                currentWindowViewModel.Y = layout.Y;
+            }
+
+            currentWindowViewModel.Width = layout.Width;
+            currentWindowViewModel.Height = layout.Height;
+            currentWindowViewModel.IsVisible = layout.Width > 0 && layout.Height > 0;
+            currentWindowViewModel.ZIndex = trackedWindow.ZIndex;
+            currentWindowViewModel.Title = trackedWindow.Title;
+            currentWindowViewModel.IsFiltered = !filterState.IsMatch(currentWindowViewModel.Title);
+            currentWindowViewModel.IsSticky = trackedWindow.IsSticky;
+            currentWindowViewModel.LayoutScale = ScaleFactor;
         }
     }
 

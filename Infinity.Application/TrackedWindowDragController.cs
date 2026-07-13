@@ -102,7 +102,6 @@ public class TrackedWindowDragController(IWindowStore store,
             trackedWindow.StickyViewportX = (int)viewportX;
         }
 
-        store.NotifyChanged(windowHandle);
         scroller.Reposition();
         return true;
     }
@@ -126,6 +125,7 @@ public class TrackedWindowDragController(IWindowStore store,
             return;
         }
 
+        store.NotifyChanged(windowHandle);
         logger.LogDebug("Tracked window drag ended for {Handle}", windowHandle);
         DragEnded?.Invoke();
     }

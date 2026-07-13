@@ -41,6 +41,10 @@ public partial class TrackedWindowView :
     private UIElement? dragCoordinateRoot;
     private TrackedWindowViewModel? draggedViewModel;
     private double dragScale;
+    private double dragStartLayoutX;
+    private double dragStartLayoutY;
+    private double dragHorizontalDelta;
+    private double dragVerticalDelta;
     private bool isThumbnailDragging;
     private bool isPointerOverWindow;
     private bool suppressNextTap;
@@ -74,6 +78,7 @@ public partial class TrackedWindowView :
 
         try
         {
+            ElementCompositionPreview.SetIsTranslationEnabled(WindowContainer, true);
             ElementCompositionPreview.SetIsTranslationEnabled(ThumbnailGrid, true);
             ElementCompositionPreview.SetIsTranslationEnabled(ThumbnailShadowHost, true);
 
@@ -298,16 +303,31 @@ public partial class TrackedWindowView :
 
             draggedViewModel = currentViewModel;
             dragScale = currentScale;
+            dragStartLayoutX = currentViewModel.X;
+            dragStartLayoutY = currentViewModel.Y;
             isThumbnailDragging = true;
             suppressNextTap = true;
             CancelPendingPeek();
             EndPeek();
-            AnimateHoverScale(false);
+            ResetHoverScale();
         }
 
-        if (draggedViewModel?.MoveThumbnail(horizontalDelta / dragScale, verticalDelta / dragScale) == true)
+        double coordinateWidth = (dragCoordinateRoot as FrameworkElement)?.ActualWidth ?? 0;
+        double horizontalPosition = coordinateWidth > 0 ? currentPoint.X / coordinateWidth : double.NaN;
+        WindowContainer.Translation = new Vector3((float)horizontalDelta, (float)verticalDelta, 0);
+
+        if (draggedViewModel?.MoveThumbnail(horizontalDelta / dragScale,
+            verticalDelta / dragScale,
+            horizontalPosition) == true)
         {
+            dragHorizontalDelta = horizontalDelta;
+            dragVerticalDelta = verticalDelta;
             args.Handled = true;
+        }
+        else
+        {
+            CompleteThumbnailDrag();
+            WindowContainer.ReleasePointerCapture(args.Pointer);
         }
     }
 
@@ -376,8 +396,15 @@ public partial class TrackedWindowView :
         dragPointerId = null;
         dragCoordinateRoot = null;
         dragScale = 0;
+        double finalX = dragStartLayoutX + dragHorizontalDelta;
+        double finalY = dragStartLayoutY + dragVerticalDelta;
+        dragStartLayoutX = 0;
+        dragStartLayoutY = 0;
+        dragHorizontalDelta = 0;
+        dragVerticalDelta = 0;
         isThumbnailDragging = false;
-        activeViewModel?.EndThumbnailDrag();
+        activeViewModel?.EndThumbnailDrag(finalX, finalY);
+        WindowContainer.Translation = Vector3.Zero;
     }
 
     private static bool IsButtonSource(object source)
@@ -735,6 +762,25 @@ public partial class TrackedWindowView :
             scaleAnimation.Duration = TimeSpan.FromMilliseconds(150);
 
             visual.StartAnimation("Scale", scaleAnimation);
+        }
+        catch
+        {
+        }
+    }
+
+    private void ResetHoverScale()
+    {
+        Visual? visual = GetContainerVisual();
+
+        if (visual is null)
+        {
+            return;
+        }
+
+        try
+        {
+            visual.StopAnimation("Scale");
+            visual.Scale = Vector3.One;
         }
         catch
         {

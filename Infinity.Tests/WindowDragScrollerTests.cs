@@ -35,7 +35,7 @@ public class WindowDragScrollerTests
 
         try
         {
-            pointer.RaiseCursorMoved(960, 500);
+            dragScroller.UpdateTrackedWindowDragPosition(0.5);
 
             Assert.Equal(1, startedCount);
             Assert.Equal(0, movedCount);
@@ -51,17 +51,18 @@ public class WindowDragScrollerTests
     }
 
     [Fact]
-    public void ManagedDragStartsAndStopsEdgeScrolling()
+    public async Task ManagedDragStartsAndStopsDesktopScrollingAsync()
     {
         TestPointerInputSource pointer = new();
         TestModifierKeyState modifier = new() { IsActive = true };
         TestTrackedWindowDragController dragController = new() { DraggingWindow = new IntPtr(1) };
+        TestScroller scroller = new();
         WindowDragScroller dragScroller = new(pointer,
             modifier,
             new TestWindowDragGuard(),
             dragController,
             new TestWorkspace(),
-            new TestScroller(),
+            scroller,
             new PanState(),
             new TestDispatcher(),
             () => new WindowDragScrollerConfiguration { SpeedLevel = DragScrollSpeed.Normal },
@@ -70,9 +71,11 @@ public class WindowDragScrollerTests
 
         try
         {
-            pointer.RaiseCursorMoved(1919, 500);
+            dragScroller.UpdateTrackedWindowDragPosition(1.0);
 
             Assert.True(dragScroller.IsAutoScrolling);
+            double targetOffset = await scroller.ScrollToRequested.Task.WaitAsync(TimeSpan.FromSeconds(1));
+            Assert.True(targetOffset > 0);
 
             dragController.RaiseDragEnded();
 

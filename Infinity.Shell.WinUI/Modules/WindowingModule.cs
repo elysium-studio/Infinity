@@ -58,6 +58,7 @@ public class WindowingModule :
                 provider.GetRequiredService<IWindowPlacementRules>(),
                 provider.GetRequiredService<IStickyWindowController>(),
                 provider.GetRequiredService<ITrackedWindowDragController>(),
+                provider.GetRequiredService<IWindowDragScroller>(),
                 provider.GetRequiredService<IPager>(),
                 provider.GetRequiredService<IOptionsMonitor<Settings>>(),
                 provider.GetRequiredService<ITextLocalizer>(),

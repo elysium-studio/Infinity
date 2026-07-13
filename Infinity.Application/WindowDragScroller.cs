@@ -124,11 +124,34 @@ public class WindowDragScroller(IPointerInputSource pointer,
 
     private void HandleCursorMoved(int x, int y)
     {
-        RecordVelocitySample(x);
+        if (!dragGuard.IsAnyDragging)
+        {
+            return;
+        }
 
-        bool isNativeWindowDragging = dragGuard.IsAnyDragging;
-        bool modifierAndDrag = (isNativeWindowDragging || trackedWindowDragController.DraggingWindow != IntPtr.Zero) &&
-            modifierKeyState.IsActive;
+        HandleDragPosition(x - workspace.WorkAreaX, true);
+    }
+
+    public void UpdateTrackedWindowDragPosition(double horizontalPosition)
+    {
+        if (!isStarted ||
+            trackedWindowDragController.DraggingWindow == IntPtr.Zero ||
+            !double.IsFinite(horizontalPosition))
+        {
+            return;
+        }
+
+        double workspacePosition = Math.Clamp(horizontalPosition, 0.0, 1.0) * workspace.Width;
+        HandleDragPosition(workspacePosition, false);
+    }
+
+    private void HandleDragPosition(double workspacePosition, bool isNativeWindowDragging)
+    {
+        int pointerX = (int)Math.Round(Math.Clamp(workspacePosition, 0, workspace.Width));
+        RecordVelocitySample(pointerX);
+
+        bool modifierAndDrag = modifierKeyState.IsActive &&
+            (isNativeWindowDragging || trackedWindowDragController.DraggingWindow != IntPtr.Zero);
 
         if (!modifierAndDrag)
         {
@@ -145,8 +168,8 @@ public class WindowDragScroller(IPointerInputSource pointer,
             DragMoved?.Invoke();
         }
 
-        int distanceFromRight = Math.Max(0, workspace.Width - x - SnapEdgePadding);
-        int distanceFromLeft = Math.Max(0, x - workspace.WorkAreaX - SnapEdgePadding);
+        int distanceFromRight = Math.Max(0, workspace.Width - pointerX - SnapEdgePadding);
+        int distanceFromLeft = Math.Max(0, pointerX - SnapEdgePadding);
 
         if (distanceFromRight <= EdgeThreshold)
         {

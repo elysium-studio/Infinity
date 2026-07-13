@@ -312,6 +312,9 @@ internal class TestScroller : IScroller
 
     public int ResetCount { get; private set; }
 
+    public TaskCompletionSource<double> ScrollToRequested { get; } =
+        new(TaskCreationOptions.RunContinuationsAsynchronously);
+
     public void Dispose()
     {
         GC.SuppressFinalize(this);
@@ -332,7 +335,11 @@ internal class TestScroller : IScroller
     {
     }
 
-    public void ScrollTo(double offset, bool animate = true) => VisualOffset = offset;
+    public void ScrollTo(double offset, bool animate = true)
+    {
+        VisualOffset = offset;
+        ScrollToRequested.TrySetResult(offset);
+    }
 
     public void Start() => ScrollStarted?.Invoke(this, EventArgs.Empty);
 
