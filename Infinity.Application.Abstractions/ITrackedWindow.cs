@@ -19,6 +19,8 @@ public interface ITrackedWindow :
 
     bool IsSticky { get; set; }
 
+    double LayoutScale { get; set; }
+
     int? ZIndex { get; set; }
 
     string Title { get; set; }

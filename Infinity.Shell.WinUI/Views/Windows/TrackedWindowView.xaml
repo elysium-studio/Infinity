@@ -20,8 +20,12 @@
             IsTabStop="False"
             PointerEntered="HandleWindowContainerPointerEntered"
             PointerExited="HandleWindowContainerPointerExited"
+            PointerPressed="HandleWindowContainerPointerPressed"
+            PointerMoved="HandleWindowContainerPointerMoved"
+            PointerReleased="HandleWindowContainerPointerReleased"
+            PointerCanceled="HandleWindowContainerPointerCanceled"
+            PointerCaptureLost="HandleWindowContainerPointerCaptureLost"
             RightTapped="HandleWindowContainerRightTapped"
-            Tapped="{x:Bind ViewModel.Navigate}"
             ToolTipService.ToolTip="{x:Bind ViewModel.Title}">
             <ItemContainer.Resources>
                 <SolidColorBrush x:Key="ItemContainerPointerOverBackground" Color="Transparent" />

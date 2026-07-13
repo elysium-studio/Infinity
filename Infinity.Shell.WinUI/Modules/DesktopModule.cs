@@ -70,6 +70,7 @@ public class DesktopModule :
                     provider.GetRequiredService<IPager>(),
                     provider.GetRequiredService<IPanState>(),
                     provider.GetRequiredService<IScroller>(),
+                    provider.GetRequiredService<ITrackedWindowDragController>(),
                     provider.GetRequiredService<IWindowCollection>(),
                     provider.GetRequiredService<ITrackedWindowCollection>(),
                     provider.GetRequiredService<IWindowSelector>(),

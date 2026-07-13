@@ -119,11 +119,42 @@ public class WindowTrackerPlacementRuleTests
         }
     }
 
+    [Fact]
+    public void ManagedDragRemainsAtItsViewportPositionDuringPageScroll()
+    {
+        WindowStore store = new();
+        TestWindowEventListener listener = new();
+        TestPanState state = new();
+        TestTrackedWindowDragController dragController = new() { DraggingWindow = new IntPtr(5) };
+        WindowTracker tracker = CreateTracker(store,
+            new TestWindowMover(),
+            listener,
+            new TestGeometryReader(),
+            state,
+            dragController);
+        tracker.Start();
+
+        try
+        {
+            tracker.TryRegisterExisting(new IntPtr(5));
+
+            state.SetOffset(2000);
+
+            Assert.True(store.TryGet(new IntPtr(5), out TrackedWindow window));
+            Assert.Equal(2100, window.CanvasX);
+        }
+        finally
+        {
+            tracker.Stop();
+        }
+    }
+
     private static WindowTracker CreateTracker(IWindowStore store,
         IWindowMover mover,
         IWindowEventListener listener,
         IWindowGeometryReader geometry,
-        IPanState? state = null) =>
+        IPanState? state = null,
+        ITrackedWindowDragController? trackedWindowDragController = null) =>
         new(store,
             geometry,
             new TestWindowFilter(),
@@ -134,6 +165,7 @@ public class WindowTrackerPlacementRuleTests
             mover,
             new TestConcealer(),
             new TestDragGuard(),
+            trackedWindowDragController ?? new TestTrackedWindowDragController(),
             new TestWindowEnumerator(),
             listener,
             new TestWorkspace(),
@@ -250,6 +282,19 @@ public class WindowTrackerPlacementRuleTests
         public void Start() => HoldStarted?.Invoke();
 
         public void Stop()
+        {
+        }
+    }
+
+    private class TestTrackedWindowDragController : ITrackedWindowDragController
+    {
+        public IntPtr DraggingWindow { get; set; }
+
+        public bool Begin(IntPtr windowHandle) => true;
+
+        public bool Move(IntPtr windowHandle, double horizontalDelta, double verticalDelta) => true;
+
+        public void End(IntPtr windowHandle)
         {
         }
     }
