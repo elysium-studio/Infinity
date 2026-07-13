@@ -105,5 +105,17 @@ public class ShellModule :
                 dragScroller.DragScrolled -= HandleDragScrolled;
             };
         });
+
+        services.Subscribe<IThumbnailDragScroller>((provider, dragScroller) =>
+        {
+            IMessenger messenger = provider.GetRequiredService<IMessenger>();
+
+            void HandleScrolled() =>
+                messenger.Send(new WindowDragScrolledEventArgs());
+
+            dragScroller.Scrolled += HandleScrolled;
+
+            return () => dragScroller.Scrolled -= HandleScrolled;
+        });
     }
 }

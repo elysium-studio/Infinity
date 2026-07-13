@@ -82,6 +82,13 @@ public static class IServiceCollectionExtensions
                 provider.GetRequiredService<IWindowStore>(),
                 provider.GetRequiredService<IScroller>(),
                 provider.GetRequiredService<ILogger<TrackedWindowDragController>>()));
+            services.AddSingleton<IThumbnailDragScroller>(provider => new ThumbnailDragScroller(
+                provider.GetRequiredService<IModifierKeyState>(),
+                provider.GetRequiredService<IScroller>(),
+                provider.GetRequiredService<IPanState>(),
+                provider.GetRequiredService<IDispatcher>(),
+                provider.GetRequiredService<Func<WindowDragScrollerConfiguration>>(),
+                provider.GetRequiredService<ILogger<ThumbnailDragScroller>>()));
             services.AddSingleton<ISelectionPreviewQueue, SelectionPreviewQueue>();
             services.AddSingleton<IWindowSelector, WindowSelector>();
             services.AddSingleton<IWindowDragScroller, WindowDragScroller>();
