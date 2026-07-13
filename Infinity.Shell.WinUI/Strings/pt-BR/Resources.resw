@@ -343,4 +343,13 @@
   <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
     <value>Remover regra de abertura</value>
   </data>
+  <data name="PinWindowMenuItem" xml:space="preserve">
+    <value>Fixar em todas as páginas</value>
+  </data>
+  <data name="UnpinWindowMenuItem" xml:space="preserve">
+    <value>Desafixar de todas as páginas</value>
+  </data>
+  <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Fixada em todas as páginas</value>
+  </data>
 </root>

@@ -45,6 +45,22 @@
                     CornerRadius="{StaticResource OverlayCornerRadius}"
                     IsHitTestVisible="False"
                     Visibility="{x:Bind ToSelectionVisibility(ViewModel.IsSelected), Mode=OneWay}" />
+                <Border
+                    x:Name="PinnedWindowIndicator"
+                    x:Uid="PinnedWindowIndicator"
+                    Margin="8,8,0,0"
+                    Padding="5"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    CornerRadius="4"
+                    IsHitTestVisible="False"
+                    Visibility="{x:Bind ToSelectionVisibility(ViewModel.IsSticky), Mode=OneWay}">
+                    <FontIcon
+                        FontFamily="Segoe Fluent Icons"
+                        FontSize="11"
+                        Glyph="&#xE718;" />
+                </Border>
                 <Button
                     x:Name="CloseButton"
                     x:Uid="CloseWindowButton"

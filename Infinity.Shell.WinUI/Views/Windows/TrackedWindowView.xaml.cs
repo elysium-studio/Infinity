@@ -226,26 +226,49 @@ public partial class TrackedWindowView :
         int? openingPage = currentViewModel.GetOpeningPage();
         IReadOnlyList<WindowPageTarget> targets = currentViewModel.GetPageTargets(openingPage);
         MenuFlyout menu = new();
-        MenuFlyoutSubItem moveSubMenu = new()
+        MenuFlyoutItem stickyItem = new()
         {
-            Text = localizer.GetString("MoveWindowToPageMenuItem")
-        };
-
-        foreach (WindowPageTarget target in targets)
-        {
-            ToggleMenuFlyoutItem item = new()
+            Text = localizer.GetString(currentViewModel.IsSticky
+                ? "UnpinWindowMenuItem"
+                : "PinWindowMenuItem"),
+            Icon = new FontIcon
             {
-                Text = target.DisplayName,
-                IsChecked = target.Page == currentPage
-            };
-            item.Click += (_, _) => currentViewModel.MoveToPage(target.Page);
-            moveSubMenu.Items.Add(item);
-        }
+                Glyph = currentViewModel.IsSticky ? "\uE77A" : "\uE718"
+            }
+        };
+        stickyItem.Click += (_, _) => currentViewModel.ToggleSticky();
+        menu.Items.Add(stickyItem);
 
-        menu.Items.Add(moveSubMenu);
+        if (!currentViewModel.IsSticky)
+        {
+            menu.Items.Add(new MenuFlyoutSeparator());
+
+            MenuFlyoutSubItem moveSubMenu = new()
+            {
+                Text = localizer.GetString("MoveWindowToPageMenuItem")
+            };
+
+            foreach (WindowPageTarget target in targets)
+            {
+                ToggleMenuFlyoutItem item = new()
+                {
+                    Text = target.DisplayName,
+                    IsChecked = target.Page == currentPage
+                };
+                item.Click += (_, _) => currentViewModel.MoveToPage(target.Page);
+                moveSubMenu.Items.Add(item);
+            }
+
+            menu.Items.Add(moveSubMenu);
+        }
 
         if (currentViewModel.CanCreatePlacementRule)
         {
+            if (currentViewModel.IsSticky)
+            {
+                menu.Items.Add(new MenuFlyoutSeparator());
+            }
+
             MenuFlyoutSubItem ruleSubMenu = new()
             {
                 Text = localizer.GetString("AlwaysOpenApplicationOnPageMenuItem")

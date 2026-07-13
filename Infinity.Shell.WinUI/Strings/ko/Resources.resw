@@ -343,4 +343,13 @@
   <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
     <value>시작 페이지 규칙 제거</value>
   </data>
+  <data name="PinWindowMenuItem" xml:space="preserve">
+    <value>모든 페이지에 고정</value>
+  </data>
+  <data name="UnpinWindowMenuItem" xml:space="preserve">
+    <value>모든 페이지에서 고정 해제</value>
+  </data>
+  <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>모든 페이지에 고정됨</value>
+  </data>
 </root>

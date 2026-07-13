@@ -50,6 +50,7 @@ public class TrackedWindowViewModelTests
             new TestPreviewSurface(),
             new TestPageMover(),
             new TestPlacementRules(),
+            new TestStickyWindowController(),
             pager,
             new TestOptionsMonitor(settings),
             new TestLocalizer(),
@@ -105,6 +106,15 @@ public class TrackedWindowViewModelTests
             targetPage = 0;
             return false;
         }
+    }
+
+    private class TestStickyWindowController : IStickyWindowController
+    {
+        public bool IsSticky(IntPtr windowHandle) => false;
+
+        public bool Pin(IntPtr windowHandle) => true;
+
+        public bool Unpin(IntPtr windowHandle) => true;
     }
 
     private class TestWindowController : IWindowController

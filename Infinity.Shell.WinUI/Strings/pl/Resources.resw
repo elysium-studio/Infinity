@@ -343,4 +343,13 @@
   <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
     <value>Usuń regułę otwierania</value>
   </data>
+  <data name="PinWindowMenuItem" xml:space="preserve">
+    <value>Przypnij do wszystkich stron</value>
+  </data>
+  <data name="UnpinWindowMenuItem" xml:space="preserve">
+    <value>Odepnij od wszystkich stron</value>
+  </data>
+  <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Przypięte do wszystkich stron</value>
+  </data>
 </root>

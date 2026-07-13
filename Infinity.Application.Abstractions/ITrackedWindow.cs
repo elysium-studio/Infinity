@@ -17,6 +17,8 @@ public interface ITrackedWindow :
 
     bool IsSelected { get; set; }
 
+    bool IsSticky { get; set; }
+
     int? ZIndex { get; set; }
 
     string Title { get; set; }
