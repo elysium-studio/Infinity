@@ -175,6 +175,7 @@
                     TabNavigation="Once"
                     VerticalScrollBarVisibility="Disabled">
                     <ItemsControl
+                        x:Name="WindowItems"
                         Width="{x:Bind ViewModel.CanvasWidth, Mode=OneWay}"
                         IsTabStop="False"
                         ItemsSource="{x:Bind ViewModel, Mode=OneWay}"

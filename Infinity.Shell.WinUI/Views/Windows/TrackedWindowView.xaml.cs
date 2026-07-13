@@ -48,6 +48,8 @@ public partial class TrackedWindowView :
     private double dragStartCanvasTop;
     private double dragHorizontalDelta;
     private double dragVerticalDelta;
+    private UIElement? dragZIndexContainer;
+    private int dragOriginalZIndex;
     private bool ownsDragScrollSession;
     private bool isThumbnailDragging;
     private bool isPointerOverWindow;
@@ -327,7 +329,7 @@ public partial class TrackedWindowView :
 
             isThumbnailDragging = true;
             ownsDragScrollSession = thumbnailDragScroller.Begin(currentViewModel.Handle);
-            SetCanvasZIndex(DraggedZIndex);
+            ElevateThumbnailZIndex();
             CancelPendingPeek();
             EndPeek();
             ResetHoverScale();
@@ -421,7 +423,7 @@ public partial class TrackedWindowView :
         ownsDragScrollSession = false;
         isThumbnailDragging = false;
         WindowContainer.Translation = Vector3.Zero;
-        ApplyZIndex();
+        RestoreThumbnailZIndex();
         activeViewModel?.EndThumbnailDrag();
     }
 
@@ -925,19 +927,61 @@ public partial class TrackedWindowView :
 
     private void SetCanvasZIndex(int zIndex)
     {
+        UIElement? container = FindWindowItemContainer();
+
+        if (container is not null)
+        {
+            Canvas.SetZIndex(container, zIndex);
+        }
+    }
+
+    private void ElevateThumbnailZIndex()
+    {
+        if (dragZIndexContainer is not null)
+        {
+            return;
+        }
+
+        UIElement? container = FindWindowItemContainer();
+
+        if (container is null)
+        {
+            return;
+        }
+
+        dragZIndexContainer = container;
+        dragOriginalZIndex = Canvas.GetZIndex(container);
+        Canvas.SetZIndex(container, DraggedZIndex);
+    }
+
+    private void RestoreThumbnailZIndex()
+    {
+        UIElement? container = dragZIndexContainer;
+
+        if (container is null)
+        {
+            return;
+        }
+
+        dragZIndexContainer = null;
+        Canvas.SetZIndex(container, dragOriginalZIndex);
+        dragOriginalZIndex = 0;
+    }
+
+    private UIElement? FindWindowItemContainer()
+    {
         DependencyObject? current = this;
 
         while (current is not null)
         {
-            DependencyObject? parent = VisualTreeHelper.GetParent(current);
-
-            if (parent is Canvas)
+            if (current is TrackedWindowCollectionView collectionView)
             {
-                Canvas.SetZIndex((UIElement)current, zIndex);
-                return;
+                return collectionView.GetWindowItemContainer(ViewModel);
             }
 
-            current = parent;
+            current = VisualTreeHelper.GetParent(current);
         }
+
+        return null;
     }
 }
