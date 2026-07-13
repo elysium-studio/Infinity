@@ -73,6 +73,10 @@ public static class IServiceCollectionExtensions
                 provider.GetRequiredService<IPager>(),
                 () => provider.GetRequiredService<IWorkspace>().Width,
                 provider.GetRequiredService<ILogger<WindowPageMover>>()));
+            services.AddSingleton<IStickyWindowController>(provider => new StickyWindowController(
+                provider.GetRequiredService<IWindowStore>(),
+                provider.GetRequiredService<IScroller>(),
+                provider.GetRequiredService<ILogger<StickyWindowController>>()));
             services.AddSingleton<ISelectionPreviewQueue, SelectionPreviewQueue>();
             services.AddSingleton<IWindowSelector, WindowSelector>();
             services.AddSingleton<IWindowDragScroller, WindowDragScroller>();

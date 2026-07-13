@@ -120,6 +120,12 @@ public class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
             return;
         }
 
+        if (trackedWindow.IsSticky)
+        {
+            logger.LogDebug("Window jump ignored — foreground window is pinned to all pages");
+            return;
+        }
+
         int currentPage = (int)Math.Floor(trackedWindow.CanvasX / (double)workspace.Width);
         int targetPage = currentPage + (direction == JumpDirection.Right ? 1 : -1);
 
@@ -139,6 +145,12 @@ public class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
         if (!store.TryGet(windowHandle, out TrackedWindow trackedWindow))
         {
             logger.LogDebug("Page jump ignored — foreground window is not tracked");
+            return;
+        }
+
+        if (trackedWindow.IsSticky)
+        {
+            logger.LogDebug("Page jump ignored — foreground window is pinned to all pages");
             return;
         }
 

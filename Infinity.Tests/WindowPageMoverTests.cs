@@ -62,6 +62,27 @@ public class WindowPageMoverTests
         Assert.Equal(0, scroller.RepositionCount);
     }
 
+    [Fact]
+    public void StickyWindowDoesNotBelongToOrMoveToASinglePage()
+    {
+        WindowStore store = new();
+        TrackedWindow window = CreateWindow(1250);
+        window.IsSticky = true;
+        window.StickyViewportX = 250;
+        store.Add(window);
+        TestScroller scroller = new();
+        WindowPageMover mover = new(store, scroller, new TestPager(), () => 1000,
+            NullLogger<WindowPageMover>.Instance);
+
+        bool hasPage = mover.TryGetPage(window.Handle, out _);
+        bool moved = mover.MoveToPage(window.Handle, 3);
+
+        Assert.False(hasPage);
+        Assert.False(moved);
+        Assert.Equal(1250, window.CanvasX);
+        Assert.Equal(0, scroller.RepositionCount);
+    }
+
     private static TrackedWindow CreateWindow(int canvasX) => new()
     {
         Handle = new IntPtr(1),

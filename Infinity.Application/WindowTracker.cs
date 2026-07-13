@@ -28,7 +28,7 @@ public class WindowTracker(IWindowStore repository,
 
     private static readonly TimeSpan MinimizeSuspendDelay = TimeSpan.FromMilliseconds(160);
 
-    private readonly Dictionary<IntPtr, int> suspendedCanvasPositions = [];
+    private readonly Dictionary<IntPtr, SuspendedWindowState> suspendedWindowStates = [];
     private readonly Dictionary<IntPtr, CancellationTokenSource> pendingMinimizeSuspensions = [];
     private readonly HashSet<IntPtr> pendingNewWindows = [];
     private readonly Lock minimizeSyncRoot = new();
@@ -114,17 +114,26 @@ public class WindowTracker(IWindowStore repository,
             return;
         }
 
-        bool isRestore = suspendedCanvasPositions.TryGetValue(windowHandle, out int previousCanvasX);
+        bool isRestore = suspendedWindowStates.TryGetValue(windowHandle, out SuspendedWindowState suspendedState);
 
         if (isRestore)
         {
             restoreGuard.MarkRestoring(windowHandle);
-            suspendedCanvasPositions.Remove(windowHandle);
+            suspendedWindowStates.Remove(windowHandle);
         }
 
-        int canvasX = isRestore ? previousCanvasX : x + (int)Math.Round(state.Offset);
+        int currentOffset = (int)Math.Round(state.Offset);
+        long restoredStickyCanvasX = (long)currentOffset + suspendedState.StickyViewportX;
+        bool restoreSticky = isRestore &&
+            suspendedState.IsSticky &&
+            restoredStickyCanvasX is >= int.MinValue and <= int.MaxValue;
+        int canvasX = isRestore
+            ? restoreSticky
+                ? (int)restoredStickyCanvasX
+                : suspendedState.CanvasX
+            : x + currentOffset;
         bool placementRuleApplied = applyPlacementRule && !isRestore && TryApplyPlacementRule(windowHandle, ref canvasX);
-        int lastPlacedX = canvasX - (int)Math.Round(state.Offset);
+        int lastPlacedX = canvasX - currentOffset;
         int zIndex = windowStackIndexMap is not null && windowStackIndexMap.TryGetValue(windowHandle, out int mappedZIndex) ? mappedZIndex : GetZIndex(windowHandle);
 
         TrackedWindow trackedWindow = new()
@@ -136,7 +145,9 @@ public class WindowTracker(IWindowStore repository,
             Height = height,
             LastPlacedX = lastPlacedX,
             LastPlacedY = y,
-            ZIndex = zIndex
+            ZIndex = zIndex,
+            IsSticky = restoreSticky,
+            StickyViewportX = restoreSticky ? suspendedState.StickyViewportX : 0
         };
 
         repository.Add(trackedWindow);
@@ -160,7 +171,7 @@ public class WindowTracker(IWindowStore repository,
     private void HandleWindowDestroyed(IntPtr windowHandle)
     {
         CancelPendingMinimizeSuspension(windowHandle);
-        suspendedCanvasPositions.Remove(windowHandle);
+        suspendedWindowStates.Remove(windowHandle);
         ForgetPendingNewWindow(windowHandle);
         Unregister(windowHandle);
     }
@@ -202,6 +213,11 @@ public class WindowTracker(IWindowStore repository,
         }
 
         trackedWindow.CanvasX = trackedWindow.LastPlacedX + (int)Math.Round(state.Offset);
+
+        if (trackedWindow.IsSticky)
+        {
+            trackedWindow.StickyViewportX = trackedWindow.LastPlacedX;
+        }
     }
 
     private void QueueMinimizeSuspension(IntPtr windowHandle)
@@ -348,7 +364,9 @@ public class WindowTracker(IWindowStore repository,
             return;
         }
 
-        suspendedCanvasPositions[windowHandle] = trackedWindow.CanvasX;
+        suspendedWindowStates[windowHandle] = new(trackedWindow.CanvasX,
+            trackedWindow.IsSticky,
+            trackedWindow.StickyViewportX);
         Unregister(windowHandle);
     }
 
@@ -392,6 +410,11 @@ public class WindowTracker(IWindowStore repository,
         trackedWindow.Height = height;
         trackedWindow.LastPlacedX = x;
         trackedWindow.LastPlacedY = y;
+
+        if (trackedWindow.IsSticky)
+        {
+            trackedWindow.StickyViewportX = x;
+        }
     }
 
     private void Unregister(IntPtr windowHandle) => repository.Remove(windowHandle);
@@ -438,7 +461,7 @@ public class WindowTracker(IWindowStore repository,
 
             foreach (IntPtr staleHandle in staleHandles)
             {
-                suspendedCanvasPositions.Remove(staleHandle);
+                suspendedWindowStates.Remove(staleHandle);
                 CancelPendingMinimizeSuspension(staleHandle);
                 Unregister(staleHandle);
             }
@@ -568,4 +591,8 @@ public class WindowTracker(IWindowStore repository,
         {
         }
     }
+
+    private readonly record struct SuspendedWindowState(int CanvasX,
+        bool IsSticky,
+        int StickyViewportX);
 }

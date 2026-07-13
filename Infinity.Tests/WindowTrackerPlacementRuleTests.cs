@@ -74,10 +74,56 @@ public class WindowTrackerPlacementRuleTests
         }
     }
 
+    [Fact]
+    public async Task MinimizedStickyWindowReturnsAtItsViewportAnchor()
+    {
+        WindowStore store = new();
+        TestWindowMover mover = new();
+        TestWindowEventListener listener = new();
+        TestGeometryReader geometry = new();
+        TestPanState state = new();
+        WindowTracker tracker = CreateTracker(store, mover, listener, geometry, state);
+        tracker.Start();
+
+        try
+        {
+            tracker.TryRegisterExisting(new IntPtr(4));
+            Assert.True(store.TryGet(new IntPtr(4), out TrackedWindow window));
+            window.IsSticky = true;
+            window.StickyViewportX = 100;
+            TaskCompletionSource removed = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            store.WindowRemoved += (_, handle) =>
+            {
+                if (handle == new IntPtr(4))
+                {
+                    removed.TrySetResult();
+                }
+            };
+
+            geometry.IsWindowMinimised = true;
+            listener.RaiseMinimizeStarted(new IntPtr(4));
+            await removed.Task.WaitAsync(TimeSpan.FromSeconds(2));
+
+            state.SetOffset(2000);
+            geometry.IsWindowMinimised = false;
+            listener.RaiseMinimizeEnded(new IntPtr(4));
+
+            Assert.True(store.TryGet(new IntPtr(4), out TrackedWindow restoredWindow));
+            Assert.True(restoredWindow.IsSticky);
+            Assert.Equal(100, restoredWindow.StickyViewportX);
+            Assert.Equal(2100, restoredWindow.CanvasX);
+        }
+        finally
+        {
+            tracker.Stop();
+        }
+    }
+
     private static WindowTracker CreateTracker(IWindowStore store,
         IWindowMover mover,
         IWindowEventListener listener,
-        IWindowGeometryReader geometry) =>
+        IWindowGeometryReader geometry,
+        IPanState? state = null) =>
         new(store,
             geometry,
             new TestWindowFilter(),
@@ -92,7 +138,7 @@ public class WindowTrackerPlacementRuleTests
             listener,
             new TestWorkspace(),
             new TestPager(),
-            new TestPanState(),
+            state ?? new TestPanState(),
             new TestDispatcher(),
             new IntPtr(99));
 
@@ -100,7 +146,9 @@ public class WindowTrackerPlacementRuleTests
     {
         public bool IsWindowVisible { get; set; } = true;
 
-        public bool IsMinimised(IntPtr windowHandle) => false;
+        public bool IsWindowMinimised { get; set; }
+
+        public bool IsMinimised(IntPtr windowHandle) => IsWindowMinimised;
 
         public bool IsVisible(IntPtr windowHandle) => IsWindowVisible;
 
@@ -219,6 +267,10 @@ public class WindowTrackerPlacementRuleTests
 
         public event Action<IntPtr>? WindowShown;
 
+        public event Action<IntPtr>? MinimizeStarted;
+
+        public event Action<IntPtr>? MinimizeEnded;
+
         event Action<IntPtr>? IWindowEventListener.WindowDestroyed
         {
             add { }
@@ -232,18 +284,6 @@ public class WindowTrackerPlacementRuleTests
         }
 
         event Action<IntPtr>? IWindowEventListener.WindowLocationChanged
-        {
-            add { }
-            remove { }
-        }
-
-        event Action<IntPtr>? IWindowEventListener.MinimizeStarted
-        {
-            add { }
-            remove { }
-        }
-
-        event Action<IntPtr>? IWindowEventListener.MinimizeEnded
         {
             add { }
             remove { }
@@ -281,6 +321,10 @@ public class WindowTrackerPlacementRuleTests
         public void RaiseWindowCreated(IntPtr windowHandle) => WindowCreated?.Invoke(windowHandle);
 
         public void RaiseWindowShown(IntPtr windowHandle) => WindowShown?.Invoke(windowHandle);
+
+        public void RaiseMinimizeStarted(IntPtr windowHandle) => MinimizeStarted?.Invoke(windowHandle);
+
+        public void RaiseMinimizeEnded(IntPtr windowHandle) => MinimizeEnded?.Invoke(windowHandle);
 
         public void Start()
         {
