@@ -37,7 +37,7 @@ public class PagerLifetime(IWindowTracker tracker,
         timer.Tick += HandleScrollTimerTick;
 
         concealmentRecovery.RecoverStrandedWindows();
-        enumerator.EnumerateVisible(windowHandle => tracker.TryRegister(windowHandle));
+        enumerator.EnumerateVisible(windowHandle => tracker.TryRegisterExisting(windowHandle));
 
         TrackedWindow? fullyOffscreenWindow = repository
             .Where(window => window.CanvasY < workspace.Height &&

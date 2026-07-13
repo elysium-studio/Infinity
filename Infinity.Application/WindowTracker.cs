@@ -30,7 +30,9 @@ public class WindowTracker(IWindowStore repository,
 
     private readonly Dictionary<IntPtr, int> suspendedCanvasPositions = [];
     private readonly Dictionary<IntPtr, CancellationTokenSource> pendingMinimizeSuspensions = [];
+    private readonly HashSet<IntPtr> pendingNewWindows = [];
     private readonly Lock minimizeSyncRoot = new();
+    private readonly Lock registrationSyncRoot = new();
 
     private Timer? selfHealTimer;
     private int selfHealInProgress;
@@ -64,13 +66,20 @@ public class WindowTracker(IWindowStore repository,
 
         CancelPendingMinimizeSuspensions();
 
+        lock (registrationSyncRoot)
+        {
+            pendingNewWindows.Clear();
+        }
+
         selfHealTimer?.Dispose();
         selfHealTimer = null;
     }
 
-    public void TryRegister(IntPtr windowHandle) => TryRegister(windowHandle, null);
+    public void TryRegisterExisting(IntPtr windowHandle) => TryRegister(windowHandle, null, false);
 
-    private void TryRegister(IntPtr windowHandle, Dictionary<IntPtr, int>? windowStackIndexMap)
+    private void TryRegister(IntPtr windowHandle,
+        Dictionary<IntPtr, int>? windowStackIndexMap,
+        bool applyPlacementRule)
     {
         if (repository.TryGet(windowHandle, out _))
         {
@@ -96,7 +105,7 @@ public class WindowTracker(IWindowStore repository,
                 return;
             }
 
-            TryRegister(ancestor, windowStackIndexMap);
+            TryRegister(ancestor, windowStackIndexMap, applyPlacementRule);
             return;
         }
 
@@ -114,7 +123,7 @@ public class WindowTracker(IWindowStore repository,
         }
 
         int canvasX = isRestore ? previousCanvasX : x + (int)Math.Round(state.Offset);
-        bool placementRuleApplied = !isRestore && TryApplyPlacementRule(windowHandle, ref canvasX);
+        bool placementRuleApplied = applyPlacementRule && !isRestore && TryApplyPlacementRule(windowHandle, ref canvasX);
         int lastPlacedX = canvasX - (int)Math.Round(state.Offset);
         int zIndex = windowStackIndexMap is not null && windowStackIndexMap.TryGetValue(windowHandle, out int mappedZIndex) ? mappedZIndex : GetZIndex(windowHandle);
 
@@ -131,6 +140,7 @@ public class WindowTracker(IWindowStore repository,
         };
 
         repository.Add(trackedWindow);
+        ForgetPendingNewWindow(windowHandle);
 
         if (placementRuleApplied)
         {
@@ -138,14 +148,20 @@ public class WindowTracker(IWindowStore repository,
         }
     }
 
-    private void HandleWindowCreated(IntPtr windowHandle) => TryRegister(windowHandle);
+    private void HandleWindowCreated(IntPtr windowHandle)
+    {
+        MarkPendingNewWindow(windowHandle);
+        TryRegister(windowHandle, null, true);
+    }
 
-    private void HandleWindowShown(IntPtr windowHandle) => TryRegister(windowHandle);
+    private void HandleWindowShown(IntPtr windowHandle) =>
+        TryRegister(windowHandle, null, IsPendingNewWindow(windowHandle));
 
     private void HandleWindowDestroyed(IntPtr windowHandle)
     {
         CancelPendingMinimizeSuspension(windowHandle);
         suspendedCanvasPositions.Remove(windowHandle);
+        ForgetPendingNewWindow(windowHandle);
         Unregister(windowHandle);
     }
 
@@ -154,7 +170,7 @@ public class WindowTracker(IWindowStore repository,
     private void HandleMinimizeEnded(IntPtr windowHandle)
     {
         CancelPendingMinimizeSuspension(windowHandle);
-        TryRegister(windowHandle);
+        TryRegister(windowHandle, null, IsPendingNewWindow(windowHandle));
     }
 
     private void HandleDragEnded(IntPtr windowHandle) => HandleWindowMovedExternally(windowHandle);
@@ -434,7 +450,7 @@ public class WindowTracker(IWindowStore repository,
             {
                 if (!repository.TryGet(liveWindow, out _))
                 {
-                    TryRegister(liveWindow, windowStackIndexMap);
+                    TryRegister(liveWindow, windowStackIndexMap, IsPendingNewWindow(liveWindow));
                 }
             }
         }
@@ -516,6 +532,30 @@ public class WindowTracker(IWindowStore repository,
             trackedWindow.Width,
             trackedWindow.Height);
         mover.EndBatch();
+    }
+
+    private void MarkPendingNewWindow(IntPtr windowHandle)
+    {
+        lock (registrationSyncRoot)
+        {
+            pendingNewWindows.Add(windowHandle);
+        }
+    }
+
+    private bool IsPendingNewWindow(IntPtr windowHandle)
+    {
+        lock (registrationSyncRoot)
+        {
+            return pendingNewWindows.Contains(windowHandle);
+        }
+    }
+
+    private void ForgetPendingNewWindow(IntPtr windowHandle)
+    {
+        lock (registrationSyncRoot)
+        {
+            pendingNewWindows.Remove(windowHandle);
+        }
     }
 
     private static void TryCancel(CancellationTokenSource cancellationTokenSource)
