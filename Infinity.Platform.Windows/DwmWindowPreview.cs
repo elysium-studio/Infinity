@@ -5,8 +5,7 @@ namespace Infinity.Platform.Windows;
 public class DwmWindowPreview(IDwmWindowPreviewSurface surface,
     nint windowHandle,
     uint ownerProcessId) :
-    IWindowPreview,
-    IWindowPreviewOverlay
+    IWindowPreview
 {
     private const int FailureThreshold = 3;
 
@@ -29,16 +28,6 @@ public class DwmWindowPreview(IDwmWindowPreviewSurface surface,
 
     internal bool HasTarget { get; private set; }
 
-    internal nint OverlayTargetHandle { get; private set; }
-
-    internal double OverlayWidth { get; private set; }
-
-    internal double OverlayHeight { get; private set; }
-
-    internal bool IsOverlayVisible { get; private set; }
-
-    internal bool HasOverlayTarget { get; private set; }
-
     public event Action? PreviewInvalidated;
 
     public void SetTarget(nint sharedTargetHandle, double width, double height, bool isVisible)
@@ -60,33 +49,6 @@ public class DwmWindowPreview(IDwmWindowPreviewSurface surface,
     public void SetPlacement(double x, double y, double width, double height, bool isVisible) =>
         SetTarget(SharedTargetHandle, width, height, isVisible);
 
-    public void SetOverlayTarget(nint sharedTargetHandle, double width, double height, bool isVisible)
-    {
-        if (isDisposed)
-        {
-            return;
-        }
-
-        OverlayTargetHandle = sharedTargetHandle;
-        OverlayWidth = width;
-        OverlayHeight = height;
-        IsOverlayVisible = isVisible;
-        HasOverlayTarget = sharedTargetHandle != 0 && width > 0.0 && height > 0.0;
-
-        surface.Apply(this);
-    }
-
-    public void ClearOverlayTarget()
-    {
-        if (isDisposed)
-        {
-            return;
-        }
-
-        ResetOverlayTarget();
-        surface.Apply(this);
-    }
-
     public void ClearTarget()
     {
         if (isDisposed)
@@ -99,14 +61,13 @@ public class DwmWindowPreview(IDwmWindowPreviewSurface surface,
         Height = 0.0;
         IsVisible = false;
         HasTarget = false;
-        ResetOverlayTarget();
 
         surface.Apply(this);
     }
 
-    internal void ReportRenderResult(bool succeeded, int hResult, bool isOverlay)
+    internal void ReportRenderResult(bool succeeded, int hResult)
     {
-        if (isDisposed || isOverlay)
+        if (isDisposed)
         {
             return;
         }
@@ -163,14 +124,5 @@ public class DwmWindowPreview(IDwmWindowPreviewSurface surface,
     {
         (KeepAlive as IDisposable)?.Dispose();
         KeepAlive = null;
-    }
-
-    private void ResetOverlayTarget()
-    {
-        OverlayTargetHandle = 0;
-        OverlayWidth = 0.0;
-        OverlayHeight = 0.0;
-        IsOverlayVisible = false;
-        HasOverlayTarget = false;
     }
 }

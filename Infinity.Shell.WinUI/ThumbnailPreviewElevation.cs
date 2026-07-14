@@ -1,6 +1,7 @@
-using Infinity.Platform.Abstractions;
+using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Media;
 using System;
 using Windows.Foundation;
@@ -13,23 +14,18 @@ internal class ThumbnailPreviewElevation :
     private readonly Canvas overlay;
     private readonly FrameworkElement sourceHost;
     private readonly Border overlayHost;
-    private readonly IWindowPreviewOverlay previewOverlay;
     private readonly ThumbnailProxyHandle proxyHandle;
-    private double previewWidth;
-    private double previewHeight;
-    private bool isActive;
+    private bool isElevated;
     private bool isDisposed;
 
     private ThumbnailPreviewElevation(Canvas overlay,
         FrameworkElement sourceHost,
         Border overlayHost,
-        IWindowPreviewOverlay previewOverlay,
         ThumbnailProxyHandle proxyHandle)
     {
         this.overlay = overlay;
         this.sourceHost = sourceHost;
         this.overlayHost = overlayHost;
-        this.previewOverlay = previewOverlay;
         this.proxyHandle = proxyHandle;
     }
 
@@ -37,8 +33,7 @@ internal class ThumbnailPreviewElevation :
         FrameworkElement sourceHost,
         TrackedWindowViewModel viewModel)
     {
-        if (viewModel.Preview is not IWindowPreviewOverlay previewOverlay ||
-            viewModel.Preview.KeepAlive is not ThumbnailProxyHandle ||
+        if (viewModel.Preview?.KeepAlive is not ThumbnailProxyHandle proxyHandle ||
             !TryGetBounds(sourceHost, overlay, out Rect bounds))
         {
             return null;
@@ -54,59 +49,21 @@ internal class ThumbnailPreviewElevation :
 
         Canvas.SetLeft(overlayHost, bounds.X);
         Canvas.SetTop(overlayHost, bounds.Y);
+        Canvas.SetZIndex(overlayHost, int.MaxValue);
         overlay.Children.Add(overlayHost);
-
-        if (!ThumbnailProxyManager.TryAttachTemporary(overlayHost,
-            bounds.Width,
-            bounds.Height,
-            out ThumbnailProxyHandle? proxyHandle) || proxyHandle is null)
-        {
-            overlay.Children.Remove(overlayHost);
-            return null;
-        }
 
         ThumbnailPreviewElevation elevation = new(overlay,
             sourceHost,
             overlayHost,
-            previewOverlay,
             proxyHandle);
 
-        try
+        if (elevation.TryElevate())
         {
-            elevation.SetPreviewSize(bounds.Width, bounds.Height);
-            elevation.Activate();
             return elevation;
         }
-        catch
-        {
-            elevation.Dispose();
-            return null;
-        }
-    }
 
-    public void Activate()
-    {
-        if (isDisposed || isActive)
-        {
-            return;
-        }
-
-        Update();
-        overlayHost.Visibility = Visibility.Visible;
-        isActive = true;
-        CompositionTarget.Rendering += HandleRendering;
-    }
-
-    public void Deactivate()
-    {
-        if (!isActive)
-        {
-            return;
-        }
-
-        CompositionTarget.Rendering -= HandleRendering;
-        isActive = false;
-        overlayHost.Visibility = Visibility.Collapsed;
+        elevation.Dispose();
+        return null;
     }
 
     public void Update()
@@ -120,12 +77,6 @@ internal class ThumbnailPreviewElevation :
         Canvas.SetTop(overlayHost, bounds.Y);
         overlayHost.Width = bounds.Width;
         overlayHost.Height = bounds.Height;
-
-        if (Math.Abs(previewWidth - bounds.Width) >= 0.5 ||
-            Math.Abs(previewHeight - bounds.Height) >= 0.5)
-        {
-            SetPreviewSize(bounds.Width, bounds.Height);
-        }
     }
 
     public void Dispose()
@@ -135,16 +86,20 @@ internal class ThumbnailPreviewElevation :
             return;
         }
 
-        Deactivate();
         isDisposed = true;
+        CompositionTarget.Rendering -= HandleRendering;
 
         try
         {
-            previewOverlay.ClearOverlayTarget();
+            if (isElevated)
+            {
+                TrySetChildVisual(overlayHost, null);
+                TrySetChildVisual(sourceHost, proxyHandle.Visual);
+                isElevated = false;
+            }
         }
         finally
         {
-            ThumbnailProxyManager.ReleaseTemporary(overlayHost, proxyHandle);
             overlay.Children.Remove(overlayHost);
         }
 
@@ -153,16 +108,41 @@ internal class ThumbnailPreviewElevation :
 
     private void HandleRendering(object? sender, object args) => Update();
 
-    private void SetPreviewSize(double width, double height)
+    private bool TryElevate()
     {
-        if (!ThumbnailProxyManager.UpdateSize(proxyHandle, width, height))
+        if (isDisposed)
         {
-            return;
+            return false;
         }
 
-        previewWidth = width;
-        previewHeight = height;
-        previewOverlay.SetOverlayTarget(proxyHandle.Proxy.Handle, width, height, true);
+        Update();
+        overlayHost.Visibility = Visibility.Visible;
+
+        if (!TrySetChildVisual(sourceHost, null) ||
+            !TrySetChildVisual(overlayHost, proxyHandle.Visual))
+        {
+            TrySetChildVisual(overlayHost, null);
+            TrySetChildVisual(sourceHost, proxyHandle.Visual);
+            overlayHost.Visibility = Visibility.Collapsed;
+            return false;
+        }
+
+        isElevated = true;
+        CompositionTarget.Rendering += HandleRendering;
+        return true;
+    }
+
+    private static bool TrySetChildVisual(FrameworkElement host, Visual? visual)
+    {
+        try
+        {
+            ElementCompositionPreview.SetElementChildVisual(host, visual);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static bool TryGetBounds(FrameworkElement sourceHost,
