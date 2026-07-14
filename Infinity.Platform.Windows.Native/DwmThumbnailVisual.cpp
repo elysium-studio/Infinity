@@ -406,17 +406,74 @@ namespace Infinity::Platform::Windows::Native
         target.IsActive = false;
     }
 
-    static ThumbnailTarget* FindTarget(HANDLE sharedTargetHandle)
+    static ThumbnailTarget* FindTarget(HWND sourceWindowHandle)
     {
         for (ThumbnailTarget& target : targets)
         {
-            if (target.SharedTargetHandle == sharedTargetHandle)
+            if (target.SourceWindowHandle == sourceWindowHandle)
             {
                 return &target;
             }
         }
 
         return nullptr;
+    }
+
+    static HRESULT RebindTarget(DwmThumbnailVisualItem const& item, ThumbnailTarget& target, bool& targetPreserved)
+    {
+        targetPreserved = true;
+
+        if (target.SharedTargetHandle == item.SharedTargetHandle)
+        {
+            return S_OK;
+        }
+
+        ComPtr<IVisualTargetPartner> newVisualTarget;
+        HRESULT result = OpenVisualTargetFromHandle(item.SharedTargetHandle, newVisualTarget.GetAddressOf());
+
+        if (FAILED(result))
+        {
+            return result;
+        }
+
+        ComPtr<IPlatformVisual> platformRootVisual;
+        result = target.RootVisual.As(&platformRootVisual);
+
+        if (FAILED(result))
+        {
+            return result;
+        }
+
+        if (target.VisualTarget)
+        {
+            result = target.VisualTarget->SetRoot(nullptr);
+
+            if (FAILED(result))
+            {
+                return result;
+            }
+        }
+
+        result = newVisualTarget->SetRoot(platformRootVisual.Get());
+
+        if (FAILED(result))
+        {
+            if (target.VisualTarget)
+            {
+                HRESULT restoreResult = target.VisualTarget->SetRoot(platformRootVisual.Get());
+                targetPreserved = SUCCEEDED(restoreResult);
+            }
+            else
+            {
+                targetPreserved = false;
+            }
+
+            return result;
+        }
+
+        target.VisualTarget = std::move(newVisualTarget);
+        target.SharedTargetHandle = item.SharedTargetHandle;
+        return S_OK;
     }
 
     static HRESULT CreateTarget(HWND currentOwnerWindowHandle, DwmThumbnailVisualItem const& item, ThumbnailTarget& target)
@@ -491,16 +548,26 @@ namespace Infinity::Platform::Windows::Native
 
     static HRESULT UpdateTarget(DwmThumbnailVisualItem const& item, ThumbnailTarget& target)
     {
-        target.SourceSize = GetSourceSize(item.SourceWindowHandle);
-        target.Width = item.Width;
-        target.Height = item.Height;
+        bool targetPreserved = true;
         target.IsActive = true;
-
-        DWM_THUMBNAIL_PROPERTIES properties = CreateThumbnailProperties(target.SourceSize, item.Width, item.Height);
-        HRESULT result = DwmUpdateThumbnailProperties(target.ThumbnailHandle, &properties);
+        HRESULT result = RebindTarget(item, target, targetPreserved);
 
         if (FAILED(result))
         {
+            target.IsActive = targetPreserved;
+            return result;
+        }
+
+        target.SourceSize = GetSourceSize(item.SourceWindowHandle);
+        target.Width = item.Width;
+        target.Height = item.Height;
+
+        DWM_THUMBNAIL_PROPERTIES properties = CreateThumbnailProperties(target.SourceSize, item.Width, item.Height);
+        result = DwmUpdateThumbnailProperties(target.ThumbnailHandle, &properties);
+
+        if (FAILED(result))
+        {
+            target.IsActive = false;
             return result;
         }
 
@@ -592,13 +659,7 @@ namespace Infinity::Platform::Windows::Native
                     continue;
                 }
 
-                ThumbnailTarget* target = FindTarget(item.SharedTargetHandle);
-
-                if (target && target->SourceWindowHandle != item.SourceWindowHandle)
-                {
-                    DestroyTarget(*target);
-                    target = nullptr;
-                }
+                ThumbnailTarget* target = FindTarget(item.SourceWindowHandle);
 
                 HRESULT itemResult;
 
@@ -619,7 +680,7 @@ namespace Infinity::Platform::Windows::Native
                 {
                     itemResult = UpdateTarget(item, *target);
 
-                    if (FAILED(itemResult))
+                    if (FAILED(itemResult) && !target->IsActive)
                     {
                         DestroyTarget(*target);
                     }

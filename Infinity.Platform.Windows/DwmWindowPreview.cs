@@ -39,6 +39,28 @@ public class DwmWindowPreview(IDwmWindowPreviewSurface surface,
 
     internal bool HasOverlayTarget { get; private set; }
 
+    internal nint ActiveTargetHandle => HasOverlayTarget && IsOverlayVisible
+        ? OverlayTargetHandle
+        : SharedTargetHandle;
+
+    internal double ActiveWidth => HasOverlayTarget && IsOverlayVisible
+        ? OverlayWidth
+        : Width;
+
+    internal double ActiveHeight => HasOverlayTarget && IsOverlayVisible
+        ? OverlayHeight
+        : Height;
+
+    internal bool IsActiveTargetVisible => HasOverlayTarget && IsOverlayVisible
+        ? IsOverlayVisible
+        : IsVisible;
+
+    internal bool HasActiveTarget => HasOverlayTarget && IsOverlayVisible
+        ? HasOverlayTarget
+        : HasTarget;
+
+    internal bool IsActiveTargetOverlay => HasOverlayTarget && IsOverlayVisible;
+
     public event Action? PreviewInvalidated;
 
     public void SetTarget(nint sharedTargetHandle, double width, double height, bool isVisible)

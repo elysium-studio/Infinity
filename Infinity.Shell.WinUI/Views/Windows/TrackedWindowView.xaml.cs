@@ -49,7 +49,6 @@ public partial class TrackedWindowView :
     private double dragHorizontalDelta;
     private double dragVerticalDelta;
     private UIElement? dragZIndexContainer;
-    private int dragOriginalZIndex;
     private ThumbnailPreviewElevation? dragPreviewElevation;
     private bool ownsDragScrollSession;
     private bool isThumbnailDragging;
@@ -426,9 +425,17 @@ public partial class TrackedWindowView :
         ownsDragScrollSession = false;
         isThumbnailDragging = false;
         WindowContainer.Translation = Vector3.Zero;
-        RestoreThumbnailZIndex();
-        dragPreviewElevation?.Dispose();
-        dragPreviewElevation = null;
+
+        try
+        {
+            dragPreviewElevation?.Dispose();
+        }
+        finally
+        {
+            dragPreviewElevation = null;
+            RestoreThumbnailZIndex();
+        }
+
         activeViewModel?.EndThumbnailDrag();
     }
 
@@ -905,7 +912,7 @@ public partial class TrackedWindowView :
 
         try
         {
-            SetCanvasZIndex(isThumbnailDragging ? DraggedZIndex : ComputeZIndex());
+            SetCanvasZIndex(dragZIndexContainer is not null ? DraggedZIndex : ComputeZIndex());
         }
         catch
         {
@@ -955,22 +962,18 @@ public partial class TrackedWindowView :
         }
 
         dragZIndexContainer = container;
-        dragOriginalZIndex = Canvas.GetZIndex(container);
         Canvas.SetZIndex(container, DraggedZIndex);
     }
 
     private void RestoreThumbnailZIndex()
     {
-        UIElement? container = dragZIndexContainer;
-
-        if (container is null)
+        if (dragZIndexContainer is null)
         {
             return;
         }
 
         dragZIndexContainer = null;
-        Canvas.SetZIndex(container, dragOriginalZIndex);
-        dragOriginalZIndex = 0;
+        ApplyZIndex();
     }
 
     private UIElement? FindWindowItemContainer()
