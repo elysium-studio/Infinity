@@ -33,10 +33,6 @@ public partial class TrackedWindowCollectionView :
     internal UIElement? GetWindowItemContainer(object item) =>
         WindowItems.ContainerFromItem(item) as UIElement;
 
-    internal ThumbnailPreviewElevation? ElevateWindowPreview(TrackedWindowViewModel viewModel,
-        FrameworkElement sourceHost) =>
-        ThumbnailPreviewElevation.TryCreate(ThumbnailPreviewOverlay, sourceHost, viewModel);
-
     private void HandleBackdropSizeChanged(object sender, SizeChangedEventArgs args)
     {
         if (ViewModel is null)

@@ -20,8 +20,7 @@ namespace Infinity.Shell.WinUI;
 public partial class TrackedWindowView :
     UserControl
 {
-    private const int DraggedZIndex = 1_000_000;
-    private const int SelectedZIndex = DraggedZIndex - 1;
+    private const int SelectedZIndex = 999_999;
     private const int FilteredTierOffset = -100_000;
     private const int UntrackedOrderRank = -50_000;
     private const double ThumbnailDragThreshold = 4.0;
@@ -48,9 +47,6 @@ public partial class TrackedWindowView :
     private double dragStartCanvasTop;
     private double dragHorizontalDelta;
     private double dragVerticalDelta;
-    private UIElement? dragZIndexContainer;
-    private int dragOriginalZIndex;
-    private ThumbnailPreviewElevation? dragPreviewElevation;
     private bool ownsDragScrollSession;
     private bool isThumbnailDragging;
     private bool isPointerOverWindow;
@@ -276,8 +272,6 @@ public partial class TrackedWindowView :
         dragPointerId = args.Pointer.PointerId;
         dragCoordinateRoot = coordinateRoot;
         dragStartPoint = args.GetCurrentPoint(coordinateRoot).Position;
-        ElevateThumbnailZIndex();
-        dragPreviewElevation = FindWindowCollectionView()?.ElevateWindowPreview(ViewModel, ThumbnailHost);
 
         args.Handled = true;
     }
@@ -338,7 +332,6 @@ public partial class TrackedWindowView :
         }
 
         WindowContainer.Translation = new Vector3((float)horizontalDistance, (float)verticalDistance, 0);
-        dragPreviewElevation?.Update();
 
         if (draggedViewModel?.MoveThumbnail(horizontalDistance / dragScale,
             verticalDistance / dragScale) == true)
@@ -426,17 +419,6 @@ public partial class TrackedWindowView :
         ownsDragScrollSession = false;
         isThumbnailDragging = false;
         WindowContainer.Translation = Vector3.Zero;
-
-        try
-        {
-            dragPreviewElevation?.Dispose();
-        }
-        finally
-        {
-            dragPreviewElevation = null;
-            RestoreThumbnailZIndex();
-        }
-
         activeViewModel?.EndThumbnailDrag();
     }
 
@@ -913,7 +895,7 @@ public partial class TrackedWindowView :
 
         try
         {
-            SetCanvasZIndex(dragZIndexContainer is not null ? DraggedZIndex : ComputeZIndex());
+            SetCanvasZIndex(ComputeZIndex());
         }
         catch
         {
@@ -946,39 +928,6 @@ public partial class TrackedWindowView :
         {
             Canvas.SetZIndex(container, zIndex);
         }
-    }
-
-    private void ElevateThumbnailZIndex()
-    {
-        if (dragZIndexContainer is not null)
-        {
-            return;
-        }
-
-        UIElement? container = FindWindowItemContainer();
-
-        if (container is null)
-        {
-            return;
-        }
-
-        dragZIndexContainer = container;
-        dragOriginalZIndex = Canvas.GetZIndex(container);
-        Canvas.SetZIndex(container, DraggedZIndex);
-    }
-
-    private void RestoreThumbnailZIndex()
-    {
-        UIElement? container = dragZIndexContainer;
-
-        if (container is null)
-        {
-            return;
-        }
-
-        dragZIndexContainer = null;
-        Canvas.SetZIndex(container, dragOriginalZIndex);
-        dragOriginalZIndex = 0;
     }
 
     private UIElement? FindWindowItemContainer()
