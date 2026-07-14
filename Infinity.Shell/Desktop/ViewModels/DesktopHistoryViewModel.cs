@@ -19,10 +19,10 @@ public partial class DesktopHistoryViewModel :
     private Timer? relativeTimeTimer;
 
     [ObservableProperty]
-    private IReadOnlyList<DesktopHistoryItemViewModel> backEntries = [];
+    private List<DesktopHistoryItemViewModel> backEntries = [];
 
     [ObservableProperty]
-    private IReadOnlyList<DesktopHistoryItemViewModel> forwardEntries = [];
+    private List<DesktopHistoryItemViewModel> forwardEntries = [];
 
     [ObservableProperty]
     private bool canGoBack;
@@ -103,8 +103,8 @@ public partial class DesktopHistoryViewModel :
         CanGoBack = history.CanGoBack;
         CanGoForward = history.CanGoForward;
 
-        BackEntries = history.BackEntries.Select(CreateItem).ToArray();
-        ForwardEntries = history.ForwardEntries.Select(CreateItem).ToArray();
+        BackEntries = history.BackEntries.Select(CreateItem).ToList();
+        ForwardEntries = history.ForwardEntries.Select(CreateItem).ToList();
         CanClear = BackEntries.Count > 0 || ForwardEntries.Count > 0;
 
         string backShortcut = FormatShortcut(settings.DesktopHistoryBackShortcut);
