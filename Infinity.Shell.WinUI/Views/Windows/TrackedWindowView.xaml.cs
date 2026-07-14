@@ -49,6 +49,7 @@ public partial class TrackedWindowView :
     private double dragHorizontalDelta;
     private double dragVerticalDelta;
     private UIElement? dragZIndexContainer;
+    private int dragOriginalZIndex;
     private ThumbnailPreviewElevation? dragPreviewElevation;
     private bool ownsDragScrollSession;
     private bool isThumbnailDragging;
@@ -962,18 +963,22 @@ public partial class TrackedWindowView :
         }
 
         dragZIndexContainer = container;
+        dragOriginalZIndex = Canvas.GetZIndex(container);
         Canvas.SetZIndex(container, DraggedZIndex);
     }
 
     private void RestoreThumbnailZIndex()
     {
-        if (dragZIndexContainer is null)
+        UIElement? container = dragZIndexContainer;
+
+        if (container is null)
         {
             return;
         }
 
         dragZIndexContainer = null;
-        ApplyZIndex();
+        Canvas.SetZIndex(container, dragOriginalZIndex);
+        dragOriginalZIndex = 0;
     }
 
     private UIElement? FindWindowItemContainer()
