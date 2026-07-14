@@ -406,74 +406,17 @@ namespace Infinity::Platform::Windows::Native
         target.IsActive = false;
     }
 
-    static ThumbnailTarget* FindTarget(HWND sourceWindowHandle)
+    static ThumbnailTarget* FindTarget(HANDLE sharedTargetHandle)
     {
         for (ThumbnailTarget& target : targets)
         {
-            if (target.SourceWindowHandle == sourceWindowHandle)
+            if (target.SharedTargetHandle == sharedTargetHandle)
             {
                 return &target;
             }
         }
 
         return nullptr;
-    }
-
-    static HRESULT RebindTarget(DwmThumbnailVisualItem const& item, ThumbnailTarget& target, bool& targetPreserved)
-    {
-        targetPreserved = true;
-
-        if (target.SharedTargetHandle == item.SharedTargetHandle)
-        {
-            return S_OK;
-        }
-
-        ComPtr<IVisualTargetPartner> newVisualTarget;
-        HRESULT result = OpenVisualTargetFromHandle(item.SharedTargetHandle, newVisualTarget.GetAddressOf());
-
-        if (FAILED(result))
-        {
-            return result;
-        }
-
-        ComPtr<IPlatformVisual> platformRootVisual;
-        result = target.RootVisual.As(&platformRootVisual);
-
-        if (FAILED(result))
-        {
-            return result;
-        }
-
-        if (target.VisualTarget)
-        {
-            result = target.VisualTarget->SetRoot(nullptr);
-
-            if (FAILED(result))
-            {
-                return result;
-            }
-        }
-
-        result = newVisualTarget->SetRoot(platformRootVisual.Get());
-
-        if (FAILED(result))
-        {
-            if (target.VisualTarget)
-            {
-                HRESULT restoreResult = target.VisualTarget->SetRoot(platformRootVisual.Get());
-                targetPreserved = SUCCEEDED(restoreResult);
-            }
-            else
-            {
-                targetPreserved = false;
-            }
-
-            return result;
-        }
-
-        target.VisualTarget = std::move(newVisualTarget);
-        target.SharedTargetHandle = item.SharedTargetHandle;
-        return S_OK;
     }
 
     static HRESULT CreateTarget(HWND currentOwnerWindowHandle, DwmThumbnailVisualItem const& item, ThumbnailTarget& target)
@@ -548,26 +491,16 @@ namespace Infinity::Platform::Windows::Native
 
     static HRESULT UpdateTarget(DwmThumbnailVisualItem const& item, ThumbnailTarget& target)
     {
-        bool targetPreserved = true;
-        target.IsActive = true;
-        HRESULT result = RebindTarget(item, target, targetPreserved);
-
-        if (FAILED(result))
-        {
-            target.IsActive = targetPreserved;
-            return result;
-        }
-
         target.SourceSize = GetSourceSize(item.SourceWindowHandle);
         target.Width = item.Width;
         target.Height = item.Height;
+        target.IsActive = true;
 
         DWM_THUMBNAIL_PROPERTIES properties = CreateThumbnailProperties(target.SourceSize, item.Width, item.Height);
-        result = DwmUpdateThumbnailProperties(target.ThumbnailHandle, &properties);
+        HRESULT result = DwmUpdateThumbnailProperties(target.ThumbnailHandle, &properties);
 
         if (FAILED(result))
         {
-            target.IsActive = false;
             return result;
         }
 
@@ -659,7 +592,13 @@ namespace Infinity::Platform::Windows::Native
                     continue;
                 }
 
-                ThumbnailTarget* target = FindTarget(item.SourceWindowHandle);
+                ThumbnailTarget* target = FindTarget(item.SharedTargetHandle);
+
+                if (target && target->SourceWindowHandle != item.SourceWindowHandle)
+                {
+                    DestroyTarget(*target);
+                    target = nullptr;
+                }
 
                 HRESULT itemResult;
 
@@ -680,7 +619,7 @@ namespace Infinity::Platform::Windows::Native
                 {
                     itemResult = UpdateTarget(item, *target);
 
-                    if (FAILED(itemResult) && !target->IsActive)
+                    if (FAILED(itemResult))
                     {
                         DestroyTarget(*target);
                     }

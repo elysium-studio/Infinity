@@ -342,18 +342,30 @@ public class DwmWindowPreviewSurface :
             return false;
         }
 
-        EnsureRenderCapacity(previews.Count);
+        EnsureRenderCapacity(previews.Count * 2);
         int itemCount = 0;
 
         foreach (DwmWindowPreview preview in previews.Values)
         {
             AddRenderItem(preview,
-                preview.ActiveTargetHandle,
-                preview.ActiveWidth,
-                preview.ActiveHeight,
-                preview.IsActiveTargetVisible,
-                preview.HasActiveTarget,
-                preview.IsActiveTargetOverlay,
+                preview.SharedTargetHandle,
+                preview.Width,
+                preview.Height,
+                preview.IsVisible,
+                preview.HasTarget,
+                false,
+                ref itemCount);
+        }
+
+        foreach (DwmWindowPreview preview in previews.Values)
+        {
+            AddRenderItem(preview,
+                preview.OverlayTargetHandle,
+                preview.OverlayWidth,
+                preview.OverlayHeight,
+                preview.IsOverlayVisible,
+                preview.HasOverlayTarget,
+                true,
                 ref itemCount);
         }
 
