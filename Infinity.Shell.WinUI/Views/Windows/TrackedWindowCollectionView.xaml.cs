@@ -2,6 +2,9 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Microsoft.UI.Xaml.Input;
+using Infinity.Application.Abstractions;
+using Microsoft.Extensions.Options;
 using System;
 using System.ComponentModel;
 using Windows.UI;
@@ -16,11 +19,18 @@ public partial class TrackedWindowCollectionView :
     private string? backgroundColour;
     private SolidColorBrush? backgroundBrush;
     private bool suppressSelectionChanged;
+    private readonly IDesktopNavigationHistory desktopHistory;
+    private readonly IOptionsMonitor<Settings> settings;
 
-    public TrackedWindowCollectionView()
+    public TrackedWindowCollectionView(IDesktopNavigationHistory desktopHistory,
+        IOptionsMonitor<Settings> settings)
     {
         InitializeComponent();
 
+        this.desktopHistory = desktopHistory;
+        this.settings = settings;
+
+        Root.AddHandler(PointerPressedEvent, new PointerEventHandler(HandlePointerPressed), true);
         Loaded += HandleLoaded;
         Unloaded += HandleUnloaded;
         DataContextChanged += HandleDataContextChanged;
@@ -61,6 +71,25 @@ public partial class TrackedWindowCollectionView :
 
     private void HandleLoaded(object sender, RoutedEventArgs args) =>
         Focus(FocusState.Programmatic);
+
+    private void HandlePointerPressed(object sender, PointerRoutedEventArgs args)
+    {
+        if (!settings.CurrentValue.DesktopHistoryEnabled ||
+            !settings.CurrentValue.DesktopHistoryMouseButtonsEnabled)
+        {
+            return;
+        }
+
+        Microsoft.UI.Input.PointerUpdateKind updateKind = args.GetCurrentPoint(Root).Properties.PointerUpdateKind;
+        bool handled = updateKind switch
+        {
+            Microsoft.UI.Input.PointerUpdateKind.XButton1Pressed => desktopHistory.GoBack(),
+            Microsoft.UI.Input.PointerUpdateKind.XButton2Pressed => desktopHistory.GoForward(),
+            _ => false
+        };
+
+        args.Handled = handled;
+    }
 
     private void HandleUnloaded(object sender, RoutedEventArgs args)
     {

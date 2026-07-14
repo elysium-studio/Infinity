@@ -352,4 +352,97 @@
   <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Anclada en todas las páginas</value>
   </data>
+  <data name="DesktopHistoryEnabledCard.Header" xml:space="preserve">
+    <value>Historial del escritorio</value>
+  </data>
+  <data name="DesktopHistoryEnabledCard.Description" xml:space="preserve">
+    <value>Recordar las ventanas y páginas visitadas recientemente</value>
+  </data>
+  <data name="DesktopHistoryCapacityCard.Header" xml:space="preserve">
+    <value>Longitud del historial</value>
+  </data>
+  <data name="DesktopHistoryCapacityCard.Description" xml:space="preserve">
+    <value>Número máximo de destinos conservados</value>
+  </data>
+  <data name="DesktopHistoryMouseButtonsCard.Header" xml:space="preserve">
+    <value>Atrás y adelante con el ratón</value>
+  </data>
+  <data name="DesktopHistoryMouseButtonsCard.Description" xml:space="preserve">
+    <value>Usar los botones de navegación del ratón mientras la vista previa de Infinity está abierta</value>
+  </data>
+  <data name="DesktopHistoryBackShortcutHeader" xml:space="preserve">
+    <value>Atajo para volver</value>
+  </data>
+  <data name="DesktopHistoryBackShortcutDescription" xml:space="preserve">
+    <value>Volver a la ventana o página visitada anteriormente</value>
+  </data>
+  <data name="DesktopHistoryForwardShortcutHeader" xml:space="preserve">
+    <value>Atajo para avanzar</value>
+  </data>
+  <data name="DesktopHistoryForwardShortcutDescription" xml:space="preserve">
+    <value>Avanzar después de volver atrás</value>
+  </data>
+  <data name="DesktopHistoryShortcutRecordingHint.Text" xml:space="preserve">
+    <value>Pulsa dos teclas modificadoras y luego una tecla de activación</value>
+  </data>
+  <data name="DesktopHistoryShortcutStartWithModifiers" xml:space="preserve">
+    <value>Empieza con dos teclas modificadoras y luego pulsa una tecla de activación.</value>
+  </data>
+  <data name="DesktopHistoryShortcutInvalid" xml:space="preserve">
+    <value>Usa dos teclas modificadoras seguidas de una tecla que no sea modificadora.</value>
+  </data>
+  <data name="DesktopHistoryShortcutConflict" xml:space="preserve">
+    <value>Este atajo entra en conflicto con otro atajo de Infinity.</value>
+  </data>
+  <data name="DesktopHistoryClearCard.Header" xml:space="preserve">
+    <value>Borrar historial del escritorio</value>
+  </data>
+  <data name="DesktopHistoryClearCard.Description" xml:space="preserve">
+    <value>Quitar todos los destinos registrados en esta sesión</value>
+  </data>
+  <data name="DesktopHistoryClearButton.Content" xml:space="preserve">
+    <value>Borrar</value>
+  </data>
+  <data name="DesktopHistoryMenuButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Historial del escritorio</value>
+  </data>
+  <data name="DesktopHistoryMenuButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Historial del escritorio</value>
+  </data>
+  <data name="DesktopHistoryBackHeader.Text" xml:space="preserve">
+    <value>Atrás</value>
+  </data>
+  <data name="DesktopHistoryForwardHeader.Text" xml:space="preserve">
+    <value>Adelante</value>
+  </data>
+  <data name="DesktopHistoryEmptyBack.Text" xml:space="preserve">
+    <value>No hay destinos anteriores</value>
+  </data>
+  <data name="DesktopHistoryEmptyForward.Text" xml:space="preserve">
+    <value>No hay destinos posteriores</value>
+  </data>
+  <data name="DesktopHistoryBackToolTip" xml:space="preserve">
+    <value>Atrás ({0})</value>
+  </data>
+  <data name="DesktopHistoryForwardToolTip" xml:space="preserve">
+    <value>Adelante ({0})</value>
+  </data>
+  <data name="DesktopHistoryUntitledWindow" xml:space="preserve">
+    <value>Ventana sin título</value>
+  </data>
+  <data name="DesktopHistoryPageOnly" xml:space="preserve">
+    <value>Página</value>
+  </data>
+  <data name="DesktopHistoryJustNow" xml:space="preserve">
+    <value>Ahora mismo</value>
+  </data>
+  <data name="DesktopHistoryMinutesAgo" xml:space="preserve">
+    <value>Hace {0} min</value>
+  </data>
+  <data name="DesktopHistoryHoursAgo" xml:space="preserve">
+    <value>Hace {0} h</value>
+  </data>
+  <data name="DesktopHistoryDaysAgo" xml:space="preserve">
+    <value>Hace {0} días</value>
+  </data>
 </root>

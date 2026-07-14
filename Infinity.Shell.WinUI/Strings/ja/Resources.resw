@@ -352,4 +352,97 @@
   <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>すべてのページに固定済み</value>
   </data>
+  <data name="DesktopHistoryEnabledCard.Header" xml:space="preserve">
+    <value>デスクトップ履歴</value>
+  </data>
+  <data name="DesktopHistoryEnabledCard.Description" xml:space="preserve">
+    <value>最近表示したウィンドウとページを記憶します</value>
+  </data>
+  <data name="DesktopHistoryCapacityCard.Header" xml:space="preserve">
+    <value>履歴の長さ</value>
+  </data>
+  <data name="DesktopHistoryCapacityCard.Description" xml:space="preserve">
+    <value>保持する移動先の最大数</value>
+  </data>
+  <data name="DesktopHistoryMouseButtonsCard.Header" xml:space="preserve">
+    <value>マウスの戻る／進む</value>
+  </data>
+  <data name="DesktopHistoryMouseButtonsCard.Description" xml:space="preserve">
+    <value>Infinity のプレビューを開いている間、マウスのナビゲーションボタンを使用します</value>
+  </data>
+  <data name="DesktopHistoryBackShortcutHeader" xml:space="preserve">
+    <value>戻るショートカット</value>
+  </data>
+  <data name="DesktopHistoryBackShortcutDescription" xml:space="preserve">
+    <value>直前に表示したウィンドウまたはページに戻ります</value>
+  </data>
+  <data name="DesktopHistoryForwardShortcutHeader" xml:space="preserve">
+    <value>進むショートカット</value>
+  </data>
+  <data name="DesktopHistoryForwardShortcutDescription" xml:space="preserve">
+    <value>戻った後に先へ進みます</value>
+  </data>
+  <data name="DesktopHistoryShortcutRecordingHint.Text" xml:space="preserve">
+    <value>2 つの修飾キーを押してからトリガーキーを押してください</value>
+  </data>
+  <data name="DesktopHistoryShortcutStartWithModifiers" xml:space="preserve">
+    <value>2 つの修飾キーから始め、次にトリガーキーを押してください。</value>
+  </data>
+  <data name="DesktopHistoryShortcutInvalid" xml:space="preserve">
+    <value>2 つの修飾キーの後に、修飾キー以外のキーを 1 つ使用してください。</value>
+  </data>
+  <data name="DesktopHistoryShortcutConflict" xml:space="preserve">
+    <value>このショートカットは別の Infinity ショートカットと競合しています。</value>
+  </data>
+  <data name="DesktopHistoryClearCard.Header" xml:space="preserve">
+    <value>デスクトップ履歴を消去</value>
+  </data>
+  <data name="DesktopHistoryClearCard.Description" xml:space="preserve">
+    <value>このセッションで記録された移動先をすべて削除します</value>
+  </data>
+  <data name="DesktopHistoryClearButton.Content" xml:space="preserve">
+    <value>消去</value>
+  </data>
+  <data name="DesktopHistoryMenuButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>デスクトップ履歴</value>
+  </data>
+  <data name="DesktopHistoryMenuButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>デスクトップ履歴</value>
+  </data>
+  <data name="DesktopHistoryBackHeader.Text" xml:space="preserve">
+    <value>戻る</value>
+  </data>
+  <data name="DesktopHistoryForwardHeader.Text" xml:space="preserve">
+    <value>進む</value>
+  </data>
+  <data name="DesktopHistoryEmptyBack.Text" xml:space="preserve">
+    <value>以前の移動先はありません</value>
+  </data>
+  <data name="DesktopHistoryEmptyForward.Text" xml:space="preserve">
+    <value>以降の移動先はありません</value>
+  </data>
+  <data name="DesktopHistoryBackToolTip" xml:space="preserve">
+    <value>戻る ({0})</value>
+  </data>
+  <data name="DesktopHistoryForwardToolTip" xml:space="preserve">
+    <value>進む ({0})</value>
+  </data>
+  <data name="DesktopHistoryUntitledWindow" xml:space="preserve">
+    <value>無題のウィンドウ</value>
+  </data>
+  <data name="DesktopHistoryPageOnly" xml:space="preserve">
+    <value>ページ</value>
+  </data>
+  <data name="DesktopHistoryJustNow" xml:space="preserve">
+    <value>たった今</value>
+  </data>
+  <data name="DesktopHistoryMinutesAgo" xml:space="preserve">
+    <value>{0} 分前</value>
+  </data>
+  <data name="DesktopHistoryHoursAgo" xml:space="preserve">
+    <value>{0} 時間前</value>
+  </data>
+  <data name="DesktopHistoryDaysAgo" xml:space="preserve">
+    <value>{0} 日前</value>
+  </data>
 </root>

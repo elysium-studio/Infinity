@@ -352,4 +352,97 @@
   <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Vastgemaakt op alle pagina's</value>
   </data>
+  <data name="DesktopHistoryEnabledCard.Header" xml:space="preserve">
+    <value>Bureaubladgeschiedenis</value>
+  </data>
+  <data name="DesktopHistoryEnabledCard.Description" xml:space="preserve">
+    <value>Onlangs bezochte vensters en pagina’s onthouden</value>
+  </data>
+  <data name="DesktopHistoryCapacityCard.Header" xml:space="preserve">
+    <value>Geschiedenislengte</value>
+  </data>
+  <data name="DesktopHistoryCapacityCard.Description" xml:space="preserve">
+    <value>Maximumaantal bewaarde bestemmingen</value>
+  </data>
+  <data name="DesktopHistoryMouseButtonsCard.Header" xml:space="preserve">
+    <value>Vorige en volgende met de muis</value>
+  </data>
+  <data name="DesktopHistoryMouseButtonsCard.Description" xml:space="preserve">
+    <value>Navigatieknoppen van de muis gebruiken terwijl het Infinity-voorbeeld is geopend</value>
+  </data>
+  <data name="DesktopHistoryBackShortcutHeader" xml:space="preserve">
+    <value>Sneltoets voor Vorige</value>
+  </data>
+  <data name="DesktopHistoryBackShortcutDescription" xml:space="preserve">
+    <value>Terugkeren naar het eerder bezochte venster of de eerdere pagina</value>
+  </data>
+  <data name="DesktopHistoryForwardShortcutHeader" xml:space="preserve">
+    <value>Sneltoets voor Volgende</value>
+  </data>
+  <data name="DesktopHistoryForwardShortcutDescription" xml:space="preserve">
+    <value>Vooruitgaan nadat u terug bent gegaan</value>
+  </data>
+  <data name="DesktopHistoryShortcutRecordingHint.Text" xml:space="preserve">
+    <value>Druk op twee wijzigingstoetsen en daarna op een activeringstoets</value>
+  </data>
+  <data name="DesktopHistoryShortcutStartWithModifiers" xml:space="preserve">
+    <value>Begin met twee wijzigingstoetsen en druk daarna op een activeringstoets.</value>
+  </data>
+  <data name="DesktopHistoryShortcutInvalid" xml:space="preserve">
+    <value>Gebruik twee wijzigingstoetsen gevolgd door één toets die geen wijzigingstoets is.</value>
+  </data>
+  <data name="DesktopHistoryShortcutConflict" xml:space="preserve">
+    <value>Deze sneltoets conflicteert met een andere Infinity-sneltoets.</value>
+  </data>
+  <data name="DesktopHistoryClearCard.Header" xml:space="preserve">
+    <value>Bureaubladgeschiedenis wissen</value>
+  </data>
+  <data name="DesktopHistoryClearCard.Description" xml:space="preserve">
+    <value>Alle bestemmingen verwijderen die in deze sessie zijn vastgelegd</value>
+  </data>
+  <data name="DesktopHistoryClearButton.Content" xml:space="preserve">
+    <value>Wissen</value>
+  </data>
+  <data name="DesktopHistoryMenuButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Bureaubladgeschiedenis</value>
+  </data>
+  <data name="DesktopHistoryMenuButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Bureaubladgeschiedenis</value>
+  </data>
+  <data name="DesktopHistoryBackHeader.Text" xml:space="preserve">
+    <value>Vorige</value>
+  </data>
+  <data name="DesktopHistoryForwardHeader.Text" xml:space="preserve">
+    <value>Volgende</value>
+  </data>
+  <data name="DesktopHistoryEmptyBack.Text" xml:space="preserve">
+    <value>Geen eerdere bestemmingen</value>
+  </data>
+  <data name="DesktopHistoryEmptyForward.Text" xml:space="preserve">
+    <value>Geen latere bestemmingen</value>
+  </data>
+  <data name="DesktopHistoryBackToolTip" xml:space="preserve">
+    <value>Vorige ({0})</value>
+  </data>
+  <data name="DesktopHistoryForwardToolTip" xml:space="preserve">
+    <value>Volgende ({0})</value>
+  </data>
+  <data name="DesktopHistoryUntitledWindow" xml:space="preserve">
+    <value>Naamloos venster</value>
+  </data>
+  <data name="DesktopHistoryPageOnly" xml:space="preserve">
+    <value>Pagina</value>
+  </data>
+  <data name="DesktopHistoryJustNow" xml:space="preserve">
+    <value>Zojuist</value>
+  </data>
+  <data name="DesktopHistoryMinutesAgo" xml:space="preserve">
+    <value>{0} min. geleden</value>
+  </data>
+  <data name="DesktopHistoryHoursAgo" xml:space="preserve">
+    <value>{0} uur geleden</value>
+  </data>
+  <data name="DesktopHistoryDaysAgo" xml:space="preserve">
+    <value>{0} dagen geleden</value>
+  </data>
 </root>

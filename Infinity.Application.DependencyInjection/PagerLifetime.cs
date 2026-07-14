@@ -12,6 +12,8 @@ public class PagerLifetime(IWindowTracker tracker,
     IWindowDragGuard dragGuard,
     IWindowDragScroller dragScroller,
     IPageGestureSource gestureSource,
+    IDesktopNavigationHistoryLifetime desktopHistory,
+    DesktopHistoryShortcutController desktopHistoryShortcuts,
     IWindowPageJumper jumper,
     IWindowTitleSynchronizer titleSynchronizer,
     IWindowStack stack,
@@ -79,6 +81,8 @@ public class PagerLifetime(IWindowTracker tracker,
         coordinator.Start();
         windowCollection.Start();
         pager.Start();
+        desktopHistory.Start();
+        desktopHistoryShortcuts.Start();
         gestureSource.Start();
         jumper.Start();
 
@@ -99,6 +103,8 @@ public class PagerLifetime(IWindowTracker tracker,
 
         jumper.Stop();
         gestureSource.Stop();
+        desktopHistoryShortcuts.Stop();
+        desktopHistory.Stop();
         pager.Stop();
         windowCollection.Stop();
         tracker.Stop();

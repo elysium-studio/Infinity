@@ -7,6 +7,16 @@ public class Settings
 {
     public Dictionary<string, int>? ApplicationPageRules { get; set; } = [];
 
+    public List<List<int>> DesktopHistoryBackShortcut { get; set; } = DesktopHistoryDefaults.CreateBackShortcut();
+
+    public double DesktopHistoryCapacity { get; set; } = DesktopHistoryDefaults.Capacity;
+
+    public bool DesktopHistoryEnabled { get; set; } = true;
+
+    public List<List<int>> DesktopHistoryForwardShortcut { get; set; } = DesktopHistoryDefaults.CreateForwardShortcut();
+
+    public bool DesktopHistoryMouseButtonsEnabled { get; set; } = true;
+
     public bool DesktopBlur { get; set; } = true;
 
     public DragScrollSpeed DragScrollSpeed { get; set; } = DragScrollSpeed.Normal;

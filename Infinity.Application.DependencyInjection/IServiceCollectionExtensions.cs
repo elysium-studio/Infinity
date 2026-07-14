@@ -20,6 +20,11 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<IWindowTitleSynchronizer, WindowTitleSynchronizer>();
             services.AddSingleton<IWindowRestoreGuard, WindowRestoreGuard>();
 
+            services.AddSingleton<DesktopNavigationHistory>();
+            services.AddSingleton<IDesktopNavigationHistory>(provider => provider.GetRequiredService<DesktopNavigationHistory>());
+            services.AddSingleton<IDesktopNavigationHistoryLifetime>(provider => provider.GetRequiredService<DesktopNavigationHistory>());
+            services.AddSingleton<DesktopHistoryShortcutController>();
+
             services.AddSingleton<IWindowTracker>(provider =>
                 new WindowTracker(provider.GetRequiredService<IWindowStore>(),
                     provider.GetRequiredService<IWindowGeometryReader>(),

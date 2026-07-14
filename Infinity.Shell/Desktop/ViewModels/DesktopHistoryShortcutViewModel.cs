@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
@@ -7,7 +7,7 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Shell;
 
-public partial class ScrollModifierKeyViewModel(IServiceProvider provider,
+public partial class DesktopHistoryShortcutViewModel(IServiceProvider provider,
     IServiceFactory factory,
     IMessenger messenger,
     IDisposer disposer,
@@ -17,14 +17,14 @@ public partial class ScrollModifierKeyViewModel(IServiceProvider provider,
     Func<Settings, List<List<int>>?> read,
     Action<Settings, List<List<int>>?> write,
     IHotKeysBuilder builder,
-    HotKeysBuilderOptions builderOptions,
     IKeyLabelProvider labelProvider,
-    ITextLocalizer localizer) :
+    ITextLocalizer localizer,
+    DesktopHistoryShortcutKind kind) :
     ObservableReadWriteViewModel<Settings, List<List<int>>>(provider, factory, messenger, disposer, dispatcher, settings, writer, read, write),
     IDesktopViewModel
 {
+    private const int RequiredKeyCount = 3;
     private List<List<int>> previousValue = [];
-    private List<List<int>> pendingCombinations = [];
 
     [ObservableProperty]
     private bool isRecording;
@@ -41,15 +41,25 @@ public partial class ScrollModifierKeyViewModel(IServiceProvider provider,
     [ObservableProperty]
     private List<ModifierKeyViewModel> labels = [];
 
-    private int RequiredKeyCount => Math.Max(2, builderOptions.KeyCount);
+    [ObservableProperty]
+    private bool isEnabled;
+
+    public string Header => localizer.GetText(kind == DesktopHistoryShortcutKind.Back
+        ? "DesktopHistoryBackShortcutHeader"
+        : "DesktopHistoryForwardShortcutHeader");
+
+    public string Description => localizer.GetText(kind == DesktopHistoryShortcutKind.Back
+        ? "DesktopHistoryBackShortcutDescription"
+        : "DesktopHistoryForwardShortcutDescription");
 
     public override void Activated()
     {
         base.Activated();
-
+        builder.Changed -= HandleBuilderChanged;
+        builder.Unavailable -= HandleBuilderUnavailable;
         builder.Changed += HandleBuilderChanged;
         builder.Unavailable += HandleBuilderUnavailable;
-
+        IsEnabled = Options.DesktopHistoryEnabled;
         BuildLabels(Value);
     }
 
@@ -70,10 +80,17 @@ public partial class ScrollModifierKeyViewModel(IServiceProvider provider,
         base.Deactivated();
     }
 
+    public override void Dispose()
+    {
+        builder.Changed -= HandleBuilderChanged;
+        builder.Unavailable -= HandleBuilderUnavailable;
+        builder.Dispose();
+        base.Dispose();
+    }
+
     public void StartRecording()
     {
-        previousValue = Value ?? [];
-        pendingCombinations = [];
+        previousValue = Value?.Select(group => group.ToList()).ToList() ?? [];
 
         Dispatcher.Dispatch(() =>
         {
@@ -81,7 +98,7 @@ public partial class ScrollModifierKeyViewModel(IServiceProvider provider,
             CanSave = false;
             Labels = [];
             IsValidationOpen = true;
-            ValidationMessage = localizer.GetText("ScrollShortcutStartWithModifier");
+            ValidationMessage = localizer.GetText("DesktopHistoryShortcutStartWithModifiers");
         });
 
         if (!builder.Start())
@@ -89,7 +106,6 @@ public partial class ScrollModifierKeyViewModel(IServiceProvider provider,
             Dispatcher.Dispatch(() =>
             {
                 IsRecording = false;
-                CanSave = false;
                 IsValidationOpen = true;
                 ValidationMessage = localizer.GetText("ScrollShortcutRecorderUnavailable");
             });
@@ -99,8 +115,6 @@ public partial class ScrollModifierKeyViewModel(IServiceProvider provider,
     public void CancelRecording()
     {
         builder.Stop();
-
-        pendingCombinations = [];
 
         Dispatcher.Dispatch(() =>
         {
@@ -118,30 +132,21 @@ public partial class ScrollModifierKeyViewModel(IServiceProvider provider,
     {
         HotKeysBuilderSnapshot snapshot = builder.Current;
 
-        if (!IsRecording || !builder.IsComplete || snapshot.Keys.Count != RequiredKeyCount)
+        if (!IsRecording || !builder.IsComplete || !DesktopHistoryShortcutValidator.IsValid(snapshot))
         {
-            Dispatcher.Dispatch(() =>
-            {
-                CanSave = false;
-                IsValidationOpen = true;
-                ValidationMessage = localizer.GetText("ScrollShortcutPressKeysToSave", RequiredKeyCount);
-            });
-
+            ShowValidation("DesktopHistoryShortcutInvalid");
             return;
         }
 
-        pendingCombinations = snapshot.Combinations.Select(combination => combination.ToList()).ToList();
+        List<List<int>> shortcut = snapshot.Combinations.Select(group => group.ToList()).ToList();
+        List<List<int>> otherShortcut = kind == DesktopHistoryShortcutKind.Back
+            ? Options.DesktopHistoryForwardShortcut
+            : Options.DesktopHistoryBackShortcut;
 
-        if (DesktopHistoryShortcutValidator.ConflictsWithPageNavigation(Options.DesktopHistoryBackShortcut, pendingCombinations) ||
-            DesktopHistoryShortcutValidator.ConflictsWithPageNavigation(Options.DesktopHistoryForwardShortcut, pendingCombinations))
+        if (DesktopHistoryShortcutValidator.AreEquivalent(shortcut, otherShortcut) ||
+            DesktopHistoryShortcutValidator.ConflictsWithPageNavigation(shortcut, Options.ScrollModifierKeys))
         {
-            Dispatcher.Dispatch(() =>
-            {
-                CanSave = false;
-                IsValidationOpen = true;
-                ValidationMessage = localizer.GetText("DesktopHistoryShortcutConflict");
-            });
-
+            ShowValidation("DesktopHistoryShortcutConflict");
             return;
         }
 
@@ -155,33 +160,20 @@ public partial class ScrollModifierKeyViewModel(IServiceProvider provider,
             ValidationMessage = string.Empty;
         });
 
-        Value = pendingCombinations;
-        BuildLabels(Value);
-
-        pendingCombinations = [];
+        Value = shortcut;
+        BuildLabels(shortcut);
     }
 
-    private void HandleBuilderChanged(object? sender, HotKeysBuilderSnapshot snapshot) =>
-        ApplySnapshot(snapshot);
-
-    private void HandleBuilderUnavailable(object? sender, EventArgs args)
+    protected override void OptionsChanged(Settings options)
     {
-        Dispatcher.Dispatch(() =>
-        {
-            if (!IsRecording)
-            {
-                return;
-            }
-
-            CanSave = false;
-            IsValidationOpen = true;
-            ValidationMessage = localizer.GetText("ScrollShortcutUnavailable");
-        });
+        IsEnabled = options.DesktopHistoryEnabled;
+        BuildLabels(kind == DesktopHistoryShortcutKind.Back
+            ? options.DesktopHistoryBackShortcut
+            : options.DesktopHistoryForwardShortcut);
     }
 
-    private void ApplySnapshot(HotKeysBuilderSnapshot snapshot)
+    private void HandleBuilderChanged(object? sender, HotKeysBuilderSnapshot snapshot)
     {
-        List<List<int>> combinations = snapshot.Combinations.Select(combination => combination.ToList()).ToList();
         List<ModifierKeyViewModel> newLabels = snapshot.Keys.Select(BuildLabel).ToList();
 
         Dispatcher.Dispatch(() =>
@@ -191,76 +183,64 @@ public partial class ScrollModifierKeyViewModel(IServiceProvider provider,
                 return;
             }
 
-            pendingCombinations = combinations;
             Labels = newLabels;
-            CanSave = builder.IsComplete && snapshot.Keys.Count == RequiredKeyCount;
+            CanSave = builder.IsComplete && DesktopHistoryShortcutValidator.IsValid(snapshot);
 
             if (snapshot.Keys.Count == 0)
             {
                 IsValidationOpen = true;
-                ValidationMessage = localizer.GetText("ScrollShortcutStartWithModifier");
-                return;
+                ValidationMessage = localizer.GetText("DesktopHistoryShortcutStartWithModifiers");
             }
-
-            if (snapshot.Keys.Count < RequiredKeyCount)
+            else if (snapshot.Keys.Count < RequiredKeyCount)
             {
                 IsValidationOpen = true;
                 ValidationMessage = localizer.GetText("ScrollShortcutPressMoreKeys", RequiredKeyCount - snapshot.Keys.Count);
-                return;
             }
-
-            if (!builder.IsComplete)
+            else if (!DesktopHistoryShortcutValidator.IsValid(snapshot))
             {
                 IsValidationOpen = true;
-                ValidationMessage = localizer.GetText("ScrollShortcutUnavailable");
-                return;
+                ValidationMessage = localizer.GetText("DesktopHistoryShortcutInvalid");
             }
-
-            IsValidationOpen = false;
-            ValidationMessage = string.Empty;
+            else
+            {
+                IsValidationOpen = false;
+                ValidationMessage = string.Empty;
+            }
         });
     }
 
-    private void BuildLabels(List<List<int>>? combinations)
+    private void HandleBuilderUnavailable(object? sender, EventArgs args) => ShowValidation("ScrollShortcutUnavailable");
+
+    private void ShowValidation(string resourceKey) => Dispatcher.Dispatch(() =>
     {
-        if (combinations is null or { Count: 0 })
+        CanSave = false;
+        IsValidationOpen = true;
+        ValidationMessage = localizer.GetText(resourceKey);
+    });
+
+    private void BuildLabels(IEnumerable<IEnumerable<int>>? combinations)
+    {
+        if (combinations is null)
         {
             Dispatcher.Dispatch(() => Labels = []);
             return;
         }
 
-        HashSet<string> seen = [];
-        List<ModifierKeyViewModel> newLabels = [];
-
-        foreach (List<int> combination in combinations)
-        {
-            foreach (int keyCode in combination)
-            {
-                ModifierKeyViewModel label = BuildLabel(keyCode);
-
-                if (seen.Add(label.ToolTip ?? label.Text))
-                {
-                    newLabels.Add(label);
-                    break;
-                }
-            }
-        }
+        List<ModifierKeyViewModel> newLabels = combinations
+            .Select(group => group.FirstOrDefault())
+            .Where(key => key != 0)
+            .Select(BuildLabel)
+            .ToList();
 
         Dispatcher.Dispatch(() => Labels = newLabels);
     }
 
-    private ModifierKeyViewModel BuildLabel(HotKey key)
-    {
-        string text = labelProvider.Shorten(key.Text);
-
-        return new ModifierKeyViewModel(text, ToolTip: key.Text);
-    }
+    private ModifierKeyViewModel BuildLabel(HotKey key) =>
+        new(labelProvider.Shorten(key.Text), ToolTip: key.Text);
 
     private ModifierKeyViewModel BuildLabel(int keyCode)
     {
         string fullText = labelProvider.GetFullLabel(keyCode);
-        string text = labelProvider.Shorten(fullText);
-
-        return new ModifierKeyViewModel(text, ToolTip: fullText);
+        return new ModifierKeyViewModel(labelProvider.Shorten(fullText), ToolTip: fullText);
     }
 }

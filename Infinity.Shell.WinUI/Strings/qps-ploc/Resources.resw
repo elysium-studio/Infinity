@@ -352,4 +352,97 @@
   <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>[!! Þîññëð ţô àļļ þàĝëš ~~~~~~~ !!]</value>
   </data>
+  <data name="DesktopHistoryEnabledCard.Header" xml:space="preserve">
+    <value>[Ðëšķţøþ ħîšţøŕÿ]</value>
+  </data>
+  <data name="DesktopHistoryEnabledCard.Description" xml:space="preserve">
+    <value>[Ŕëḿëḿɓëŕ ŕëçëñţļÿ vîšîţëð ŵîñðøŵš åñð þåĝëš]</value>
+  </data>
+  <data name="DesktopHistoryCapacityCard.Header" xml:space="preserve">
+    <value>[Ħîšţøŕÿ ļëñĝţħ]</value>
+  </data>
+  <data name="DesktopHistoryCapacityCard.Description" xml:space="preserve">
+    <value>[Ḿåжîḿûḿ ñûḿɓëŕ øƒ ðëšţîñåţîøñš ŕëţåîñëð]</value>
+  </data>
+  <data name="DesktopHistoryMouseButtonsCard.Header" xml:space="preserve">
+    <value>[Ḿøûšë ɓåçķ åñð ƒøŕŵåŕð]</value>
+  </data>
+  <data name="DesktopHistoryMouseButtonsCard.Description" xml:space="preserve">
+    <value>[Ûšë ḿøûšë ñåvîĝåţîøñ ɓûţţøñš ŵħîļë ţħë Infinity þŕëvîëŵ îš øþëñ]</value>
+  </data>
+  <data name="DesktopHistoryBackShortcutHeader" xml:space="preserve">
+    <value>[Ɓåçķ šħøŕţçûţ]</value>
+  </data>
+  <data name="DesktopHistoryBackShortcutDescription" xml:space="preserve">
+    <value>[Ŕëţûŕñ ţø ţħë þŕëvîøûšļÿ vîšîţëð ŵîñðøŵ øŕ þåĝë]</value>
+  </data>
+  <data name="DesktopHistoryForwardShortcutHeader" xml:space="preserve">
+    <value>[Ƒøŕŵåŕð šħøŕţçûţ]</value>
+  </data>
+  <data name="DesktopHistoryForwardShortcutDescription" xml:space="preserve">
+    <value>[Ḿøvë ƒøŕŵåŕð åƒţëŕ ñåvîĝåţîñĝ ɓåçķ]</value>
+  </data>
+  <data name="DesktopHistoryShortcutRecordingHint.Text" xml:space="preserve">
+    <value>[Þŕëšš ţŵø ḿøðîƒîëŕ ķëÿš, ţħëñ å ţŕîĝĝëŕ ķëÿ]</value>
+  </data>
+  <data name="DesktopHistoryShortcutStartWithModifiers" xml:space="preserve">
+    <value>[Šţåŕţ ŵîţħ ţŵø ḿøðîƒîëŕ ķëÿš, ţħëñ þŕëšš å ţŕîĝĝëŕ ķëÿ.]</value>
+  </data>
+  <data name="DesktopHistoryShortcutInvalid" xml:space="preserve">
+    <value>[Ûšë ţŵø ḿøðîƒîëŕ ķëÿš ƒøļļøŵëð ɓÿ øñë ñøñ-ḿøðîƒîëŕ ķëÿ.]</value>
+  </data>
+  <data name="DesktopHistoryShortcutConflict" xml:space="preserve">
+    <value>[Ţħîš šħøŕţçûţ çøñƒļîçţš ŵîţħ åñøţħëŕ Infinity šħøŕţçûţ.]</value>
+  </data>
+  <data name="DesktopHistoryClearCard.Header" xml:space="preserve">
+    <value>[Çļëåŕ ðëšķţøþ ħîšţøŕÿ]</value>
+  </data>
+  <data name="DesktopHistoryClearCard.Description" xml:space="preserve">
+    <value>[Ŕëḿøvë ëvëŕÿ ŕëçøŕðëð ðëšţîñåţîøñ ƒŕøḿ ţħîš šëššîøñ]</value>
+  </data>
+  <data name="DesktopHistoryClearButton.Content" xml:space="preserve">
+    <value>[Çļëåŕ]</value>
+  </data>
+  <data name="DesktopHistoryMenuButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>[Ðëšķţøþ ħîšţøŕÿ]</value>
+  </data>
+  <data name="DesktopHistoryMenuButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>[Ðëšķţøþ ħîšţøŕÿ]</value>
+  </data>
+  <data name="DesktopHistoryBackHeader.Text" xml:space="preserve">
+    <value>[Ɓåçķ]</value>
+  </data>
+  <data name="DesktopHistoryForwardHeader.Text" xml:space="preserve">
+    <value>[Ƒøŕŵåŕð]</value>
+  </data>
+  <data name="DesktopHistoryEmptyBack.Text" xml:space="preserve">
+    <value>[Ñø ëåŕļîëŕ ðëšţîñåţîøñš]</value>
+  </data>
+  <data name="DesktopHistoryEmptyForward.Text" xml:space="preserve">
+    <value>[Ñø ļåţëŕ ðëšţîñåţîøñš]</value>
+  </data>
+  <data name="DesktopHistoryBackToolTip" xml:space="preserve">
+    <value>[Ɓåçķ ({0})]</value>
+  </data>
+  <data name="DesktopHistoryForwardToolTip" xml:space="preserve">
+    <value>[Ƒøŕŵåŕð ({0})]</value>
+  </data>
+  <data name="DesktopHistoryUntitledWindow" xml:space="preserve">
+    <value>[Ûñţîţļëð ŵîñðøŵ]</value>
+  </data>
+  <data name="DesktopHistoryPageOnly" xml:space="preserve">
+    <value>[Þåĝë]</value>
+  </data>
+  <data name="DesktopHistoryJustNow" xml:space="preserve">
+    <value>[Ĵûšţ ñøŵ]</value>
+  </data>
+  <data name="DesktopHistoryMinutesAgo" xml:space="preserve">
+    <value>[{0} ḿîñ åĝø]</value>
+  </data>
+  <data name="DesktopHistoryHoursAgo" xml:space="preserve">
+    <value>[{0} ħŕ åĝø]</value>
+  </data>
+  <data name="DesktopHistoryDaysAgo" xml:space="preserve">
+    <value>[{0} ðåÿš åĝø]</value>
+  </data>
 </root>

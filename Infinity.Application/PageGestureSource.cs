@@ -50,7 +50,7 @@ public class PageGestureSource(IKeyboardInputSource keyboardInputSource,
 
     private void HandleKeyDown(object? sender, KeyEventArgs args)
     {
-        if (!modifierKeyState.IsActive)
+        if (args.Handled || !modifierKeyState.IsActive)
         {
             return;
         }
@@ -92,7 +92,7 @@ public class PageGestureSource(IKeyboardInputSource keyboardInputSource,
 
     private void HandleKeyUp(object? sender, KeyEventArgs args)
     {
-        if (!triggerKeys.Contains(args.VirtualKeyCode))
+        if (args.Handled || !triggerKeys.Contains(args.VirtualKeyCode))
         {
             return;
         }

@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Application.DependencyInjection;
 using Elysium.Platform.Abstractions;
+using Elysium.Platform.Windows;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
@@ -73,6 +74,71 @@ public class DesktopSettingsModule :
                     provider.GetRequiredService<HotKeysBuilderOptions>(),
                     provider.GetRequiredService<IKeyLabelProvider>(),
                     provider.GetRequiredService<ITextLocalizer>()))
+            .AddViewFor<DesktopHistoryEnabledView, IDesktopViewModel, DesktopHistoryEnabledViewModel>(ServiceLifetime.Transient,
+                provider => new DesktopHistoryEnabledView(),
+                provider => new DesktopHistoryEnabledViewModel(provider,
+                    provider.GetRequiredService<IServiceFactory>(),
+                    provider.GetRequiredService<IMessenger>(),
+                    provider.GetRequiredService<IDisposer>(),
+                    provider.GetRequiredService<IDispatcher>(),
+                    provider.GetRequiredService<Settings>(),
+                    provider.GetRequiredService<IWritableOptions<Settings>>(),
+                    config => config.DesktopHistoryEnabled,
+                    (config, enabled) => config.DesktopHistoryEnabled = enabled))
+            .AddViewFor<DesktopHistoryCapacityView, IDesktopViewModel, DesktopHistoryCapacityViewModel>(ServiceLifetime.Transient,
+                provider => new DesktopHistoryCapacityView(),
+                provider => new DesktopHistoryCapacityViewModel(provider,
+                    provider.GetRequiredService<IServiceFactory>(),
+                    provider.GetRequiredService<IMessenger>(),
+                    provider.GetRequiredService<IDisposer>(),
+                    provider.GetRequiredService<IDispatcher>(),
+                    provider.GetRequiredService<Settings>(),
+                    provider.GetRequiredService<IWritableOptions<Settings>>(),
+                    config => config.DesktopHistoryCapacity,
+                    (config, capacity) => config.DesktopHistoryCapacity = capacity))
+            .AddViewFor<DesktopHistoryBackShortcutView, IDesktopViewModel, DesktopHistoryBackShortcutViewModel>(ServiceLifetime.Transient,
+                provider => new DesktopHistoryBackShortcutView(),
+                provider => new DesktopHistoryBackShortcutViewModel(provider,
+                    provider.GetRequiredService<IServiceFactory>(),
+                    provider.GetRequiredService<IMessenger>(),
+                    provider.GetRequiredService<IDisposer>(),
+                    provider.GetRequiredService<IDispatcher>(),
+                    provider.GetRequiredService<Settings>(),
+                    provider.GetRequiredService<IWritableOptions<Settings>>(),
+                    new HotKeysBuilder(new HotKeysBuilderOptions { KeyCount = 3 }),
+                    provider.GetRequiredService<IKeyLabelProvider>(),
+                    provider.GetRequiredService<ITextLocalizer>()))
+            .AddViewFor<DesktopHistoryForwardShortcutView, IDesktopViewModel, DesktopHistoryForwardShortcutViewModel>(ServiceLifetime.Transient,
+                provider => new DesktopHistoryForwardShortcutView(),
+                provider => new DesktopHistoryForwardShortcutViewModel(provider,
+                    provider.GetRequiredService<IServiceFactory>(),
+                    provider.GetRequiredService<IMessenger>(),
+                    provider.GetRequiredService<IDisposer>(),
+                    provider.GetRequiredService<IDispatcher>(),
+                    provider.GetRequiredService<Settings>(),
+                    provider.GetRequiredService<IWritableOptions<Settings>>(),
+                    new HotKeysBuilder(new HotKeysBuilderOptions { KeyCount = 3 }),
+                    provider.GetRequiredService<IKeyLabelProvider>(),
+                    provider.GetRequiredService<ITextLocalizer>()))
+            .AddViewFor<DesktopHistoryMouseButtonsView, IDesktopViewModel, DesktopHistoryMouseButtonsViewModel>(ServiceLifetime.Transient,
+                provider => new DesktopHistoryMouseButtonsView(),
+                provider => new DesktopHistoryMouseButtonsViewModel(provider,
+                    provider.GetRequiredService<IServiceFactory>(),
+                    provider.GetRequiredService<IMessenger>(),
+                    provider.GetRequiredService<IDisposer>(),
+                    provider.GetRequiredService<IDispatcher>(),
+                    provider.GetRequiredService<Settings>(),
+                    provider.GetRequiredService<IWritableOptions<Settings>>(),
+                    config => config.DesktopHistoryMouseButtonsEnabled,
+                    (config, enabled) => config.DesktopHistoryMouseButtonsEnabled = enabled))
+            .AddViewFor<DesktopHistoryClearView, IDesktopViewModel, DesktopHistoryClearViewModel>(ServiceLifetime.Transient,
+                provider => new DesktopHistoryClearView(),
+                provider => new DesktopHistoryClearViewModel(provider,
+                    provider.GetRequiredService<IServiceFactory>(),
+                    provider.GetRequiredService<IMessenger>(),
+                    provider.GetRequiredService<IDisposer>(),
+                    provider.GetRequiredService<IDispatcher>(),
+                    provider.GetRequiredService<IDesktopNavigationHistory>()))
             .AddViewFor<WindowPeekView, IDesktopViewModel, WindowPeekViewModel>(ServiceLifetime.Transient,
                 provider => new WindowPeekView(),
                 provider => new WindowPeekViewModel(provider,

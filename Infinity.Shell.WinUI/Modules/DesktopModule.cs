@@ -58,7 +58,22 @@ public class DesktopModule :
             .AddView(ServiceLifetime.Singleton, provider => new ScrollTriggerView())
             .AddViewFor(
                 ServiceLifetime.Singleton,
-                provider => new TrackedWindowCollectionView(),
+                provider => new DesktopHistoryView(),
+                provider => new DesktopHistoryViewModel(
+                    provider,
+                    provider.GetRequiredService<IServiceFactory>(),
+                    provider.GetRequiredService<IMessenger>(),
+                    provider.GetRequiredService<IDisposer>(),
+                    provider.GetRequiredService<IDispatcher>(),
+                    provider.GetRequiredService<IDesktopNavigationHistory>(),
+                    provider.GetRequiredService<ITextLocalizer>(),
+                    provider.GetRequiredService<IKeyLabelProvider>(),
+                    provider.GetRequiredService<Settings>()))
+            .AddViewFor(
+                ServiceLifetime.Singleton,
+                provider => new TrackedWindowCollectionView(
+                    provider.GetRequiredService<IDesktopNavigationHistory>(),
+                    provider.GetRequiredService<IOptionsMonitor<Settings>>()),
                 provider => new TrackedWindowCollectionViewModel(
                     provider,
                     provider.GetRequiredService<IServiceFactory>(),

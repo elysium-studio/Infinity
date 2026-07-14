@@ -62,9 +62,17 @@ public class ConfigurationModule :
             })
             .WithChangeHandler((provider, options, _) =>
                 provider.GetRequiredService<WindowDragScrollerConfiguration>()
-                    .SpeedLevel = options.DragScrollSpeed);
+                    .SpeedLevel = options.DragScrollSpeed)
+            .WithChangeHandler((provider, options, _) =>
+                UpdateDesktopHistoryConfiguration(provider.GetRequiredService<DesktopHistoryConfiguration>(), options));
 
         services
+            .AddSingleton(provider =>
+            {
+                DesktopHistoryConfiguration configuration = new();
+                UpdateDesktopHistoryConfiguration(configuration, provider.GetRequiredService<Settings>());
+                return configuration;
+            })
             .AddSingleton(provider =>
                 new ScrollerConfiguration
                 {
@@ -88,4 +96,11 @@ public class ConfigurationModule :
                 return configBuilder.Build();
             });
     }
+
+    private static void UpdateDesktopHistoryConfiguration(DesktopHistoryConfiguration configuration, Settings settings) =>
+        configuration.Update(settings.DesktopHistoryEnabled,
+            (int)Math.Round(settings.DesktopHistoryCapacity),
+            settings.DesktopHistoryMouseButtonsEnabled,
+            settings.DesktopHistoryBackShortcut,
+            settings.DesktopHistoryForwardShortcut);
 }
