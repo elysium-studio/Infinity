@@ -115,6 +115,7 @@ public partial class TrackedWindowView :
     private void HandleUnloaded(object sender, RoutedEventArgs args)
     {
         CompleteThumbnailDrag(false);
+        DisposeThumbnailPreviewElevation();
         WindowContainer.ReleasePointerCaptures();
         CancelPendingPeek();
         EndPeek();
@@ -141,6 +142,7 @@ public partial class TrackedWindowView :
     private void HandleDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {
         CompleteThumbnailDrag(false);
+        DisposeThumbnailPreviewElevation();
         WindowContainer.ReleasePointerCaptures();
         CancelPendingPeek();
         EndPeek();
@@ -277,7 +279,15 @@ public partial class TrackedWindowView :
         dragCoordinateRoot = coordinateRoot;
         dragStartPoint = args.GetCurrentPoint(coordinateRoot).Position;
         ElevateThumbnailZIndex();
-        dragPreviewElevation = FindWindowCollectionView()?.ElevateWindowPreview(ViewModel, ThumbnailHost);
+
+        if (dragPreviewElevation is null)
+        {
+            dragPreviewElevation = FindWindowCollectionView()?.ElevateWindowPreview(ViewModel, ThumbnailHost);
+        }
+        else
+        {
+            dragPreviewElevation.Activate();
+        }
 
         args.Handled = true;
     }
@@ -429,15 +439,20 @@ public partial class TrackedWindowView :
 
         try
         {
-            dragPreviewElevation?.Dispose();
+            dragPreviewElevation?.Deactivate();
         }
         finally
         {
-            dragPreviewElevation = null;
             RestoreThumbnailZIndex();
         }
 
         activeViewModel?.EndThumbnailDrag();
+    }
+
+    private void DisposeThumbnailPreviewElevation()
+    {
+        dragPreviewElevation?.Dispose();
+        dragPreviewElevation = null;
     }
 
     private void UpdateThumbnailDragScroll(PointerRoutedEventArgs args)

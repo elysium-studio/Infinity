@@ -17,6 +17,7 @@ internal class ThumbnailPreviewElevation :
     private readonly ThumbnailProxyHandle proxyHandle;
     private double previewWidth;
     private double previewHeight;
+    private bool isActive;
     private bool isDisposed;
 
     private ThumbnailPreviewElevation(Canvas overlay,
@@ -30,8 +31,6 @@ internal class ThumbnailPreviewElevation :
         this.overlayHost = overlayHost;
         this.previewOverlay = previewOverlay;
         this.proxyHandle = proxyHandle;
-
-        CompositionTarget.Rendering += HandleRendering;
     }
 
     public static ThumbnailPreviewElevation? TryCreate(Canvas overlay,
@@ -49,7 +48,8 @@ internal class ThumbnailPreviewElevation :
         {
             Width = bounds.Width,
             Height = bounds.Height,
-            IsHitTestVisible = false
+            IsHitTestVisible = false,
+            Visibility = Visibility.Collapsed
         };
 
         Canvas.SetLeft(overlayHost, bounds.X);
@@ -74,6 +74,7 @@ internal class ThumbnailPreviewElevation :
         try
         {
             elevation.SetPreviewSize(bounds.Width, bounds.Height);
+            elevation.Activate();
             return elevation;
         }
         catch
@@ -81,6 +82,31 @@ internal class ThumbnailPreviewElevation :
             elevation.Dispose();
             return null;
         }
+    }
+
+    public void Activate()
+    {
+        if (isDisposed || isActive)
+        {
+            return;
+        }
+
+        Update();
+        overlayHost.Visibility = Visibility.Visible;
+        isActive = true;
+        CompositionTarget.Rendering += HandleRendering;
+    }
+
+    public void Deactivate()
+    {
+        if (!isActive)
+        {
+            return;
+        }
+
+        CompositionTarget.Rendering -= HandleRendering;
+        isActive = false;
+        overlayHost.Visibility = Visibility.Collapsed;
     }
 
     public void Update()
@@ -109,8 +135,8 @@ internal class ThumbnailPreviewElevation :
             return;
         }
 
+        Deactivate();
         isDisposed = true;
-        CompositionTarget.Rendering -= HandleRendering;
 
         try
         {
