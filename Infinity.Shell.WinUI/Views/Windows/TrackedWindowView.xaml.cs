@@ -426,9 +426,17 @@ public partial class TrackedWindowView :
         ownsDragScrollSession = false;
         isThumbnailDragging = false;
         WindowContainer.Translation = Vector3.Zero;
-        RestoreThumbnailZIndex();
-        dragPreviewElevation?.Dispose();
-        dragPreviewElevation = null;
+
+        try
+        {
+            dragPreviewElevation?.Dispose();
+        }
+        finally
+        {
+            dragPreviewElevation = null;
+            RestoreThumbnailZIndex();
+        }
+
         activeViewModel?.EndThumbnailDrag();
     }
 
@@ -905,7 +913,7 @@ public partial class TrackedWindowView :
 
         try
         {
-            SetCanvasZIndex(isThumbnailDragging ? DraggedZIndex : ComputeZIndex());
+            SetCanvasZIndex(dragZIndexContainer is not null ? DraggedZIndex : ComputeZIndex());
         }
         catch
         {
