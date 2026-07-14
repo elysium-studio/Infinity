@@ -405,16 +405,6 @@ public partial class TrackedWindowView :
         {
             ResetDragVisual();
         }
-        else if (!DispatcherQueue.TryEnqueue(() =>
-        {
-            if (isDragVisualPendingReset)
-            {
-                ResetDragVisual();
-            }
-        }))
-        {
-            ResetDragVisual();
-        }
     }
 
     private void ResetDragVisual()
