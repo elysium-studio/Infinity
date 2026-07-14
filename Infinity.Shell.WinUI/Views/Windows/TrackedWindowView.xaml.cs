@@ -43,11 +43,10 @@ public partial class TrackedWindowView :
     private FrameworkElement? dragScrollBoundary;
     private TrackedWindowViewModel? draggedViewModel;
     private double dragScale;
-    private double dragStartCanvasLeft;
-    private double dragStartCanvasTop;
     private double dragHorizontalDelta;
     private double dragVerticalDelta;
     private bool ownsDragScrollSession;
+    private bool isDragVisualPendingReset;
     private bool isThumbnailDragging;
     private bool isPointerOverWindow;
 
@@ -311,18 +310,6 @@ public partial class TrackedWindowView :
             draggedViewModel = currentViewModel;
             dragScale = currentScale;
             dragScrollBoundary = FindThumbnailDragScrollBoundary();
-            dragStartCanvasLeft = Canvas.GetLeft(WindowContainer);
-            dragStartCanvasTop = Canvas.GetTop(WindowContainer);
-
-            if (!double.IsFinite(dragStartCanvasLeft))
-            {
-                dragStartCanvasLeft = currentViewModel.X;
-            }
-
-            if (!double.IsFinite(dragStartCanvasTop))
-            {
-                dragStartCanvasTop = currentViewModel.Y;
-            }
 
             isThumbnailDragging = true;
             ownsDragScrollSession = thumbnailDragScroller.Begin(currentViewModel.Handle);
@@ -401,25 +388,39 @@ public partial class TrackedWindowView :
             thumbnailDragScroller.End(activeViewModel.Handle);
         }
 
-        if (activeViewModel is not null && commitVisualPosition)
-        {
-            Canvas.SetLeft(WindowContainer, dragStartCanvasLeft + dragHorizontalDelta);
-            Canvas.SetTop(WindowContainer, dragStartCanvasTop + dragVerticalDelta);
-        }
-
         draggedViewModel = null;
         dragPointerId = null;
         dragCoordinateRoot = null;
         dragScrollBoundary = null;
         dragScale = 0;
-        dragStartCanvasLeft = 0;
-        dragStartCanvasTop = 0;
+        bool hasVisualDelta = dragHorizontalDelta != 0 || dragVerticalDelta != 0;
         dragHorizontalDelta = 0;
         dragVerticalDelta = 0;
         ownsDragScrollSession = false;
         isThumbnailDragging = false;
-        WindowContainer.Translation = Vector3.Zero;
+        isDragVisualPendingReset = activeViewModel is not null && commitVisualPosition && hasVisualDelta;
         activeViewModel?.EndThumbnailDrag();
+
+        if (!isDragVisualPendingReset)
+        {
+            ResetDragVisual();
+        }
+        else if (!DispatcherQueue.TryEnqueue(() =>
+        {
+            if (isDragVisualPendingReset)
+            {
+                ResetDragVisual();
+            }
+        }))
+        {
+            ResetDragVisual();
+        }
+    }
+
+    private void ResetDragVisual()
+    {
+        isDragVisualPendingReset = false;
+        WindowContainer.Translation = Vector3.Zero;
     }
 
     private void UpdateThumbnailDragScroll(PointerRoutedEventArgs args)
@@ -660,6 +661,12 @@ public partial class TrackedWindowView :
 
     private void ApplyFromPropertyName(string? propertyName)
     {
+        if (isDragVisualPendingReset &&
+            (propertyName == nameof(TrackedWindowViewModel.X) || propertyName == nameof(TrackedWindowViewModel.Y)))
+        {
+            ResetDragVisual();
+        }
+
         if (propertyName == nameof(TrackedWindowViewModel.IsFiltered))
         {
             ApplyFilterState();
