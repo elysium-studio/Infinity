@@ -49,7 +49,6 @@ internal class ThumbnailPreviewElevation :
 
         Canvas.SetLeft(overlayHost, bounds.X);
         Canvas.SetTop(overlayHost, bounds.Y);
-        Canvas.SetZIndex(overlayHost, int.MaxValue);
         overlay.Children.Add(overlayHost);
 
         ThumbnailPreviewElevation elevation = new(overlay,
