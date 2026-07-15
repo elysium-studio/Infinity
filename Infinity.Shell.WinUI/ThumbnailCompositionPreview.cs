@@ -11,12 +11,15 @@ namespace Infinity.Shell.WinUI;
 public class ThumbnailCompositionPreview :
     IDisposable
 {
+    private const float CornerRadius = 8.0f;
+
     private readonly FrameworkElement host;
     private readonly IWindowPreview preview;
     private readonly SystemVisualProxyVisualPrivate proxy;
+    private readonly CompositionRoundedRectangleGeometry roundedGeometry;
+    private readonly CompositionGeometricClip roundedClip;
     private readonly ILogger logger;
     private bool isDisposed;
-    private bool isSuspended;
     private bool isVisible;
     private float width;
     private float height;
@@ -24,11 +27,15 @@ public class ThumbnailCompositionPreview :
     private ThumbnailCompositionPreview(FrameworkElement host,
         IWindowPreview preview,
         SystemVisualProxyVisualPrivate proxy,
+        CompositionRoundedRectangleGeometry roundedGeometry,
+        CompositionGeometricClip roundedClip,
         ILogger logger)
     {
         this.host = host;
         this.preview = preview;
         this.proxy = proxy;
+        this.roundedGeometry = roundedGeometry;
+        this.roundedClip = roundedClip;
         this.logger = logger;
     }
 
@@ -50,34 +57,36 @@ public class ThumbnailCompositionPreview :
         }
 
         SystemVisualProxyVisualPrivate? proxy = null;
+        CompositionRoundedRectangleGeometry? roundedGeometry = null;
+        CompositionGeometricClip? roundedClip = null;
 
         try
         {
             Visual hostVisual = ElementCompositionPreview.GetElementVisual(host);
-            proxy = SystemVisualProxyVisualPrivate.Create(hostVisual.Compositor);
+            Compositor compositor = hostVisual.Compositor;
+            proxy = SystemVisualProxyVisualPrivate.Create(compositor);
+            roundedGeometry = compositor.CreateRoundedRectangleGeometry();
+            roundedClip = compositor.CreateGeometricClip(roundedGeometry);
+            proxy.Visual.Clip = roundedClip;
             ElementCompositionPreview.SetElementChildVisual(host, proxy.Visual);
 
-            return new ThumbnailCompositionPreview(host, preview, proxy, logger);
+            return new ThumbnailCompositionPreview(host,
+                preview,
+                proxy,
+                roundedGeometry,
+                roundedClip,
+                logger);
         }
         catch (Exception exception)
         {
             logger.LogError(exception, "Failed to create the composition thumbnail preview");
             TryDetach(host, proxy?.Visual, logger);
+            roundedClip?.Dispose();
+            roundedGeometry?.Dispose();
             proxy?.Dispose();
             preview.Dispose();
             return null;
         }
-    }
-
-    public void SetSuspended(bool isSuspended)
-    {
-        if (isDisposed || this.isSuspended == isSuspended)
-        {
-            return;
-        }
-
-        this.isSuspended = isSuspended;
-        ApplyTarget();
     }
 
     public void Update(double width, double height, bool isVisible)
@@ -102,7 +111,9 @@ public class ThumbnailCompositionPreview :
         this.height = normalizedHeight;
         this.isVisible = normalizedVisibility;
         proxy.Visual.Size = new Vector2(normalizedWidth, normalizedHeight);
-        ApplyTarget();
+        UpdateClip(normalizedWidth, normalizedHeight);
+        proxy.Visual.IsVisible = normalizedVisibility;
+        preview.SetTarget(proxy.Handle, normalizedWidth, normalizedHeight, normalizedVisibility);
     }
 
     public void Dispose()
@@ -115,16 +126,19 @@ public class ThumbnailCompositionPreview :
         isDisposed = true;
         preview.SetTarget(0, 0.0, 0.0, false);
         TryDetach(host, proxy.Visual, logger);
+        proxy.Visual.Clip = null;
+        roundedClip.Dispose();
+        roundedGeometry.Dispose();
         proxy.Dispose();
         preview.Dispose();
         GC.SuppressFinalize(this);
     }
 
-    private void ApplyTarget()
+    private void UpdateClip(float width, float height)
     {
-        bool effectiveVisibility = isVisible && !isSuspended;
-        proxy.Visual.IsVisible = effectiveVisibility;
-        preview.SetTarget(proxy.Handle, width, height, isVisible);
+        float radius = MathF.Min(CornerRadius, MathF.Min(width, height) / 2.0f);
+        roundedGeometry.Size = new Vector2(width, height);
+        roundedGeometry.CornerRadius = new Vector2(radius, radius);
     }
 
     private static void TryDetach(FrameworkElement host, Visual? visual, ILogger logger)

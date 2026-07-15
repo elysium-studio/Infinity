@@ -31,17 +31,6 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
         }
     }
 
-    public nint OwnerWindowHandle
-    {
-        get
-        {
-            lock (syncLock)
-            {
-                return isDisposed ? 0 : ownerWindowHandle;
-            }
-        }
-    }
-
     public void Apply(DwmWindowPreview preview,
         nint sharedTargetHandle,
         double width,
