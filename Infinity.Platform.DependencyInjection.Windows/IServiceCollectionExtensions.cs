@@ -49,6 +49,7 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<WindowConcealer>();
             services.AddSingleton<IWindowConcealer>(provider => provider.GetRequiredService<WindowConcealer>());
             services.AddSingleton<IWindowConcealmentRecovery>(provider => provider.GetRequiredService<WindowConcealer>());
+            services.AddSingleton<IWindowDragPreviewFactory, DwmWindowDragPreviewFactory>();
             services.AddSingleton<IWindowPreviewSurface, DwmWindowPreviewSurface>();
             services.AddSingleton<IWindowTitleReader, WindowTitleReader>();
 

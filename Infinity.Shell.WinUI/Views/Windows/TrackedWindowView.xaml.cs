@@ -31,6 +31,7 @@ public partial class TrackedWindowView :
     private TrackedWindowViewModel? viewModel;
     private TrackedWindowViewModel? subscribedViewModel;
     private ThumbnailCompositionPreview? preview;
+    private IWindowDragPreview? dragPreview;
     private DispatcherQueueTimer? peekTimer;
     private TrackedWindowViewModel? pendingPeekViewModel;
     private TrackedWindowViewModel? peekingViewModel;
@@ -39,6 +40,8 @@ public partial class TrackedWindowView :
     private int previewUpdateGeneration;
     private uint? dragPointerId;
     private Point dragStartPoint;
+    private WindowPreviewBounds dragPreviewStartBounds;
+    private double dragPreviewScale;
     private UIElement? dragCoordinateRoot;
     private FrameworkElement? dragScrollBoundary;
     private TrackedWindowViewModel? draggedViewModel;
@@ -53,16 +56,19 @@ public partial class TrackedWindowView :
 
     private readonly IStringLocalizer localizer;
     private readonly IThumbnailDragScroller thumbnailDragScroller;
+    private readonly IWindowDragPreviewFactory windowDragPreviewFactory;
     private readonly IWindowPreviewSurface windowPreviewSurface;
     private readonly ILogger<TrackedWindowView> logger;
 
     public TrackedWindowView(IStringLocalizer localizer,
         IThumbnailDragScroller thumbnailDragScroller,
+        IWindowDragPreviewFactory windowDragPreviewFactory,
         IWindowPreviewSurface windowPreviewSurface,
         ILogger<TrackedWindowView> logger)
     {
         this.localizer = localizer;
         this.thumbnailDragScroller = thumbnailDragScroller;
+        this.windowDragPreviewFactory = windowDragPreviewFactory;
         this.windowPreviewSurface = windowPreviewSurface;
         this.logger = logger;
         InitializeComponent();
@@ -237,6 +243,10 @@ public partial class TrackedWindowView :
         dragPointerId = args.Pointer.PointerId;
         dragCoordinateRoot = coordinateRoot;
         dragStartPoint = args.GetCurrentPoint(coordinateRoot).Position;
+        CancelPendingPeek();
+        EndPeek();
+        ResetHoverScale();
+        BeginDragPreview();
         isDragZIndexElevated = true;
         ApplyZIndex();
 
@@ -287,6 +297,7 @@ public partial class TrackedWindowView :
         }
 
         WindowContainer.Translation = new Vector3((float)horizontalDistance, (float)verticalDistance, 0);
+        UpdateDragPreview(horizontalDistance, verticalDistance);
 
         if (draggedViewModel?.MoveThumbnail(horizontalDistance / dragScale,
             verticalDistance / dragScale) == true)
@@ -350,6 +361,8 @@ public partial class TrackedWindowView :
     private void CompleteThumbnailDrag(bool commitVisualPosition = true)
     {
         TrackedWindowViewModel? activeViewModel = draggedViewModel;
+        EndDragPreview();
+
         if (activeViewModel is not null && ownsDragScrollSession)
         {
             thumbnailDragScroller.End(activeViewModel.Handle);
@@ -383,6 +396,131 @@ public partial class TrackedWindowView :
         isDragVisualPendingReset = false;
         WindowContainer.Translation = Vector3.Zero;
     }
+
+    private void BeginDragPreview()
+    {
+        if (preview is null || viewModel is null || dragPreview is not null ||
+            !TryGetDragPreviewBounds(out nint ownerWindowHandle,
+                out WindowPreviewBounds bounds,
+                out double rasterizationScale))
+        {
+            return;
+        }
+
+        IWindowDragPreview? createdPreview = windowDragPreviewFactory.Create(ownerWindowHandle,
+            viewModel.Handle,
+            bounds);
+
+        if (createdPreview is null)
+        {
+            return;
+        }
+
+        dragPreview = createdPreview;
+        dragPreviewStartBounds = bounds;
+        dragPreviewScale = rasterizationScale;
+        preview.SetSuspended(true);
+    }
+
+    private void UpdateDragPreview(double horizontalDistance, double verticalDistance)
+    {
+        if (dragPreview is null)
+        {
+            return;
+        }
+
+        int horizontalPixels = ClampToInt(Math.Round(horizontalDistance * dragPreviewScale));
+        int verticalPixels = ClampToInt(Math.Round(verticalDistance * dragPreviewScale));
+        WindowPreviewBounds bounds = dragPreviewStartBounds with
+        {
+            X = AddClamped(dragPreviewStartBounds.X, horizontalPixels),
+            Y = AddClamped(dragPreviewStartBounds.Y, verticalPixels)
+        };
+
+        try
+        {
+            dragPreview.Move(bounds);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Failed to move the DWM drag preview");
+            EndDragPreview();
+        }
+    }
+
+    private void EndDragPreview()
+    {
+        IWindowDragPreview? currentDragPreview = dragPreview;
+
+        if (currentDragPreview is null)
+        {
+            return;
+        }
+
+        dragPreview = null;
+        preview?.SetSuspended(false);
+
+        try
+        {
+            currentDragPreview.Dispose();
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Failed to dispose the DWM drag preview");
+        }
+    }
+
+    private bool TryGetDragPreviewBounds(out nint ownerWindowHandle,
+        out WindowPreviewBounds bounds,
+        out double rasterizationScale)
+    {
+        ownerWindowHandle = 0;
+        bounds = default;
+        rasterizationScale = 0.0;
+
+        XamlRoot? xamlRoot = XamlRoot;
+        UIElement? rootContent = xamlRoot?.Content as UIElement;
+        double width = ThumbnailHost.ActualWidth;
+        double height = ThumbnailHost.ActualHeight;
+
+        if (xamlRoot is null || rootContent is null ||
+            width <= 0.0 || height <= 0.0 ||
+            !double.IsFinite(width) || !double.IsFinite(height))
+        {
+            return false;
+        }
+
+        try
+        {
+            Point position = ThumbnailHost.TransformToVisual(rootContent).TransformPoint(default);
+            rasterizationScale = xamlRoot.RasterizationScale;
+
+            if (!double.IsFinite(position.X) || !double.IsFinite(position.Y) ||
+                !double.IsFinite(rasterizationScale) || rasterizationScale <= 0.0)
+            {
+                return false;
+            }
+
+            ownerWindowHandle = windowPreviewSurface.OwnerWindowHandle;
+            bounds = new WindowPreviewBounds(
+                ClampToInt(Math.Round(position.X * rasterizationScale)),
+                ClampToInt(Math.Round(position.Y * rasterizationScale)),
+                Math.Max(1, ClampToInt(Math.Round(width * rasterizationScale))),
+                Math.Max(1, ClampToInt(Math.Round(height * rasterizationScale))));
+            return ownerWindowHandle != 0;
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Failed to calculate the DWM drag preview bounds");
+            return false;
+        }
+    }
+
+    private static int AddClamped(int value, int delta) =>
+        (int)Math.Clamp((long)value + delta, int.MinValue, int.MaxValue);
+
+    private static int ClampToInt(double value) =>
+        (int)Math.Clamp(value, int.MinValue, int.MaxValue);
 
     private void UpdateThumbnailDragScroll(PointerRoutedEventArgs args)
     {

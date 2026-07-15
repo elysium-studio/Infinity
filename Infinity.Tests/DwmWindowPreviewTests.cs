@@ -7,6 +7,18 @@ namespace Infinity.Tests;
 public class DwmWindowPreviewTests
 {
     [Fact]
+    public void DragPreviewRejectsInvalidWindowBounds()
+    {
+        DwmWindowDragPreviewFactory factory = new(NullLogger<DwmWindowDragPreviewFactory>.Instance);
+
+        IWindowDragPreview? preview = factory.Create(new IntPtr(1),
+            new IntPtr(2),
+            new WindowPreviewBounds(0, 0, 0, 200));
+
+        Assert.Null(preview);
+    }
+
+    [Fact]
     public void TargetIsForwardedToTheOwningSurface()
     {
         TestSurface surface = new();

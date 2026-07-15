@@ -11,19 +11,12 @@ namespace Infinity.Shell.WinUI;
 public class ThumbnailCompositionPreview :
     IDisposable
 {
-    private const float CornerRadius = 8.0f;
-
     private readonly FrameworkElement host;
     private readonly IWindowPreview preview;
     private readonly SystemVisualProxyVisualPrivate proxy;
-    private readonly CompositionVisualSurface visualSurface;
-    private readonly CompositionSurfaceBrush surfaceBrush;
-    private readonly CompositionRoundedRectangleGeometry roundedGeometry;
-    private readonly CompositionGeometricClip roundedClip;
-    private readonly SpriteVisual spriteVisual;
     private readonly ILogger logger;
     private bool isDisposed;
-    private bool hasUpdate;
+    private bool isSuspended;
     private bool isVisible;
     private float width;
     private float height;
@@ -31,21 +24,11 @@ public class ThumbnailCompositionPreview :
     private ThumbnailCompositionPreview(FrameworkElement host,
         IWindowPreview preview,
         SystemVisualProxyVisualPrivate proxy,
-        CompositionVisualSurface visualSurface,
-        CompositionSurfaceBrush surfaceBrush,
-        CompositionRoundedRectangleGeometry roundedGeometry,
-        CompositionGeometricClip roundedClip,
-        SpriteVisual spriteVisual,
         ILogger logger)
     {
         this.host = host;
         this.preview = preview;
         this.proxy = proxy;
-        this.visualSurface = visualSurface;
-        this.surfaceBrush = surfaceBrush;
-        this.roundedGeometry = roundedGeometry;
-        this.roundedClip = roundedClip;
-        this.spriteVisual = spriteVisual;
         this.logger = logger;
     }
 
@@ -67,56 +50,34 @@ public class ThumbnailCompositionPreview :
         }
 
         SystemVisualProxyVisualPrivate? proxy = null;
-        CompositionVisualSurface? visualSurface = null;
-        CompositionSurfaceBrush? surfaceBrush = null;
-        CompositionRoundedRectangleGeometry? roundedGeometry = null;
-        CompositionGeometricClip? roundedClip = null;
-        SpriteVisual? spriteVisual = null;
 
         try
         {
             Visual hostVisual = ElementCompositionPreview.GetElementVisual(host);
-            Compositor compositor = hostVisual.Compositor;
-            proxy = SystemVisualProxyVisualPrivate.Create(compositor);
-            visualSurface = compositor.CreateVisualSurface();
-            visualSurface.SourceVisual = proxy.Visual;
-            visualSurface.SourceOffset = Vector2.Zero;
+            proxy = SystemVisualProxyVisualPrivate.Create(hostVisual.Compositor);
+            ElementCompositionPreview.SetElementChildVisual(host, proxy.Visual);
 
-            surfaceBrush = compositor.CreateSurfaceBrush(visualSurface);
-            surfaceBrush.Stretch = CompositionStretch.Fill;
-
-            roundedGeometry = compositor.CreateRoundedRectangleGeometry();
-            roundedClip = compositor.CreateGeometricClip(roundedGeometry);
-
-            spriteVisual = compositor.CreateSpriteVisual();
-            spriteVisual.Brush = surfaceBrush;
-            spriteVisual.Clip = roundedClip;
-            spriteVisual.RelativeSizeAdjustment = Vector2.One;
-            ElementCompositionPreview.SetElementChildVisual(host, spriteVisual);
-
-            return new ThumbnailCompositionPreview(host,
-                preview,
-                proxy,
-                visualSurface,
-                surfaceBrush,
-                roundedGeometry,
-                roundedClip,
-                spriteVisual,
-                logger);
+            return new ThumbnailCompositionPreview(host, preview, proxy, logger);
         }
         catch (Exception exception)
         {
             logger.LogError(exception, "Failed to create the composition thumbnail preview");
-            TryDetach(host, spriteVisual, logger);
-            spriteVisual?.Dispose();
-            roundedClip?.Dispose();
-            roundedGeometry?.Dispose();
-            surfaceBrush?.Dispose();
-            visualSurface?.Dispose();
+            TryDetach(host, proxy?.Visual, logger);
             proxy?.Dispose();
             preview.Dispose();
             return null;
         }
+    }
+
+    public void SetSuspended(bool isSuspended)
+    {
+        if (isDisposed || this.isSuspended == isSuspended)
+        {
+            return;
+        }
+
+        this.isSuspended = isSuspended;
+        ApplyTarget();
     }
 
     public void Update(double width, double height, bool isVisible)
@@ -130,23 +91,18 @@ public class ThumbnailCompositionPreview :
         float normalizedHeight = NormalizeLength(height);
         bool normalizedVisibility = isVisible && normalizedWidth > 0.0f && normalizedHeight > 0.0f;
 
-        if (hasUpdate &&
-            this.width == normalizedWidth &&
+        if (this.width == normalizedWidth &&
             this.height == normalizedHeight &&
             this.isVisible == normalizedVisibility)
         {
             return;
         }
 
-        hasUpdate = true;
         this.width = normalizedWidth;
         this.height = normalizedHeight;
         this.isVisible = normalizedVisibility;
         proxy.Visual.Size = new Vector2(normalizedWidth, normalizedHeight);
-        visualSurface.SourceSize = new Vector2(normalizedWidth, normalizedHeight);
-        spriteVisual.IsVisible = normalizedVisibility;
-        UpdateClip(normalizedWidth, normalizedHeight);
-        preview.SetTarget(proxy.Handle, normalizedWidth, normalizedHeight, normalizedVisibility);
+        ApplyTarget();
     }
 
     public void Dispose()
@@ -158,30 +114,29 @@ public class ThumbnailCompositionPreview :
 
         isDisposed = true;
         preview.SetTarget(0, 0.0, 0.0, false);
-        TryDetach(host, spriteVisual, logger);
-        spriteVisual.Brush = null;
-        spriteVisual.Clip = null;
-        visualSurface.SourceVisual = null;
-        spriteVisual.Dispose();
-        roundedClip.Dispose();
-        roundedGeometry.Dispose();
-        surfaceBrush.Dispose();
-        visualSurface.Dispose();
+        TryDetach(host, proxy.Visual, logger);
         proxy.Dispose();
         preview.Dispose();
         GC.SuppressFinalize(this);
     }
 
-    private static void TryDetach(FrameworkElement host, SpriteVisual? spriteVisual, ILogger logger)
+    private void ApplyTarget()
     {
-        if (spriteVisual is null)
+        bool effectiveVisibility = isVisible && !isSuspended;
+        proxy.Visual.IsVisible = effectiveVisibility;
+        preview.SetTarget(proxy.Handle, width, height, isVisible);
+    }
+
+    private static void TryDetach(FrameworkElement host, Visual? visual, ILogger logger)
+    {
+        if (visual is null)
         {
             return;
         }
 
         try
         {
-            if (ReferenceEquals(ElementCompositionPreview.GetElementChildVisual(host), spriteVisual))
+            if (ReferenceEquals(ElementCompositionPreview.GetElementChildVisual(host), visual))
             {
                 ElementCompositionPreview.SetElementChildVisual(host, null);
             }
@@ -190,13 +145,6 @@ public class ThumbnailCompositionPreview :
         {
             logger.LogWarning(exception, "Failed to detach the composition thumbnail preview");
         }
-    }
-
-    private void UpdateClip(float width, float height)
-    {
-        float radius = MathF.Min(CornerRadius, MathF.Min(width, height) / 2.0f);
-        roundedGeometry.Size = new Vector2(width, height);
-        roundedGeometry.CornerRadius = new Vector2(radius, radius);
     }
 
     private static float NormalizeLength(double value)
