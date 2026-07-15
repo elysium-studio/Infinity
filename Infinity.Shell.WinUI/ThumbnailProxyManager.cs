@@ -40,6 +40,29 @@ public static class ThumbnailProxyManager
         }
     }
 
+    public static bool TryReattach(IWindowPreview preview, FrameworkElement host, out nint proxyHandle)
+    {
+        proxyHandle = 0;
+
+        try
+        {
+            Visual elementVisual = ElementCompositionPreview.GetElementVisual(host);
+            Compositor compositor = elementVisual.Compositor;
+
+            if (preview.KeepAlive is ThumbnailProxyHandle existingHandle)
+            {
+                ClearExisting(preview, host, existingHandle);
+            }
+
+            return TryCreateAndAttach(preview, host, compositor, out proxyHandle);
+        }
+        catch
+        {
+            proxyHandle = 0;
+            return false;
+        }
+    }
+
     public static bool UpdateSize(IWindowPreview preview, double width, double height)
     {
         if (preview.KeepAlive is not ThumbnailProxyHandle handle)

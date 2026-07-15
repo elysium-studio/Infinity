@@ -321,6 +321,7 @@ public partial class TrackedWindowView :
             CancelPendingPeek();
             EndPeek();
             ResetHoverScale();
+            RebindPreviewVisual();
         }
 
         WindowContainer.Translation = new Vector3((float)horizontalDistance, (float)verticalDistance, 0);
@@ -409,6 +410,11 @@ public partial class TrackedWindowView :
 
         activeViewModel?.EndThumbnailDrag();
 
+        if (activeViewModel is not null)
+        {
+            FindWindowCollectionView()?.RestoreWindowPreviewOrder(activeViewModel);
+        }
+
         if (!isDragVisualPendingReset)
         {
             ResetDragVisual();
@@ -419,6 +425,33 @@ public partial class TrackedWindowView :
     {
         isDragVisualPendingReset = false;
         WindowContainer.Translation = Vector3.Zero;
+    }
+
+    internal void RebindPreviewVisual()
+    {
+        IWindowPreview? preview = viewModel?.Preview;
+
+        if (!isLoaded || preview is null || ThumbnailHost.ActualWidth <= 0.0 || ThumbnailHost.ActualHeight <= 0.0)
+        {
+            return;
+        }
+
+        if (!ThumbnailProxyManager.TryReattach(preview, ThumbnailHost, out nint proxyHandle))
+        {
+            return;
+        }
+
+        double width = ThumbnailHost.ActualWidth;
+        double height = ThumbnailHost.ActualHeight;
+
+        if (!ThumbnailProxyManager.UpdateSize(preview, width, height))
+        {
+            return;
+        }
+
+        lastPreviewWidth = width;
+        lastPreviewHeight = height;
+        viewModel!.SetPreviewTarget(proxyHandle, width, height);
     }
 
     private void UpdateThumbnailDragScroll(PointerRoutedEventArgs args)
@@ -907,13 +940,8 @@ public partial class TrackedWindowView :
         }
     }
 
-    private int ComputeZIndex()
+    internal static int ComputeZIndexRank(TrackedWindowViewModel viewModel)
     {
-        if (viewModel is null)
-        {
-            return 0;
-        }
-
         if (viewModel.IsSelected)
         {
             return SelectedZIndex;
@@ -924,6 +952,9 @@ public partial class TrackedWindowView :
 
         return viewModel.IsFiltered ? orderRank + FilteredTierOffset : orderRank;
     }
+
+    private int ComputeZIndex() =>
+        viewModel is null ? 0 : ComputeZIndexRank(viewModel);
 
     private void SetCanvasZIndex(int zIndex)
     {

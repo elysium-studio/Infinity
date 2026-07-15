@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using Windows.UI;
 
@@ -33,9 +34,68 @@ public partial class TrackedWindowCollectionView :
     internal UIElement? GetWindowItemContainer(object item) =>
         WindowItems.ContainerFromItem(item) as UIElement;
 
-    internal ThumbnailPreviewElevation? ElevateWindowPreview(TrackedWindowViewModel viewModel,
-        FrameworkElement sourceHost) =>
-        ThumbnailPreviewElevation.TryCreate(ThumbnailPreviewOverlay, sourceHost, viewModel);
+    internal void RestoreWindowPreviewOrder(TrackedWindowViewModel droppedViewModel)
+    {
+        int droppedRank = TrackedWindowView.ComputeZIndexRank(droppedViewModel);
+        List<KeyValuePair<int, TrackedWindowView>> viewsAboveDropped = new();
+
+        foreach (object item in WindowItems.Items)
+        {
+            if (item is not TrackedWindowViewModel itemViewModel ||
+                ReferenceEquals(itemViewModel, droppedViewModel))
+            {
+                continue;
+            }
+
+            int itemRank = TrackedWindowView.ComputeZIndexRank(itemViewModel);
+
+            if (itemRank <= droppedRank)
+            {
+                continue;
+            }
+
+            if (GetWindowItemContainer(itemViewModel) is not UIElement container)
+            {
+                continue;
+            }
+
+            TrackedWindowView? itemView = FindTrackedWindowView(container);
+
+            if (itemView is not null)
+            {
+                viewsAboveDropped.Add(new KeyValuePair<int, TrackedWindowView>(itemRank, itemView));
+            }
+        }
+
+        viewsAboveDropped.Sort((first, second) => first.Key.CompareTo(second.Key));
+
+        foreach (KeyValuePair<int, TrackedWindowView> entry in viewsAboveDropped)
+        {
+            entry.Value.RebindPreviewVisual();
+        }
+    }
+
+    private static TrackedWindowView? FindTrackedWindowView(DependencyObject root)
+    {
+        if (root is TrackedWindowView view)
+        {
+            return view;
+        }
+
+        int childCount = VisualTreeHelper.GetChildrenCount(root);
+
+        for (int childIndex = 0; childIndex < childCount; childIndex++)
+        {
+            TrackedWindowView? found = FindTrackedWindowView(VisualTreeHelper.GetChild(root, childIndex));
+
+            if (found is not null)
+            {
+                return found;
+            }
+        }
+
+        return null;
+    }
 
     private void HandleBackdropSizeChanged(object sender, SizeChangedEventArgs args)
     {
