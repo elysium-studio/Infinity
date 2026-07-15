@@ -53,7 +53,6 @@ public class WindowingModule :
                 provider.GetRequiredService<IMessenger>(),
                 provider.GetRequiredService<IDisposer>(),
                 provider.GetRequiredService<IWindowController>(),
-                provider.GetRequiredService<IWindowPreviewSurface>(),
                 provider.GetRequiredService<IWindowPageMover>(),
                 provider.GetRequiredService<IWindowPlacementRules>(),
                 provider.GetRequiredService<IStickyWindowController>(),
@@ -67,7 +66,9 @@ public class WindowingModule :
                 ServiceLifetime.Transient,
                 provider => new TrackedWindowView(
                     provider.GetRequiredService<IStringLocalizer>(),
-                    provider.GetRequiredService<IThumbnailDragScroller>()));
+                    provider.GetRequiredService<IThumbnailDragScroller>(),
+                    provider.GetRequiredService<IWindowPreviewSurface>(),
+                    provider.GetRequiredService<ILogger<TrackedWindowView>>()));
 
         services.Subscribe<IWindowCollection>((provider, windowCollection) =>
         {

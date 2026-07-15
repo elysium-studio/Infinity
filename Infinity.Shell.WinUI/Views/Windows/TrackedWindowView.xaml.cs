@@ -1,6 +1,7 @@
 using Elysium.UI.WinUI;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
+using Microsoft.Extensions.Logging;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -29,15 +30,13 @@ public partial class TrackedWindowView :
 
     private TrackedWindowViewModel? viewModel;
     private TrackedWindowViewModel? subscribedViewModel;
-    private IWindowPreview? subscribedPreview;
+    private ThumbnailCompositionPreview? preview;
     private DispatcherQueueTimer? peekTimer;
     private TrackedWindowViewModel? pendingPeekViewModel;
     private TrackedWindowViewModel? peekingViewModel;
     private bool isLoaded;
     private bool isPreviewTargetQueued;
     private int previewUpdateGeneration;
-    private double lastPreviewWidth;
-    private double lastPreviewHeight;
     private uint? dragPointerId;
     private Point dragStartPoint;
     private UIElement? dragCoordinateRoot;
@@ -54,12 +53,18 @@ public partial class TrackedWindowView :
 
     private readonly IStringLocalizer localizer;
     private readonly IThumbnailDragScroller thumbnailDragScroller;
+    private readonly IWindowPreviewSurface windowPreviewSurface;
+    private readonly ILogger<TrackedWindowView> logger;
 
     public TrackedWindowView(IStringLocalizer localizer,
-        IThumbnailDragScroller thumbnailDragScroller)
+        IThumbnailDragScroller thumbnailDragScroller,
+        IWindowPreviewSurface windowPreviewSurface,
+        ILogger<TrackedWindowView> logger)
     {
         this.localizer = localizer;
         this.thumbnailDragScroller = thumbnailDragScroller;
+        this.windowPreviewSurface = windowPreviewSurface;
+        this.logger = logger;
         InitializeComponent();
 
         DataContextChanged += HandleDataContextChanged;
@@ -99,10 +104,12 @@ public partial class TrackedWindowView :
         {
         }
 
-        SubscribeToPreview(viewModel?.Preview);
-
         if (viewModel is not null)
         {
+            preview = ThumbnailCompositionPreview.Create(windowPreviewSurface,
+                viewModel.Handle,
+                ThumbnailHost,
+                logger);
             ApplyFilterState();
             ApplyZIndex();
             QueuePreviewTargetUpdate();
@@ -121,9 +128,6 @@ public partial class TrackedWindowView :
         isPointerOverWindow = false;
         previewUpdateGeneration++;
         isPreviewTargetQueued = false;
-        lastPreviewWidth = 0.0;
-        lastPreviewHeight = 0.0;
-
         viewModel = null;
 
         if (subscribedViewModel is not null)
@@ -132,7 +136,8 @@ public partial class TrackedWindowView :
             subscribedViewModel = null;
         }
 
-        UnsubscribeFromPreview();
+        preview?.Dispose();
+        preview = null;
     }
 
     private void HandleDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
@@ -151,12 +156,9 @@ public partial class TrackedWindowView :
             subscribedViewModel = null;
         }
 
+        preview?.Dispose();
+        preview = null;
         viewModel = args.NewValue as TrackedWindowViewModel;
-
-        SubscribeToPreview(viewModel?.Preview);
-
-        lastPreviewWidth = 0.0;
-        lastPreviewHeight = 0.0;
 
         if (viewModel is not null)
         {
@@ -165,53 +167,15 @@ public partial class TrackedWindowView :
 
             if (isLoaded)
             {
+                preview = ThumbnailCompositionPreview.Create(windowPreviewSurface,
+                    viewModel.Handle,
+                    ThumbnailHost,
+                    logger);
                 ApplyFilterState();
                 ApplyZIndex();
                 QueuePreviewTargetUpdate();
             }
         }
-    }
-
-    private void SubscribeToPreview(IWindowPreview? preview)
-    {
-        if (ReferenceEquals(subscribedPreview, preview))
-        {
-            return;
-        }
-
-        UnsubscribeFromPreview();
-
-        if (preview is null)
-        {
-            return;
-        }
-
-        subscribedPreview = preview;
-        subscribedPreview.PreviewInvalidated += HandlePreviewInvalidated;
-    }
-
-    private void UnsubscribeFromPreview()
-    {
-        if (subscribedPreview is null)
-        {
-            return;
-        }
-
-        subscribedPreview.PreviewInvalidated -= HandlePreviewInvalidated;
-        subscribedPreview = null;
-    }
-
-    private void HandlePreviewInvalidated()
-    {
-        DispatcherQueue.TryEnqueue(() =>
-        {
-            if (!isLoaded)
-            {
-                return;
-            }
-
-            UpdatePreviewTarget();
-        });
     }
 
     private void HandleSizeChanged(object sender, SizeChangedEventArgs args) =>
@@ -273,7 +237,6 @@ public partial class TrackedWindowView :
         dragPointerId = args.Pointer.PointerId;
         dragCoordinateRoot = coordinateRoot;
         dragStartPoint = args.GetCurrentPoint(coordinateRoot).Position;
-
         isDragZIndexElevated = true;
         ApplyZIndex();
 
@@ -321,7 +284,6 @@ public partial class TrackedWindowView :
             CancelPendingPeek();
             EndPeek();
             ResetHoverScale();
-            RebindPreviewVisual();
         }
 
         WindowContainer.Translation = new Vector3((float)horizontalDistance, (float)verticalDistance, 0);
@@ -388,7 +350,6 @@ public partial class TrackedWindowView :
     private void CompleteThumbnailDrag(bool commitVisualPosition = true)
     {
         TrackedWindowViewModel? activeViewModel = draggedViewModel;
-
         if (activeViewModel is not null && ownsDragScrollSession)
         {
             thumbnailDragScroller.End(activeViewModel.Handle);
@@ -410,14 +371,10 @@ public partial class TrackedWindowView :
 
         activeViewModel?.EndThumbnailDrag();
 
-        if (activeViewModel is not null)
-        {
-            FindWindowCollectionView()?.RestoreWindowPreviewOrder(activeViewModel);
-        }
-
         if (!isDragVisualPendingReset)
         {
             ResetDragVisual();
+            QueuePreviewTargetUpdate();
         }
     }
 
@@ -425,33 +382,6 @@ public partial class TrackedWindowView :
     {
         isDragVisualPendingReset = false;
         WindowContainer.Translation = Vector3.Zero;
-    }
-
-    internal void RebindPreviewVisual()
-    {
-        IWindowPreview? preview = viewModel?.Preview;
-
-        if (!isLoaded || preview is null || ThumbnailHost.ActualWidth <= 0.0 || ThumbnailHost.ActualHeight <= 0.0)
-        {
-            return;
-        }
-
-        if (!ThumbnailProxyManager.TryReattach(preview, ThumbnailHost, out nint proxyHandle))
-        {
-            return;
-        }
-
-        double width = ThumbnailHost.ActualWidth;
-        double height = ThumbnailHost.ActualHeight;
-
-        if (!ThumbnailProxyManager.UpdateSize(preview, width, height))
-        {
-            return;
-        }
-
-        lastPreviewWidth = width;
-        lastPreviewHeight = height;
-        viewModel!.SetPreviewTarget(proxyHandle, width, height);
     }
 
     private void UpdateThumbnailDragScroll(PointerRoutedEventArgs args)
@@ -710,6 +640,7 @@ public partial class TrackedWindowView :
 
         if (propertyName == nameof(TrackedWindowViewModel.Width) ||
             propertyName == nameof(TrackedWindowViewModel.Height) ||
+            propertyName == nameof(TrackedWindowViewModel.IsFiltered) ||
             propertyName == nameof(TrackedWindowViewModel.IsVisible))
         {
             QueuePreviewTargetUpdate();
@@ -751,38 +682,19 @@ public partial class TrackedWindowView :
 
     private void UpdatePreviewTarget()
     {
-        IWindowPreview? preview = viewModel?.Preview;
-
-        if (preview is null || ThumbnailHost.ActualWidth <= 0.0 || ThumbnailHost.ActualHeight <= 0.0)
+        if (preview is null || viewModel is null)
         {
             return;
         }
 
         double width = ThumbnailHost.ActualWidth;
         double height = ThumbnailHost.ActualHeight;
-
-        if (Math.Abs(width - lastPreviewWidth) < 0.5 && Math.Abs(height - lastPreviewHeight) < 0.5)
-        {
-            return;
-        }
-
-        for (int attempt = 0; attempt < 2; attempt++)
-        {
-            if (!ThumbnailProxyManager.TryAttach(preview, ThumbnailHost, out nint proxyHandle))
-            {
-                return;
-            }
-
-            if (!ThumbnailProxyManager.UpdateSize(preview, width, height))
-            {
-                continue;
-            }
-
-            lastPreviewWidth = width;
-            lastPreviewHeight = height;
-            viewModel!.SetPreviewTarget(proxyHandle, width, height);
-            return;
-        }
+        bool isVisible = width > 0.0 &&
+            height > 0.0 &&
+            viewModel.IsVisible &&
+            !viewModel.IsFiltered &&
+            Visibility == Visibility.Visible;
+        preview.Update(width, height, isVisible);
     }
 
     private Visual? GetContainerVisual()

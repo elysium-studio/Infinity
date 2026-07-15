@@ -199,7 +199,6 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                        <Canvas x:Name="ThumbnailPreviewOverlay" IsHitTestVisible="False" />
                     </Grid>
                 </ScrollViewer>
                 <PipsPager

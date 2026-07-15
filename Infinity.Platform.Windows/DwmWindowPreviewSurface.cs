@@ -1,74 +1,67 @@
-﻿using Infinity.Platform.Abstractions;
+using Infinity.Platform.Abstractions;
+using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
 
 namespace Infinity.Platform.Windows;
 
-public class DwmWindowPreviewSurface :
+public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
     IWindowPreviewSurface,
     IDwmWindowPreviewSurface,
     IDisposable
 {
     private const string LibraryName = "Infinity.Platform.Windows.Native.dll";
 
-    private readonly Dictionary<nint, DwmWindowPreview> previews = [];
+    private readonly Dictionary<long, PreviewState> previews = [];
     private readonly Lock syncLock = new();
     private DwmThumbnailVisualItem[] renderItems = [];
-    private DwmWindowPreview?[] renderedPreviews = [];
-
     private bool isDisposed;
     private bool? bridgeAvailable;
+    private int lastRenderFailure;
+    private long nextPreviewId;
     private nint ownerWindowHandle;
+
     public bool IsAvailable
     {
         get
         {
             lock (syncLock)
             {
-                return TryIsAvailable();
+                return !isDisposed && (bridgeAvailable ??= TryIsAvailable());
             }
         }
     }
 
-    public int LastBridgeHResult
-    {
-        get
-        {
-            lock (syncLock)
-            {
-                return GetLastBridgeHResult();
-            }
-        }
-    }
-
-    public int LastHResult
-    {
-        get
-        {
-            lock (syncLock)
-            {
-                return GetLastHResult();
-            }
-        }
-    }
-    public void Apply(DwmWindowPreview preview)
+    public void Apply(DwmWindowPreview preview,
+        nint sharedTargetHandle,
+        double width,
+        double height,
+        bool isVisible)
     {
         lock (syncLock)
         {
-            if (isDisposed)
+            if (isDisposed || !previews.TryGetValue(preview.Id, out PreviewState? state) ||
+                !ReferenceEquals(state.Preview, preview))
             {
                 return;
             }
 
-            if (!previews.TryGetValue(preview.WindowHandle, out DwmWindowPreview? currentPreview))
+            int normalizedWidth = NormalizeLength(width);
+            int normalizedHeight = NormalizeLength(height);
+            bool normalizedVisibility = isVisible && sharedTargetHandle != 0 &&
+                normalizedWidth > 0 && normalizedHeight > 0;
+
+            if (state.SharedTargetHandle == sharedTargetHandle &&
+                state.Width == normalizedWidth &&
+                state.Height == normalizedHeight &&
+                state.IsVisible == normalizedVisibility)
             {
                 return;
             }
 
-            if (!ReferenceEquals(currentPreview, preview))
-            {
-                return;
-            }
-
+            state.SharedTargetHandle = sharedTargetHandle;
+            state.Width = normalizedWidth;
+            state.Height = normalizedHeight;
+            state.IsVisible = normalizedVisibility;
             RenderCore();
         }
     }
@@ -77,21 +70,13 @@ public class DwmWindowPreviewSurface :
     {
         lock (syncLock)
         {
-            if (isDisposed)
+            if (!isDisposed)
             {
-                return;
+                TryClear();
+                ownerWindowHandle = 0;
             }
-
-            foreach (DwmWindowPreview preview in previews.Values)
-            {
-                preview.ClearTarget();
-            }
-
-            TryClear();
         }
     }
-
-    public void Commit() => Render();
 
     public IWindowPreview? CreatePreview(nint windowHandle)
     {
@@ -100,8 +85,6 @@ public class DwmWindowPreviewSurface :
             return null;
         }
 
-        uint currentProcessId = QueryOwnerProcessId(windowHandle);
-
         lock (syncLock)
         {
             if (isDisposed)
@@ -109,20 +92,9 @@ public class DwmWindowPreviewSurface :
                 return null;
             }
 
-            if (previews.TryGetValue(windowHandle, out DwmWindowPreview? existingPreview))
-            {
-                if (existingPreview.OwnerProcessId == currentProcessId)
-                {
-                    return existingPreview;
-                }
-
-                previews.Remove(windowHandle);
-                existingPreview.MarkDisposed();
-            }
-
-            DwmWindowPreview preview = new(this, windowHandle, currentProcessId);
-            previews[windowHandle] = preview;
-
+            long previewId = ++nextPreviewId;
+            DwmWindowPreview preview = new(this, windowHandle, previewId);
+            previews.Add(previewId, new PreviewState(preview));
             return preview;
         }
     }
@@ -136,15 +108,13 @@ public class DwmWindowPreviewSurface :
                 return;
             }
 
-            foreach (DwmWindowPreview preview in previews.Values)
+            foreach (PreviewState state in previews.Values)
             {
-                preview.MarkDisposed();
+                state.Preview.MarkDisposed();
             }
 
             previews.Clear();
-
             TryClear();
-
             ownerWindowHandle = 0;
             isDisposed = true;
         }
@@ -154,6 +124,11 @@ public class DwmWindowPreviewSurface :
 
     public void Initialize(nint ownerWindowHandle)
     {
+        if (ownerWindowHandle == 0)
+        {
+            return;
+        }
+
         lock (syncLock)
         {
             if (isDisposed)
@@ -161,123 +136,50 @@ public class DwmWindowPreviewSurface :
                 return;
             }
 
-            if (ownerWindowHandle == 0)
+            if (this.ownerWindowHandle != ownerWindowHandle)
             {
-                return;
+                TryClear();
+                this.ownerWindowHandle = ownerWindowHandle;
             }
-
-            if (this.ownerWindowHandle == ownerWindowHandle)
-            {
-                RenderCore();
-                return;
-            }
-
-            if (this.ownerWindowHandle != 0)
-            {
-                return;
-            }
-
-            this.ownerWindowHandle = ownerWindowHandle;
 
             RenderCore();
         }
     }
+
     public void Remove(DwmWindowPreview preview)
     {
         lock (syncLock)
         {
-            if (isDisposed)
+            if (isDisposed || !previews.TryGetValue(preview.Id, out PreviewState? state) ||
+                !ReferenceEquals(state.Preview, preview))
             {
                 return;
             }
 
-            if (previews.TryGetValue(preview.WindowHandle, out DwmWindowPreview? currentPreview) &&
-                ReferenceEquals(currentPreview, preview))
-            {
-                previews.Remove(preview.WindowHandle);
-            }
-
+            previews.Remove(preview.Id);
             RenderCore();
         }
     }
 
-    public void Render()
-    {
-        lock (syncLock)
-        {
-            if (isDisposed)
-            {
-                return;
-            }
-
-            RenderCore();
-        }
-    }
     [DllImport(LibraryName, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
     private static extern void DwmThumbnailVisual_Clear();
-
-    [DllImport(LibraryName, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
-    private static extern int DwmThumbnailVisual_GetLastBridgeHResult();
-
-    [DllImport(LibraryName, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
-    private static extern int DwmThumbnailVisual_GetLastHResult();
 
     [DllImport(LibraryName, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
     private static extern int DwmThumbnailVisual_IsAvailable();
 
     [DllImport(LibraryName, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
-    private static extern int DwmThumbnailVisual_RenderBatch(nint ownerWindowHandle, DwmThumbnailVisualItem[] items, int count);
+    private static extern int DwmThumbnailVisual_RenderBatch(nint ownerWindowHandle,
+        DwmThumbnailVisualItem[] items,
+        int count);
 
-    private static int GetLastBridgeHResult()
+    private static int NormalizeLength(double value)
     {
-        try
-        {
-            return DwmThumbnailVisual_GetLastBridgeHResult();
-        }
-        catch (DllNotFoundException)
-        {
-            return unchecked((int)0x8007007E);
-        }
-        catch (EntryPointNotFoundException)
-        {
-            return unchecked((int)0x8007007F);
-        }
-    }
-
-    private static int GetLastHResult()
-    {
-        try
-        {
-            return DwmThumbnailVisual_GetLastHResult();
-        }
-        catch (DllNotFoundException)
-        {
-            return unchecked((int)0x8007007E);
-        }
-        catch (EntryPointNotFoundException)
-        {
-            return unchecked((int)0x8007007F);
-        }
-    }
-
-    [DllImport("user32.dll", ExactSpelling = true)]
-    private static extern uint GetWindowThreadProcessId(nint windowHandle, out uint processId);
-
-    private static uint QueryOwnerProcessId(nint windowHandle)
-    {
-        try
-        {
-            _ = GetWindowThreadProcessId(windowHandle, out uint processId);
-            return processId;
-        }
-        catch (DllNotFoundException)
+        if (!double.IsFinite(value) || value <= 0.0)
         {
             return 0;
         }
-        catch (EntryPointNotFoundException)
-        {
-            return 0;
-        }
+
+        return (int)Math.Clamp(Math.Round(value), 1, int.MaxValue);
     }
 
     private static bool TryClear()
@@ -313,30 +215,27 @@ public class DwmWindowPreviewSurface :
         }
     }
 
-    private static bool TryRenderBatch(nint ownerWindowHandle, DwmThumbnailVisualItem[] items, int count)
+    private static int TryRenderBatch(nint ownerWindowHandle,
+        DwmThumbnailVisualItem[] items,
+        int count)
     {
         try
         {
-            return DwmThumbnailVisual_RenderBatch(ownerWindowHandle, items, count) == 0;
+            return DwmThumbnailVisual_RenderBatch(ownerWindowHandle, items, count);
         }
         catch (DllNotFoundException)
         {
-            return false;
+            return unchecked((int)0x8007007E);
         }
         catch (EntryPointNotFoundException)
         {
-            return false;
+            return unchecked((int)0x8007007F);
         }
     }
 
     private bool RenderCore()
     {
-        if (ownerWindowHandle == 0)
-        {
-            return false;
-        }
-
-        if ((bridgeAvailable ??= TryIsAvailable()) is false)
+        if (ownerWindowHandle == 0 || (bridgeAvailable ??= TryIsAvailable()) is false)
         {
             return false;
         }
@@ -344,35 +243,38 @@ public class DwmWindowPreviewSurface :
         EnsureRenderCapacity(previews.Count);
         int itemCount = 0;
 
-        foreach (DwmWindowPreview preview in previews.Values)
+        foreach (PreviewState state in previews.Values)
         {
-            if (!preview.HasTarget || !preview.IsVisible || preview.WindowHandle == 0 || preview.SharedTargetHandle == 0 || preview.Width <= 0.0 || preview.Height <= 0.0)
+            if (state.SharedTargetHandle == 0 || state.Width <= 0 || state.Height <= 0)
             {
                 continue;
             }
 
-            renderItems[itemCount] = new DwmThumbnailVisualItem
+            renderItems[itemCount++] = new DwmThumbnailVisualItem
             {
-                SourceWindowHandle = preview.WindowHandle,
-                SharedTargetHandle = preview.SharedTargetHandle,
-                Width = Math.Max(1, (int)Math.Round(preview.Width)),
-                Height = Math.Max(1, (int)Math.Round(preview.Height))
+                PreviewId = (ulong)state.Preview.Id,
+                SourceWindowHandle = state.Preview.WindowHandle,
+                SharedTargetHandle = state.SharedTargetHandle,
+                Width = state.Width,
+                Height = state.Height,
+                IsVisible = state.IsVisible ? 1 : 0
             };
-            renderedPreviews[itemCount] = preview;
-            itemCount++;
         }
 
-        bool result = TryRenderBatch(ownerWindowHandle, renderItems, itemCount);
+        int result = TryRenderBatch(ownerWindowHandle, renderItems, itemCount);
+        Array.Clear(renderItems, 0, itemCount);
 
-        for (int index = 0; index < itemCount; index++)
+        if (result < 0 && result != lastRenderFailure)
         {
-            bool itemSucceeded = renderItems[index].ResultHResult == 0;
-            renderedPreviews[index]!.ReportRenderResult(itemSucceeded, renderItems[index].ResultHResult);
-            renderedPreviews[index] = null;
-            renderItems[index] = default;
+            lastRenderFailure = result;
+            logger.LogWarning("DWM thumbnail composition failed with HRESULT 0x{HResult:X8}", result);
+        }
+        else if (result >= 0)
+        {
+            lastRenderFailure = 0;
         }
 
-        return result;
+        return result >= 0;
     }
 
     private void EnsureRenderCapacity(int count)
@@ -384,11 +286,26 @@ public class DwmWindowPreviewSurface :
 
         int capacity = Math.Max(count, Math.Max(4, renderItems.Length * 2));
         Array.Resize(ref renderItems, capacity);
-        Array.Resize(ref renderedPreviews, capacity);
     }
+
+    private sealed class PreviewState(DwmWindowPreview preview)
+    {
+        public DwmWindowPreview Preview { get; } = preview;
+
+        public nint SharedTargetHandle { get; set; }
+
+        public int Width { get; set; }
+
+        public int Height { get; set; }
+
+        public bool IsVisible { get; set; }
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     private struct DwmThumbnailVisualItem
     {
+        public ulong PreviewId;
+
         public nint SourceWindowHandle;
 
         public nint SharedTargetHandle;
@@ -397,6 +314,6 @@ public class DwmWindowPreviewSurface :
 
         public int Height;
 
-        public int ResultHResult;
+        public int IsVisible;
     }
 }
