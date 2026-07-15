@@ -290,6 +290,7 @@ public partial class TrackedWindowView :
             dragScrollBoundary = FindThumbnailDragScrollBoundary();
 
             isThumbnailDragging = true;
+            SetCloseButtonVisible(false);
             ownsDragScrollSession = thumbnailDragScroller.Begin(currentViewModel.Handle);
             CancelPendingPeek();
             EndPeek();
@@ -333,7 +334,6 @@ public partial class TrackedWindowView :
 
         if (isPointerOverWindow)
         {
-            SetCloseButtonVisible(true);
             QueuePeek();
         }
     }
@@ -378,6 +378,7 @@ public partial class TrackedWindowView :
         dragVerticalDelta = 0;
         ownsDragScrollSession = false;
         isThumbnailDragging = false;
+        SetCloseButtonVisible(isPointerOverWindow);
         isDragVisualPendingReset = activeViewModel is not null && commitVisualPosition && hasVisualDelta;
         isDragZIndexElevated = false;
         ApplyZIndex();
