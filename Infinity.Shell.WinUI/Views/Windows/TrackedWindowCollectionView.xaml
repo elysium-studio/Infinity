@@ -201,6 +201,11 @@
                         </ItemsControl>
                     </Grid>
                 </ScrollViewer>
+                <Canvas
+                    x:Name="ThumbnailDragOverlay"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    IsHitTestVisible="False" />
                 <PipsPager
                     x:Name="PageIndicator"
                     HorizontalAlignment="Center"

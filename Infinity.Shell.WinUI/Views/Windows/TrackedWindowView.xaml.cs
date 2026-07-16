@@ -288,9 +288,18 @@ public partial class TrackedWindowView :
             CancelPendingPeek();
             EndPeek();
             ResetHoverScale();
+
+            TrackedWindowCollectionView? collectionView = FindWindowCollectionView();
+
+            if (preview is not null && collectionView is not null &&
+                !preview.BeginDrag(collectionView.ThumbnailDragVisualHost))
+            {
+                logger.LogWarning("Failed to move the live thumbnail into the drag overlay");
+            }
         }
 
         WindowContainer.Translation = new Vector3((float)horizontalDistance, (float)verticalDistance, 0);
+        preview?.MoveDrag(horizontalDistance, verticalDistance);
 
         if (draggedViewModel?.MoveThumbnail(horizontalDistance / dragScale,
             verticalDistance / dragScale) == true)
@@ -353,6 +362,7 @@ public partial class TrackedWindowView :
     private void CompleteThumbnailDrag(bool commitVisualPosition = true)
     {
         TrackedWindowViewModel? activeViewModel = draggedViewModel;
+        preview?.EndDrag();
 
         if (activeViewModel is not null && ownsDragScrollSession)
         {

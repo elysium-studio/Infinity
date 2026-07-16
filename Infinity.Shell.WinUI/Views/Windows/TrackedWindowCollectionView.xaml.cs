@@ -30,6 +30,8 @@ public partial class TrackedWindowCollectionView :
 
     internal FrameworkElement ThumbnailDragScrollBoundary => BackdropBorder;
 
+    internal FrameworkElement ThumbnailDragVisualHost => ThumbnailDragOverlay;
+
     internal UIElement? GetWindowItemContainer(object item) =>
         WindowItems.ContainerFromItem(item) as UIElement;
 
