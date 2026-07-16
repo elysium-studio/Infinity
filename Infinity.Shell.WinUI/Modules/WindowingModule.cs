@@ -68,7 +68,6 @@ public class WindowingModule :
                     provider.GetRequiredService<IStringLocalizer>(),
                     provider.GetRequiredService<IThumbnailDragScroller>(),
                     provider.GetRequiredService<IWindowPreviewSurface>(),
-                    provider.GetRequiredService<IWindowZOrderController>(),
                     provider.GetRequiredService<ILogger<TrackedWindowView>>()));
 
         services.Subscribe<IWindowCollection>((provider, windowCollection) =>

@@ -51,7 +51,6 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<IWindowConcealmentRecovery>(provider => provider.GetRequiredService<WindowConcealer>());
             services.AddSingleton<IWindowPreviewSurface, DwmWindowPreviewSurface>();
             services.AddSingleton<IWindowTitleReader, WindowTitleReader>();
-            services.AddSingleton<IWindowZOrderController, WindowZOrderController>();
 
             services.AddSingleton<IWindowFocusGuard, WindowFocusGuard>();
             services.AddSingleton<WindowArrangingController>();
