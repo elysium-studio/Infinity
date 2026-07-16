@@ -49,6 +49,7 @@ public partial class TrackedWindowView :
     private bool isDragVisualPendingReset;
     private bool isDragZIndexElevated;
     private bool isThumbnailDragging;
+    private bool isThumbnailToolTipSuppressed;
     private bool isPointerOverWindow;
 
     private readonly IStringLocalizer localizer;
@@ -287,6 +288,7 @@ public partial class TrackedWindowView :
             dragScrollBoundary = FindThumbnailDragScrollBoundary();
 
             isThumbnailDragging = true;
+            SetThumbnailToolTipSuppressed(true);
             SetCloseButtonVisible(false);
             ownsDragScrollSession = thumbnailDragScroller.Begin(currentViewModel.Handle);
             CancelPendingPeek();
@@ -379,6 +381,7 @@ public partial class TrackedWindowView :
         dragVerticalDelta = 0;
         ownsDragScrollSession = false;
         isThumbnailDragging = false;
+        SetThumbnailToolTipSuppressed(false);
         SetCloseButtonVisible(isPointerOverWindow);
         isDragVisualPendingReset = activeViewModel is not null && commitVisualPosition && hasVisualDelta;
         isDragZIndexElevated = false;
@@ -397,6 +400,26 @@ public partial class TrackedWindowView :
     {
         isDragVisualPendingReset = false;
         WindowContainer.Translation = Vector3.Zero;
+    }
+
+    private void SetThumbnailToolTipSuppressed(bool suppressed)
+    {
+        if (isThumbnailToolTipSuppressed == suppressed)
+        {
+            return;
+        }
+
+        isThumbnailToolTipSuppressed = suppressed;
+
+        if (suppressed)
+        {
+            WindowToolTip.IsOpen = false;
+            ToolTipService.SetToolTip(WindowContainer, null);
+        }
+        else
+        {
+            ToolTipService.SetToolTip(WindowContainer, WindowToolTip);
+        }
     }
 
     private void UpdateThumbnailDragScroll(PointerRoutedEventArgs args)

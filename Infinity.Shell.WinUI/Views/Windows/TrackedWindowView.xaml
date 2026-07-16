@@ -25,8 +25,10 @@
             PointerMoved="HandleWindowContainerPointerMoved"
             PointerPressed="HandleWindowContainerPointerPressed"
             PointerReleased="HandleWindowContainerPointerReleased"
-            RightTapped="HandleWindowContainerRightTapped"
-            ToolTipService.ToolTip="{x:Bind ViewModel.Title}">
+            RightTapped="HandleWindowContainerRightTapped">
+            <ToolTipService.ToolTip>
+                <ToolTip x:Name="WindowToolTip" Content="{x:Bind ViewModel.Title}" />
+            </ToolTipService.ToolTip>
             <ItemContainer.Resources>
                 <SolidColorBrush x:Key="ItemContainerPointerOverBackground" Color="Transparent" />
                 <SolidColorBrush x:Key="ItemContainerPressedBackground" Color="Transparent" />
