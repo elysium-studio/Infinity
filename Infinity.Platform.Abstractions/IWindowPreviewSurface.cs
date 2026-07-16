@@ -4,8 +4,6 @@ public interface IWindowPreviewSurface
 {
     bool IsAvailable { get; }
 
-    IDisposable DeferUpdates();
-
     void Initialize(nint ownerWindowHandle);
 
     IWindowPreview? CreatePreview(nint windowHandle);
