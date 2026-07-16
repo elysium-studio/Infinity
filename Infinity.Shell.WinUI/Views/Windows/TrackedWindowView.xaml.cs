@@ -240,6 +240,7 @@ public partial class TrackedWindowView :
         dragPointerId = args.Pointer.PointerId;
         dragCoordinateRoot = coordinateRoot;
         dragStartPoint = args.GetCurrentPoint(coordinateRoot).Position;
+        windowActivator.Activate(ViewModel.Handle);
         CancelPendingPeek();
         EndPeek();
         ResetHoverScale();
@@ -286,7 +287,6 @@ public partial class TrackedWindowView :
             dragScrollBoundary = FindThumbnailDragScrollBoundary();
 
             isThumbnailDragging = true;
-            windowActivator.Activate(currentViewModel.Handle);
             SetCloseButtonVisible(false);
             ownsDragScrollSession = thumbnailDragScroller.Begin(currentViewModel.Handle);
             CancelPendingPeek();
