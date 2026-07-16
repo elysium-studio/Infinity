@@ -39,6 +39,7 @@ public partial class TrackedWindowView :
     private int previewUpdateGeneration;
     private uint? dragPointerId;
     private Point dragStartPoint;
+    private Rect? dragInitialBounds;
     private UIElement? dragCoordinateRoot;
     private FrameworkElement? dragScrollBoundary;
     private TrackedWindowViewModel? draggedViewModel;
@@ -286,6 +287,7 @@ public partial class TrackedWindowView :
             draggedViewModel = currentViewModel;
             dragScale = currentScale;
             dragScrollBoundary = FindThumbnailDragScrollBoundary();
+            dragInitialBounds = GetDragBounds(dragScrollBoundary);
 
             isThumbnailDragging = true;
             SetThumbnailToolTipSuppressed(true);
@@ -295,6 +297,7 @@ public partial class TrackedWindowView :
             EndPeek();
         }
 
+        (horizontalDistance, verticalDistance) = ConstrainThumbnailDrag(horizontalDistance, verticalDistance);
         WindowContainer.Translation = new Vector3((float)horizontalDistance, (float)verticalDistance, 0);
 
         if (draggedViewModel?.MoveThumbnail(horizontalDistance / dragScale,
@@ -373,6 +376,7 @@ public partial class TrackedWindowView :
 
         draggedViewModel = null;
         dragPointerId = null;
+        dragInitialBounds = null;
         dragCoordinateRoot = null;
         dragScrollBoundary = null;
         dragScale = 0;
@@ -420,6 +424,86 @@ public partial class TrackedWindowView :
         {
             ToolTipService.SetToolTip(WindowContainer, WindowToolTip);
         }
+    }
+
+    private Rect? GetDragBounds(FrameworkElement? boundary)
+    {
+        if (boundary is null ||
+            !double.IsFinite(WindowContainer.ActualWidth) ||
+            !double.IsFinite(WindowContainer.ActualHeight) ||
+            WindowContainer.ActualWidth <= 0 ||
+            WindowContainer.ActualHeight <= 0)
+        {
+            return null;
+        }
+
+        try
+        {
+            Point origin = WindowContainer.TransformToVisual(boundary).TransformPoint(new Point());
+
+            if (!double.IsFinite(origin.X) || !double.IsFinite(origin.Y))
+            {
+                return null;
+            }
+
+            return new Rect(origin.X,
+                origin.Y,
+                WindowContainer.ActualWidth,
+                WindowContainer.ActualHeight);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Failed to resolve thumbnail drag bounds");
+            return null;
+        }
+    }
+
+    private (double Horizontal, double Vertical) ConstrainThumbnailDrag(double horizontalDistance,
+        double verticalDistance)
+    {
+        if (dragInitialBounds is not Rect bounds || dragScrollBoundary is null)
+        {
+            return (horizontalDistance, verticalDistance);
+        }
+
+        return (ConstrainDragAxis(horizontalDistance,
+                bounds.X,
+                bounds.Width,
+                dragScrollBoundary.ActualWidth),
+            ConstrainDragAxis(verticalDistance,
+                bounds.Y,
+                bounds.Height,
+                dragScrollBoundary.ActualHeight));
+    }
+
+    private static double ConstrainDragAxis(double distance,
+        double start,
+        double length,
+        double boundaryLength)
+    {
+        if (!double.IsFinite(distance) ||
+            !double.IsFinite(start) ||
+            !double.IsFinite(length) ||
+            !double.IsFinite(boundaryLength) ||
+            length <= 0 ||
+            boundaryLength <= 0)
+        {
+            return distance;
+        }
+
+        if (length > boundaryLength)
+        {
+            double alignEndDistance = boundaryLength - start - length;
+            double alignStartDistance = -start;
+            return Math.Clamp(distance,
+                Math.Min(alignEndDistance, alignStartDistance),
+                Math.Max(alignEndDistance, alignStartDistance));
+        }
+
+        double minimumDistance = start < 0 ? 0 : -start;
+        double end = start + length;
+        double maximumDistance = end > boundaryLength ? 0 : boundaryLength - end;
+        return Math.Clamp(distance, minimumDistance, maximumDistance);
     }
 
     private void UpdateThumbnailDragScroll(PointerRoutedEventArgs args)
