@@ -243,7 +243,7 @@ public partial class TrackedWindowView :
         windowNavigationCoordinator.Activate(ViewModel.Handle);
         CancelPendingPeek();
         EndPeek();
-        ResetHoverScale();
+        AnimateHoverScale(false);
         isDragZIndexElevated = true;
         ApplyZIndex();
 
@@ -291,7 +291,6 @@ public partial class TrackedWindowView :
             ownsDragScrollSession = thumbnailDragScroller.Begin(currentViewModel.Handle);
             CancelPendingPeek();
             EndPeek();
-            ResetHoverScale();
         }
 
         WindowContainer.Translation = new Vector3((float)horizontalDistance, (float)verticalDistance, 0);
@@ -322,6 +321,11 @@ public partial class TrackedWindowView :
         WindowContainer.ReleasePointerCapture(args.Pointer);
         args.Handled = true;
 
+        if (isPointerOverWindow)
+        {
+            AnimateHoverScale(true);
+        }
+
         if (!wasDragging)
         {
             ViewModel.Navigate();
@@ -343,6 +347,7 @@ public partial class TrackedWindowView :
 
         CompleteThumbnailDrag();
         WindowContainer.ReleasePointerCapture(args.Pointer);
+        AnimateHoverScale(isPointerOverWindow);
         args.Handled = true;
     }
 
@@ -351,6 +356,7 @@ public partial class TrackedWindowView :
         if (dragPointerId == args.Pointer.PointerId)
         {
             CompleteThumbnailDrag();
+            AnimateHoverScale(isPointerOverWindow);
         }
     }
 
@@ -765,25 +771,6 @@ public partial class TrackedWindowView :
             scaleAnimation.Duration = TimeSpan.FromMilliseconds(150);
 
             visual.StartAnimation("Scale", scaleAnimation);
-        }
-        catch
-        {
-        }
-    }
-
-    private void ResetHoverScale()
-    {
-        Visual? visual = GetContainerVisual();
-
-        if (visual is null)
-        {
-            return;
-        }
-
-        try
-        {
-            visual.StopAnimation("Scale");
-            visual.Scale = Vector3.One;
         }
         catch
         {
