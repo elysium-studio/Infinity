@@ -39,8 +39,9 @@ public partial class TrackedWindowView :
     private int previewUpdateGeneration;
     private uint? dragPointerId;
     private Point dragStartPoint;
-    private Rect? dragHorizontalInitialBounds;
-    private Rect? dragVerticalInitialBounds;
+    private double? dragHorizontalPointerStart;
+    private double? dragVerticalPointerStart;
+    private double? dragWallpaperLeft;
     private UIElement? dragCoordinateRoot;
     private FrameworkElement? dragHorizontalBoundary;
     private FrameworkElement? dragScrollBoundary;
@@ -246,6 +247,7 @@ public partial class TrackedWindowView :
         dragPointerId = args.Pointer.PointerId;
         dragCoordinateRoot = coordinateRoot;
         dragStartPoint = args.GetCurrentPoint(coordinateRoot).Position;
+        InitialiseDragBoundaries(args);
         windowNavigationCoordinator.Activate(ViewModel.Handle);
         CancelPendingPeek();
         EndPeek();
@@ -290,12 +292,6 @@ public partial class TrackedWindowView :
 
             draggedViewModel = currentViewModel;
             dragScale = currentScale;
-            dragCollectionView = FindWindowCollectionView();
-            dragHorizontalBoundary = dragCollectionView?.ThumbnailDragHorizontalBoundary;
-            dragScrollBoundary = dragCollectionView?.ThumbnailDragScrollBoundary;
-            dragVerticalBoundary = dragCollectionView?.ThumbnailDragVerticalBoundary;
-            dragHorizontalInitialBounds = GetDragBounds(dragHorizontalBoundary);
-            dragVerticalInitialBounds = GetDragBounds(dragVerticalBoundary);
 
             isThumbnailDragging = true;
             SetThumbnailToolTipSuppressed(true);
@@ -384,8 +380,9 @@ public partial class TrackedWindowView :
 
         draggedViewModel = null;
         dragPointerId = null;
-        dragHorizontalInitialBounds = null;
-        dragVerticalInitialBounds = null;
+        dragHorizontalPointerStart = null;
+        dragVerticalPointerStart = null;
+        dragWallpaperLeft = null;
         dragCoordinateRoot = null;
         dragHorizontalBoundary = null;
         dragScrollBoundary = null;
@@ -438,54 +435,53 @@ public partial class TrackedWindowView :
         }
     }
 
-    private Rect? GetDragBounds(FrameworkElement? boundary)
+    private void InitialiseDragBoundaries(PointerRoutedEventArgs args)
     {
-        if (boundary is null ||
-            !double.IsFinite(WindowContainer.ActualWidth) ||
-            !double.IsFinite(WindowContainer.ActualHeight) ||
-            WindowContainer.ActualWidth <= 0 ||
-            WindowContainer.ActualHeight <= 0)
+        dragCollectionView = FindWindowCollectionView();
+        dragHorizontalBoundary = dragCollectionView?.ThumbnailDragHorizontalBoundary;
+        dragScrollBoundary = dragCollectionView?.ThumbnailDragScrollBoundary;
+        dragVerticalBoundary = dragCollectionView?.ThumbnailDragVerticalBoundary;
+
+        Point? horizontalPoint = dragHorizontalBoundary is null
+            ? null
+            : args.GetCurrentPoint(dragHorizontalBoundary).Position;
+        Point? verticalPoint = dragVerticalBoundary is null
+            ? null
+            : args.GetCurrentPoint(dragVerticalBoundary).Position;
+
+        if (horizontalPoint is Point horizontal && double.IsFinite(horizontal.X))
         {
-            return null;
+            dragHorizontalPointerStart = horizontal.X;
         }
 
-        try
+        if (verticalPoint is Point vertical && double.IsFinite(vertical.Y))
         {
-            Point origin = WindowContainer.TransformToVisual(boundary).TransformPoint(new Point());
-
-            if (!double.IsFinite(origin.X) || !double.IsFinite(origin.Y))
-            {
-                return null;
-            }
-
-            return new Rect(origin.X,
-                origin.Y,
-                WindowContainer.ActualWidth,
-                WindowContainer.ActualHeight);
+            dragVerticalPointerStart = vertical.Y;
         }
-        catch (Exception exception)
+
+        if (horizontalPoint is Point horizontalOrigin &&
+            verticalPoint is Point verticalOrigin &&
+            double.IsFinite(horizontalOrigin.X) &&
+            double.IsFinite(verticalOrigin.X))
         {
-            logger.LogWarning(exception, "Failed to resolve thumbnail drag bounds");
-            return null;
+            dragWallpaperLeft = horizontalOrigin.X - verticalOrigin.X;
         }
     }
 
     private (double Horizontal, double Vertical) ConstrainThumbnailDrag(double horizontalDistance,
         double verticalDistance)
     {
-        double constrainedHorizontalDistance = dragHorizontalInitialBounds is Rect horizontalBounds &&
+        double constrainedHorizontalDistance = dragHorizontalPointerStart is double horizontalPointerStart &&
             dragHorizontalBoundary is not null
             ? ConstrainDragAxis(horizontalDistance,
-                horizontalBounds.X,
-                horizontalBounds.Width,
+                horizontalPointerStart,
                 dragHorizontalBoundary.ActualWidth,
                 GetHorizontalDragMinimum())
             : horizontalDistance;
-        double constrainedVerticalDistance = dragVerticalInitialBounds is Rect verticalBounds &&
+        double constrainedVerticalDistance = dragVerticalPointerStart is double verticalPointerStart &&
             dragVerticalBoundary is not null
             ? ConstrainDragAxis(verticalDistance,
-                verticalBounds.Y,
-                verticalBounds.Height,
+                verticalPointerStart,
                 dragVerticalBoundary.ActualHeight,
                 0)
             : verticalDistance;
@@ -495,48 +491,32 @@ public partial class TrackedWindowView :
 
     private static double ConstrainDragAxis(double distance,
         double start,
-        double length,
         double boundaryLength,
         double minimumPosition)
     {
         if (!double.IsFinite(distance) ||
             !double.IsFinite(start) ||
-            !double.IsFinite(length) ||
             !double.IsFinite(boundaryLength) ||
             !double.IsFinite(minimumPosition) ||
-            length <= 0 ||
             boundaryLength <= 0)
         {
             return distance;
         }
 
         minimumPosition = Math.Clamp(minimumPosition, 0, boundaryLength);
-
-        if (length > boundaryLength - minimumPosition)
-        {
-            double alignEndDistance = boundaryLength - start - length;
-            double alignStartDistance = minimumPosition - start;
-            return Math.Clamp(distance,
-                Math.Min(alignEndDistance, alignStartDistance),
-                Math.Max(alignEndDistance, alignStartDistance));
-        }
-
         double minimumDistance = start < minimumPosition ? 0 : minimumPosition - start;
-        double end = start + length;
-        double maximumDistance = end > boundaryLength ? 0 : boundaryLength - end;
+        double maximumDistance = start > boundaryLength ? 0 : boundaryLength - start;
         return Math.Clamp(distance, minimumDistance, maximumDistance);
     }
 
     private double GetHorizontalDragMinimum()
     {
-        if (dragHorizontalInitialBounds is not Rect horizontalBounds ||
-            dragVerticalInitialBounds is not Rect verticalBounds ||
+        if (dragWallpaperLeft is not double wallpaperLeft ||
             dragCollectionView?.ViewModel is not TrackedWindowCollectionViewModel collectionViewModel)
         {
             return 0;
         }
 
-        double wallpaperLeft = horizontalBounds.X - verticalBounds.X;
         double scaledOffset = Math.Max(0, collectionViewModel.HorizontalOffset) * dragScale;
 
         return double.IsFinite(wallpaperLeft) && double.IsFinite(scaledOffset)
