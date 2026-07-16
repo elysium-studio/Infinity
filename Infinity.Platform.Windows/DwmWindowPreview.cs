@@ -13,11 +13,17 @@ public class DwmWindowPreview(IDwmWindowPreviewSurface surface,
 
     internal long Id { get; } = id;
 
-    public void SetTarget(nint sharedTargetHandle, double width, double height, bool isVisible)
+    public void SetPlacement(double x,
+        double y,
+        double width,
+        double height,
+        int zIndex,
+        bool isVisible,
+        bool isElevated)
     {
         if (Volatile.Read(ref isDisposed) == 0)
         {
-            surface.Apply(this, sharedTargetHandle, width, height, isVisible);
+            surface.Apply(this, x, y, width, height, zIndex, isVisible, isElevated);
         }
     }
 

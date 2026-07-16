@@ -7,15 +7,15 @@ namespace Infinity.Tests;
 public class DwmWindowPreviewTests
 {
     [Fact]
-    public void TargetIsForwardedToTheOwningSurface()
+    public void PlacementIsForwardedToTheOwningSurface()
     {
         TestSurface surface = new();
         DwmWindowPreview preview = new(surface, new IntPtr(42), 7);
 
-        preview.SetTarget(new IntPtr(84), 300.0, 200.0, true);
+        preview.SetPlacement(12.0, 24.0, 300.0, 200.0, 5, true, true);
 
         Assert.Same(preview, surface.AppliedPreview);
-        Assert.Equal((new IntPtr(84), 300.0, 200.0, true), surface.Target);
+        Assert.Equal((12.0, 24.0, 300.0, 200.0, 5, true, true), surface.Placement);
     }
 
     [Fact]
@@ -25,7 +25,7 @@ public class DwmWindowPreviewTests
         DwmWindowPreview preview = new(surface, new IntPtr(42), 7);
 
         Parallel.For(0, 16, _ => preview.Dispose());
-        preview.SetTarget(new IntPtr(84), 300.0, 200.0, true);
+        preview.SetPlacement(12.0, 24.0, 300.0, 200.0, 5, true, true);
 
         Assert.Equal(1, surface.RemoveCount);
         Assert.Null(surface.AppliedPreview);
@@ -38,7 +38,7 @@ public class DwmWindowPreviewTests
         IWindowPreview preview = Assert.IsType<DwmWindowPreview>(surface.CreatePreview(new IntPtr(42)));
 
         surface.Dispose();
-        preview.SetTarget(new IntPtr(84), 300.0, 200.0, true);
+        preview.SetPlacement(12.0, 24.0, 300.0, 200.0, 5, true, true);
         preview.Dispose();
 
         Assert.Null(surface.CreatePreview(new IntPtr(43)));
@@ -50,18 +50,21 @@ public class DwmWindowPreviewTests
 
         public DwmWindowPreview? AppliedPreview { get; private set; }
 
-        public (nint SharedTargetHandle, double Width, double Height, bool IsVisible) Target { get; private set; }
+        public (double X, double Y, double Width, double Height, int ZIndex, bool IsVisible, bool IsElevated) Placement { get; private set; }
 
         public int RemoveCount => Volatile.Read(ref removeCount);
 
         public void Apply(DwmWindowPreview preview,
-            nint sharedTargetHandle,
+            double x,
+            double y,
             double width,
             double height,
-            bool isVisible)
+            int zIndex,
+            bool isVisible,
+            bool isElevated)
         {
             AppliedPreview = preview;
-            Target = (sharedTargetHandle, width, height, isVisible);
+            Placement = (x, y, width, height, zIndex, isVisible, isElevated);
         }
 
         public void Remove(DwmWindowPreview preview) => Interlocked.Increment(ref removeCount);

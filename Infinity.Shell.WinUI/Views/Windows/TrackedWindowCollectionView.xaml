@@ -168,6 +168,11 @@
                         <Image Source="{x:Bind ToImageSource(ViewModel.BackgroundPath), Mode=OneWay}" Stretch="UniformToFill" />
                     </Border>
                 </Border>
+                <Canvas
+                    x:Name="ThumbnailCompositionLayer"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    IsHitTestVisible="False" />
                 <ScrollViewer
                     VerticalAlignment="Stretch"
                     HorizontalScrollBarVisibility="Hidden"
@@ -201,11 +206,6 @@
                         </ItemsControl>
                     </Grid>
                 </ScrollViewer>
-                <Canvas
-                    x:Name="ThumbnailDragOverlay"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
-                    IsHitTestVisible="False" />
                 <PipsPager
                     x:Name="PageIndicator"
                     HorizontalAlignment="Center"

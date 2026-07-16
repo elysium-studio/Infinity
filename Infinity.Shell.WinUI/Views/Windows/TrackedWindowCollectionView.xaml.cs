@@ -2,6 +2,8 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Infinity.Platform.Abstractions;
+using Microsoft.Extensions.Logging;
 using System;
 using System.ComponentModel;
 using Windows.UI;
@@ -15,10 +17,17 @@ public partial class TrackedWindowCollectionView :
     private ImageSource? backgroundImageSource;
     private string? backgroundColour;
     private SolidColorBrush? backgroundBrush;
+    private ThumbnailCompositionTarget? thumbnailCompositionTarget;
     private bool suppressSelectionChanged;
 
-    public TrackedWindowCollectionView()
+    private readonly IWindowPreviewSurface windowPreviewSurface;
+    private readonly ILogger<TrackedWindowCollectionView> logger;
+
+    public TrackedWindowCollectionView(IWindowPreviewSurface windowPreviewSurface,
+        ILogger<TrackedWindowCollectionView> logger)
     {
+        this.windowPreviewSurface = windowPreviewSurface;
+        this.logger = logger;
         InitializeComponent();
 
         Loaded += HandleLoaded;
@@ -30,7 +39,7 @@ public partial class TrackedWindowCollectionView :
 
     internal FrameworkElement ThumbnailDragScrollBoundary => BackdropBorder;
 
-    internal FrameworkElement ThumbnailDragVisualHost => ThumbnailDragOverlay;
+    internal FrameworkElement ThumbnailCompositionHost => ThumbnailCompositionLayer;
 
     internal UIElement? GetWindowItemContainer(object item) =>
         WindowItems.ContainerFromItem(item) as UIElement;
@@ -57,11 +66,19 @@ public partial class TrackedWindowCollectionView :
         SyncPageIndicator();
     }
 
-    private void HandleLoaded(object sender, RoutedEventArgs args) =>
+    private void HandleLoaded(object sender, RoutedEventArgs args)
+    {
+        thumbnailCompositionTarget ??= ThumbnailCompositionTarget.Create(ThumbnailCompositionLayer,
+            windowPreviewSurface,
+            logger);
         Focus(FocusState.Programmatic);
+    }
 
     private void HandleUnloaded(object sender, RoutedEventArgs args)
     {
+        thumbnailCompositionTarget?.Dispose();
+        thumbnailCompositionTarget = null;
+
         if (ViewModel is not null)
         {
             ViewModel.PropertyChanged -= OnViewModelPropertyChanged;

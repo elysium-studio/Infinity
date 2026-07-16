@@ -106,10 +106,7 @@ public partial class TrackedWindowView :
 
         if (viewModel is not null)
         {
-            preview = ThumbnailCompositionPreview.Create(windowPreviewSurface,
-                viewModel.Handle,
-                ThumbnailHost,
-                logger);
+            CreatePreview();
             ApplyFilterState();
             ApplyZIndex();
             QueuePreviewTargetUpdate();
@@ -167,10 +164,7 @@ public partial class TrackedWindowView :
 
             if (isLoaded)
             {
-                preview = ThumbnailCompositionPreview.Create(windowPreviewSurface,
-                    viewModel.Handle,
-                    ThumbnailHost,
-                    logger);
+                CreatePreview();
                 ApplyFilterState();
                 ApplyZIndex();
                 QueuePreviewTargetUpdate();
@@ -242,6 +236,7 @@ public partial class TrackedWindowView :
         ResetHoverScale();
         isDragZIndexElevated = true;
         ApplyZIndex();
+        UpdatePreviewTarget();
 
         args.Handled = true;
     }
@@ -289,17 +284,10 @@ public partial class TrackedWindowView :
             EndPeek();
             ResetHoverScale();
 
-            TrackedWindowCollectionView? collectionView = FindWindowCollectionView();
-
-            if (preview is not null && collectionView is not null &&
-                !preview.BeginDrag(collectionView.ThumbnailDragVisualHost))
-            {
-                logger.LogWarning("Failed to move the live thumbnail into the drag overlay");
-            }
         }
 
         WindowContainer.Translation = new Vector3((float)horizontalDistance, (float)verticalDistance, 0);
-        preview?.MoveDrag(horizontalDistance, verticalDistance);
+        UpdatePreviewTarget();
 
         if (draggedViewModel?.MoveThumbnail(horizontalDistance / dragScale,
             verticalDistance / dragScale) == true)
@@ -362,7 +350,6 @@ public partial class TrackedWindowView :
     private void CompleteThumbnailDrag(bool commitVisualPosition = true)
     {
         TrackedWindowViewModel? activeViewModel = draggedViewModel;
-        preview?.EndDrag();
 
         if (activeViewModel is not null && ownsDragScrollSession)
         {
@@ -385,6 +372,7 @@ public partial class TrackedWindowView :
         ApplyZIndex();
 
         activeViewModel?.EndThumbnailDrag();
+        QueuePreviewTargetUpdate();
 
         if (!isDragVisualPendingReset)
         {
@@ -655,6 +643,10 @@ public partial class TrackedWindowView :
 
         if (propertyName == nameof(TrackedWindowViewModel.Width) ||
             propertyName == nameof(TrackedWindowViewModel.Height) ||
+            propertyName == nameof(TrackedWindowViewModel.X) ||
+            propertyName == nameof(TrackedWindowViewModel.Y) ||
+            propertyName == nameof(TrackedWindowViewModel.ZIndex) ||
+            propertyName == nameof(TrackedWindowViewModel.IsSelected) ||
             propertyName == nameof(TrackedWindowViewModel.IsFiltered) ||
             propertyName == nameof(TrackedWindowViewModel.IsVisible))
         {
@@ -702,14 +694,28 @@ public partial class TrackedWindowView :
             return;
         }
 
-        double width = ThumbnailHost.ActualWidth;
-        double height = ThumbnailHost.ActualHeight;
-        bool isVisible = width > 0.0 &&
-            height > 0.0 &&
+        bool isVisible = ThumbnailHost.ActualWidth > 0.0 &&
+            ThumbnailHost.ActualHeight > 0.0 &&
             viewModel.IsVisible &&
             !viewModel.IsFiltered &&
             Visibility == Visibility.Visible;
-        preview.Update(width, height, isVisible);
+        preview.Update(ComputeZIndex(), isVisible, isDragZIndexElevated);
+    }
+
+    private void CreatePreview()
+    {
+        TrackedWindowCollectionView? collectionView = FindWindowCollectionView();
+
+        if (viewModel is null || collectionView is null)
+        {
+            return;
+        }
+
+        preview = ThumbnailCompositionPreview.Create(windowPreviewSurface,
+            viewModel.Handle,
+            ThumbnailHost,
+            collectionView.ThumbnailCompositionHost,
+            logger);
     }
 
     private Visual? GetContainerVisual()

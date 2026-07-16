@@ -71,16 +71,19 @@ namespace Infinity::Platform::Windows::Native
     {
         unsigned long long PreviewId{};
         HWND SourceWindowHandle{};
-        HANDLE SharedTargetHandle{};
         HTHUMBNAIL ThumbnailHandle{};
         SIZE SourceSize{};
+        int X{};
+        int Y{};
         int Width{};
         int Height{};
+        int ZIndex{};
         bool IsVisible{};
+        bool IsElevated{};
         bool IsActive{};
-        ComPtr<IVisualTargetPartner> VisualTarget;
-        ComPtr<IDCompositionVisual2> RootVisual;
+        ComPtr<IDCompositionVisual2> ContainerVisual;
         ComPtr<IDCompositionVisual2> ThumbnailVisual;
+        ComPtr<IDCompositionRectangleClip> Clip;
     };
 
     static HMODULE dwmapiModule;
@@ -88,7 +91,10 @@ namespace Infinity::Platform::Windows::Native
     static DwmpQueryWindowThumbnailSourceSize queryWindowThumbnailSourceSize;
 
     static HWND ownerWindowHandle;
+    static HANDLE sharedTargetHandle;
     static std::vector<ThumbnailTarget> targets;
+    static ComPtr<IVisualTargetPartner> visualTarget;
+    static ComPtr<IDCompositionVisual2> rootVisual;
 
     static ComPtr<ID3D11Device> d3dDevice;
     static ComPtr<IDXGIDevice> dxgiDevice;
@@ -103,6 +109,11 @@ namespace Infinity::Platform::Windows::Native
     static LONG MaxLong(LONG left, LONG right)
     {
         return left > right ? left : right;
+    }
+
+    static int MinInt(int left, int right)
+    {
+        return left < right ? left : right;
     }
 
     static HRESULT SafeOpenSharedTarget(OpenSharedTargetFromHandle function, ICompositionPartner* partner, HANDLE handle, IVisualTargetPartner** target)
@@ -268,9 +279,9 @@ namespace Infinity::Platform::Windows::Native
         return platformCompositor.As(&compositionPartner);
     }
 
-    static HRESULT OpenVisualTargetFromHandle(HANDLE sharedTargetHandle, IVisualTargetPartner** target)
+    static HRESULT OpenVisualTargetFromHandle(HANDLE targetHandle, IVisualTargetPartner** target)
     {
-        if (!compositionPartner || !sharedTargetHandle || !target)
+        if (!compositionPartner || !targetHandle || !target)
         {
             return E_INVALIDARG;
         }
@@ -283,7 +294,7 @@ namespace Infinity::Platform::Windows::Native
             return E_POINTER;
         }
 
-        return SafeOpenSharedTarget(openSharedTargetFromHandle, compositionPartner.Get(), sharedTargetHandle, target);
+        return SafeOpenSharedTarget(openSharedTargetFromHandle, compositionPartner.Get(), targetHandle, target);
     }
 
     static HRESULT LoadPrivateDwmApi()
@@ -342,16 +353,93 @@ namespace Infinity::Platform::Windows::Native
         return properties;
     }
 
-    static void DestroyTarget(ThumbnailTarget& target)
+    static bool IsAbove(ThumbnailTarget const& left, ThumbnailTarget const& right)
     {
-        if (target.RootVisual)
+        if (left.IsElevated != right.IsElevated)
         {
-            target.RootVisual->RemoveAllVisuals();
+            return left.IsElevated;
         }
 
-        if (target.VisualTarget)
+        if (left.ZIndex != right.ZIndex)
         {
-            target.VisualTarget->SetRoot(nullptr);
+            return left.ZIndex > right.ZIndex;
+        }
+
+        return left.PreviewId > right.PreviewId;
+    }
+
+    static HRESULT InsertTarget(ThumbnailTarget& target)
+    {
+        if (!rootVisual || !target.ContainerVisual)
+        {
+            return E_UNEXPECTED;
+        }
+
+        ThumbnailTarget* reference = nullptr;
+
+        for (ThumbnailTarget& candidate : targets)
+        {
+            if (&candidate == &target || !candidate.ContainerVisual || !IsAbove(candidate, target))
+            {
+                continue;
+            }
+
+            if (!reference || IsAbove(*reference, candidate))
+            {
+                reference = &candidate;
+            }
+        }
+
+        return reference
+            ? rootVisual->AddVisual(target.ContainerVisual.Get(), FALSE, reference->ContainerVisual.Get())
+            : rootVisual->AddVisual(target.ContainerVisual.Get(), TRUE, nullptr);
+    }
+
+    static HRESULT ReorderTarget(ThumbnailTarget& target)
+    {
+        if (!rootVisual || !target.ContainerVisual)
+        {
+            return E_UNEXPECTED;
+        }
+
+        HRESULT result = rootVisual->RemoveVisual(target.ContainerVisual.Get());
+        return FAILED(result) ? result : InsertTarget(target);
+    }
+
+    static HRESULT UpdateClip(ThumbnailTarget& target)
+    {
+        if (!target.Clip)
+        {
+            return E_UNEXPECTED;
+        }
+
+        float radius = static_cast<float>(MinInt(8, MinInt(target.Width, target.Height) / 2));
+        HRESULT result = target.Clip->SetLeft(0.0f);
+        if (SUCCEEDED(result)) result = target.Clip->SetTop(0.0f);
+        if (SUCCEEDED(result)) result = target.Clip->SetRight(static_cast<float>(target.Width));
+        if (SUCCEEDED(result)) result = target.Clip->SetBottom(static_cast<float>(target.Height));
+        if (SUCCEEDED(result)) result = target.Clip->SetTopLeftRadiusX(radius);
+        if (SUCCEEDED(result)) result = target.Clip->SetTopLeftRadiusY(radius);
+        if (SUCCEEDED(result)) result = target.Clip->SetTopRightRadiusX(radius);
+        if (SUCCEEDED(result)) result = target.Clip->SetTopRightRadiusY(radius);
+        if (SUCCEEDED(result)) result = target.Clip->SetBottomLeftRadiusX(radius);
+        if (SUCCEEDED(result)) result = target.Clip->SetBottomLeftRadiusY(radius);
+        if (SUCCEEDED(result)) result = target.Clip->SetBottomRightRadiusX(radius);
+        if (SUCCEEDED(result)) result = target.Clip->SetBottomRightRadiusY(radius);
+        return result;
+    }
+
+    static void DestroyTarget(ThumbnailTarget& target)
+    {
+        if (rootVisual && target.ContainerVisual)
+        {
+            rootVisual->RemoveVisual(target.ContainerVisual.Get());
+        }
+
+        if (target.ContainerVisual)
+        {
+            target.ContainerVisual->RemoveAllVisuals();
+            target.ContainerVisual->SetClip(nullptr);
         }
 
         if (target.ThumbnailHandle)
@@ -360,12 +448,11 @@ namespace Infinity::Platform::Windows::Native
             target.ThumbnailHandle = nullptr;
         }
 
+        target.Clip.Reset();
         target.ThumbnailVisual.Reset();
-        target.RootVisual.Reset();
-        target.VisualTarget.Reset();
+        target.ContainerVisual.Reset();
         target.PreviewId = 0;
         target.SourceWindowHandle = nullptr;
-        target.SharedTargetHandle = nullptr;
         target.SourceSize = {};
         target.IsActive = false;
     }
@@ -378,6 +465,63 @@ namespace Infinity::Platform::Windows::Native
         }
 
         targets.clear();
+
+        if (visualTarget)
+        {
+            visualTarget->SetRoot(nullptr);
+        }
+
+        rootVisual.Reset();
+        visualTarget.Reset();
+        sharedTargetHandle = nullptr;
+    }
+
+    static HRESULT EnsureVisualTree(HANDLE currentSharedTargetHandle)
+    {
+        if (sharedTargetHandle == currentSharedTargetHandle && rootVisual && visualTarget)
+        {
+            return S_OK;
+        }
+
+        DestroyVisualTree();
+        HRESULT result = OpenVisualTargetFromHandle(currentSharedTargetHandle, visualTarget.GetAddressOf());
+
+        if (FAILED(result))
+        {
+            return result;
+        }
+
+        ComPtr<IDCompositionVisual> rootVisualBase;
+        result = compositionDevice->CreateVisual(rootVisualBase.GetAddressOf());
+
+        if (FAILED(result))
+        {
+            return result;
+        }
+
+        result = rootVisualBase.As(&rootVisual);
+
+        if (FAILED(result))
+        {
+            return result;
+        }
+
+        ComPtr<IPlatformVisual> platformRootVisual;
+        result = rootVisual.As(&platformRootVisual);
+
+        if (FAILED(result))
+        {
+            return result;
+        }
+
+        result = visualTarget->SetRoot(platformRootVisual.Get());
+
+        if (SUCCEEDED(result))
+        {
+            sharedTargetHandle = currentSharedTargetHandle;
+        }
+
+        return result;
     }
 
     static ThumbnailTarget* FindTarget(unsigned long long previewId)
@@ -397,53 +541,38 @@ namespace Infinity::Platform::Windows::Native
     {
         target.PreviewId = item.PreviewId;
         target.SourceWindowHandle = item.SourceWindowHandle;
-        target.SharedTargetHandle = item.SharedTargetHandle;
         target.SourceSize = GetSourceSize(item.SourceWindowHandle);
+        target.X = item.X;
+        target.Y = item.Y;
         target.Width = item.Width;
         target.Height = item.Height;
+        target.ZIndex = item.ZIndex;
         target.IsVisible = item.IsVisible != 0;
+        target.IsElevated = item.IsElevated != 0;
         target.IsActive = true;
 
-        HRESULT result = OpenVisualTargetFromHandle(item.SharedTargetHandle, target.VisualTarget.GetAddressOf());
+        ComPtr<IDCompositionVisual> containerVisualBase;
+        HRESULT result = compositionDevice->CreateVisual(containerVisualBase.GetAddressOf());
+        if (SUCCEEDED(result)) result = containerVisualBase.As(&target.ContainerVisual);
+        if (SUCCEEDED(result)) result = compositionDevice->CreateRectangleClip(target.Clip.GetAddressOf());
 
         if (FAILED(result))
         {
             return result;
         }
 
-        ComPtr<IDCompositionVisual> rootVisualBase;
-        result = compositionDevice->CreateVisual(rootVisualBase.GetAddressOf());
+        target.ContainerVisual->SetOffsetX(static_cast<float>(target.X));
+        target.ContainerVisual->SetOffsetY(static_cast<float>(target.Y));
+        result = UpdateClip(target);
+        if (SUCCEEDED(result)) result = target.ContainerVisual->SetClip(target.Clip.Get());
 
-        if (FAILED(result))
-        {
-            return result;
-        }
-
-        result = rootVisualBase.As(&target.RootVisual);
-
-        if (FAILED(result))
-        {
-            return result;
-        }
-
-        ComPtr<IPlatformVisual> platformRootVisual;
-        result = target.RootVisual.As(&platformRootVisual);
-
-        if (FAILED(result))
-        {
-            return result;
-        }
-
-        result = target.VisualTarget->SetRoot(platformRootVisual.Get());
-
-        if (FAILED(result))
-        {
-            return result;
-        }
-
-        DWM_THUMBNAIL_PROPERTIES properties = CreateThumbnailProperties(target.SourceSize, item.Width, item.Height, target.IsVisible);
+        DWM_THUMBNAIL_PROPERTIES properties = CreateThumbnailProperties(target.SourceSize, target.Width, target.Height, target.IsVisible);
         void* visual = nullptr;
-        result = SafeCreateSharedThumbnailVisual(createSharedThumbnailVisual, currentOwnerWindowHandle, item.SourceWindowHandle, 2, &properties, compositionDevice.Get(), &visual, &target.ThumbnailHandle);
+
+        if (SUCCEEDED(result))
+        {
+            result = SafeCreateSharedThumbnailVisual(createSharedThumbnailVisual, currentOwnerWindowHandle, item.SourceWindowHandle, 2, &properties, compositionDevice.Get(), &visual, &target.ThumbnailHandle);
+        }
 
         if (visual)
         {
@@ -455,33 +584,48 @@ namespace Infinity::Platform::Windows::Native
             return FAILED(result) ? result : E_FAIL;
         }
 
-        return target.RootVisual->AddVisual(target.ThumbnailVisual.Get(), TRUE, nullptr);
+        result = target.ContainerVisual->AddVisual(target.ThumbnailVisual.Get(), TRUE, nullptr);
+        return FAILED(result) ? result : InsertTarget(target);
     }
 
     static HRESULT UpdateTarget(DwmThumbnailVisualItem const& item, ThumbnailTarget& target)
     {
+        bool positionChanged = target.X != item.X || target.Y != item.Y;
         bool sizeChanged = target.Width != item.Width || target.Height != item.Height;
         bool visibilityChanged = target.IsVisible != (item.IsVisible != 0);
+        bool orderChanged = target.ZIndex != item.ZIndex || target.IsElevated != (item.IsElevated != 0);
 
         target.IsActive = true;
+        target.X = item.X;
+        target.Y = item.Y;
+        target.ZIndex = item.ZIndex;
+        target.IsElevated = item.IsElevated != 0;
 
-        if (sizeChanged || visibilityChanged)
+        HRESULT result = S_OK;
+
+        if (positionChanged)
+        {
+            result = target.ContainerVisual->SetOffsetX(static_cast<float>(target.X));
+            if (SUCCEEDED(result)) result = target.ContainerVisual->SetOffsetY(static_cast<float>(target.Y));
+        }
+
+        if (SUCCEEDED(result) && (sizeChanged || visibilityChanged))
         {
             target.SourceSize = GetSourceSize(item.SourceWindowHandle);
             target.Width = item.Width;
             target.Height = item.Height;
             target.IsVisible = item.IsVisible != 0;
-
             DWM_THUMBNAIL_PROPERTIES properties = CreateThumbnailProperties(target.SourceSize, target.Width, target.Height, target.IsVisible);
-            HRESULT result = DwmUpdateThumbnailProperties(target.ThumbnailHandle, &properties);
-
-            if (FAILED(result))
-            {
-                return result;
-            }
+            result = DwmUpdateThumbnailProperties(target.ThumbnailHandle, &properties);
+            if (SUCCEEDED(result) && sizeChanged) result = UpdateClip(target);
         }
 
-        return S_OK;
+        if (SUCCEEDED(result) && orderChanged)
+        {
+            result = ReorderTarget(target);
+        }
+
+        return result;
     }
 
     static void RemoveInactiveTargets()
@@ -507,21 +651,15 @@ namespace Infinity::Platform::Windows::Native
         return SUCCEEDED(result) ? 1 : 0;
     }
 
-    int DwmThumbnailVisual_RenderBatch(HWND currentOwnerWindowHandle, DwmThumbnailVisualItem* items, int count)
+    int DwmThumbnailVisual_RenderBatch(HWND currentOwnerWindowHandle, HANDLE currentSharedTargetHandle, DwmThumbnailVisualItem* items, int count)
     {
-        if (!currentOwnerWindowHandle)
+        if (!currentOwnerWindowHandle || !currentSharedTargetHandle)
         {
             return E_INVALIDARG;
         }
 
         HRESULT result = LoadPrivateDwmApi();
-
-        if (FAILED(result))
-        {
-            return result;
-        }
-
-        result = EnsureInteropCompositionDevice();
+        if (SUCCEEDED(result)) result = EnsureInteropCompositionDevice();
 
         if (FAILED(result))
         {
@@ -532,6 +670,13 @@ namespace Infinity::Platform::Windows::Native
         {
             DestroyVisualTree();
             ownerWindowHandle = currentOwnerWindowHandle;
+        }
+
+        result = EnsureVisualTree(currentSharedTargetHandle);
+
+        if (FAILED(result))
+        {
+            return result;
         }
 
         for (ThumbnailTarget& target : targets)
@@ -547,11 +692,7 @@ namespace Infinity::Platform::Windows::Native
             {
                 DwmThumbnailVisualItem& item = items[index];
 
-                if (!item.PreviewId ||
-                    !item.SourceWindowHandle ||
-                    !item.SharedTargetHandle ||
-                    item.Width <= 0 ||
-                    item.Height <= 0)
+                if (!item.PreviewId || !item.SourceWindowHandle || item.Width <= 0 || item.Height <= 0)
                 {
                     lastItemResult = E_INVALIDARG;
                     continue;
@@ -559,9 +700,7 @@ namespace Infinity::Platform::Windows::Native
 
                 ThumbnailTarget* target = FindTarget(item.PreviewId);
 
-                if (target &&
-                    (target->SourceWindowHandle != item.SourceWindowHandle ||
-                        target->SharedTargetHandle != item.SharedTargetHandle))
+                if (target && target->SourceWindowHandle != item.SourceWindowHandle)
                 {
                     DestroyTarget(*target);
                     target = nullptr;
@@ -600,13 +739,7 @@ namespace Infinity::Platform::Windows::Native
 
         RemoveInactiveTargets();
         result = compositionDevice->Commit();
-
-        if (FAILED(result))
-        {
-            return result;
-        }
-
-        return lastItemResult;
+        return FAILED(result) ? result : lastItemResult;
     }
 
     void DwmThumbnailVisual_Clear()
@@ -617,7 +750,6 @@ namespace Infinity::Platform::Windows::Native
         if (compositionDevice)
         {
             compositionDevice->Commit();
-            return;
         }
     }
 

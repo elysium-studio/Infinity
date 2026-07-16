@@ -7,5 +7,11 @@ public interface IWindowPreview :
 {
     nint WindowHandle { get; }
 
-    void SetTarget(nint sharedTargetHandle, double width, double height, bool isVisible);
+    void SetPlacement(double x,
+        double y,
+        double width,
+        double height,
+        int zIndex,
+        bool isVisible,
+        bool isElevated);
 }
