@@ -45,6 +45,7 @@ public partial class TrackedWindowView :
     private FrameworkElement? dragHorizontalBoundary;
     private FrameworkElement? dragScrollBoundary;
     private FrameworkElement? dragVerticalBoundary;
+    private TrackedWindowCollectionView? dragCollectionView;
     private TrackedWindowViewModel? draggedViewModel;
     private double dragScale;
     private double dragHorizontalDelta;
@@ -289,10 +290,10 @@ public partial class TrackedWindowView :
 
             draggedViewModel = currentViewModel;
             dragScale = currentScale;
-            TrackedWindowCollectionView? collectionView = FindWindowCollectionView();
-            dragHorizontalBoundary = collectionView?.ThumbnailDragHorizontalBoundary;
-            dragScrollBoundary = collectionView?.ThumbnailDragScrollBoundary;
-            dragVerticalBoundary = collectionView?.ThumbnailDragVerticalBoundary;
+            dragCollectionView = FindWindowCollectionView();
+            dragHorizontalBoundary = dragCollectionView?.ThumbnailDragHorizontalBoundary;
+            dragScrollBoundary = dragCollectionView?.ThumbnailDragScrollBoundary;
+            dragVerticalBoundary = dragCollectionView?.ThumbnailDragVerticalBoundary;
             dragHorizontalInitialBounds = GetDragBounds(dragHorizontalBoundary);
             dragVerticalInitialBounds = GetDragBounds(dragVerticalBoundary);
 
@@ -389,6 +390,7 @@ public partial class TrackedWindowView :
         dragHorizontalBoundary = null;
         dragScrollBoundary = null;
         dragVerticalBoundary = null;
+        dragCollectionView = null;
         dragScale = 0;
         bool hasVisualDelta = dragHorizontalDelta != 0 || dragVerticalDelta != 0;
         dragHorizontalDelta = 0;
@@ -476,14 +478,16 @@ public partial class TrackedWindowView :
             ? ConstrainDragAxis(horizontalDistance,
                 horizontalBounds.X,
                 horizontalBounds.Width,
-                dragHorizontalBoundary.ActualWidth)
+                dragHorizontalBoundary.ActualWidth,
+                GetHorizontalDragMinimum())
             : horizontalDistance;
         double constrainedVerticalDistance = dragVerticalInitialBounds is Rect verticalBounds &&
             dragVerticalBoundary is not null
             ? ConstrainDragAxis(verticalDistance,
                 verticalBounds.Y,
                 verticalBounds.Height,
-                dragVerticalBoundary.ActualHeight)
+                dragVerticalBoundary.ActualHeight,
+                0)
             : verticalDistance;
 
         return (constrainedHorizontalDistance, constrainedVerticalDistance);
@@ -492,31 +496,52 @@ public partial class TrackedWindowView :
     private static double ConstrainDragAxis(double distance,
         double start,
         double length,
-        double boundaryLength)
+        double boundaryLength,
+        double minimumPosition)
     {
         if (!double.IsFinite(distance) ||
             !double.IsFinite(start) ||
             !double.IsFinite(length) ||
             !double.IsFinite(boundaryLength) ||
+            !double.IsFinite(minimumPosition) ||
             length <= 0 ||
             boundaryLength <= 0)
         {
             return distance;
         }
 
-        if (length > boundaryLength)
+        minimumPosition = Math.Clamp(minimumPosition, 0, boundaryLength);
+
+        if (length > boundaryLength - minimumPosition)
         {
             double alignEndDistance = boundaryLength - start - length;
-            double alignStartDistance = -start;
+            double alignStartDistance = minimumPosition - start;
             return Math.Clamp(distance,
                 Math.Min(alignEndDistance, alignStartDistance),
                 Math.Max(alignEndDistance, alignStartDistance));
         }
 
-        double minimumDistance = start < 0 ? 0 : -start;
+        double minimumDistance = start < minimumPosition ? 0 : minimumPosition - start;
         double end = start + length;
         double maximumDistance = end > boundaryLength ? 0 : boundaryLength - end;
         return Math.Clamp(distance, minimumDistance, maximumDistance);
+    }
+
+    private double GetHorizontalDragMinimum()
+    {
+        if (dragHorizontalInitialBounds is not Rect horizontalBounds ||
+            dragVerticalInitialBounds is not Rect verticalBounds ||
+            dragCollectionView?.ViewModel is not TrackedWindowCollectionViewModel collectionViewModel)
+        {
+            return 0;
+        }
+
+        double wallpaperLeft = horizontalBounds.X - verticalBounds.X;
+        double scaledOffset = Math.Max(0, collectionViewModel.HorizontalOffset) * dragScale;
+
+        return double.IsFinite(wallpaperLeft) && double.IsFinite(scaledOffset)
+            ? Math.Max(0, wallpaperLeft - scaledOffset)
+            : 0;
     }
 
     private void UpdateThumbnailDragScroll(PointerRoutedEventArgs args)
