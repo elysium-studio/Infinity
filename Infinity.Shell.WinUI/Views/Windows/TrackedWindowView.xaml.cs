@@ -42,6 +42,7 @@ public partial class TrackedWindowView :
     private UIElement? dragCoordinateRoot;
     private FrameworkElement? dragScrollBoundary;
     private TrackedWindowViewModel? draggedViewModel;
+    private IDisposable? dragZOrderLease;
     private double dragScale;
     private double dragHorizontalDelta;
     private double dragVerticalDelta;
@@ -54,16 +55,19 @@ public partial class TrackedWindowView :
     private readonly IStringLocalizer localizer;
     private readonly IThumbnailDragScroller thumbnailDragScroller;
     private readonly IWindowPreviewSurface windowPreviewSurface;
+    private readonly IWindowZOrderController windowZOrderController;
     private readonly ILogger<TrackedWindowView> logger;
 
     public TrackedWindowView(IStringLocalizer localizer,
         IThumbnailDragScroller thumbnailDragScroller,
         IWindowPreviewSurface windowPreviewSurface,
+        IWindowZOrderController windowZOrderController,
         ILogger<TrackedWindowView> logger)
     {
         this.localizer = localizer;
         this.thumbnailDragScroller = thumbnailDragScroller;
         this.windowPreviewSurface = windowPreviewSurface;
+        this.windowZOrderController = windowZOrderController;
         this.logger = logger;
         InitializeComponent();
 
@@ -283,6 +287,7 @@ public partial class TrackedWindowView :
             dragScrollBoundary = FindThumbnailDragScrollBoundary();
 
             isThumbnailDragging = true;
+            dragZOrderLease = windowZOrderController.ElevateTemporarily(currentViewModel.Handle);
             SetCloseButtonVisible(false);
             ownsDragScrollSession = thumbnailDragScroller.Begin(currentViewModel.Handle);
             CancelPendingPeek();
@@ -362,7 +367,10 @@ public partial class TrackedWindowView :
     private void CompleteThumbnailDrag(bool commitVisualPosition = true)
     {
         TrackedWindowViewModel? activeViewModel = draggedViewModel;
+        IDisposable? currentZOrderLease = dragZOrderLease;
+        dragZOrderLease = null;
         preview?.EndDrag();
+        currentZOrderLease?.Dispose();
 
         if (activeViewModel is not null && ownsDragScrollSession)
         {

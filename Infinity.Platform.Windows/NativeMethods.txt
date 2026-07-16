@@ -22,6 +22,7 @@ BITMAPINFO
 BITMAPINFOHEADER
 PostMessage
 GetWindowRect
+GetWindow
 SendMessage
 SetWindowPos
 SystemParametersInfo
