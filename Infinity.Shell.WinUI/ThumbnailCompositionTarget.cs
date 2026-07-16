@@ -26,7 +26,6 @@ public class ThumbnailCompositionTarget :
         this.previewSurface = previewSurface;
         this.proxy = proxy;
         this.logger = logger;
-        host.SizeChanged += HandleHostSizeChanged;
     }
 
     public static ThumbnailCompositionTarget? Create(FrameworkElement host,
@@ -44,7 +43,7 @@ public class ThumbnailCompositionTarget :
         {
             Visual hostVisual = ElementCompositionPreview.GetElementVisual(host);
             proxy = SystemVisualProxyVisualPrivate.Create(hostVisual.Compositor);
-            SetVisualSize(proxy.Visual, host.ActualWidth, host.ActualHeight);
+            proxy.Visual.RelativeSizeAdjustment = Vector2.One;
             ElementCompositionPreview.SetElementChildVisual(host, proxy.Visual);
             previewSurface.SetTarget(proxy.Handle);
             return new ThumbnailCompositionTarget(host, previewSurface, proxy, logger);
@@ -67,34 +66,10 @@ public class ThumbnailCompositionTarget :
         }
 
         isDisposed = true;
-        host.SizeChanged -= HandleHostSizeChanged;
         previewSurface.SetTarget(0);
         TryDetach(host, proxy.Visual, logger);
         proxy.Dispose();
         GC.SuppressFinalize(this);
-    }
-
-    private void HandleHostSizeChanged(object sender, SizeChangedEventArgs args)
-    {
-        try
-        {
-            SetVisualSize(proxy.Visual, args.NewSize.Width, args.NewSize.Height);
-        }
-        catch (Exception exception)
-        {
-            logger.LogWarning(exception, "Failed to resize the shared DWM thumbnail composition target");
-        }
-    }
-
-    private static void SetVisualSize(Visual visual, double width, double height)
-    {
-        float normalizedWidth = double.IsFinite(width) && width > 0.0
-            ? (float)Math.Min(width, float.MaxValue)
-            : 0.0f;
-        float normalizedHeight = double.IsFinite(height) && height > 0.0
-            ? (float)Math.Min(height, float.MaxValue)
-            : 0.0f;
-        visual.Size = new Vector2(normalizedWidth, normalizedHeight);
     }
 
     private static void TryDetach(FrameworkElement host, Visual? visual, ILogger logger)
