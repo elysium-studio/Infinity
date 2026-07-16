@@ -58,9 +58,7 @@ public class DesktopModule :
             .AddView(ServiceLifetime.Singleton, provider => new ScrollTriggerView())
             .AddViewFor(
                 ServiceLifetime.Singleton,
-                provider => new TrackedWindowCollectionView(
-                    provider.GetRequiredService<IWindowPreviewSurface>(),
-                    provider.GetRequiredService<ILogger<TrackedWindowCollectionView>>()),
+                provider => new TrackedWindowCollectionView(),
                 provider => new TrackedWindowCollectionViewModel(
                     provider,
                     provider.GetRequiredService<IServiceFactory>(),

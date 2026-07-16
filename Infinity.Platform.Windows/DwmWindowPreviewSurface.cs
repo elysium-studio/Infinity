@@ -19,7 +19,6 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
     private int lastRenderFailure;
     private long nextPreviewId;
     private nint ownerWindowHandle;
-    private nint sharedTargetHandle;
 
     public bool IsAvailable
     {
@@ -33,13 +32,10 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
     }
 
     public void Apply(DwmWindowPreview preview,
-        double x,
-        double y,
+        nint sharedTargetHandle,
         double width,
         double height,
-        int zIndex,
-        bool isVisible,
-        bool isElevated)
+        bool isVisible)
     {
         lock (syncLock)
         {
@@ -49,30 +45,23 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
                 return;
             }
 
-            int normalizedX = NormalizeCoordinate(x);
-            int normalizedY = NormalizeCoordinate(y);
             int normalizedWidth = NormalizeLength(width);
             int normalizedHeight = NormalizeLength(height);
-            bool normalizedVisibility = isVisible && normalizedWidth > 0 && normalizedHeight > 0;
+            bool normalizedVisibility = isVisible && sharedTargetHandle != 0 &&
+                normalizedWidth > 0 && normalizedHeight > 0;
 
-            if (state.X == normalizedX &&
-                state.Y == normalizedY &&
+            if (state.SharedTargetHandle == sharedTargetHandle &&
                 state.Width == normalizedWidth &&
                 state.Height == normalizedHeight &&
-                state.ZIndex == zIndex &&
-                state.IsVisible == normalizedVisibility &&
-                state.IsElevated == isElevated)
+                state.IsVisible == normalizedVisibility)
             {
                 return;
             }
 
-            state.X = normalizedX;
-            state.Y = normalizedY;
+            state.SharedTargetHandle = sharedTargetHandle;
             state.Width = normalizedWidth;
             state.Height = normalizedHeight;
-            state.ZIndex = zIndex;
             state.IsVisible = normalizedVisibility;
-            state.IsElevated = isElevated;
             RenderCore();
         }
     }
@@ -85,7 +74,6 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
             {
                 TryClear();
                 ownerWindowHandle = 0;
-                sharedTargetHandle = 0;
             }
         }
     }
@@ -128,7 +116,6 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
             previews.Clear();
             TryClear();
             ownerWindowHandle = 0;
-            sharedTargetHandle = 0;
             isDisposed = true;
         }
 
@@ -174,21 +161,6 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
         }
     }
 
-    public void SetTarget(nint sharedTargetHandle)
-    {
-        lock (syncLock)
-        {
-            if (isDisposed || this.sharedTargetHandle == sharedTargetHandle)
-            {
-                return;
-            }
-
-            TryClear();
-            this.sharedTargetHandle = sharedTargetHandle;
-            RenderCore();
-        }
-    }
-
     [DllImport(LibraryName, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
     private static extern void DwmThumbnailVisual_Clear();
 
@@ -197,19 +169,8 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
 
     [DllImport(LibraryName, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
     private static extern int DwmThumbnailVisual_RenderBatch(nint ownerWindowHandle,
-        nint sharedTargetHandle,
         DwmThumbnailVisualItem[] items,
         int count);
-
-    private static int NormalizeCoordinate(double value)
-    {
-        if (!double.IsFinite(value))
-        {
-            return 0;
-        }
-
-        return (int)Math.Clamp(Math.Round(value), int.MinValue, int.MaxValue);
-    }
 
     private static int NormalizeLength(double value)
     {
@@ -255,13 +216,12 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
     }
 
     private static int TryRenderBatch(nint ownerWindowHandle,
-        nint sharedTargetHandle,
         DwmThumbnailVisualItem[] items,
         int count)
     {
         try
         {
-            return DwmThumbnailVisual_RenderBatch(ownerWindowHandle, sharedTargetHandle, items, count);
+            return DwmThumbnailVisual_RenderBatch(ownerWindowHandle, items, count);
         }
         catch (DllNotFoundException)
         {
@@ -275,8 +235,7 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
 
     private bool RenderCore()
     {
-        if (ownerWindowHandle == 0 || sharedTargetHandle == 0 ||
-            (bridgeAvailable ??= TryIsAvailable()) is false)
+        if (ownerWindowHandle == 0 || (bridgeAvailable ??= TryIsAvailable()) is false)
         {
             return false;
         }
@@ -286,7 +245,7 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
 
         foreach (PreviewState state in previews.Values)
         {
-            if (state.Width <= 0 || state.Height <= 0)
+            if (state.SharedTargetHandle == 0 || state.Width <= 0 || state.Height <= 0)
             {
                 continue;
             }
@@ -295,17 +254,14 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
             {
                 PreviewId = (ulong)state.Preview.Id,
                 SourceWindowHandle = state.Preview.WindowHandle,
-                X = state.X,
-                Y = state.Y,
+                SharedTargetHandle = state.SharedTargetHandle,
                 Width = state.Width,
                 Height = state.Height,
-                ZIndex = state.ZIndex,
-                IsVisible = state.IsVisible ? 1 : 0,
-                IsElevated = state.IsElevated ? 1 : 0
+                IsVisible = state.IsVisible ? 1 : 0
             };
         }
 
-        int result = TryRenderBatch(ownerWindowHandle, sharedTargetHandle, renderItems, itemCount);
+        int result = TryRenderBatch(ownerWindowHandle, renderItems, itemCount);
         Array.Clear(renderItems, 0, itemCount);
 
         if (result < 0 && result != lastRenderFailure)
@@ -336,19 +292,13 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
     {
         public DwmWindowPreview Preview { get; } = preview;
 
-        public int X { get; set; }
-
-        public int Y { get; set; }
+        public nint SharedTargetHandle { get; set; }
 
         public int Width { get; set; }
 
         public int Height { get; set; }
 
-        public int ZIndex { get; set; }
-
         public bool IsVisible { get; set; }
-
-        public bool IsElevated { get; set; }
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -358,18 +308,12 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
 
         public nint SourceWindowHandle;
 
-        public int X;
-
-        public int Y;
+        public nint SharedTargetHandle;
 
         public int Width;
 
         public int Height;
 
-        public int ZIndex;
-
         public int IsVisible;
-
-        public int IsElevated;
     }
 }

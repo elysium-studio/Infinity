@@ -3,13 +3,10 @@
 public interface IDwmWindowPreviewSurface
 {
     void Apply(DwmWindowPreview preview,
-        double x,
-        double y,
+        nint sharedTargetHandle,
         double width,
         double height,
-        int zIndex,
-        bool isVisible,
-        bool isElevated);
+        bool isVisible);
 
     void Remove(DwmWindowPreview preview);
 }
