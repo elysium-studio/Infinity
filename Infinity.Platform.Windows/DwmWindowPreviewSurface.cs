@@ -16,6 +16,7 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
     private DwmThumbnailVisualItem[] renderItems = [];
     private bool isDisposed;
     private bool? bridgeAvailable;
+    private int deferredUpdateCount;
     private int lastRenderFailure;
     private long nextPreviewId;
     private nint ownerWindowHandle;
@@ -62,7 +63,7 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
             state.Width = normalizedWidth;
             state.Height = normalizedHeight;
             state.IsVisible = normalizedVisibility;
-            RenderCore();
+            RenderIfReady();
         }
     }
 
@@ -99,6 +100,20 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
         }
     }
 
+    public IDisposable DeferUpdates()
+    {
+        lock (syncLock)
+        {
+            if (isDisposed)
+            {
+                return new UpdateDeferral(null);
+            }
+
+            deferredUpdateCount++;
+            return new UpdateDeferral(this);
+        }
+    }
+
     public void Dispose()
     {
         lock (syncLock)
@@ -116,6 +131,7 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
             previews.Clear();
             TryClear();
             ownerWindowHandle = 0;
+            deferredUpdateCount = 0;
             isDisposed = true;
         }
 
@@ -142,7 +158,7 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
                 this.ownerWindowHandle = ownerWindowHandle;
             }
 
-            RenderCore();
+            RenderIfReady();
         }
     }
 
@@ -157,7 +173,25 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
             }
 
             previews.Remove(preview.Id);
-            RenderCore();
+            RenderIfReady();
+        }
+    }
+
+    private void CompleteDeferredUpdate()
+    {
+        lock (syncLock)
+        {
+            if (isDisposed || deferredUpdateCount == 0)
+            {
+                return;
+            }
+
+            deferredUpdateCount--;
+
+            if (deferredUpdateCount == 0)
+            {
+                RenderCore();
+            }
         }
     }
 
@@ -277,6 +311,14 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
         return result >= 0;
     }
 
+    private void RenderIfReady()
+    {
+        if (deferredUpdateCount == 0)
+        {
+            RenderCore();
+        }
+    }
+
     private void EnsureRenderCapacity(int count)
     {
         if (renderItems.Length >= count)
@@ -299,6 +341,18 @@ public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
         public int Height { get; set; }
 
         public bool IsVisible { get; set; }
+    }
+
+    private class UpdateDeferral(DwmWindowPreviewSurface? surface) :
+        IDisposable
+    {
+        private DwmWindowPreviewSurface? surface = surface;
+
+        public void Dispose()
+        {
+            Interlocked.Exchange(ref surface, null)?.CompleteDeferredUpdate();
+            GC.SuppressFinalize(this);
+        }
     }
 
     [StructLayout(LayoutKind.Sequential)]

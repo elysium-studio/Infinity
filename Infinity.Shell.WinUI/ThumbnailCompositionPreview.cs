@@ -13,6 +13,8 @@ public class ThumbnailCompositionPreview :
 {
     private const float CornerRadius = 8.0f;
 
+    private readonly IWindowPreviewSurface previewSurface;
+    private readonly nint windowHandle;
     private readonly FrameworkElement host;
     private readonly IWindowPreview preview;
     private readonly SystemVisualProxyVisualPrivate proxy;
@@ -21,14 +23,20 @@ public class ThumbnailCompositionPreview :
     private readonly CompositionGeometricClip roundedClip;
     private readonly ILogger logger;
     private ContainerVisual? dragContainer;
+    private CompositionGeometricClip? dragRoundedClip;
+    private CompositionRoundedRectangleGeometry? dragRoundedGeometry;
     private FrameworkElement? dragHost;
+    private IWindowPreview? dragPreview;
+    private SystemVisualProxyVisualPrivate? dragProxy;
     private Vector2 dragOrigin;
     private bool isDisposed;
     private bool isVisible;
     private float width;
     private float height;
 
-    private ThumbnailCompositionPreview(FrameworkElement host,
+    private ThumbnailCompositionPreview(IWindowPreviewSurface previewSurface,
+        nint windowHandle,
+        FrameworkElement host,
         IWindowPreview preview,
         SystemVisualProxyVisualPrivate proxy,
         ContainerVisual hostContainer,
@@ -36,6 +44,8 @@ public class ThumbnailCompositionPreview :
         CompositionGeometricClip roundedClip,
         ILogger logger)
     {
+        this.previewSurface = previewSurface;
+        this.windowHandle = windowHandle;
         this.host = host;
         this.preview = preview;
         this.proxy = proxy;
@@ -80,7 +90,9 @@ public class ThumbnailCompositionPreview :
             hostContainer.Children.InsertAtTop(proxy.Visual);
             ElementCompositionPreview.SetElementChildVisual(host, hostContainer);
 
-            return new ThumbnailCompositionPreview(host,
+            return new ThumbnailCompositionPreview(previewSurface,
+                windowHandle,
+                host,
                 preview,
                 proxy,
                 hostContainer,
@@ -104,12 +116,16 @@ public class ThumbnailCompositionPreview :
 
     public bool BeginDrag(FrameworkElement overlayHost)
     {
-        if (isDisposed || dragContainer is not null)
+        if (isDisposed || dragPreview is not null)
         {
             return false;
         }
 
         ContainerVisual? createdContainer = null;
+        CompositionGeometricClip? createdClip = null;
+        CompositionRoundedRectangleGeometry? createdGeometry = null;
+        IWindowPreview? createdPreview = null;
+        SystemVisualProxyVisualPrivate? createdProxy = null;
 
         try
         {
@@ -120,6 +136,7 @@ public class ThumbnailCompositionPreview :
             }
 
             Visual overlayVisual = ElementCompositionPreview.GetElementVisual(overlayHost);
+            Compositor compositor = overlayVisual.Compositor;
             Windows.Foundation.Point position = host.TransformToVisual(overlayHost).TransformPoint(default);
 
             if (!double.IsFinite(position.X) || !double.IsFinite(position.Y))
@@ -127,24 +144,66 @@ public class ThumbnailCompositionPreview :
                 return false;
             }
 
-            createdContainer = overlayVisual.Compositor.CreateContainerVisual();
+            createdPreview = previewSurface.CreatePreview(windowHandle);
+
+            if (createdPreview is null)
+            {
+                return false;
+            }
+
+            createdProxy = SystemVisualProxyVisualPrivate.Create(compositor);
+            createdGeometry = compositor.CreateRoundedRectangleGeometry();
+            createdClip = compositor.CreateGeometricClip(createdGeometry);
+            createdProxy.Visual.Size = new Vector2(width, height);
+            createdProxy.Visual.Clip = createdClip;
+            createdProxy.Visual.IsVisible = isVisible;
+            UpdateClip(createdGeometry, width, height);
+
+            createdContainer = compositor.CreateContainerVisual();
             createdContainer.RelativeSizeAdjustment = Vector2.One;
-            ElementCompositionPreview.SetElementChildVisual(overlayHost, createdContainer);
-            hostContainer.Children.Remove(proxy.Visual);
             dragOrigin = new Vector2((float)position.X, (float)position.Y);
-            proxy.Visual.Offset = new Vector3(dragOrigin, 0.0f);
-            createdContainer.Children.InsertAtTop(proxy.Visual);
+            createdProxy.Visual.Offset = new Vector3(dragOrigin, 0.0f);
+            createdContainer.Children.InsertAtTop(createdProxy.Visual);
+            ElementCompositionPreview.SetElementChildVisual(overlayHost, createdContainer);
+
+            using (previewSurface.DeferUpdates())
+            {
+                preview.SetTarget(proxy.Handle, width, height, false);
+                createdPreview.SetTarget(createdProxy.Handle, width, height, isVisible);
+            }
+
             dragHost = overlayHost;
             dragContainer = createdContainer;
+            dragRoundedClip = createdClip;
+            dragRoundedGeometry = createdGeometry;
+            dragPreview = createdPreview;
+            dragProxy = createdProxy;
             return true;
         }
         catch (Exception exception)
         {
             logger.LogWarning(exception, "Failed to elevate the live thumbnail for dragging");
-            TryRemove(proxy.Visual, logger);
-            proxy.Visual.Offset = Vector3.Zero;
-            TryInsert(hostContainer, proxy.Visual, logger);
+
+            if (createdPreview is not null)
+            {
+                using (previewSurface.DeferUpdates())
+                {
+                    preview.SetTarget(proxy.Handle, width, height, isVisible);
+                    createdPreview.Dispose();
+                }
+            }
+
             TryDetach(overlayHost, createdContainer, logger);
+            TryRemove(createdProxy?.Visual, logger);
+
+            if (createdProxy is not null)
+            {
+                createdProxy.Visual.Clip = null;
+            }
+
+            createdClip?.Dispose();
+            createdGeometry?.Dispose();
+            createdProxy?.Dispose();
             createdContainer?.Dispose();
             return false;
         }
@@ -152,7 +211,9 @@ public class ThumbnailCompositionPreview :
 
     public void MoveDrag(double horizontalDelta, double verticalDelta)
     {
-        if (isDisposed || dragContainer is null ||
+        SystemVisualProxyVisualPrivate? currentDragProxy = dragProxy;
+
+        if (isDisposed || currentDragProxy is null ||
             !double.IsFinite(horizontalDelta) || !double.IsFinite(verticalDelta))
         {
             return;
@@ -160,38 +221,51 @@ public class ThumbnailCompositionPreview :
 
         float x = ClampToFloat(dragOrigin.X + horizontalDelta);
         float y = ClampToFloat(dragOrigin.Y + verticalDelta);
-        proxy.Visual.Offset = new Vector3(x, y, 0.0f);
+        currentDragProxy.Visual.Offset = new Vector3(x, y, 0.0f);
     }
 
     public void EndDrag()
     {
         ContainerVisual? currentDragContainer = dragContainer;
+        CompositionGeometricClip? currentDragClip = dragRoundedClip;
+        CompositionRoundedRectangleGeometry? currentDragGeometry = dragRoundedGeometry;
         FrameworkElement? currentDragHost = dragHost;
+        IWindowPreview? currentDragPreview = dragPreview;
+        SystemVisualProxyVisualPrivate? currentDragProxy = dragProxy;
 
-        if (currentDragContainer is null || currentDragHost is null)
+        if (currentDragContainer is null || currentDragHost is null ||
+            currentDragPreview is null || currentDragProxy is null)
         {
             return;
         }
 
         dragContainer = null;
+        dragRoundedClip = null;
+        dragRoundedGeometry = null;
         dragHost = null;
+        dragPreview = null;
+        dragProxy = null;
 
         try
         {
-            currentDragContainer.Children.Remove(proxy.Visual);
-            proxy.Visual.Offset = Vector3.Zero;
-            hostContainer.Children.InsertAtTop(proxy.Visual);
+            using (previewSurface.DeferUpdates())
+            {
+                preview.SetTarget(proxy.Handle, width, height, isVisible);
+                currentDragPreview.Dispose();
+            }
         }
         catch (Exception exception)
         {
             logger.LogWarning(exception, "Failed to restore the live thumbnail after dragging");
-            TryRemove(proxy.Visual, logger);
-            proxy.Visual.Offset = Vector3.Zero;
-            TryInsert(hostContainer, proxy.Visual, logger);
         }
         finally
         {
             TryDetach(currentDragHost, currentDragContainer, logger);
+            TryRemove(currentDragProxy.Visual, logger);
+            currentDragProxy.Visual.Clip = null;
+            currentDragClip?.Dispose();
+            currentDragGeometry?.Dispose();
+            currentDragProxy.Dispose();
             currentDragContainer.Dispose();
         }
     }
@@ -218,9 +292,32 @@ public class ThumbnailCompositionPreview :
         this.height = normalizedHeight;
         this.isVisible = normalizedVisibility;
         proxy.Visual.Size = new Vector2(normalizedWidth, normalizedHeight);
-        UpdateClip(normalizedWidth, normalizedHeight);
+        UpdateClip(roundedGeometry, normalizedWidth, normalizedHeight);
         proxy.Visual.IsVisible = normalizedVisibility;
-        preview.SetTarget(proxy.Handle, normalizedWidth, normalizedHeight, normalizedVisibility);
+
+        if (dragPreview is not null && dragProxy is not null)
+        {
+            dragProxy.Visual.Size = new Vector2(normalizedWidth, normalizedHeight);
+            dragProxy.Visual.IsVisible = normalizedVisibility;
+
+            if (dragRoundedGeometry is not null)
+            {
+                UpdateClip(dragRoundedGeometry, normalizedWidth, normalizedHeight);
+            }
+
+            using (previewSurface.DeferUpdates())
+            {
+                preview.SetTarget(proxy.Handle, normalizedWidth, normalizedHeight, false);
+                dragPreview.SetTarget(dragProxy.Handle,
+                    normalizedWidth,
+                    normalizedHeight,
+                    normalizedVisibility);
+            }
+        }
+        else
+        {
+            preview.SetTarget(proxy.Handle, normalizedWidth, normalizedHeight, normalizedVisibility);
+        }
     }
 
     public void Dispose()
@@ -244,11 +341,13 @@ public class ThumbnailCompositionPreview :
         GC.SuppressFinalize(this);
     }
 
-    private void UpdateClip(float width, float height)
+    private static void UpdateClip(CompositionRoundedRectangleGeometry geometry,
+        float width,
+        float height)
     {
         float radius = MathF.Min(CornerRadius, MathF.Min(width, height) / 2.0f);
-        roundedGeometry.Size = new Vector2(width, height);
-        roundedGeometry.CornerRadius = new Vector2(radius, radius);
+        geometry.Size = new Vector2(width, height);
+        geometry.CornerRadius = new Vector2(radius, radius);
     }
 
     private static void TryDetach(FrameworkElement host, Visual? visual, ILogger logger)
@@ -268,18 +367,6 @@ public class ThumbnailCompositionPreview :
         catch (Exception exception)
         {
             logger.LogWarning(exception, "Failed to detach the composition thumbnail preview");
-        }
-    }
-
-    private static void TryInsert(ContainerVisual container, Visual visual, ILogger logger)
-    {
-        try
-        {
-            container.Children.InsertAtTop(visual);
-        }
-        catch (Exception exception)
-        {
-            logger.LogWarning(exception, "Failed to attach the composition thumbnail visual");
         }
     }
 
