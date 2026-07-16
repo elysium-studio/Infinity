@@ -21,8 +21,6 @@ public unsafe class WindowMover :
 
     public void BeginBatch(int count)
     {
-        PInvoke.DwmFlush();
-
         pendingMoves.Clear();
 
         if (count <= 0)
