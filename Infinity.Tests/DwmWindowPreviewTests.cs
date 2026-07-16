@@ -1,4 +1,6 @@
+using Infinity.Platform.Abstractions;
 using Infinity.Platform.Windows;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Infinity.Tests;
 
@@ -8,36 +10,38 @@ public class DwmWindowPreviewTests
     public void TargetIsForwardedToTheOwningSurface()
     {
         TestSurface surface = new();
-        DwmWindowPreview preview = new(surface, new IntPtr(42), 7, new IntPtr(84));
+        DwmWindowPreview preview = new(surface, new IntPtr(42), 7);
 
-        preview.Update(300.0, 200.0, true);
+        preview.SetTarget(new IntPtr(84), 300.0, 200.0, true);
 
         Assert.Same(preview, surface.AppliedPreview);
-        Assert.Equal((300.0, 200.0, true), surface.Target);
-        preview.Dispose();
+        Assert.Equal((new IntPtr(84), 300.0, 200.0, true), surface.Target);
     }
 
     [Fact]
     public void DisposeRemovesPreviewOnceAndRejectsLaterUpdates()
     {
         TestSurface surface = new();
-        DwmWindowPreview preview = new(surface, new IntPtr(42), 7, new IntPtr(84));
+        DwmWindowPreview preview = new(surface, new IntPtr(42), 7);
 
         Parallel.For(0, 16, _ => preview.Dispose());
-        preview.Update(300.0, 200.0, true);
+        preview.SetTarget(new IntPtr(84), 300.0, 200.0, true);
 
         Assert.Equal(1, surface.RemoveCount);
         Assert.Null(surface.AppliedPreview);
     }
 
     [Fact]
-    public void ExposesTheNativeCompositionVisual()
+    public void SurfaceShutdownInvalidatesOwnedPreviews()
     {
-        TestSurface surface = new();
-        DwmWindowPreview preview = new(surface, new IntPtr(42), 7, new IntPtr(84));
+        DwmWindowPreviewSurface surface = new(NullLogger<DwmWindowPreviewSurface>.Instance);
+        IWindowPreview preview = Assert.IsType<DwmWindowPreview>(surface.CreatePreview(new IntPtr(42)));
 
-        Assert.Equal(new IntPtr(84), preview.Visual);
+        surface.Dispose();
+        preview.SetTarget(new IntPtr(84), 300.0, 200.0, true);
         preview.Dispose();
+
+        Assert.Null(surface.CreatePreview(new IntPtr(43)));
     }
 
     private class TestSurface : IDwmWindowPreviewSurface
@@ -46,17 +50,18 @@ public class DwmWindowPreviewTests
 
         public DwmWindowPreview? AppliedPreview { get; private set; }
 
-        public (double Width, double Height, bool IsVisible) Target { get; private set; }
+        public (nint SharedTargetHandle, double Width, double Height, bool IsVisible) Target { get; private set; }
 
         public int RemoveCount => Volatile.Read(ref removeCount);
 
         public void Apply(DwmWindowPreview preview,
+            nint sharedTargetHandle,
             double width,
             double height,
             bool isVisible)
         {
             AppliedPreview = preview;
-            Target = (width, height, isVisible);
+            Target = (sharedTargetHandle, width, height, isVisible);
         }
 
         public void Remove(DwmWindowPreview preview) => Interlocked.Increment(ref removeCount);
