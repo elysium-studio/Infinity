@@ -47,7 +47,6 @@ public class TrackedWindowViewModelTests
             new WeakReferenceMessenger(),
             new TestDisposer(),
             new TestWindowController(),
-            new TestPreviewSurface(),
             new TestPageMover(),
             new TestPlacementRules(),
             new TestStickyWindowController(),
@@ -142,33 +141,6 @@ public class TrackedWindowViewModelTests
         }
 
         public void Restore(IntPtr handle)
-        {
-        }
-    }
-
-    private class TestPreviewSurface : IWindowPreviewSurface
-    {
-        public bool IsAvailable => false;
-
-        public int LastHResult => 0;
-
-        public int LastBridgeHResult => 0;
-
-        public void Clear()
-        {
-        }
-
-        public void Commit()
-        {
-        }
-
-        public IWindowPreview? CreatePreview(IntPtr windowHandle) => null;
-
-        public void Initialize(IntPtr ownerWindowHandle)
-        {
-        }
-
-        public void Render()
         {
         }
     }

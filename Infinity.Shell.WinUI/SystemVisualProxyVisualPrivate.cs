@@ -33,6 +33,7 @@ public partial class SystemVisualProxyVisualPrivate :
         nint statics = 0;
         nint proxyUnknown = 0;
         nint proxyVisual = 0;
+        Visual? visual = null;
         IObjectReference? compositorReference;
         try
         {
@@ -50,13 +51,15 @@ public partial class SystemVisualProxyVisualPrivate :
             Guid visualId = VisualId;
             ThrowIfFailed(Marshal.QueryInterface(proxyUnknown, in visualId, out proxyVisual));
 
-            Visual visual = Visual.FromAbi(proxyVisual);
+            visual = Visual.FromAbi(proxyVisual);
             nint handle = GetHandle(proxyUnknown);
 
             return new SystemVisualProxyVisualPrivate(proxyUnknown, visual, handle);
         }
         catch
         {
+            visual?.Dispose();
+
             if (proxyUnknown != 0)
             {
                 Marshal.Release(proxyUnknown);
@@ -96,6 +99,7 @@ public partial class SystemVisualProxyVisualPrivate :
 
         if (pointer != 0)
         {
+            Visual.Dispose();
             Marshal.Release(pointer);
         }
 

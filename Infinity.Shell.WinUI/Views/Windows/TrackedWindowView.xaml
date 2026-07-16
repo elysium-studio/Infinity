@@ -18,17 +18,19 @@
             FocusVisualPrimaryThickness="0"
             FocusVisualSecondaryThickness="0"
             IsTabStop="False"
-            PointerEntered="HandleWindowContainerPointerEntered"
-            PointerExited="HandleWindowContainerPointerExited"
-            PointerPressed="HandleWindowContainerPointerPressed"
-            PointerMoved="HandleWindowContainerPointerMoved"
-            PointerReleased="HandleWindowContainerPointerReleased"
             PointerCanceled="HandleWindowContainerPointerCanceled"
             PointerCaptureLost="HandleWindowContainerPointerCaptureLost"
+            PointerEntered="HandleWindowContainerPointerEntered"
+            PointerExited="HandleWindowContainerPointerExited"
+            PointerMoved="HandleWindowContainerPointerMoved"
+            PointerPressed="HandleWindowContainerPointerPressed"
+            PointerReleased="HandleWindowContainerPointerReleased"
             RightTapped="HandleWindowContainerRightTapped"
             ToolTipService.ToolTip="{x:Bind ViewModel.Title}">
             <ItemContainer.Resources>
                 <SolidColorBrush x:Key="ItemContainerPointerOverBackground" Color="Transparent" />
+                <SolidColorBrush x:Key="ItemContainerPressedBackground" Color="Transparent" />
+
             </ItemContainer.Resources>
             <Grid x:Name="ThumbnailGrid">
                 <Border

@@ -14,7 +14,6 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
     IMessenger messenger,
     IDisposer disposer,
     IWindowController controller,
-    IWindowPreviewSurface windowPreviewSurface,
     IWindowPageMover pageMover,
     IWindowPlacementRules placementRules,
     IStickyWindowController stickyWindowController,
@@ -27,11 +26,6 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
     ObservableViewModel(provider, factory, messenger, disposer),
     ITrackedWindow
 {
-    private readonly IWindowPreview? preview = windowPreviewSurface.CreatePreview(handle);
-    private IntPtr previewTargetHandle;
-    private double previewWidth;
-    private double previewHeight;
-
     [ObservableProperty]
     private double height;
 
@@ -71,10 +65,6 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
     public double LayoutScale { get; set; }
 
     public bool ShouldFadeThumb => IsFiltered;
-
-    public IWindowPreview? Preview => preview;
-
-    public IWindowPreview? Preview1 => preview;
 
     public bool CanCreatePlacementRule => placementRules.CanCreateRule(Handle);
 
@@ -187,44 +177,4 @@ public partial class TrackedWindowViewModel(IServiceProvider provider,
         }
     }
 
-    public void SetPreviewTarget(IntPtr sharedTargetHandle, double width, double height)
-    {
-        if (previewTargetHandle == sharedTargetHandle
-            && Math.Abs(previewWidth - width) < 0.5
-            && Math.Abs(previewHeight - height) < 0.5)
-        {
-            return;
-        }
-
-        previewTargetHandle = sharedTargetHandle;
-        previewWidth = width;
-        previewHeight = height;
-
-        UpdatePreview();
-    }
-
-    public void SetPreviewPlacement(double x, double y, double width, double height)
-    {
-        if (Math.Abs(previewWidth - width) < 0.5 &&
-            Math.Abs(previewHeight - height) < 0.5)
-        {
-            return;
-        }
-
-        previewWidth = width;
-        previewHeight = height;
-
-        UpdatePreview();
-    }
-
-    private void UpdatePreview()
-    {
-        if (previewTargetHandle == 0 || previewWidth <= 0.0 || previewHeight <= 0.0)
-        {
-            preview?.SetTarget(0, 0.0, 0.0, false);
-            return;
-        }
-
-        preview?.SetTarget(previewTargetHandle, previewWidth, previewHeight, true);
-    }
 }
