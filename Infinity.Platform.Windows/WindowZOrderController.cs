@@ -14,11 +14,11 @@ public class WindowZOrderController(ILogger<WindowZOrderController> logger) :
         SET_WINDOW_POS_FLAGS.SWP_NOMOVE |
         SET_WINDOW_POS_FLAGS.SWP_NOSIZE |
         SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE |
-        SET_WINDOW_POS_FLAGS.SWP_NOOWNERZORDER;
+        SET_WINDOW_POS_FLAGS.SWP_NOOWNERZORDER |
+        SET_WINDOW_POS_FLAGS.SWP_ASYNCWINDOWPOS;
 
     private static readonly HWND HwndTop = new(0);
     private static readonly HWND HwndTopmost = new(new nint(-1));
-    private static readonly HWND HwndNotTopmost = new(new nint(-2));
 
     public IDisposable? ElevateTemporarily(nint windowHandle)
     {
@@ -41,7 +41,9 @@ public class WindowZOrderController(ILogger<WindowZOrderController> logger) :
         HWND restoreAfter = previous.IsNull
             ? isTopmost ? HwndTopmost : HwndTop
             : previous;
-        if (!TrySetWindowPos(hwnd, HwndTopmost, "make window topmost for thumbnail drag"))
+        HWND elevateAfter = isTopmost ? HwndTopmost : HwndTop;
+
+        if (!TrySetWindowPos(hwnd, elevateAfter, "elevate window for thumbnail drag"))
         {
             return null;
         }
@@ -71,13 +73,7 @@ public class WindowZOrderController(ILogger<WindowZOrderController> logger) :
             restoreAfter = wasTopmost ? HwndTopmost : HwndTop;
         }
 
-        if (!wasTopmost &&
-            !TrySetWindowPos(hwnd, HwndNotTopmost, "remove temporary topmost state after thumbnail drag"))
-        {
-            return;
-        }
-
-        _ = TrySetWindowPos(hwnd, restoreAfter, "restore window order after thumbnail drag");
+        _ = TrySetWindowPos(hwnd, restoreAfter, "restore window after thumbnail drag");
     }
 
     private bool TrySetWindowPos(HWND hwnd, HWND insertAfter, string operation)
