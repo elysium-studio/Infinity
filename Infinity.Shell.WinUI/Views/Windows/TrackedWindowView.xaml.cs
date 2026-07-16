@@ -39,9 +39,11 @@ public partial class TrackedWindowView :
     private int previewUpdateGeneration;
     private uint? dragPointerId;
     private Point dragStartPoint;
-    private Rect? dragInitialBounds;
+    private Rect? dragHorizontalInitialBounds;
+    private Rect? dragVerticalInitialBounds;
     private UIElement? dragCoordinateRoot;
     private FrameworkElement? dragScrollBoundary;
+    private FrameworkElement? dragVerticalBoundary;
     private TrackedWindowViewModel? draggedViewModel;
     private double dragScale;
     private double dragHorizontalDelta;
@@ -286,8 +288,11 @@ public partial class TrackedWindowView :
 
             draggedViewModel = currentViewModel;
             dragScale = currentScale;
-            dragScrollBoundary = FindThumbnailDragScrollBoundary();
-            dragInitialBounds = GetDragBounds(dragScrollBoundary);
+            TrackedWindowCollectionView? collectionView = FindWindowCollectionView();
+            dragScrollBoundary = collectionView?.ThumbnailDragScrollBoundary;
+            dragVerticalBoundary = collectionView?.ThumbnailDragVerticalBoundary;
+            dragHorizontalInitialBounds = GetDragBounds(dragScrollBoundary);
+            dragVerticalInitialBounds = GetDragBounds(dragVerticalBoundary);
 
             isThumbnailDragging = true;
             SetThumbnailToolTipSuppressed(true);
@@ -376,9 +381,11 @@ public partial class TrackedWindowView :
 
         draggedViewModel = null;
         dragPointerId = null;
-        dragInitialBounds = null;
+        dragHorizontalInitialBounds = null;
+        dragVerticalInitialBounds = null;
         dragCoordinateRoot = null;
         dragScrollBoundary = null;
+        dragVerticalBoundary = null;
         dragScale = 0;
         bool hasVisualDelta = dragHorizontalDelta != 0 || dragVerticalDelta != 0;
         dragHorizontalDelta = 0;
@@ -461,19 +468,22 @@ public partial class TrackedWindowView :
     private (double Horizontal, double Vertical) ConstrainThumbnailDrag(double horizontalDistance,
         double verticalDistance)
     {
-        if (dragInitialBounds is not Rect bounds || dragScrollBoundary is null)
-        {
-            return (horizontalDistance, verticalDistance);
-        }
+        double constrainedHorizontalDistance = dragHorizontalInitialBounds is Rect horizontalBounds &&
+            dragScrollBoundary is not null
+            ? ConstrainDragAxis(horizontalDistance,
+                horizontalBounds.X,
+                horizontalBounds.Width,
+                dragScrollBoundary.ActualWidth)
+            : horizontalDistance;
+        double constrainedVerticalDistance = dragVerticalInitialBounds is Rect verticalBounds &&
+            dragVerticalBoundary is not null
+            ? ConstrainDragAxis(verticalDistance,
+                verticalBounds.Y,
+                verticalBounds.Height,
+                dragVerticalBoundary.ActualHeight)
+            : verticalDistance;
 
-        return (ConstrainDragAxis(horizontalDistance,
-                bounds.X,
-                bounds.Width,
-                dragScrollBoundary.ActualWidth),
-            ConstrainDragAxis(verticalDistance,
-                bounds.Y,
-                bounds.Height,
-                dragScrollBoundary.ActualHeight));
+        return (constrainedHorizontalDistance, constrainedVerticalDistance);
     }
 
     private static double ConstrainDragAxis(double distance,
@@ -516,23 +526,6 @@ public partial class TrackedWindowView :
         double viewportWidth = dragScrollBoundary.ActualWidth;
         double pointerX = args.GetCurrentPoint(dragScrollBoundary).Position.X;
         thumbnailDragScroller.Update(draggedViewModel.Handle, pointerX, viewportWidth);
-    }
-
-    private FrameworkElement? FindThumbnailDragScrollBoundary()
-    {
-        DependencyObject? current = this;
-
-        while (current is not null)
-        {
-            if (current is TrackedWindowCollectionView collectionView)
-            {
-                return collectionView.ThumbnailDragScrollBoundary;
-            }
-
-            current = VisualTreeHelper.GetParent(current);
-        }
-
-        return null;
     }
 
     private static bool IsButtonSource(object source)
