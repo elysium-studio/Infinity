@@ -53,16 +53,19 @@ public partial class TrackedWindowView :
 
     private readonly IStringLocalizer localizer;
     private readonly IThumbnailDragScroller thumbnailDragScroller;
+    private readonly IWindowActivator windowActivator;
     private readonly IWindowPreviewSurface windowPreviewSurface;
     private readonly ILogger<TrackedWindowView> logger;
 
     public TrackedWindowView(IStringLocalizer localizer,
         IThumbnailDragScroller thumbnailDragScroller,
+        IWindowActivator windowActivator,
         IWindowPreviewSurface windowPreviewSurface,
         ILogger<TrackedWindowView> logger)
     {
         this.localizer = localizer;
         this.thumbnailDragScroller = thumbnailDragScroller;
+        this.windowActivator = windowActivator;
         this.windowPreviewSurface = windowPreviewSurface;
         this.logger = logger;
         InitializeComponent();
@@ -283,23 +286,15 @@ public partial class TrackedWindowView :
             dragScrollBoundary = FindThumbnailDragScrollBoundary();
 
             isThumbnailDragging = true;
+            windowActivator.Activate(currentViewModel.Handle);
             SetCloseButtonVisible(false);
             ownsDragScrollSession = thumbnailDragScroller.Begin(currentViewModel.Handle);
             CancelPendingPeek();
             EndPeek();
             ResetHoverScale();
-
-            TrackedWindowCollectionView? collectionView = FindWindowCollectionView();
-
-            if (preview is not null && collectionView is not null &&
-                !preview.BeginDrag(collectionView.ThumbnailDragVisualHost))
-            {
-                logger.LogWarning("Failed to move the live thumbnail into the drag overlay");
-            }
         }
 
         WindowContainer.Translation = new Vector3((float)horizontalDistance, (float)verticalDistance, 0);
-        preview?.MoveDrag(horizontalDistance, verticalDistance);
 
         if (draggedViewModel?.MoveThumbnail(horizontalDistance / dragScale,
             verticalDistance / dragScale) == true)
@@ -362,7 +357,6 @@ public partial class TrackedWindowView :
     private void CompleteThumbnailDrag(bool commitVisualPosition = true)
     {
         TrackedWindowViewModel? activeViewModel = draggedViewModel;
-        preview?.EndDrag();
 
         if (activeViewModel is not null && ownsDragScrollSession)
         {

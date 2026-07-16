@@ -67,6 +67,7 @@ public class WindowingModule :
                 provider => new TrackedWindowView(
                     provider.GetRequiredService<IStringLocalizer>(),
                     provider.GetRequiredService<IThumbnailDragScroller>(),
+                    provider.GetRequiredService<IWindowActivator>(),
                     provider.GetRequiredService<IWindowPreviewSurface>(),
                     provider.GetRequiredService<ILogger<TrackedWindowView>>()));
 
