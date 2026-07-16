@@ -28,7 +28,9 @@ public partial class TrackedWindowCollectionView :
 
     public TrackedWindowCollectionViewModel? ViewModel => DataContext as TrackedWindowCollectionViewModel;
 
-    internal FrameworkElement ThumbnailDragScrollBoundary => DesktopViewport;
+    internal FrameworkElement ThumbnailDragHorizontalBoundary => DesktopViewport;
+
+    internal FrameworkElement ThumbnailDragScrollBoundary => BackdropBorder;
 
     internal FrameworkElement ThumbnailDragVerticalBoundary => BackdropBorder;
 

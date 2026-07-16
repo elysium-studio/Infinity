@@ -42,6 +42,7 @@ public partial class TrackedWindowView :
     private Rect? dragHorizontalInitialBounds;
     private Rect? dragVerticalInitialBounds;
     private UIElement? dragCoordinateRoot;
+    private FrameworkElement? dragHorizontalBoundary;
     private FrameworkElement? dragScrollBoundary;
     private FrameworkElement? dragVerticalBoundary;
     private TrackedWindowViewModel? draggedViewModel;
@@ -289,9 +290,10 @@ public partial class TrackedWindowView :
             draggedViewModel = currentViewModel;
             dragScale = currentScale;
             TrackedWindowCollectionView? collectionView = FindWindowCollectionView();
+            dragHorizontalBoundary = collectionView?.ThumbnailDragHorizontalBoundary;
             dragScrollBoundary = collectionView?.ThumbnailDragScrollBoundary;
             dragVerticalBoundary = collectionView?.ThumbnailDragVerticalBoundary;
-            dragHorizontalInitialBounds = GetDragBounds(dragScrollBoundary);
+            dragHorizontalInitialBounds = GetDragBounds(dragHorizontalBoundary);
             dragVerticalInitialBounds = GetDragBounds(dragVerticalBoundary);
 
             isThumbnailDragging = true;
@@ -384,6 +386,7 @@ public partial class TrackedWindowView :
         dragHorizontalInitialBounds = null;
         dragVerticalInitialBounds = null;
         dragCoordinateRoot = null;
+        dragHorizontalBoundary = null;
         dragScrollBoundary = null;
         dragVerticalBoundary = null;
         dragScale = 0;
@@ -469,11 +472,11 @@ public partial class TrackedWindowView :
         double verticalDistance)
     {
         double constrainedHorizontalDistance = dragHorizontalInitialBounds is Rect horizontalBounds &&
-            dragScrollBoundary is not null
+            dragHorizontalBoundary is not null
             ? ConstrainDragAxis(horizontalDistance,
                 horizontalBounds.X,
                 horizontalBounds.Width,
-                dragScrollBoundary.ActualWidth)
+                dragHorizontalBoundary.ActualWidth)
             : horizontalDistance;
         double constrainedVerticalDistance = dragVerticalInitialBounds is Rect verticalBounds &&
             dragVerticalBoundary is not null
