@@ -4,20 +4,23 @@ namespace Infinity.Platform.Windows;
 
 public class DwmWindowPreview(IDwmWindowPreviewSurface surface,
     nint windowHandle,
-    long id) :
+    long id,
+    nint visual) :
     IWindowPreview
 {
     private int isDisposed;
 
     public nint WindowHandle { get; } = windowHandle;
 
+    public nint Visual { get; } = visual;
+
     internal long Id { get; } = id;
 
-    public void SetTarget(nint sharedTargetHandle, double width, double height, bool isVisible)
+    public void Update(double width, double height, bool isVisible)
     {
         if (Volatile.Read(ref isDisposed) == 0)
         {
-            surface.Apply(this, sharedTargetHandle, width, height, isVisible);
+            surface.Apply(this, width, height, isVisible);
         }
     }
 

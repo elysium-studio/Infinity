@@ -6,7 +6,7 @@ public interface IWindowPreviewSurface
 
     void Initialize(nint ownerWindowHandle);
 
-    IWindowPreview? CreatePreview(nint windowHandle);
+    IWindowPreview? CreatePreview(nint windowHandle, nint compositor);
 
     void Clear();
 }
