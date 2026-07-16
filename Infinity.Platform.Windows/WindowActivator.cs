@@ -25,9 +25,10 @@ public class WindowActivator :
             return;
         }
 
-        RestoreAndActivate(hwnd);
-
-        _ = RetryRestoreAndActivateAsync(hwnd);
+        if (!RestoreAndActivate(hwnd))
+        {
+            _ = RetryRestoreAndActivateAsync(hwnd);
+        }
     }
 
     private static async Task RetryRestoreAndActivateAsync(HWND hwnd)
@@ -41,7 +42,7 @@ public class WindowActivator :
                 return;
             }
 
-            RestoreAndActivate(hwnd);
+            _ = RestoreAndActivate(hwnd);
         }
         catch (ObjectDisposedException)
         {
@@ -51,17 +52,17 @@ public class WindowActivator :
         }
     }
 
-    private static void RestoreAndActivate(HWND hwnd)
+    private static bool RestoreAndActivate(HWND hwnd)
     {
         if (PInvoke.IsIconic(hwnd))
         {
             PInvoke.ShowWindowAsync(hwnd, SHOW_WINDOW_CMD.SW_RESTORE);
         }
-        else
+        else if (!PInvoke.IsWindowVisible(hwnd))
         {
             PInvoke.ShowWindowAsync(hwnd, SHOW_WINDOW_CMD.SW_SHOW);
         }
 
-        PInvoke.SetForegroundWindow(hwnd);
+        return PInvoke.SetForegroundWindow(hwnd);
     }
 }
