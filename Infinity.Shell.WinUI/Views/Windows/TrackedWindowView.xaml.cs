@@ -53,19 +53,19 @@ public partial class TrackedWindowView :
 
     private readonly IStringLocalizer localizer;
     private readonly IThumbnailDragScroller thumbnailDragScroller;
-    private readonly IWindowActivator windowActivator;
+    private readonly IWindowNavigationCoordinator windowNavigationCoordinator;
     private readonly IWindowPreviewSurface windowPreviewSurface;
     private readonly ILogger<TrackedWindowView> logger;
 
     public TrackedWindowView(IStringLocalizer localizer,
         IThumbnailDragScroller thumbnailDragScroller,
-        IWindowActivator windowActivator,
+        IWindowNavigationCoordinator windowNavigationCoordinator,
         IWindowPreviewSurface windowPreviewSurface,
         ILogger<TrackedWindowView> logger)
     {
         this.localizer = localizer;
         this.thumbnailDragScroller = thumbnailDragScroller;
-        this.windowActivator = windowActivator;
+        this.windowNavigationCoordinator = windowNavigationCoordinator;
         this.windowPreviewSurface = windowPreviewSurface;
         this.logger = logger;
         InitializeComponent();
@@ -240,7 +240,7 @@ public partial class TrackedWindowView :
         dragPointerId = args.Pointer.PointerId;
         dragCoordinateRoot = coordinateRoot;
         dragStartPoint = args.GetCurrentPoint(coordinateRoot).Position;
-        windowActivator.Activate(ViewModel.Handle);
+        windowNavigationCoordinator.Activate(ViewModel.Handle);
         CancelPendingPeek();
         EndPeek();
         ResetHoverScale();
