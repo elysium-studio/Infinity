@@ -150,6 +150,7 @@
                 </Button>
             </Grid>
             <Grid
+                x:Name="DesktopViewport"
                 Grid.Row="2"
                 Padding="0,12,0,12"
                 Background="{ThemeResource LayerOnAcrylicFillColorDefault}"

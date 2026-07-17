@@ -141,6 +141,8 @@ public partial class TrackedWindowCollectionViewModel :
 
     public int ScreenWidth => workspace.Width;
 
+    public double HorizontalOffset => scroller.VisualOffset;
+
     private double ScaleFactor => ContentHeight > 0 ? ContentHeight / ScreenHeight : 0;
 
     public override void Activated()
