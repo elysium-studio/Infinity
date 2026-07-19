@@ -14,9 +14,9 @@
 		<PackageReference Include="Elysium.Presentation" Version="$(ElysiumVersion)" />
 		<PackageReference Include="Elysium.Presentation.Abstractions" Version="$(ElysiumVersion)" />
 		<PackageReference Include="Elysium.Presentation.DependencyInjection" Version="$(ElysiumVersion)" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.9" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.9" />
-		<PackageReference Include="Microsoft.Extensions.Options" Version="10.0.9" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.10" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.10" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="10.0.10" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Infinity.Application.Abstractions\Infinity.Application.Abstractions.csproj" />

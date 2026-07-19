@@ -57,14 +57,14 @@
 		<PackageReference Include="Elysium.Updates" Version="$(ElysiumVersion)" />
 		<PackageReference Include="Elysium.Updates.Abstractions" Version="$(ElysiumVersion)" />
 		<PackageReference Include="Elysium.Updates.DependencyInjection" Version="$(ElysiumVersion)" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.9" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
 		<PackageReference Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
 		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2270" />
-		<PackageReference Include="Microsoft.WindowsAppSDK" Version="2.2.0" />
-		<PackageReference Include="Microsoft.WindowsAppSDK.Runtime" Version="2.2.0" GeneratePathProperty="true" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.WindowsAppSDK" Version="2.3.1" />
+		<PackageReference Include="Microsoft.WindowsAppSDK.Runtime" Version="2.3.1" GeneratePathProperty="true" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="3.0.1" />
 		<PackageReference Include="Velopack" Version="1.2.0" />
-		<PackageReference Include="WinUIEx" Version="2.9.1" />
+		<PackageReference Include="WinUIEx" Version="2.9.2" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Infinity.Application.DependencyInjection\Infinity.Application.DependencyInjection.csproj" />
@@ -85,9 +85,7 @@
 		<Copy SourceFiles="@(PriFiles)" DestinationFolder="$(PublishDir)" />
 		<Copy SourceFiles="@(XbfFiles)" DestinationFolder="$(PublishDir)" />
 	</Target>
-	<UsingTask TaskName="ExtractWindowsAppRuntimeInsightsResource"
-		TaskFactory="RoslynCodeTaskFactory"
-		AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+	<UsingTask TaskName="ExtractWindowsAppRuntimeInsightsResource" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
 		<ParameterGroup>
 			<ArchivePath ParameterType="System.String" Required="true" />
 			<OutputPath ParameterType="System.String" Required="true" />
@@ -113,16 +111,11 @@
             ]]></Code>
 		</Task>
 	</UsingTask>
-	<Target Name="CopyWindowsAppRuntimeInsightsResourceToPublish"
-		AfterTargets="Publish"
-		Condition="'$(WindowsAppSDKSelfContained)' == 'true'">
+	<Target Name="CopyWindowsAppRuntimeInsightsResourceToPublish" AfterTargets="Publish" Condition="'$(WindowsAppSDKSelfContained)' == 'true'">
 		<PropertyGroup>
 			<WindowsAppRuntimeFrameworkMsix>$(PkgMicrosoft_WindowsAppSDK_Runtime)\tools\MSIX\win10-x64\Microsoft.WindowsAppRuntime.2.msix</WindowsAppRuntimeFrameworkMsix>
 		</PropertyGroup>
-		<Error Condition="!Exists('$(WindowsAppRuntimeFrameworkMsix)')"
-			Text="Windows App Runtime framework package was not found at $(WindowsAppRuntimeFrameworkMsix)." />
-		<ExtractWindowsAppRuntimeInsightsResource
-			ArchivePath="$(WindowsAppRuntimeFrameworkMsix)"
-			OutputPath="$(PublishDir)Microsoft.WindowsAppRuntime.Insights.Resource.dll" />
+		<Error Condition="!Exists('$(WindowsAppRuntimeFrameworkMsix)')" Text="Windows App Runtime framework package was not found at $(WindowsAppRuntimeFrameworkMsix)." />
+		<ExtractWindowsAppRuntimeInsightsResource ArchivePath="$(WindowsAppRuntimeFrameworkMsix)" OutputPath="$(PublishDir)Microsoft.WindowsAppRuntime.Insights.Resource.dll" />
 	</Target>
 </Project>
