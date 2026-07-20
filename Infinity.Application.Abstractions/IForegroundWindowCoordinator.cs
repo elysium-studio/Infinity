@@ -9,4 +9,6 @@ public interface IForegroundWindowCoordinator
     void HandleWindowMinimizeEnded(IntPtr handle);
 
     void NotifyWindowClosed(IntPtr handle);
+
+    void SuppressForegroundFollow();
 }

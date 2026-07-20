@@ -30,6 +30,7 @@ public class ShellModule :
                 provider.GetRequiredService<IPanState>(),
                 provider.GetRequiredService<IScroller>(),
                 provider.GetRequiredService<IWorkspace>(),
+                provider.GetRequiredService<IForegroundWindowCoordinator>(),
                 provider.GetRequiredService<ILogger<Pager>>()));
 
         services.Subscribe<IPointerInputSource>((provider, pointer) =>
