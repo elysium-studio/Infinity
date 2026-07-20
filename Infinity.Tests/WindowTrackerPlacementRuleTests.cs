@@ -192,6 +192,9 @@ public class WindowTrackerPlacementRuleTests
             height = 600;
             return true;
         }
+
+        public bool TryReadVisibleGeometry(IntPtr windowHandle, out int x, out int y, out int width, out int height) =>
+            TryReadGeometry(windowHandle, out x, out y, out width, out height);
     }
 
     private class TestWindowFilter : IWindowFilter
