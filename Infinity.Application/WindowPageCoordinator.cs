@@ -225,7 +225,7 @@ public class WindowPageCoordinator(IWindowStore store,
             return;
         }
 
-        StartForegroundFollowSuppression();
+        SuppressForegroundFollow();
 
         lock (syncRoot)
         {
@@ -243,7 +243,7 @@ public class WindowPageCoordinator(IWindowStore store,
             return;
         }
 
-        StartForegroundFollowSuppression();
+        SuppressForegroundFollow();
 
         lock (syncRoot)
         {
@@ -458,7 +458,7 @@ public class WindowPageCoordinator(IWindowStore store,
         }
     }
 
-    private void StartForegroundFollowSuppression()
+    public void SuppressForegroundFollow()
     {
         lock (syncRoot)
         {

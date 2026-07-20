@@ -19,6 +19,7 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<IWindowStore, WindowStore>();
             services.AddSingleton<IWindowTitleSynchronizer, WindowTitleSynchronizer>();
             services.AddSingleton<IWindowRestoreGuard, WindowRestoreGuard>();
+            services.AddSingleton<StartupPageRestorer>();
 
             services.AddSingleton<IWindowTracker>(provider =>
                 new WindowTracker(provider.GetRequiredService<IWindowStore>(),

@@ -8,6 +8,7 @@ public class Pager(IWindowStore repository,
     IPanState state,
     IScroller coordinator,
     IWorkspace workspace,
+    IForegroundWindowCoordinator foregroundWindowCoordinator,
     ILogger<Pager> logger) :
     IPager
 {
@@ -53,6 +54,7 @@ public class Pager(IWindowStore repository,
         logger.LogInformation("Navigating to page {Page}", targetPage);
 
         double targetOffset = targetPage * workspace.Width;
+        foregroundWindowCoordinator.SuppressForegroundFollow();
         coordinator.ScrollTo(targetOffset);
     }
 

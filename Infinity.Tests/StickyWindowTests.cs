@@ -248,6 +248,7 @@ public class StickyWindowPagingTests
             new PanState(),
             new TestScroller(),
             new TestWorkspace(),
+            new TestForegroundWindowCoordinator(),
             NullLogger<Pager>.Instance);
 
         Assert.Equal(4, pager.PageCount);
@@ -264,6 +265,7 @@ public class StickyWindowPagingTests
             state,
             new TestScroller(),
             new TestWorkspace(),
+            new TestForegroundWindowCoordinator(),
             NullLogger<Pager>.Instance);
 
         Assert.Equal(6, pager.PageCount);
