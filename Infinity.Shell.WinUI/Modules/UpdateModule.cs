@@ -19,6 +19,11 @@ public class UpdateModule :
 
     public void Register(IServiceCollection services)
     {
+        if (PackageIdentity.IsPackaged)
+        {
+            return;
+        }
+
         DispatcherQueue dispatcherQueue = DispatcherQueue.GetForCurrentThread();
         services.AddUpdateController(configuration =>
         {

@@ -16,9 +16,12 @@ public static class Start
             return;
         }
 
-        VelopackApp.Build()
-            .OnBeforeUninstallFastCallback(UninstallCleanup.Run)
-            .Run();
+        if (!PackageIdentity.IsPackaged)
+        {
+            VelopackApp.Build()
+                .OnBeforeUninstallFastCallback(UninstallCleanup.Run)
+                .Run();
+        }
 
 #pragma warning disable CA1806
         Microsoft.UI.Xaml.Application.Start(args => new App());
