@@ -193,4 +193,4 @@ healthchecksdb
 MigrationBackup/
 .ionide/
 FodyWeavers.xsdpublish.ps1
-/publish.ps1
+/publish.local.json

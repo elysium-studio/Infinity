@@ -1,0 +1,25 @@
+{
+  "azureSigning": {
+    "endpoint": "",
+    "accountName": "",
+    "certificateProfileName": ""
+  },
+  "sftp": {
+    "host": "",
+    "user": "",
+    "password": "",
+    "basePath": "/public",
+    "hostKey": ""
+  },
+  "microsoftStore": {
+    "productId": "",
+    "identityName": "",
+    "publisher": "",
+    "publisherDisplayName": "",
+    "tenantId": "",
+    "sellerId": "",
+    "clientId": "",
+    "clientSecret": "",
+    "flightId": ""
+  }
+}
