@@ -1,6 +1,6 @@
-﻿namespace Infinity.Platform.Windows;
+namespace Infinity.Platform.Windows;
 
-public class WindowFilterOptions
+public sealed class WindowFilterOptions
 {
     public IReadOnlySet<string> BlockedProcessNames { get; init; } = new HashSet<string>
     {

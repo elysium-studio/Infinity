@@ -1,8 +1,8 @@
-﻿using Infinity.Application.Abstractions;
+using Infinity.Application.Abstractions;
 
 namespace Infinity.Application;
 
-public class ScrollDeltaAccumulator :
+public sealed class ScrollDeltaAccumulator :
     IScrollDeltaAccumulator
 {
     private double pendingPixels;

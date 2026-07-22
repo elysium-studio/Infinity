@@ -8,7 +8,7 @@ using System.Numerics;
 
 namespace Infinity.Shell.WinUI;
 
-public class ThumbnailCompositionPreview :
+public sealed class ThumbnailCompositionPreview :
     IDisposable
 {
     private const float CornerRadius = 8.0f;

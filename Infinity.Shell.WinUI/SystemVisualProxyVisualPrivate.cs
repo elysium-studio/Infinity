@@ -1,4 +1,4 @@
-﻿using Microsoft.UI.Composition;
+using Microsoft.UI.Composition;
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -6,7 +6,7 @@ using WinRT;
 
 namespace Infinity.Shell.WinUI;
 
-public partial class SystemVisualProxyVisualPrivate :
+public sealed partial class SystemVisualProxyVisualPrivate :
     IDisposable
 {
     private static readonly Guid SystemVisualProxyVisualPrivateStaticsId = new("6efeef10-e0c5-5997-bcb7-c1644f1cab81");

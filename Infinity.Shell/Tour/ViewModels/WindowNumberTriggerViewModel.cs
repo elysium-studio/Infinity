@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Presentation;
@@ -7,7 +7,7 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Shell;
 
-public partial class WindowNumberTriggerViewModel(IServiceProvider provider,
+public sealed partial class WindowNumberTriggerViewModel(IServiceProvider provider,
     IServiceFactory factory,
     IMessenger messenger,
     IDisposer disposer,

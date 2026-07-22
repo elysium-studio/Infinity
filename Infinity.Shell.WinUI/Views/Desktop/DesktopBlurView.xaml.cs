@@ -2,7 +2,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Infinity.Shell.WinUI;
 
-public partial class DesktopBlurView :
+public sealed partial class DesktopBlurView :
     UserControl
 {
     public DesktopBlurView() => InitializeComponent();

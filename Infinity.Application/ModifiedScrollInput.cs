@@ -1,10 +1,10 @@
-﻿using Elysium.Platform.Abstractions;
+using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 
 namespace Infinity.Application;
 
-public class ModifiedScrollInput(IPointerInputSource pointer, 
+public sealed class ModifiedScrollInput(IPointerInputSource pointer,
     IModifierKeyState modifierKeyState) : 
     IScrollInputSource
 {

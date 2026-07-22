@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
@@ -9,7 +9,7 @@ using NavigationStartedEventArgs = Infinity.Application.Abstractions.NavigationS
 
 namespace Infinity.Shell;
 
-public partial class DesktopFlyoutViewModel :
+public sealed partial class DesktopFlyoutViewModel :
     ObservableViewModel,
     IRecipient<NavigationStartedEventArgs>,
     IRecipient<NavigationCompletedEventArgs>,

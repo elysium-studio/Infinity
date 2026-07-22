@@ -1,4 +1,4 @@
-﻿namespace Infinity.Application.Abstractions;
+namespace Infinity.Application.Abstractions;
 
-public class NavigationCompletedEventArgs :
+public sealed class NavigationCompletedEventArgs :
     EventArgs;

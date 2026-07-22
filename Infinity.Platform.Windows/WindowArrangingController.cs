@@ -5,7 +5,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Infinity.Platform.Windows;
 
-public class WindowArrangingController(ILogger<WindowArrangingController> logger)
+public sealed class WindowArrangingController(ILogger<WindowArrangingController> logger)
 {
     private enum WindowArrangingState
     {

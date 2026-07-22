@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Infinity.Tests;
 
-public class DwmWindowPreviewTests
+public sealed class DwmWindowPreviewTests
 {
     [Fact]
     public void TargetIsForwardedToTheOwningSurface()
@@ -44,7 +44,7 @@ public class DwmWindowPreviewTests
         Assert.Null(surface.CreatePreview(new IntPtr(43)));
     }
 
-    private class TestSurface : IDwmWindowPreviewSurface
+    private sealed class TestSurface : IDwmWindowPreviewSurface
     {
         private int removeCount;
 

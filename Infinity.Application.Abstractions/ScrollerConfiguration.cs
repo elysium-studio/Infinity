@@ -1,6 +1,6 @@
-﻿namespace Infinity.Application.Abstractions;
+namespace Infinity.Application.Abstractions;
 
-public record ScrollerConfiguration
+public sealed record ScrollerConfiguration
 {
     public double PixelsPerScrollNotch { get; set; }
 }

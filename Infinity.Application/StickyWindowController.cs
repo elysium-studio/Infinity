@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public class StickyWindowController(IWindowStore store,
+public sealed class StickyWindowController(IWindowStore store,
     IScroller scroller,
     ILogger<StickyWindowController> logger) :
     IStickyWindowController

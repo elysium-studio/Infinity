@@ -1,8 +1,8 @@
-﻿using Infinity.Application.Abstractions;
+using Infinity.Application.Abstractions;
 
 namespace Infinity.Application;
 
-public class WindowPeekSource :
+public sealed class WindowPeekSource :
     IWindowPeekSource
 {
     public nint Handle { get; set; }

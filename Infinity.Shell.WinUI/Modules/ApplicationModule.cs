@@ -1,4 +1,4 @@
-﻿using Elysium.Application;
+using Elysium.Application;
 using Elysium.Application.Abstractions;
 using Elysium.Application.DependencyInjection;
 using Elysium.Platform.Abstractions;
@@ -9,7 +9,7 @@ using System;
 
 namespace Infinity.Shell.WinUI;
 
-public class ApplicationModule(string applicationData,
+public sealed class ApplicationModule(string applicationData,
     DispatcherQueue dispatcherQueue,
     Action<Action<Exception?>> registerFlushHandler) :
     IModule

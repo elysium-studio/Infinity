@@ -1,9 +1,9 @@
-﻿using Elysium.Platform.Abstractions;
+using Elysium.Platform.Abstractions;
 using Infinity.Platform.Abstractions;
 
 namespace Infinity.Platform.Windows;
 
-public class PointerInputSource :
+public sealed class PointerInputSource :
     IPointerInputSource
 {
     private const int IdleTimeoutMs = 120;

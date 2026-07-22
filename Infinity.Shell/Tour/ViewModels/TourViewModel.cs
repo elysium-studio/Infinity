@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Presentation;
 using Elysium.Presentation.Abstractions;
@@ -7,7 +7,7 @@ using System.ComponentModel;
 
 namespace Infinity.Shell;
 
-public class TourViewModel(IServiceProvider provider,
+public sealed class TourViewModel(IServiceProvider provider,
     IServiceFactory factory,
     IMessenger messenger,
     IDisposer disposer,

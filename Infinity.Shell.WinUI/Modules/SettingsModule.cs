@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Infinity.Shell.WinUI;
 
-public class SettingsModule :
+public sealed class SettingsModule :
     IModule
 {
     public void Register(IServiceCollection services)

@@ -1,4 +1,4 @@
-﻿using Infinity.Platform.Abstractions;
+using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Runtime.ExceptionServices;
@@ -7,7 +7,7 @@ using System.Runtime.InteropServices.Marshalling;
 
 namespace Infinity.Platform.Windows;
 
-public unsafe partial class DesktopBackgroundSource :
+public sealed unsafe partial class DesktopBackgroundSource :
     IDesktopBackgroundSource,
     IDisposable
 {

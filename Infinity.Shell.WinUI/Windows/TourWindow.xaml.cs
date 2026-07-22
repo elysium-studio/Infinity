@@ -5,7 +5,7 @@ using Windows.Graphics;
 
 namespace Infinity.Shell.WinUI;
 
-public partial class TourWindow :
+public sealed partial class TourWindow :
     Window
 {
     private const int WindowWidth = 800;

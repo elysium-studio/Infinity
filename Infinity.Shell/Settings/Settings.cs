@@ -1,9 +1,9 @@
-﻿using Elysium.Platform.Abstractions;
+using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 
 namespace Infinity.Shell;
 
-public class Settings
+public sealed class Settings
 {
     public Dictionary<string, int>? ApplicationPageRules { get; set; } = [];
 

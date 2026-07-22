@@ -1,8 +1,8 @@
-﻿using Infinity.Platform.Abstractions;
+using Infinity.Platform.Abstractions;
 
 namespace Infinity.Platform.Windows;
 
-public class DwmWindowPreview(IDwmWindowPreviewSurface surface,
+public sealed class DwmWindowPreview(IDwmWindowPreviewSurface surface,
     nint windowHandle,
     long id) :
     IWindowPreview

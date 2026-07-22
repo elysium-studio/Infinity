@@ -1,4 +1,4 @@
-﻿using Elysium.Application.Abstractions;
+using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -9,7 +9,7 @@ using Windows.Win32.Foundation;
 
 namespace Infinity.Platform.Windows;
 
-public class ForegroundWindowTracker(IWindowEventListener listener,
+public sealed class ForegroundWindowTracker(IWindowEventListener listener,
     IWindowFocusGuard focusGuard,
     IDispatcher dispatcher,
     ILogger<ForegroundWindowTracker> logger) :

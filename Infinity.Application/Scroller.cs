@@ -1,4 +1,4 @@
-﻿using Elysium.Application.Abstractions;
+using Elysium.Application.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace Infinity.Application;
 
-public class Scroller(IPanState state,
+public sealed class Scroller(IPanState state,
     IWindowStore store,
     IWindowMover mover,
     IWindowConcealer concealer,

@@ -1,9 +1,9 @@
-﻿using Infinity.Application.Abstractions;
+using Infinity.Application.Abstractions;
 using System.Collections;
 
 namespace Infinity.Shell;
 
-public class TrackedWindowCollection :
+public sealed class TrackedWindowCollection :
     ITrackedWindowCollection
 {
     private readonly Dictionary<IntPtr, ITrackedWindow> map = [];

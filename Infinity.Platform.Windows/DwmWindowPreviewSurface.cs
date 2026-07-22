@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Infinity.Platform.Windows;
 
-public class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
+public sealed class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> logger) :
     IWindowPreviewSurface,
     IDwmWindowPreviewSurface,
     IDisposable

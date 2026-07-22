@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Application.DependencyInjection;
 using Elysium.Platform.Abstractions;
@@ -12,7 +12,7 @@ using System.Text.Json;
 
 namespace Infinity.Shell.WinUI;
 
-public class ConfigurationModule :
+public sealed class ConfigurationModule :
     IModule
 {
     public void Register(IServiceCollection services)

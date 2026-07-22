@@ -1,4 +1,4 @@
-﻿using Elysium.Application;
+using Elysium.Application;
 using Elysium.Application.Abstractions;
 using Elysium.Application.DependencyInjection;
 using Elysium.Presentation;
@@ -19,7 +19,7 @@ using IApplicationLifetime = Elysium.Application.Abstractions.IApplicationLifeti
 
 namespace Infinity.Shell.WinUI;
 
-public partial class App
+public sealed partial class App
 {
     private readonly Lock shutdownLock = new();
 

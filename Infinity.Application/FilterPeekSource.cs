@@ -1,8 +1,8 @@
-﻿using Infinity.Application.Abstractions;
+using Infinity.Application.Abstractions;
 
 namespace Infinity.Application;
 
-public class FilterPeekSource(IWindowFilterState filterState) :
+public sealed class FilterPeekSource(IWindowFilterState filterState) :
     IPeekSource
 {
     public bool IsActive => filterState.IsActive;

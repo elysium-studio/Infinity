@@ -8,7 +8,7 @@ using Windows.Win32.System.Threading;
 
 namespace Infinity.Platform.Windows;
 
-public class WindowApplicationIdentityProvider :
+public sealed class WindowApplicationIdentityProvider :
     IWindowApplicationIdentityProvider
 {
     private const string ApplicationFrameHost = "ApplicationFrameHost.exe";

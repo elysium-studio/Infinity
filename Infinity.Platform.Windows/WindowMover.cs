@@ -1,11 +1,11 @@
-﻿using Infinity.Platform.Abstractions;
+using Infinity.Platform.Abstractions;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Infinity.Platform.Windows;
 
-public unsafe class WindowMover :
+public sealed unsafe class WindowMover :
     IWindowMover
 {
     private const SET_WINDOW_POS_FLAGS SwpFlags =

@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace Infinity.Shell;
 
-public class WindowPlacementRules :
+public sealed class WindowPlacementRules :
     IWindowPlacementRules
 {
     private readonly IWindowApplicationIdentityProvider identityProvider;

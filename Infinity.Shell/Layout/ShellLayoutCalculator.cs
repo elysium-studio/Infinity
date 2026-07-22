@@ -1,9 +1,9 @@
-﻿using Elysium.Platform.Abstractions;
+using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 
 namespace Infinity.Shell;
 
-public class ShellLayoutCalculator(IWorkspace workspace) :
+public sealed class ShellLayoutCalculator(IWorkspace workspace) :
     IShellLayoutCalculator
 {
     public ShellWindowLayout Calculate(TrackedWindow trackedWindow, double panOffset, int monitorOffsetX, double scaleFactor, int screenWidth, int screenHeight)

@@ -4,7 +4,7 @@ using Windows.Graphics;
 
 namespace Infinity.Shell.WinUI;
 
-public partial class SettingsWindow :
+public sealed partial class SettingsWindow :
     Window
 {
     private const int WindowWidth = 1100;

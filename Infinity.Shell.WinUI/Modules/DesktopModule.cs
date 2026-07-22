@@ -14,7 +14,7 @@ using IApplicationLifetime = Elysium.Application.Abstractions.IApplicationLifeti
 
 namespace Infinity.Shell.WinUI;
 
-public class DesktopModule :
+public sealed class DesktopModule :
     IModule
 {
     public void Register(IServiceCollection services)

@@ -1,4 +1,4 @@
-﻿using Elysium.Application.Abstractions;
+using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -9,7 +9,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Infinity.Platform.Windows;
 
-public class WindowDragGuard(IWindowEventListener listener,
+public sealed class WindowDragGuard(IWindowEventListener listener,
     IModifierKeyState modifierKeyState,
     IDispatcher dispatcher,
     WindowArrangingController windowArranging,

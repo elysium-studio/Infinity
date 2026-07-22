@@ -1,11 +1,11 @@
-﻿using Infinity.Platform.Abstractions;
+using Infinity.Platform.Abstractions;
 using System;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 
 namespace Infinity.Platform.Windows;
 
-public class WindowController :
+public sealed class WindowController :
     IWindowController
 {
     private const uint WmClose = 0x0010u;

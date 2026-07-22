@@ -1,9 +1,9 @@
-﻿using Elysium.Application.Abstractions;
+using Elysium.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 
 namespace Infinity.Shell;
 
-public class DesktopBackgroundController(IDesktopBackgroundSource source,
+public sealed class DesktopBackgroundController(IDesktopBackgroundSource source,
     IDispatcher dispatcher) :
     IDesktopBackgroundController
 {

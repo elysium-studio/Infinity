@@ -1,10 +1,10 @@
-﻿using Elysium.Platform.Abstractions;
+using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 
 namespace Infinity.Application;
 
-public class WindowTitleSynchronizer(IWindowStore repository,
+public sealed class WindowTitleSynchronizer(IWindowStore repository,
     IWindowTitleReader titleReader,
     IWindowEventListener listener) :
     IWindowTitleSynchronizer

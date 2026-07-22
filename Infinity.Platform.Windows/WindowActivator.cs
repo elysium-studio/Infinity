@@ -1,4 +1,4 @@
-﻿using Infinity.Platform.Abstractions;
+using Infinity.Platform.Abstractions;
 using System.Threading.Tasks;
 using Windows.Win32;
 using Windows.Win32.Foundation;
@@ -6,7 +6,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Infinity.Platform.Windows;
 
-public class WindowActivator :
+public sealed class WindowActivator :
     IWindowActivator
 {
     private static readonly TimeSpan ActivationRetryDelay = TimeSpan.FromMilliseconds(60);

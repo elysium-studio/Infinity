@@ -1,10 +1,10 @@
-﻿using Infinity.Application.Abstractions;
+using Infinity.Application.Abstractions;
 
 using System.Diagnostics;
 
 namespace Infinity.Application;
 
-public class WindowRestoreGuard :
+public sealed class WindowRestoreGuard :
     IWindowRestoreGuard
 {
     private static readonly long RestoreWindowDurationTicks = Stopwatch.Frequency / 2;

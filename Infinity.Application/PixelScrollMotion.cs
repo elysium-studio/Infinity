@@ -1,8 +1,8 @@
-﻿using Infinity.Application.Abstractions;
+using Infinity.Application.Abstractions;
 
 namespace Infinity.Application;
 
-public class PixelScrollMotion :
+public sealed class PixelScrollMotion :
     IDeltaScrollMotion
 {
     private const double StopThreshold = 0.02;

@@ -7,7 +7,7 @@ using System.Numerics;
 
 namespace Infinity.Shell.WinUI;
 
-public partial class ScrollTriggerView :
+public sealed partial class ScrollTriggerView :
     UserControl
 {
     private const float CtrlHoldEnd = 3200f;

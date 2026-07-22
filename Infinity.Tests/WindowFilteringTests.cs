@@ -4,7 +4,7 @@ using Infinity.Shell;
 
 namespace Infinity.Tests;
 
-public class TrackedWindowFilterTests
+public sealed class TrackedWindowFilterTests
 {
     [Theory]
     [InlineData("")]
@@ -42,7 +42,7 @@ public class TrackedWindowFilterTests
     }
 }
 
-public class FilterPeekSourceTests
+public sealed class FilterPeekSourceTests
 {
     [Fact]
     public void StateAndWindowMatchingAreDelegatedToFilterState()
@@ -67,7 +67,7 @@ public class FilterPeekSourceTests
         Title = title
     };
 
-    private class StubFilterState : IWindowFilterState
+    private sealed class StubFilterState : IWindowFilterState
     {
         public bool IsActive { get; init; }
 

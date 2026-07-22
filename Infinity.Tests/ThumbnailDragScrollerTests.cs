@@ -7,7 +7,7 @@ using System.Collections.Concurrent;
 
 namespace Infinity.Tests;
 
-public class ThumbnailDragScrollerTests
+public sealed class ThumbnailDragScrollerTests
 {
     [Fact]
     public async Task EdgePositionStartsWhenModifierBecomesActiveAsync()
@@ -120,7 +120,7 @@ public class ThumbnailDragScrollerTests
             () => new WindowDragScrollerConfiguration { SpeedLevel = DragScrollSpeed.Normal },
             NullLogger<ThumbnailDragScroller>.Instance);
 
-    private class TestModifierKeyState : IModifierKeyState
+    private sealed class TestModifierKeyState : IModifierKeyState
     {
         public event Action<bool>? StateChanged;
 
@@ -142,12 +142,12 @@ public class ThumbnailDragScrollerTests
         }
     }
 
-    private class TestDispatcher : IDispatcher
+    private sealed class TestDispatcher : IDispatcher
     {
         public void Dispatch(Action action) => action();
     }
 
-    private class TestScroller(IPanState state) : IScroller
+    private sealed class TestScroller(IPanState state) : IScroller
     {
         private readonly ConcurrentQueue<double> offsets = new();
         private readonly SemaphoreSlim offsetAvailable = new(0);

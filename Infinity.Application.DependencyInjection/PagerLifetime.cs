@@ -1,4 +1,4 @@
-﻿using Elysium.Platform.Abstractions;
+using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Hosting;
@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application.DependencyInjection;
 
-public class PagerLifetime(IWindowTracker tracker,
+public sealed class PagerLifetime(IWindowTracker tracker,
     IWindowEnumerator enumerator,
     IWindowEventListener listener,
     IWindowDragGuard dragGuard,

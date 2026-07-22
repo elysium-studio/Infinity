@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Presentation;
@@ -9,7 +9,7 @@ using Microsoft.Extensions.Options;
 
 namespace Infinity.Shell;
 
-public partial class TrackedWindowViewModel(IServiceProvider provider,
+public sealed partial class TrackedWindowViewModel(IServiceProvider provider,
     IServiceFactory factory,
     IMessenger messenger,
     IDisposer disposer,

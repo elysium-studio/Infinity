@@ -2,7 +2,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Infinity.Shell.WinUI;
 
-public partial class VirtualPagesCountView :
+public sealed partial class VirtualPagesCountView :
     UserControl
 {
     public VirtualPagesCountView() => InitializeComponent();

@@ -1,4 +1,4 @@
-﻿using Elysium.Application.Abstractions;
+using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public class WindowCollection(IWindowStore store,
+public sealed class WindowCollection(IWindowStore store,
     IScrollTimer timer,
     IScroller scroller,
     IWindowStack windowStack,

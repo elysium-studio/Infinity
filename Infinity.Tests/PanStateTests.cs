@@ -2,7 +2,7 @@ using Infinity.Application;
 
 namespace Infinity.Tests;
 
-public class PanStateTests
+public sealed class PanStateTests
 {
     [Fact]
     public void ApplyDeltaClampsOffsetToConfiguredBounds()

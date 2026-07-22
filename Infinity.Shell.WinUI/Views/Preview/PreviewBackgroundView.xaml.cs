@@ -2,7 +2,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Infinity.Shell.WinUI;
 
-public partial class PreviewBackgroundView :
+public sealed partial class PreviewBackgroundView :
     UserControl
 {
     public PreviewBackgroundView() => InitializeComponent();

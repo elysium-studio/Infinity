@@ -1,3 +1,3 @@
 namespace Infinity.Shell;
 
-public record WindowActivationRequestedEventArgs;
+public sealed record WindowActivationRequestedEventArgs;

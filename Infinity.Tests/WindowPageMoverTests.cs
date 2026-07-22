@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Infinity.Tests;
 
-public class WindowPageMoverTests
+public sealed class WindowPageMoverTests
 {
     [Fact]
     public void MoveToPagePreservesPositionWithinPage()
@@ -92,7 +92,7 @@ public class WindowPageMoverTests
         Height = 600
     };
 
-    private class TestScroller : IScroller
+    private sealed class TestScroller : IScroller
     {
         public event EventHandler? ScrollStarted;
 
@@ -130,7 +130,7 @@ public class WindowPageMoverTests
         public void Stop() => ScrollStopped?.Invoke(this, EventArgs.Empty);
     }
 
-    private class TestPager : IPager
+    private sealed class TestPager : IPager
     {
         public event Action<int>? PageChanged;
 

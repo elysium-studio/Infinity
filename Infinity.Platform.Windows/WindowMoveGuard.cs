@@ -1,8 +1,8 @@
-﻿using Infinity.Platform.Abstractions;
+using Infinity.Platform.Abstractions;
 
 namespace Infinity.Platform.Windows;
 
-public class WindowMoveGuard :
+public sealed class WindowMoveGuard :
     IWindowMoveGuard
 {
     private readonly Action endScope;

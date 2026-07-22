@@ -5,7 +5,7 @@ using Windows.Win32.Graphics.Dwm;
 
 namespace Infinity.Platform.Windows;
 
-public class WindowGeometryReader :
+public sealed class WindowGeometryReader :
     IWindowGeometryReader
 {
     private const DWMWINDOWATTRIBUTE ExtendedFrameBounds = DWMWINDOWATTRIBUTE.DWMWA_EXTENDED_FRAME_BOUNDS;

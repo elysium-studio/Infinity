@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
@@ -12,7 +12,7 @@ using NavigationCompletedEventArgs = Infinity.Application.Abstractions.Navigatio
 
 namespace Infinity.Shell;
 
-public partial class TrackedWindowCollectionViewModel :
+public sealed partial class TrackedWindowCollectionViewModel :
     ObservableCollectionViewModel<ITrackedWindow>,
     IRecipient<OptionsChangedEventArgs<Settings>>,
     IRecipient<WindowPeekChangedEventArgs>,

@@ -1,9 +1,9 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Infinity.Application.Abstractions;
 
 namespace Infinity.Application;
 
-public class EasingScrollMotion :
+public sealed class EasingScrollMotion :
     IDeltaScrollMotion
 {
     private const double NaturalFrequency = 30.0;
