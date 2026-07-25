@@ -249,6 +249,8 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         {
             foregroundWindowHandle = handle;
         }
+
+        NavigateToPage(handle);
     }
 
     public void NotifyWindowClosed(IntPtr handle)

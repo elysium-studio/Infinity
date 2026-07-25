@@ -120,6 +120,53 @@ public sealed class WindowTrackerPlacementRuleTests
     }
 
     [Fact]
+    public async Task MinimizedWindowReturnsToItsStoredPage()
+    {
+        WindowStore store = new();
+        TestWindowEventListener listener = new();
+        TestGeometryReader geometry = new();
+        TestPanState state = new();
+        state.SetOffset(1000);
+        WindowTracker tracker = CreateTracker(store,
+            new TestWindowMover(),
+            listener,
+            geometry,
+            state);
+        tracker.Start();
+
+        try
+        {
+            tracker.TryRegisterExisting(new IntPtr(5));
+            Assert.True(store.TryGet(new IntPtr(5), out TrackedWindow window));
+            Assert.Equal(1100, window.CanvasX);
+
+            state.SetOffset(0);
+            TaskCompletionSource removed = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            store.WindowRemoved += (_, handle) =>
+            {
+                if (handle == new IntPtr(5))
+                {
+                    removed.TrySetResult();
+                }
+            };
+
+            geometry.IsWindowMinimised = true;
+            listener.RaiseMinimizeStarted(new IntPtr(5));
+            await removed.Task.WaitAsync(TimeSpan.FromSeconds(2));
+
+            geometry.IsWindowMinimised = false;
+            listener.RaiseMinimizeEnded(new IntPtr(5));
+
+            Assert.True(store.TryGet(new IntPtr(5), out TrackedWindow restoredWindow));
+            Assert.Equal(1100, restoredWindow.CanvasX);
+        }
+        finally
+        {
+            tracker.Stop();
+        }
+    }
+
+    [Fact]
     public void ManagedDragRemainsAtItsViewportPositionDuringPageScroll()
     {
         WindowStore store = new();
