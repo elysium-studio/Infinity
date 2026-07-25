@@ -73,6 +73,7 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
 
             latestVisibility = isNavigationVisible;
             visibilityUpdatePending = true;
+            pageUpdatePending |= isNavigationVisible && latestState is not null;
             return true;
         }
     }
@@ -89,6 +90,18 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
             latestState = state;
             pageUpdatePending = true;
             return true;
+        }
+    }
+
+    internal (InfinityPageNavigationState? State, bool? Visibility) TakePendingUpdates()
+    {
+        lock (synchronization)
+        {
+            InfinityPageNavigationState? state = pageUpdatePending ? latestState : null;
+            bool? visibility = visibilityUpdatePending ? latestVisibility : null;
+            pageUpdatePending = false;
+            visibilityUpdatePending = false;
+            return (state, visibility);
         }
     }
 
@@ -206,21 +219,12 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
         {
             await updateSignal.WaitAsync(cancellationToken);
 
-            InfinityPageNavigationState? state;
-            bool? visibility;
-
             if (!IsPageNavigationAvailable)
             {
                 continue;
             }
 
-            lock (synchronization)
-            {
-                state = pageUpdatePending ? latestState : null;
-                visibility = visibilityUpdatePending ? latestVisibility : null;
-                pageUpdatePending = false;
-                visibilityUpdatePending = false;
-            }
+            (InfinityPageNavigationState? state, bool? visibility) = TakePendingUpdates();
 
             if (visibility.HasValue)
             {

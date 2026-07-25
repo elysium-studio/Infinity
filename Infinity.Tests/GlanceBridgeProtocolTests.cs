@@ -45,4 +45,20 @@ public sealed class GlanceBridgeProtocolTests
         Assert.False(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.PageTint, false));
         Assert.True(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.DesktopFlyout, false));
     }
+
+    [Fact]
+    public void OpeningFirstNavigationSurfaceRepublishesCurrentPage()
+    {
+        using InfinityGlanceBridge bridge = new(NullLogger<InfinityGlanceBridge>.Instance);
+        InfinityPageNavigationState state = new(0, 1, "Page 1");
+
+        Assert.True(bridge.TrySetLatestState(state));
+        bridge.TakePendingUpdates();
+
+        Assert.True(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.PageTint, true));
+
+        (InfinityPageNavigationState? page, bool? visibility) = bridge.TakePendingUpdates();
+        Assert.Equal(state, page);
+        Assert.True(visibility);
+    }
 }
