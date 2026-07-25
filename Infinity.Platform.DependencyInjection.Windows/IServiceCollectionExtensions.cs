@@ -4,6 +4,7 @@ using Elysium.Platform.Windows;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Infinity.Platform.Windows.DependencyInjection;
@@ -17,6 +18,9 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<IMessageWindow, MessageWindow>();
             services.AddSingleton<IWorkspace, Workspace>();
             services.AddSingleton<IDesktopBackgroundSource, DesktopBackgroundSource>();
+            services.AddSingleton<InfinityGlanceBridge>();
+            services.AddSingleton<IInfinityGlanceBridge>(provider => provider.GetRequiredService<InfinityGlanceBridge>());
+            services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<InfinityGlanceBridge>());
 
             services.AddSingleton(new HotKeysBuilderOptions
             {

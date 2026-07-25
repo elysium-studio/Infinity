@@ -42,6 +42,7 @@ public sealed class DesktopModule :
                     provider.GetRequiredService<IWritableOptions<Settings>>(),
                     provider.GetRequiredService<IPager>(),
                     provider.GetRequiredService<IPanState>(),
+                    provider.GetRequiredService<IInfinityGlanceBridge>(),
                     provider.GetRequiredService<ITextLocalizer>()))
             .AddViewFor(
                 ServiceLifetime.Singleton,
@@ -54,6 +55,7 @@ public sealed class DesktopModule :
                     provider.GetRequiredService<IDispatcher>(),
                     provider.GetRequiredService<IWorkspace>(),
                     provider.GetRequiredService<IModifierKeyState>(),
+                    provider.GetRequiredService<IInfinityGlanceBridge>(),
                     provider.GetRequiredService<Settings>()))
             .AddView(ServiceLifetime.Singleton, provider => new ScrollTriggerView())
             .AddViewFor(

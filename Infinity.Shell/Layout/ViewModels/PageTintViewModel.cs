@@ -23,6 +23,7 @@ public sealed partial class PageTintViewModel :
     private readonly IWritableOptions<Settings> writableOptions;
     private readonly IPager pager;
     private readonly ITextLocalizer localizer;
+    private readonly IInfinityGlanceBridge glanceBridge;
     private bool filterActive;
 
     [ObservableProperty]
@@ -46,30 +47,25 @@ public sealed partial class PageTintViewModel :
     [ObservableProperty]
     private PreviewPosition previewPosition;
 
-    public PageTintViewModel(IServiceProvider provider,
-        IServiceFactory factory,
-        IMessenger messenger,
-        IDisposer disposer,
-        IDispatcher dispatcher,
-        IPointerInputSource pointer,
-        IModifierKeyState modifierKeyState,
-        IWindowDragScroller dragScroller,
-        IPageGestureSource gestureSource,
-        IOptionsMonitor<Settings> settings,
-        IWritableOptions<Settings> writableOptions,
-        IPager pager,
-        IPanState panState,
-        ITextLocalizer localizer) : base(provider, factory, messenger, disposer)
+    [ObservableProperty]
+    private bool isGlancePageSurfaceAvailable;
+
+    partial void OnIsOpenChanged(bool value) =>
+        glanceBridge.SetPageNavigationSurfaceVisible(InfinityPageNavigationSurface.PageTint, value);
+
+    public PageTintViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IDispatcher dispatcher, IPointerInputSource pointer, IModifierKeyState modifierKeyState, IWindowDragScroller dragScroller, IPageGestureSource gestureSource, IOptionsMonitor<Settings> settings, IWritableOptions<Settings> writableOptions, IPager pager, IPanState panState, IInfinityGlanceBridge glanceBridge, ITextLocalizer localizer) : base(provider, factory, messenger, disposer)
     {
         this.dispatcher = dispatcher;
         this.modifierKeyState = modifierKeyState;
         this.settings = settings;
         this.writableOptions = writableOptions;
         this.pager = pager;
+        this.glanceBridge = glanceBridge;
         this.localizer = localizer;
 
         isBlurEnabled = settings.CurrentValue.DesktopBlur;
         previewPosition = settings.CurrentValue.PreviewPosition;
+        isGlancePageSurfaceAvailable = glanceBridge.IsPageNavigationAvailable;
 
         pointer.ScrollDeltaReceived += HandleScrollDeltaReceived;
         pointer.MiddleButtonClicked += HandleMiddleButtonClicked;
@@ -78,11 +74,16 @@ public sealed partial class PageTintViewModel :
         dragScroller.DragStopped += HandleDragStopped;
         gestureSource.SessionStarted += HandleGestureSessionStarted;
         gestureSource.SessionEnded += HandleGestureSessionEnded;
+        glanceBridge.AvailabilityChanged += HandleGlanceAvailabilityChanged;
 
         Activate();
     }
 
-    public override void Activated() => PageTitle = ResolvePageTitle(pager.CurrentPage, settings.CurrentValue.PageTitles);
+    public override void Activated()
+    {
+        PageTitle = ResolvePageTitle(pager.CurrentPage, settings.CurrentValue.PageTitles);
+        PublishPageNavigation();
+    }
 
     protected override void RegisterMessages()
     {
@@ -121,6 +122,7 @@ public sealed partial class PageTintViewModel :
         {
             PageTitle = ResolvePageTitle(page, settings.CurrentValue.PageTitles);
             IsEditing = false;
+            PublishPageNavigation();
         });
     }
 
@@ -193,6 +195,7 @@ public sealed partial class PageTintViewModel :
         {
             IsEditing = false;
             PageTitle = ResolvePageTitle(page, settings.CurrentValue.PageTitles);
+            PublishPageNavigation();
         });
 
     private void HandleScrollDeltaReceived(int delta)
@@ -216,6 +219,15 @@ public sealed partial class PageTintViewModel :
             });
         }
     }
+
+    private void HandleGlanceAvailabilityChanged(object? sender, InfinityGlanceAvailabilityChangedEventArgs args) =>
+        dispatcher.Dispatch(() =>
+        {
+            IsGlancePageSurfaceAvailable = args.IsPageNavigationAvailable;
+        });
+
+    private void PublishPageNavigation() =>
+        glanceBridge.PublishPageNavigation(new InfinityPageNavigationState(pager.CurrentPage, pager.CurrentPage + 1, PageTitle));
 
     private string ResolvePageTitle(int page, Dictionary<int, string>? pageTitles) =>
         pageTitles?.TryGetValue(page, out string? title) == true

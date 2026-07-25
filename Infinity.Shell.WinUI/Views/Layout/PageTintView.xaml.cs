@@ -35,6 +35,10 @@ public sealed partial class PageTintView :
 
     private Visibility ToInverseVisibility(bool value) => value ? Visibility.Collapsed : Visibility.Visible;
 
+    private bool ToInverse(bool value) => !value;
+
+    private double ToInverseOpacity(bool value) => value ? 0d : 1d;
+
     private DesktopOverlayHeaderPlacement ToHeaderPlacement(PreviewPosition position)
     {
         if (position == PreviewPosition.Auto)
@@ -123,6 +127,11 @@ public sealed partial class PageTintView :
         }
 
         if (args.PropertyName == nameof(PageTintViewModel.PreviewPosition))
+        {
+            UpdateBindings();
+        }
+
+        if (args.PropertyName == nameof(PageTintViewModel.IsGlancePageSurfaceAvailable))
         {
             UpdateBindings();
         }
