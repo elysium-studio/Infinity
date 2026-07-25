@@ -12,7 +12,9 @@
     Loaded="{x:Bind ViewModel.Activated}"
     StaysOpen="{x:Bind ViewModel.StaysOpen, Mode=TwoWay}">
     <Controls:DesktopOverlay.Header>
-        <Grid x:Name="ShadowContainer">
+        <Grid
+            x:Name="ShadowContainer"
+            Visibility="{x:Bind ToInverseVisibility(ViewModel.IsGlancePageSurfaceAvailable), Mode=OneWay}">
             <Canvas x:Name="ShadowCanvas" />
             <Border
                 Width="240"

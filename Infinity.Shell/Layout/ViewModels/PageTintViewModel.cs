@@ -23,6 +23,9 @@ public sealed partial class PageTintViewModel :
     private readonly IWritableOptions<Settings> writableOptions;
     private readonly IPager pager;
     private readonly ITextLocalizer localizer;
+    private readonly IInfinityGlanceBridge glanceBridge;
+    private CancellationTokenSource? transientNavigationCancellation;
+    private bool pageNavigationActive;
     private bool filterActive;
 
     [ObservableProperty]
@@ -46,6 +49,9 @@ public sealed partial class PageTintViewModel :
     [ObservableProperty]
     private PreviewPosition previewPosition;
 
+    [ObservableProperty]
+    private bool isGlancePageSurfaceAvailable;
+
     public PageTintViewModel(IServiceProvider provider,
         IServiceFactory factory,
         IMessenger messenger,
@@ -59,6 +65,7 @@ public sealed partial class PageTintViewModel :
         IWritableOptions<Settings> writableOptions,
         IPager pager,
         IPanState panState,
+        IInfinityGlanceBridge glanceBridge,
         ITextLocalizer localizer) : base(provider, factory, messenger, disposer)
     {
         this.dispatcher = dispatcher;
@@ -66,10 +73,12 @@ public sealed partial class PageTintViewModel :
         this.settings = settings;
         this.writableOptions = writableOptions;
         this.pager = pager;
+        this.glanceBridge = glanceBridge;
         this.localizer = localizer;
 
         isBlurEnabled = settings.CurrentValue.DesktopBlur;
         previewPosition = settings.CurrentValue.PreviewPosition;
+        isGlancePageSurfaceAvailable = glanceBridge.IsPageNavigationAvailable;
 
         pointer.ScrollDeltaReceived += HandleScrollDeltaReceived;
         pointer.MiddleButtonClicked += HandleMiddleButtonClicked;
@@ -78,11 +87,16 @@ public sealed partial class PageTintViewModel :
         dragScroller.DragStopped += HandleDragStopped;
         gestureSource.SessionStarted += HandleGestureSessionStarted;
         gestureSource.SessionEnded += HandleGestureSessionEnded;
+        glanceBridge.AvailabilityChanged += HandleGlanceAvailabilityChanged;
 
         Activate();
     }
 
-    public override void Activated() => PageTitle = ResolvePageTitle(pager.CurrentPage, settings.CurrentValue.PageTitles);
+    public override void Activated()
+    {
+        PageTitle = ResolvePageTitle(pager.CurrentPage, settings.CurrentValue.PageTitles);
+        PublishPageNavigation();
+    }
 
     protected override void RegisterMessages()
     {
@@ -121,6 +135,7 @@ public sealed partial class PageTintViewModel :
         {
             PageTitle = ResolvePageTitle(page, settings.CurrentValue.PageTitles);
             IsEditing = false;
+            PublishPageNavigation();
         });
     }
 
@@ -163,12 +178,14 @@ public sealed partial class PageTintViewModel :
         {
             StaysOpen = true;
             PageTitle = ResolvePageTitle(pager.CurrentPage, settings.CurrentValue.PageTitles);
+            BeginPageNavigation();
             IsOpen = true;
         });
 
     private void HandleDragStopped() =>
         dispatcher.Dispatch(() =>
         {
+            EndPageNavigation();
             StaysOpen = false;
             IsOpen = false;
         });
@@ -178,12 +195,14 @@ public sealed partial class PageTintViewModel :
         {
             StaysOpen = true;
             PageTitle = ResolvePageTitle(pager.CurrentPage, settings.CurrentValue.PageTitles);
+            BeginPageNavigation();
             IsOpen = true;
         });
 
     private void HandleGestureSessionEnded() =>
         dispatcher.Dispatch(() =>
         {
+            EndPageNavigation();
             StaysOpen = false;
             IsOpen = false;
         });
@@ -193,6 +212,7 @@ public sealed partial class PageTintViewModel :
         {
             IsEditing = false;
             PageTitle = ResolvePageTitle(page, settings.CurrentValue.PageTitles);
+            PublishPageNavigation();
         });
 
     private void HandleScrollDeltaReceived(int delta)
@@ -201,6 +221,7 @@ public sealed partial class PageTintViewModel :
         {
             dispatcher.Dispatch(() =>
             {
+                BeginTransientPageNavigation();
                 IsOpen = true;
             });
         }
@@ -212,10 +233,91 @@ public sealed partial class PageTintViewModel :
         {
             dispatcher.Dispatch(() =>
             {
+                BeginTransientPageNavigation();
                 IsOpen = true;
             });
         }
     }
+
+    private void HandleGlanceAvailabilityChanged(object? sender, InfinityGlanceAvailabilityChangedEventArgs args) =>
+        dispatcher.Dispatch(() =>
+        {
+            IsGlancePageSurfaceAvailable = args.IsPageNavigationAvailable;
+
+            if (args.IsPageNavigationAvailable)
+            {
+                PublishPageNavigation();
+            }
+        });
+
+    private void BeginPageNavigation()
+    {
+        CancelTransientPageNavigation();
+        pageNavigationActive = true;
+        PublishPageNavigation();
+    }
+
+    private void EndPageNavigation()
+    {
+        CancelTransientPageNavigation();
+        pageNavigationActive = false;
+        PublishPageNavigation();
+    }
+
+    private void BeginTransientPageNavigation()
+    {
+        CancelTransientPageNavigation();
+        pageNavigationActive = true;
+        PublishPageNavigation();
+
+        CancellationTokenSource cancellation = new();
+        transientNavigationCancellation = cancellation;
+        _ = EndTransientPageNavigationAsync(cancellation);
+    }
+
+    private async Task EndTransientPageNavigationAsync(CancellationTokenSource cancellation)
+    {
+        try
+        {
+            await Task.Delay(700, cancellation.Token);
+            dispatcher.Dispatch(() =>
+            {
+                if (!ReferenceEquals(transientNavigationCancellation, cancellation))
+                {
+                    return;
+                }
+
+                transientNavigationCancellation = null;
+                cancellation.Dispose();
+                pageNavigationActive = false;
+                PublishPageNavigation();
+            });
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private void CancelTransientPageNavigation()
+    {
+        CancellationTokenSource? cancellation = transientNavigationCancellation;
+        transientNavigationCancellation = null;
+
+        if (cancellation is null)
+        {
+            return;
+        }
+
+        cancellation.Cancel();
+        cancellation.Dispose();
+    }
+
+    private void PublishPageNavigation() =>
+        glanceBridge.PublishPageNavigation(new InfinityPageNavigationState(
+            pageNavigationActive,
+            pager.CurrentPage,
+            pager.CurrentPage + 1,
+            PageTitle));
 
     private string ResolvePageTitle(int page, Dictionary<int, string>? pageTitles) =>
         pageTitles?.TryGetValue(page, out string? title) == true

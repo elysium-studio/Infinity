@@ -79,14 +79,20 @@ public sealed partial class PageTintView :
     {
         EnsureSubscribed();
         UpdateBindings();
+        UpdateHeaderContent();
     }
 
-    protected override void OnOpened() => UpdateBindings();
+    protected override void OnOpened()
+    {
+        UpdateBindings();
+        UpdateHeaderContent();
+    }
 
     private void HandleDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {
         EnsureSubscribed();
         UpdateBindings();
+        UpdateHeaderContent();
     }
 
     private void EnsureSubscribed()
@@ -126,6 +132,12 @@ public sealed partial class PageTintView :
         {
             UpdateBindings();
         }
+
+        if (args.PropertyName == nameof(PageTintViewModel.IsGlancePageSurfaceAvailable))
+        {
+            UpdateBindings();
+            UpdateHeaderContent();
+        }
     }
 
     private void UpdateBindings()
@@ -137,6 +149,16 @@ public sealed partial class PageTintView :
         }
 
         Bindings.Update();
+    }
+
+    private void UpdateHeaderContent()
+    {
+        object? content = ViewModel.IsGlancePageSurfaceAvailable ? null : ShadowContainer;
+
+        if (!ReferenceEquals(Header, content))
+        {
+            Header = content;
+        }
     }
 
     private void HandleShadowContainerSizeChanged(object sender, SizeChangedEventArgs args)

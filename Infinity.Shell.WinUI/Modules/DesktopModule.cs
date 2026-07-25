@@ -42,6 +42,7 @@ public sealed class DesktopModule :
                     provider.GetRequiredService<IWritableOptions<Settings>>(),
                     provider.GetRequiredService<IPager>(),
                     provider.GetRequiredService<IPanState>(),
+                    provider.GetRequiredService<IInfinityGlanceBridge>(),
                     provider.GetRequiredService<ITextLocalizer>()))
             .AddViewFor(
                 ServiceLifetime.Singleton,
