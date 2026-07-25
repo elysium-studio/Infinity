@@ -52,21 +52,7 @@ public sealed partial class PageTintViewModel :
     [ObservableProperty]
     private bool isGlancePageSurfaceAvailable;
 
-    public PageTintViewModel(IServiceProvider provider,
-        IServiceFactory factory,
-        IMessenger messenger,
-        IDisposer disposer,
-        IDispatcher dispatcher,
-        IPointerInputSource pointer,
-        IModifierKeyState modifierKeyState,
-        IWindowDragScroller dragScroller,
-        IPageGestureSource gestureSource,
-        IOptionsMonitor<Settings> settings,
-        IWritableOptions<Settings> writableOptions,
-        IPager pager,
-        IPanState panState,
-        IInfinityGlanceBridge glanceBridge,
-        ITextLocalizer localizer) : base(provider, factory, messenger, disposer)
+    public PageTintViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IDispatcher dispatcher, IPointerInputSource pointer, IModifierKeyState modifierKeyState, IWindowDragScroller dragScroller, IPageGestureSource gestureSource, IOptionsMonitor<Settings> settings, IWritableOptions<Settings> writableOptions, IPager pager, IPanState panState, IInfinityGlanceBridge glanceBridge, ITextLocalizer localizer) : base(provider, factory, messenger, disposer)
     {
         this.dispatcher = dispatcher;
         this.modifierKeyState = modifierKeyState;
@@ -313,11 +299,7 @@ public sealed partial class PageTintViewModel :
     }
 
     private void PublishPageNavigation() =>
-        glanceBridge.PublishPageNavigation(new InfinityPageNavigationState(
-            pageNavigationActive,
-            pager.CurrentPage,
-            pager.CurrentPage + 1,
-            PageTitle));
+        glanceBridge.PublishPageNavigation(new InfinityPageNavigationState(pageNavigationActive, pager.CurrentPage, pager.CurrentPage + 1, PageTitle));
 
     private string ResolvePageTitle(int page, Dictionary<int, string>? pageTitles) =>
         pageTitles?.TryGetValue(page, out string? title) == true

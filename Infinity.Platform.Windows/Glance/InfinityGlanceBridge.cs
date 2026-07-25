@@ -8,8 +8,7 @@ using System.Text.Json;
 
 namespace Infinity.Platform.Windows;
 
-public sealed class InfinityGlanceBridge(
-    ILogger<InfinityGlanceBridge> logger) :
+public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
     BackgroundService,
     IInfinityGlanceBridge
 {
@@ -58,11 +57,7 @@ public sealed class InfinityGlanceBridge(
         {
             try
             {
-                using NamedPipeClientStream pipe = new(
-                    ".",
-                    GlanceBridgeProtocol.PipeName,
-                    PipeDirection.InOut,
-                    PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+                using NamedPipeClientStream pipe = new(".", GlanceBridgeProtocol.PipeName, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
 
                 await pipe.ConnectAsync(stoppingToken);
                 await RunConnectionAsync(pipe, stoppingToken);
@@ -94,9 +89,7 @@ public sealed class InfinityGlanceBridge(
         }
     }
 
-    private async Task RunConnectionAsync(
-        NamedPipeClientStream pipe,
-        CancellationToken cancellationToken)
+    private async Task RunConnectionAsync(NamedPipeClientStream pipe, CancellationToken cancellationToken)
     {
         using StreamReader reader = new(pipe, Encoding.UTF8, false, leaveOpen: true);
         using StreamWriter writer = new(pipe, new UTF8Encoding(false), leaveOpen: true);
@@ -126,9 +119,7 @@ public sealed class InfinityGlanceBridge(
         }
     }
 
-    private async Task ReadMessagesAsync(
-        StreamReader reader,
-        CancellationToken cancellationToken)
+    private async Task ReadMessagesAsync(StreamReader reader, CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -162,9 +153,7 @@ public sealed class InfinityGlanceBridge(
         }
     }
 
-    private async Task WriteUpdatesAsync(
-        StreamWriter writer,
-        CancellationToken cancellationToken)
+    private async Task WriteUpdatesAsync(StreamWriter writer, CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -195,10 +184,7 @@ public sealed class InfinityGlanceBridge(
         }
     }
 
-    private static async Task WriteAsync(
-        StreamWriter writer,
-        GlanceBridgeWireMessage message,
-        CancellationToken cancellationToken)
+    private static async Task WriteAsync(StreamWriter writer, GlanceBridgeWireMessage message, CancellationToken cancellationToken)
     {
         string json = JsonSerializer.Serialize(message, GlanceBridgeJsonContext.Default.GlanceBridgeWireMessage);
         await writer.WriteLineAsync(json.AsMemory(), cancellationToken);
