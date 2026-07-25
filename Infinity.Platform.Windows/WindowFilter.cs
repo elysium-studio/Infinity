@@ -1,4 +1,4 @@
-﻿using Infinity.Platform.Abstractions;
+using Infinity.Platform.Abstractions;
 using Microsoft.Win32.SafeHandles;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,7 +11,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Infinity.Platform.Windows;
 
-public class WindowFilter(WindowFilterOptions options) : 
+public sealed class WindowFilter(WindowFilterOptions options) :
     IWindowFilter
 {
     private const DWMWINDOWATTRIBUTE DwmwaCloaked = DWMWINDOWATTRIBUTE.DWMWA_CLOAKED;

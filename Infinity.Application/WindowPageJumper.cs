@@ -1,10 +1,10 @@
-﻿using Elysium.Platform.Abstractions;
+using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
+public sealed class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
     WindowArrowMoveGesture arrowMove,
     WindowNumberSwitchGesture numberSwitch,
     WindowNumberMoveGesture numberMove,

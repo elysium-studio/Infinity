@@ -3,7 +3,7 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Tests;
 
-public class WindowStoreTests
+public sealed class WindowStoreTests
 {
     [Fact]
     public void AddStoresWindowAndRaisesAddedEvent()

@@ -1,11 +1,11 @@
-﻿using Elysium.Application.Abstractions;
+using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 
 namespace Infinity.Application;
 
-public class WindowTracker(IWindowStore repository,
+public sealed class WindowTracker(IWindowStore repository,
     IWindowGeometryReader reader,
     IWindowFilter filter,
     IWindowAncestorResolver ancestorResolver,

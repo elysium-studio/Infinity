@@ -1,4 +1,4 @@
-﻿using Elysium.Application.Abstractions;
+using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
@@ -10,7 +10,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Infinity.Platform.Windows;
 
-public class WindowStack(IWindowStore repository,
+public sealed class WindowStack(IWindowStore repository,
     IWindowEventListener listener,
     Func<nint> handleFactory,
     IDispatcher dispatcher,

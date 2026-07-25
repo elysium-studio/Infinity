@@ -1,10 +1,10 @@
-﻿using Elysium.Platform.Abstractions;
+using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public class PageGestureSource(IKeyboardInputSource keyboardInputSource,
+public sealed class PageGestureSource(IKeyboardInputSource keyboardInputSource,
     IModifierKeyState modifierKeyState,
     IEnumerable<IPageGesture> gestures,
     ILogger<PageGestureSource> logger) :

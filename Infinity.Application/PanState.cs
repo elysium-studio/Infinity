@@ -1,8 +1,8 @@
-﻿using Infinity.Application.Abstractions;
+using Infinity.Application.Abstractions;
 
 namespace Infinity.Application;
 
-public class PanState :
+public sealed class PanState :
     IPanState
 {
     public event Action? OffsetChanged;

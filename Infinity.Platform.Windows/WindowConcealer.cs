@@ -1,4 +1,4 @@
-﻿using Infinity.Application.Abstractions;
+using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
@@ -8,7 +8,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Infinity.Platform.Windows;
 
-public unsafe class WindowConcealer(IWindowEnumerator enumerator,
+public sealed unsafe class WindowConcealer(IWindowEnumerator enumerator,
     ILogger<WindowConcealer> logger) :
     IWindowConcealer,
     IWindowConcealmentRecovery,

@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
@@ -10,7 +10,7 @@ using NavigationCompletedEventArgs = Infinity.Application.Abstractions.Navigatio
 
 namespace Infinity.Shell;
 
-public partial class PageTintViewModel :
+public sealed partial class PageTintViewModel :
     ObservableViewModel,
     IRecipient<NavigationCompletedEventArgs>,
     IRecipient<WindowActivationRequestedEventArgs>,

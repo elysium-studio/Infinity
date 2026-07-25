@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Infinity.Shell.WinUI;
 
-public class DesktopSettingsModule :
+public sealed class DesktopSettingsModule :
     IModule
 {
     public void Register(IServiceCollection services)

@@ -18,7 +18,7 @@ using Windows.UI.ViewManagement;
 
 namespace Infinity.Shell.WinUI;
 
-public partial class TrackedWindowView :
+public sealed partial class TrackedWindowView :
     UserControl
 {
     private const int DraggedZIndex = 1_000_000;

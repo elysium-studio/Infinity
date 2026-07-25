@@ -1,9 +1,9 @@
-﻿using Infinity.Application.Abstractions;
+using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 
 namespace Infinity.Application;
 
-public class WindowPeekController(IWindowStore store,
+public sealed class WindowPeekController(IWindowStore store,
     IEnumerable<IPeekSource> sources,
     IWindowConcealer concealer,
     IScroller scroller,

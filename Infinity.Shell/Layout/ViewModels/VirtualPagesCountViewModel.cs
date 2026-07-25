@@ -1,11 +1,11 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Presentation;
 
 namespace Infinity.Shell;
 
-public partial class VirtualPagesCountViewModel(IServiceProvider provider,
+public sealed partial class VirtualPagesCountViewModel(IServiceProvider provider,
     IServiceFactory factory,
     IMessenger messenger,
     IDisposer disposer,

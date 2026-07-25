@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Application.DependencyInjection;
 using Elysium.Presentation.Abstractions;
@@ -10,7 +10,7 @@ using System.Collections.Generic;
 
 namespace Infinity.Shell.WinUI;
 
-public class TourModule :
+public sealed class TourModule :
     IModule
 {
     public void Register(IServiceCollection services)

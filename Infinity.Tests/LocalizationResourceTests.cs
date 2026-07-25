@@ -3,7 +3,7 @@ using System.Xml.Linq;
 
 namespace Infinity.Tests;
 
-public class LocalizationResourceTests
+public sealed class LocalizationResourceTests
 {
     private static readonly string[] ExpectedLanguages =
     [
@@ -66,5 +66,5 @@ public class LocalizationResourceTests
             .Select(match => match.Value)
             .ToArray();
 
-    private record ResourceEntry(string Name, string Value);
+    private sealed record ResourceEntry(string Name, string Value);
 }

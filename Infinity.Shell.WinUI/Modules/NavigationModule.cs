@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Application.DependencyInjection;
 using Elysium.Presentation;
@@ -14,7 +14,7 @@ using NavigationStartedEventArgs = Infinity.Application.Abstractions.NavigationS
 
 namespace Infinity.Shell.WinUI;
 
-public class NavigationModule :
+public sealed class NavigationModule :
     IModule
 {
     public void Register(IServiceCollection services)

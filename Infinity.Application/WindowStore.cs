@@ -1,9 +1,9 @@
-﻿using Infinity.Application.Abstractions;
+using Infinity.Application.Abstractions;
 using System.Collections;
 
 namespace Infinity.Application;
 
-public class WindowStore :
+public sealed class WindowStore :
     IWindowStore
 {
     private readonly Lock syncRoot = new();

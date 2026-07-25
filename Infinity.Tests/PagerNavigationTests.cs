@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Infinity.Tests;
 
-public class PagerNavigationTests
+public sealed class PagerNavigationTests
 {
     [Fact]
     public void NavigateToPageSuppressesForegroundFollowBeforeScrolling()
@@ -25,7 +25,7 @@ public class PagerNavigationTests
         Assert.Equal(["SuppressForegroundFollow", "ScrollTo:2000"], operations);
     }
 
-    private class TestNavigationScroller(List<string> operations) : IScroller
+    private sealed class TestNavigationScroller(List<string> operations) : IScroller
     {
         public event EventHandler? ScrollStarted;
 
@@ -65,7 +65,7 @@ public class PagerNavigationTests
         public void Stop() => ScrollStopped?.Invoke(this, EventArgs.Empty);
     }
 
-    private class TestWorkspace : IWorkspace
+    private sealed class TestWorkspace : IWorkspace
     {
         public event EventHandler? WorkspaceLayoutChanged;
 
@@ -85,7 +85,7 @@ public class PagerNavigationTests
     }
 }
 
-internal class TestForegroundWindowCoordinator(List<string>? operations = null) : IForegroundWindowCoordinator
+internal sealed class TestForegroundWindowCoordinator(List<string>? operations = null) : IForegroundWindowCoordinator
 {
     public void HandleForegroundWindowChanged(IntPtr handle)
     {

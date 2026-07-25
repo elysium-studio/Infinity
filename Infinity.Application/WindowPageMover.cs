@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public class WindowPageMover(IWindowStore store,
+public sealed class WindowPageMover(IWindowStore store,
     IScroller scroller,
     IPager pager,
     Func<int> workspaceWidth,

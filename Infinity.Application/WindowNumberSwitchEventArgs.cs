@@ -1,6 +1,6 @@
-﻿namespace Infinity.Application;
+namespace Infinity.Application;
 
-public class WindowNumberSwitchEventArgs(int virtualKeyCode)
+public sealed class WindowNumberSwitchEventArgs(int virtualKeyCode)
 {
     public int VirtualKeyCode { get; } = virtualKeyCode;
 }

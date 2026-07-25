@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public class ThumbnailDragScroller :
+public sealed class ThumbnailDragScroller :
     IThumbnailDragScroller
 {
     private const double EdgeTolerance = 2.0;

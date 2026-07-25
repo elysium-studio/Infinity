@@ -8,7 +8,7 @@ using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
 
-public partial class TrackedWindowCollectionView :
+public sealed partial class TrackedWindowCollectionView :
     UserControl
 {
     private string? backgroundImagePath;

@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
@@ -8,7 +8,7 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Shell;
 
-public partial class ScrollTriggerViewModel(IServiceProvider provider,
+public sealed partial class ScrollTriggerViewModel(IServiceProvider provider,
     IServiceFactory factory,
     IMessenger messenger,
     IDisposer disposer,

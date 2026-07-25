@@ -1,11 +1,11 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Presentation;
 using System.Reflection;
 
 namespace Infinity.Shell;
 
-public partial class AboutViewModel(IServiceProvider provider,
+public sealed partial class AboutViewModel(IServiceProvider provider,
     IServiceFactory factory,
     IMessenger messenger,
     IDisposer disposer) :

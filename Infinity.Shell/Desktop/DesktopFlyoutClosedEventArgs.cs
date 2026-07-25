@@ -1,4 +1,4 @@
-﻿namespace Infinity.Shell;
+namespace Infinity.Shell;
 
-public class DesktopFlyoutClosedEventArgs : 
+public sealed class DesktopFlyoutClosedEventArgs :
     EventArgs;

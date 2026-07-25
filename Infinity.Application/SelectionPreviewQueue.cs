@@ -1,10 +1,10 @@
-﻿using Infinity.Application.Abstractions;
+using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public class SelectionPreviewQueue(IWindowStack stack,
+public sealed class SelectionPreviewQueue(IWindowStack stack,
     ILogger<SelectionPreviewQueue> logger) :
     ISelectionPreviewQueue
 {

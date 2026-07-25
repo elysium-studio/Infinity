@@ -2,7 +2,7 @@ using Infinity.Application;
 
 namespace Infinity.Tests;
 
-public class ScrollDeltaAccumulatorTests
+public sealed class ScrollDeltaAccumulatorTests
 {
     [Fact]
     public void DrainAndResetReturnsAccumulatedDeltaAndClearsState()
@@ -29,7 +29,7 @@ public class ScrollDeltaAccumulatorTests
     }
 }
 
-public class PixelScrollMotionTests
+public sealed class PixelScrollMotionTests
 {
     [Fact]
     public void DrainReturnsPendingPixelsAndClearsMotion()
@@ -58,7 +58,7 @@ public class PixelScrollMotionTests
     }
 }
 
-public class MomentumScrollMotionTests
+public sealed class MomentumScrollMotionTests
 {
     [Fact]
     public void DrainAppliesFrictionAndPreservesSubPixelRemainder()

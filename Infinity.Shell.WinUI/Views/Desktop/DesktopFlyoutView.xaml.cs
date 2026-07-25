@@ -4,7 +4,7 @@ using Microsoft.UI.Xaml;
 
 namespace Infinity.Shell.WinUI;
 
-public partial class DesktopFlyoutView :
+public sealed partial class DesktopFlyoutView :
     DesktopFlyout
 {
     private readonly IWindowPreviewSurface windowPreviewSurface;

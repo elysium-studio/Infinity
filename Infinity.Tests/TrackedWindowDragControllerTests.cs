@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Infinity.Tests;
 
-public class TrackedWindowDragControllerTests
+public sealed class TrackedWindowDragControllerTests
 {
     [Fact]
     public void MoveUsesWorkspaceDeltaAndRepositionsWindow()

@@ -16,7 +16,7 @@ using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
 
-public partial class WelcomeView :
+public sealed partial class WelcomeView :
     UserControl
 {
     private const float BlobCycleDuration = 9000f;

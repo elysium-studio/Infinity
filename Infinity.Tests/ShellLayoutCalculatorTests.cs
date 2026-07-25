@@ -4,7 +4,7 @@ using Infinity.Shell;
 
 namespace Infinity.Tests;
 
-public class ShellLayoutCalculatorTests
+public sealed class ShellLayoutCalculatorTests
 {
     [Fact]
     public void CalculateTransformsWorkspaceCoordinatesIntoScaledViewportCoordinates()
@@ -42,7 +42,7 @@ public class ShellLayoutCalculatorTests
         Height = height
     };
 
-    private class StubWorkspace : IWorkspace
+    private sealed class StubWorkspace : IWorkspace
     {
         public int Width { get; init; } = 1920;
 

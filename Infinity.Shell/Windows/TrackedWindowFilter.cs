@@ -1,8 +1,8 @@
-﻿using Infinity.Application.Abstractions;
+using Infinity.Application.Abstractions;
 
 namespace Infinity.Shell;
 
-public class TrackedWindowFilter :
+public sealed class TrackedWindowFilter :
     IWindowFilterState
 {
     public string Filter { get; set; } = string.Empty;

@@ -1,3 +1,3 @@
-﻿namespace Infinity.Application.Abstractions;
+namespace Infinity.Application.Abstractions;
 
-public record WindowNavigationRequestedEventArgs(IntPtr Handle);
+public sealed record WindowNavigationRequestedEventArgs(IntPtr Handle);

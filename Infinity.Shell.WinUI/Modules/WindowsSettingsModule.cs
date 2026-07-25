@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Infinity.Shell.WinUI;
 
-public class WindowsSettingsModule :
+public sealed class WindowsSettingsModule :
     IModule
 {
     public void Register(IServiceCollection services)

@@ -8,7 +8,7 @@ using System.Numerics;
 
 namespace Infinity.Shell.WinUI;
 
-public partial class WindowNumberTriggerView :
+public sealed partial class WindowNumberTriggerView :
     UserControl
 {
     private const float CtrlPressEnd = 500f;

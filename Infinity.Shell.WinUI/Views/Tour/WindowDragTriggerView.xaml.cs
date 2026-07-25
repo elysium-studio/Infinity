@@ -7,7 +7,7 @@ using System.Numerics;
 
 namespace Infinity.Shell.WinUI;
 
-public partial class WindowDragTriggerView :
+public sealed partial class WindowDragTriggerView :
     UserControl
 {
     private const float ClickPressEnd = 900f;

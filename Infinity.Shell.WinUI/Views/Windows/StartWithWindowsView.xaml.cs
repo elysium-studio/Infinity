@@ -2,7 +2,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Infinity.Shell.WinUI;
 
-public partial class StartWithWindowsView :
+public sealed partial class StartWithWindowsView :
     UserControl
 {
     public StartWithWindowsView() => InitializeComponent();

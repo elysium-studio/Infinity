@@ -1,4 +1,4 @@
-﻿namespace Infinity.Application.Abstractions;
+namespace Infinity.Application.Abstractions;
 
 public interface IPageGesture
 {
@@ -9,59 +9,59 @@ public interface IPageGesture
     void Invoke(int virtualKeyCode);
 }
 
-public class PointerScrollDeltaReceivedEventArgs(int delta) :
+public sealed class PointerScrollDeltaReceivedEventArgs(int delta) :
     EventArgs
 {
     public int Delta { get; } = delta;
 }
 
-public class PointerMiddleButtonClickedEventArgs :
+public sealed class PointerMiddleButtonClickedEventArgs :
     EventArgs;
 
-public class WorkspaceLayoutChangedEventArgs :
+public sealed class WorkspaceLayoutChangedEventArgs :
     EventArgs;
 
-public class WindowDragStartedEventArgs :
+public sealed class WindowDragStartedEventArgs :
     EventArgs;
 
-public class WindowDragStoppedEventArgs :
+public sealed class WindowDragStoppedEventArgs :
     EventArgs;
 
-public class ScrollerScrollStartedEventArgs :
+public sealed class ScrollerScrollStartedEventArgs :
     EventArgs;
 
-public class TrackedWindowAddedEventArgs(TrackedWindow trackedWindow) :
+public sealed class TrackedWindowAddedEventArgs(TrackedWindow trackedWindow) :
     EventArgs
 {
     public TrackedWindow TrackedWindow { get; } = trackedWindow;
 }
 
-public class TrackedWindowRemovedEventArgs(IntPtr handle) :
+public sealed class TrackedWindowRemovedEventArgs(IntPtr handle) :
     EventArgs
 {
     public IntPtr Handle { get; } = handle;
 }
 
-public class TrackedWindowChangedEventArgs(TrackedWindow trackedWindow) :
+public sealed class TrackedWindowChangedEventArgs(TrackedWindow trackedWindow) :
     EventArgs
 {
     public TrackedWindow TrackedWindow { get; } = trackedWindow;
 }
 
-public class WindowStackRefreshedEventArgs :
+public sealed class WindowStackRefreshedEventArgs :
     EventArgs;
 
-public class WindowCollectionWorkspaceLayoutChangedEventArgs :
+public sealed class WindowCollectionWorkspaceLayoutChangedEventArgs :
     EventArgs;
 
-public class WindowCollectionRefreshRequestedEventArgs :
+public sealed class WindowCollectionRefreshRequestedEventArgs :
     EventArgs;
 
-public class WindowDragMovedEventArgs :
+public sealed class WindowDragMovedEventArgs :
     EventArgs;
 
-public class WindowDragScrolledEventArgs :
+public sealed class WindowDragScrolledEventArgs :
     EventArgs;
 
-public class DesktopBackgroundChangedEventArgs :
+public sealed class DesktopBackgroundChangedEventArgs :
     EventArgs;

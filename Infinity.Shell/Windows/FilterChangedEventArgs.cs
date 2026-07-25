@@ -1,3 +1,3 @@
-﻿namespace Infinity.Shell;
+namespace Infinity.Shell;
 
-public record FilterChangedEventArgs(bool IsActive);
+public sealed record FilterChangedEventArgs(bool IsActive);

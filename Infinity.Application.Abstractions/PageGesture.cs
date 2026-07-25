@@ -1,4 +1,4 @@
-﻿namespace Infinity.Application.Abstractions;
+namespace Infinity.Application.Abstractions;
 
 public class PageGesture<TEventArgs>(IReadOnlyCollection<int> triggerKeys,
     IReadOnlyCollection<int> requiredKeys,

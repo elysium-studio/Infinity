@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Infinity.Tests;
 
-public class TourViewModelTests
+public sealed class TourViewModelTests
 {
     [Fact]
     public async Task FinishPersistsCompletionBeforeRaisingFinished()
@@ -59,7 +59,7 @@ public class TourViewModelTests
             NullLogger<TourViewModel>.Instance,
             Array.Empty<ITourViewModel>());
 
-    private class TestWritableOptions : IWritableOptions<Settings>
+    private sealed class TestWritableOptions : IWritableOptions<Settings>
     {
         private readonly TaskCompletionSource<bool> completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -84,12 +84,12 @@ public class TourViewModelTests
         public void Fail(Exception exception) => completion.TrySetException(exception);
     }
 
-    private class TestServiceProvider : IServiceProvider
+    private sealed class TestServiceProvider : IServiceProvider
     {
         public object? GetService(Type serviceType) => null;
     }
 
-    private class TestServiceFactory : IServiceFactory
+    private sealed class TestServiceFactory : IServiceFactory
     {
         public object Create(Type type, Action<object> serviceDelegate, params object?[]? parameters) =>
             throw new NotSupportedException();
@@ -102,7 +102,7 @@ public class TourViewModelTests
         public TService Create<TService>(params object?[]? parameters) => throw new NotSupportedException();
     }
 
-    private class TestDisposer : IDisposer
+    private sealed class TestDisposer : IDisposer
     {
         public void Add(object subject, params object[] objects)
         {

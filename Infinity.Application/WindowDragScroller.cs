@@ -1,4 +1,4 @@
-﻿using Elysium.Platform.Abstractions;
+using Elysium.Platform.Abstractions;
 using Elysium.Application.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public class WindowDragScroller(IPointerInputSource pointer,
+public sealed class WindowDragScroller(IPointerInputSource pointer,
     IModifierKeyState modifierKeyState,
     IWindowDragGuard dragGuard,
     IWorkspace workspace,

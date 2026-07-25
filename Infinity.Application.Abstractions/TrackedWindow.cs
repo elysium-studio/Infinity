@@ -1,6 +1,6 @@
-﻿namespace Infinity.Application.Abstractions;
+namespace Infinity.Application.Abstractions;
 
-public record TrackedWindow
+public sealed record TrackedWindow
 {
     public required IntPtr Handle { get; init; }
 

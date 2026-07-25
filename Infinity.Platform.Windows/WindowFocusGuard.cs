@@ -1,11 +1,11 @@
-﻿using Infinity.Platform.Abstractions;
+using Infinity.Platform.Abstractions;
 using System.Drawing;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 
 namespace Elysium.Platform.Windows;
 
-public class WindowFocusGuard : 
+public sealed class WindowFocusGuard :
     IWindowFocusGuard
 {
     public bool IsDirect(nint windowHandle)

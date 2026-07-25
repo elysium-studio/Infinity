@@ -1,11 +1,11 @@
-﻿using Infinity.Platform.Abstractions;
+using Infinity.Platform.Abstractions;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Infinity.Platform.Windows;
 
-public class WindowAncestorResolver : 
+public sealed class WindowAncestorResolver :
     IWindowAncestorResolver
 {
     public nint GetRootAncestor(nint windowHandle) =>

@@ -6,7 +6,7 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Tests;
 
-public class WindowTrackerPlacementRuleTests
+public sealed class WindowTrackerPlacementRuleTests
 {
     [Fact]
     public void ExistingWindowKeepsItsPositionDuringStartupRegistration()
@@ -174,7 +174,7 @@ public class WindowTrackerPlacementRuleTests
             new TestDispatcher(),
             new IntPtr(99));
 
-    private class TestGeometryReader : IWindowGeometryReader
+    private sealed class TestGeometryReader : IWindowGeometryReader
     {
         public bool IsWindowVisible { get; set; } = true;
 
@@ -197,17 +197,17 @@ public class WindowTrackerPlacementRuleTests
             TryReadGeometry(windowHandle, out x, out y, out width, out height);
     }
 
-    private class TestWindowFilter : IWindowFilter
+    private sealed class TestWindowFilter : IWindowFilter
     {
         public bool ShouldTrack(IntPtr windowHandle, IntPtr ownerHandle) => true;
     }
 
-    private class TestAncestorResolver : IWindowAncestorResolver
+    private sealed class TestAncestorResolver : IWindowAncestorResolver
     {
         public IntPtr GetRootAncestor(IntPtr windowHandle) => windowHandle;
     }
 
-    private class TestRestoreGuard : IWindowRestoreGuard
+    private sealed class TestRestoreGuard : IWindowRestoreGuard
     {
         public bool IsRestoring(IntPtr windowHandle) => false;
 
@@ -216,7 +216,7 @@ public class WindowTrackerPlacementRuleTests
         }
     }
 
-    private class TestPlacementRules : IWindowPlacementRules
+    private sealed class TestPlacementRules : IWindowPlacementRules
     {
         public bool CanCreateRule(IntPtr windowHandle) => true;
 
@@ -231,14 +231,14 @@ public class WindowTrackerPlacementRuleTests
         }
     }
 
-    private class TestMoveGuard : IWindowMoveGuard
+    private sealed class TestMoveGuard : IWindowMoveGuard
     {
         public bool IsSystemMove => false;
 
         public WindowMoveScope Begin() => new(() => { });
     }
 
-    private class TestWindowMover : IWindowMover
+    private sealed class TestWindowMover : IWindowMover
     {
         public int LastX { get; private set; }
 
@@ -259,7 +259,7 @@ public class WindowTrackerPlacementRuleTests
         }
     }
 
-    private class TestConcealer : IWindowConcealer
+    private sealed class TestConcealer : IWindowConcealer
     {
         public bool Conceal(IntPtr windowHandle) => true;
 
@@ -272,7 +272,7 @@ public class WindowTrackerPlacementRuleTests
         }
     }
 
-    private class TestDragGuard : IWindowDragGuard
+    private sealed class TestDragGuard : IWindowDragGuard
     {
         public event Action? HoldStarted;
 
@@ -289,7 +289,7 @@ public class WindowTrackerPlacementRuleTests
         }
     }
 
-    private class TestTrackedWindowDragController : ITrackedWindowDragController
+    private sealed class TestTrackedWindowDragController : ITrackedWindowDragController
     {
         public IntPtr DraggingWindow { get; set; }
 
@@ -302,14 +302,14 @@ public class WindowTrackerPlacementRuleTests
         }
     }
 
-    private class TestWindowEnumerator : IWindowEnumerator
+    private sealed class TestWindowEnumerator : IWindowEnumerator
     {
         public void EnumerateVisible(Action<IntPtr> onWindowFound)
         {
         }
     }
 
-    private class TestWindowEventListener : IWindowEventListener
+    private sealed class TestWindowEventListener : IWindowEventListener
     {
         public event Action<IntPtr>? WindowCreated;
 
@@ -383,7 +383,7 @@ public class WindowTrackerPlacementRuleTests
         }
     }
 
-    private class TestWorkspace : IWorkspace
+    private sealed class TestWorkspace : IWorkspace
     {
         public event EventHandler? WorkspaceLayoutChanged;
 
@@ -402,7 +402,7 @@ public class WindowTrackerPlacementRuleTests
         }
     }
 
-    private class TestPager : IPager
+    private sealed class TestPager : IPager
     {
         public event Action<int>? PageChanged;
 
@@ -427,7 +427,7 @@ public class WindowTrackerPlacementRuleTests
         }
     }
 
-    private class TestPanState : IPanState
+    private sealed class TestPanState : IPanState
     {
         public event Action? OffsetChanged;
 
@@ -454,7 +454,7 @@ public class WindowTrackerPlacementRuleTests
         }
     }
 
-    private class TestDispatcher : IDispatcher
+    private sealed class TestDispatcher : IDispatcher
     {
         public void Dispatch(Action action) => action();
     }

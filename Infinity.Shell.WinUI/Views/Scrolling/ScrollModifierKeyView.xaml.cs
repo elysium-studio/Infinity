@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Infinity.Shell.WinUI;
 
-public partial class ScrollModifierKeyView :
+public sealed partial class ScrollModifierKeyView :
     UserControl
 {
     public ScrollModifierKeyView()

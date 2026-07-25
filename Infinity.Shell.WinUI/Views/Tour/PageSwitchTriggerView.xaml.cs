@@ -7,7 +7,7 @@ using System.Numerics;
 
 namespace Infinity.Shell.WinUI;
 
-public partial class PageSwitchTriggerView :
+public sealed partial class PageSwitchTriggerView :
     UserControl
 {
     private const float CtrlPressEnd = 500f;

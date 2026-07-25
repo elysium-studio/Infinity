@@ -1,9 +1,9 @@
-﻿using Infinity.Application.Abstractions;
+using Infinity.Application.Abstractions;
 
 namespace Infinity.Application;
 
 
-public class MomentumScrollMotion :
+public sealed class MomentumScrollMotion :
     IVelocityScrollMotion
 {
     private const double FrictionFactor = 0.88;

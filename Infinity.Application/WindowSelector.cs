@@ -1,9 +1,9 @@
-﻿using Elysium.Platform.Abstractions;
+using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 
 namespace Infinity.Application;
 
-public class WindowSelector(ISelectionPreviewQueue previewQueue,
+public sealed class WindowSelector(ISelectionPreviewQueue previewQueue,
     IWindowStore store,
     IPager pager,
     IWorkspace workspace) :

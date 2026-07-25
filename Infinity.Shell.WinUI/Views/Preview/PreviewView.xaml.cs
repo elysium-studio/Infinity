@@ -2,7 +2,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Infinity.Shell.WinUI;
 
-public partial class PreviewView :
+public sealed partial class PreviewView :
     UserControl
 {
     public PreviewView() => InitializeComponent();

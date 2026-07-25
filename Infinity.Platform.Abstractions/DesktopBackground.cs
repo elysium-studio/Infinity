@@ -1,6 +1,6 @@
-﻿namespace Infinity.Platform.Abstractions;
+namespace Infinity.Platform.Abstractions;
 
-public record DesktopBackground
+public sealed record DesktopBackground
 {
     public string? Wallpaper { get; init; }
 

@@ -2,7 +2,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Infinity.Shell.WinUI;
 
-public partial class ScrollSpeedView :
+public sealed partial class ScrollSpeedView :
     UserControl
 {
     public ScrollSpeedView() => InitializeComponent();

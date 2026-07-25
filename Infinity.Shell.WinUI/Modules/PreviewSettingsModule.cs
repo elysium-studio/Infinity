@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Infinity.Shell.WinUI;
 
-public class PreviewSettingsModule :
+public sealed class PreviewSettingsModule :
     IModule
 {
     public void Register(IServiceCollection services)

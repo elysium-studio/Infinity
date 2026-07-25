@@ -1,8 +1,8 @@
-﻿using Infinity.Platform.Abstractions;
+using Infinity.Platform.Abstractions;
 
 namespace Infinity.Platform.Windows;
 
-public class KeyLabelProvider :
+public sealed class KeyLabelProvider :
     IKeyLabelProvider
 {
     public string GetShortLabel(int keyCode) => Shorten(GetFullLabel(keyCode));

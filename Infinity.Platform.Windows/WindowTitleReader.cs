@@ -1,10 +1,10 @@
-﻿using Infinity.Platform.Abstractions;
+using Infinity.Platform.Abstractions;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 
 namespace Infinity.Platform.Windows;
 
-public class WindowTitleReader : 
+public sealed class WindowTitleReader :
     IWindowTitleReader
 {
     public unsafe string GetTitle(nint windowHandle)

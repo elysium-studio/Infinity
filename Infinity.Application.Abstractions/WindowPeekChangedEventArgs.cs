@@ -1,3 +1,3 @@
-﻿namespace Infinity.Application.Abstractions;
+namespace Infinity.Application.Abstractions;
 
-public record WindowPeekChangedEventArgs(IntPtr Handle, bool IsPeeking);
+public sealed record WindowPeekChangedEventArgs(IntPtr Handle, bool IsPeeking);

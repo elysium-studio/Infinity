@@ -14,7 +14,7 @@ using ApplicationServices = Infinity.Application;
 
 namespace Infinity.Shell.WinUI;
 
-public class WindowingModule :
+public sealed class WindowingModule :
     IModule
 {
     public void Register(IServiceCollection services)

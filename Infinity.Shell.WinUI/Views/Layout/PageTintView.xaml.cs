@@ -8,7 +8,7 @@ using System.Numerics;
 
 namespace Infinity.Shell.WinUI;
 
-public partial class PageTintView :
+public sealed partial class PageTintView :
     DesktopOverlay
 {
     private readonly IMonitorLocator monitorLocator;

@@ -13,7 +13,7 @@ using System;
 
 namespace Infinity.Shell.WinUI;
 
-public class ShellModule :
+public sealed class ShellModule :
     IModule
 {
     public void Register(IServiceCollection services)

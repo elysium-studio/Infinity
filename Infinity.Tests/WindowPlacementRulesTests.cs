@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace Infinity.Tests;
 
-public class WindowPlacementRulesTests
+public sealed class WindowPlacementRulesTests
 {
     [Fact]
     public async Task SetTargetPagePersistsRuleForApplication()
@@ -63,7 +63,7 @@ public class WindowPlacementRulesTests
         Assert.Equal(0, writer.WriteCount);
     }
 
-    private class TestIdentityProvider(string? applicationId) : IWindowApplicationIdentityProvider
+    private sealed class TestIdentityProvider(string? applicationId) : IWindowApplicationIdentityProvider
     {
         public string ApplicationId { get; } = applicationId ?? string.Empty;
 
@@ -74,7 +74,7 @@ public class WindowPlacementRulesTests
         }
     }
 
-    private class TestOptionsMonitor(Settings currentValue) : IOptionsMonitor<Settings>
+    private sealed class TestOptionsMonitor(Settings currentValue) : IOptionsMonitor<Settings>
     {
         public Settings CurrentValue { get; } = currentValue;
 
@@ -84,7 +84,7 @@ public class WindowPlacementRulesTests
             throw new NotImplementedException();
     }
 
-    private class TestWritableOptions(Settings value) : IWritableOptions<Settings>
+    private sealed class TestWritableOptions(Settings value) : IWritableOptions<Settings>
     {
         public Settings Value { get; } = value;
 

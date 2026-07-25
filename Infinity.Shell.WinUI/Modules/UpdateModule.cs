@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Infinity.Shell.WinUI;
 
-public class UpdateModule :
+public sealed class UpdateModule :
     IModule
 {
     private const string RestartForUpdateArgument = "update=restart";

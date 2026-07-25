@@ -1,4 +1,4 @@
-﻿using Elysium.Application.Abstractions;
+using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Infinity.Application;
 
-public class WindowPageCoordinator(IWindowStore store,
+public sealed class WindowPageCoordinator(IWindowStore store,
     IScroller scroller,
     IWorkspace workspace,
     IWindowActivator activator,

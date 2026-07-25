@@ -1,10 +1,10 @@
-﻿using Elysium.Platform.Abstractions;
+using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public class Pager(IWindowStore repository,
+public sealed class Pager(IWindowStore repository,
     IPanState state,
     IScroller coordinator,
     IWorkspace workspace,

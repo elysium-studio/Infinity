@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Infinity.Tests;
 
-public class StartupPageRestorerTests
+public sealed class StartupPageRestorerTests
 {
     [Fact]
     public void RestoreReconstructsCurrentPageFromVisibleFrameBounds()
@@ -79,7 +79,7 @@ public class StartupPageRestorerTests
         Height = 600
     };
 
-    private class TestGeometryReader : IWindowGeometryReader
+    private sealed class TestGeometryReader : IWindowGeometryReader
     {
         private readonly Dictionary<IntPtr, Geometry> visibleGeometries = [];
 
@@ -114,7 +114,7 @@ public class StartupPageRestorerTests
         private readonly record struct Geometry(int X, int Y, int Width, int Height);
     }
 
-    private class TestWorkspace : IWorkspace
+    private sealed class TestWorkspace : IWorkspace
     {
         public event EventHandler? WorkspaceLayoutChanged;
 
