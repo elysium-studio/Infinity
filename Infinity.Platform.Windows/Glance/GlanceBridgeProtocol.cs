@@ -29,6 +29,7 @@ internal sealed class GlanceBridgeWireMessage
 
     public string? Topic { get; set; }
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public JsonElement Payload { get; set; }
 }
 
