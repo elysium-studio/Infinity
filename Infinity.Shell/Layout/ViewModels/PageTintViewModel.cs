@@ -50,6 +50,9 @@ public sealed partial class PageTintViewModel :
     [ObservableProperty]
     private bool isGlancePageSurfaceAvailable;
 
+    partial void OnIsOpenChanged(bool value) =>
+        glanceBridge.SetPageNavigationSurfaceVisible(InfinityPageNavigationSurface.PageTint, value);
+
     public PageTintViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IDispatcher dispatcher, IPointerInputSource pointer, IModifierKeyState modifierKeyState, IWindowDragScroller dragScroller, IPageGestureSource gestureSource, IOptionsMonitor<Settings> settings, IWritableOptions<Settings> writableOptions, IPager pager, IPanState panState, IInfinityGlanceBridge glanceBridge, ITextLocalizer localizer) : base(provider, factory, messenger, disposer)
     {
         this.dispatcher = dispatcher;

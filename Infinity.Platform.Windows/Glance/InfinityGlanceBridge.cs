@@ -15,6 +15,10 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
     private readonly Lock synchronization = new();
     private readonly SemaphoreSlim updateSignal = new(0, 1);
     private InfinityPageNavigationState? latestState;
+    private bool? latestVisibility;
+    private InfinityPageNavigationSurface visibleSurfaces;
+    private bool pageUpdatePending;
+    private bool visibilityUpdatePending;
     private bool isPageNavigationAvailable;
 
     public bool IsPageNavigationAvailable
@@ -39,9 +43,37 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
             return;
         }
 
-        if (updateSignal.CurrentCount == 0)
+        SignalUpdate();
+    }
+
+    public void SetPageNavigationSurfaceVisible(InfinityPageNavigationSurface surface, bool isVisible)
+    {
+        ArgumentOutOfRangeException.ThrowIfEqual(surface, InfinityPageNavigationSurface.None);
+
+        if (TrySetPageNavigationSurfaceVisibility(surface, isVisible))
         {
-            updateSignal.Release();
+            SignalUpdate();
+        }
+    }
+
+    internal bool TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface surface, bool isVisible)
+    {
+        ArgumentOutOfRangeException.ThrowIfEqual(surface, InfinityPageNavigationSurface.None);
+
+        lock (synchronization)
+        {
+            bool wasVisible = visibleSurfaces != InfinityPageNavigationSurface.None;
+            visibleSurfaces = isVisible ? visibleSurfaces | surface : visibleSurfaces & ~surface;
+            bool isNavigationVisible = visibleSurfaces != InfinityPageNavigationSurface.None;
+
+            if (wasVisible == isNavigationVisible)
+            {
+                return false;
+            }
+
+            latestVisibility = isNavigationVisible;
+            visibilityUpdatePending = true;
+            return true;
         }
     }
 
@@ -55,6 +87,7 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
             }
 
             latestState = state;
+            pageUpdatePending = true;
             return true;
         }
     }
@@ -151,9 +184,9 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
                 bool available = message.Capabilities?.Contains(GlanceBridgeProtocol.PagesCapability, StringComparer.OrdinalIgnoreCase) == true;
                 UpdateAvailability(available);
 
-                if (available && updateSignal.CurrentCount == 0)
+                if (available)
                 {
-                    updateSignal.Release();
+                    QueueLatestUpdates();
                 }
             }
 
@@ -174,27 +207,67 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
             await updateSignal.WaitAsync(cancellationToken);
 
             InfinityPageNavigationState? state;
+            bool? visibility;
 
-            lock (synchronization)
-            {
-                state = latestState;
-            }
-
-            if (state is null || !IsPageNavigationAvailable)
+            if (!IsPageNavigationAvailable)
             {
                 continue;
             }
 
-            GlanceBridgeWireMessage message = new()
+            lock (synchronization)
             {
-                Kind = "publish",
-                ProtocolVersion = GlanceBridgeProtocol.Version,
-                Capability = GlanceBridgeProtocol.PagesCapability,
-                Topic = GlanceBridgeProtocol.PageNavigationTopic,
-                Payload = JsonSerializer.SerializeToElement(state, GlanceBridgeJsonContext.Default.InfinityPageNavigationState)
-            };
+                state = pageUpdatePending ? latestState : null;
+                visibility = visibilityUpdatePending ? latestVisibility : null;
+                pageUpdatePending = false;
+                visibilityUpdatePending = false;
+            }
 
-            await WriteAsync(writer, message, cancellationToken);
+            if (visibility.HasValue)
+            {
+                GlanceBridgeWireMessage visibilityMessage = new()
+                {
+                    Kind = "publish",
+                    ProtocolVersion = GlanceBridgeProtocol.Version,
+                    Capability = GlanceBridgeProtocol.PagesCapability,
+                    Topic = GlanceBridgeProtocol.PageNavigationVisibilityTopic,
+                    Payload = JsonSerializer.SerializeToElement(new InfinityPageNavigationVisibility(visibility.Value), GlanceBridgeJsonContext.Default.InfinityPageNavigationVisibility)
+                };
+
+                await WriteAsync(writer, visibilityMessage, cancellationToken);
+            }
+
+            if (state is not null)
+            {
+                GlanceBridgeWireMessage pageMessage = new()
+                {
+                    Kind = "publish",
+                    ProtocolVersion = GlanceBridgeProtocol.Version,
+                    Capability = GlanceBridgeProtocol.PagesCapability,
+                    Topic = GlanceBridgeProtocol.PageNavigationTopic,
+                    Payload = JsonSerializer.SerializeToElement(state, GlanceBridgeJsonContext.Default.InfinityPageNavigationState)
+                };
+
+                await WriteAsync(writer, pageMessage, cancellationToken);
+            }
+        }
+    }
+
+    private void QueueLatestUpdates()
+    {
+        lock (synchronization)
+        {
+            pageUpdatePending = latestState is not null;
+            visibilityUpdatePending = latestVisibility.HasValue;
+        }
+
+        SignalUpdate();
+    }
+
+    private void SignalUpdate()
+    {
+        if (updateSignal.CurrentCount == 0)
+        {
+            updateSignal.Release();
         }
     }
 

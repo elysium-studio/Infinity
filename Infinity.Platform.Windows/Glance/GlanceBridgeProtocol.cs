@@ -11,6 +11,7 @@ internal static class GlanceBridgeProtocol
     public const string ApplicationId = "ElysiumStudio.Infinity";
     public const string PagesCapability = "infinity.pages.v1";
     public const string PageNavigationTopic = "page-navigation";
+    public const string PageNavigationVisibilityTopic = "page-navigation-visibility";
 }
 
 internal sealed class GlanceBridgeWireMessage
@@ -36,6 +37,7 @@ internal sealed class GlanceBridgeWireMessage
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 [JsonSerializable(typeof(GlanceBridgeWireMessage))]
 [JsonSerializable(typeof(InfinityPageNavigationState))]
+[JsonSerializable(typeof(InfinityPageNavigationVisibility))]
 internal sealed partial class GlanceBridgeJsonContext :
     JsonSerializerContext
 {

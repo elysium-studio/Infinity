@@ -55,6 +55,7 @@ public sealed class DesktopModule :
                     provider.GetRequiredService<IDispatcher>(),
                     provider.GetRequiredService<IWorkspace>(),
                     provider.GetRequiredService<IModifierKeyState>(),
+                    provider.GetRequiredService<IInfinityGlanceBridge>(),
                     provider.GetRequiredService<Settings>()))
             .AddView(ServiceLifetime.Singleton, provider => new ScrollTriggerView())
             .AddViewFor(

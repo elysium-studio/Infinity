@@ -23,6 +23,7 @@ public sealed partial class DesktopFlyoutViewModel :
     IRecipient<WindowDragStoppedEventArgs>
 {
     private readonly IDispatcher dispatcher;
+    private readonly IInfinityGlanceBridge glanceBridge;
     private readonly IWorkspace workspace;
     private readonly IModifierKeyState modifierKeyState;
 
@@ -41,16 +42,10 @@ public sealed partial class DesktopFlyoutViewModel :
     private bool userDismissed;
     private IntPtr currentWorkspace;
 
-    public DesktopFlyoutViewModel(IServiceProvider provider,
-        IServiceFactory factory,
-        IMessenger messenger,
-        IDisposer disposer,
-        IDispatcher dispatcher,
-        IWorkspace workspace,
-        IModifierKeyState modifierKeyState,
-        Settings settings) : base(provider, factory, messenger, disposer)
+    public DesktopFlyoutViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IDispatcher dispatcher, IWorkspace workspace, IModifierKeyState modifierKeyState, IInfinityGlanceBridge glanceBridge, Settings settings) : base(provider, factory, messenger, disposer)
     {
         this.dispatcher = dispatcher;
+        this.glanceBridge = glanceBridge;
         this.workspace = workspace;
         this.modifierKeyState = modifierKeyState;
 
@@ -133,6 +128,8 @@ public sealed partial class DesktopFlyoutViewModel :
 
     partial void OnIsOpenChanged(bool value)
     {
+        glanceBridge.SetPageNavigationSurfaceVisible(InfinityPageNavigationSurface.DesktopFlyout, value);
+
         if (value)
         {
             currentWorkspace = workspace.GetCurrentWorkspace();

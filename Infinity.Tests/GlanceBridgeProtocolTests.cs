@@ -34,4 +34,15 @@ public sealed class GlanceBridgeProtocolTests
         Assert.False(bridge.TrySetLatestState(state));
         Assert.True(bridge.TrySetLatestState(state with { PageIndex = 3, PageNumber = 4, PageTitle = "Page 4" }));
     }
+
+    [Fact]
+    public void NavigationRemainsVisibleUntilEverySurfaceCloses()
+    {
+        using InfinityGlanceBridge bridge = new(NullLogger<InfinityGlanceBridge>.Instance);
+
+        Assert.True(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.PageTint, true));
+        Assert.False(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.DesktopFlyout, true));
+        Assert.False(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.PageTint, false));
+        Assert.True(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.DesktopFlyout, false));
+    }
 }
