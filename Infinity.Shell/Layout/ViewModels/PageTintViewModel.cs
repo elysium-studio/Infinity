@@ -5,7 +5,9 @@ using Elysium.Platform.Abstractions;
 using Elysium.Presentation;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Text.Json;
 using NavigationCompletedEventArgs = Infinity.Application.Abstractions.NavigationCompletedEventArgs;
 
 namespace Infinity.Shell;
@@ -24,6 +26,7 @@ public sealed partial class PageTintViewModel :
     private readonly IPager pager;
     private readonly ITextLocalizer localizer;
     private readonly IInfinityGlanceBridge glanceBridge;
+    private readonly ILogger<PageTintViewModel> logger;
     private bool filterActive;
 
     [ObservableProperty]
@@ -53,7 +56,7 @@ public sealed partial class PageTintViewModel :
     partial void OnIsOpenChanged(bool value) =>
         glanceBridge.SetPageNavigationSurfaceVisible(InfinityPageNavigationSurface.PageTint, value);
 
-    public PageTintViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IDispatcher dispatcher, IPointerInputSource pointer, IModifierKeyState modifierKeyState, IWindowDragScroller dragScroller, IPageGestureSource gestureSource, IOptionsMonitor<Settings> settings, IWritableOptions<Settings> writableOptions, IPager pager, IPanState panState, IInfinityGlanceBridge glanceBridge, ITextLocalizer localizer) : base(provider, factory, messenger, disposer)
+    public PageTintViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IDispatcher dispatcher, IPointerInputSource pointer, IModifierKeyState modifierKeyState, IWindowDragScroller dragScroller, IPageGestureSource gestureSource, IOptionsMonitor<Settings> settings, IWritableOptions<Settings> writableOptions, IPager pager, IPanState panState, IInfinityGlanceBridge glanceBridge, ITextLocalizer localizer, ILogger<PageTintViewModel> logger) : base(provider, factory, messenger, disposer)
     {
         this.dispatcher = dispatcher;
         this.modifierKeyState = modifierKeyState;
@@ -62,6 +65,7 @@ public sealed partial class PageTintViewModel :
         this.pager = pager;
         this.glanceBridge = glanceBridge;
         this.localizer = localizer;
+        this.logger = logger;
 
         isBlurEnabled = settings.CurrentValue.DesktopBlur;
         previewPosition = settings.CurrentValue.PreviewPosition;
@@ -75,6 +79,7 @@ public sealed partial class PageTintViewModel :
         gestureSource.SessionStarted += HandleGestureSessionStarted;
         gestureSource.SessionEnded += HandleGestureSessionEnded;
         glanceBridge.AvailabilityChanged += HandleGlanceAvailabilityChanged;
+        glanceBridge.MessageReceived += HandleGlanceMessageReceived;
 
         Activate();
     }
@@ -101,29 +106,7 @@ public sealed partial class PageTintViewModel :
 
     public async Task CommitEditAsync()
     {
-        string trimmed = EditingTitle.Trim();
-        int page = pager.CurrentPage;
-
-        Settings updated = await writableOptions.ReadAsync() ?? new Settings();
-        updated.PageTitles ??= [];
-
-        if (string.IsNullOrEmpty(trimmed))
-        {
-            updated.PageTitles.Remove(page);
-        }
-        else
-        {
-            updated.PageTitles[page] = trimmed;
-        }
-
-        await writableOptions.WriteAsync(updated);
-
-        dispatcher.Dispatch(() =>
-        {
-            PageTitle = ResolvePageTitle(page, settings.CurrentValue.PageTitles);
-            IsEditing = false;
-            PublishPageNavigation();
-        });
+        await UpdatePageTitleAsync(pager.CurrentPage, EditingTitle);
     }
 
     public void CancelEditing() => IsEditing = false;
@@ -225,6 +208,68 @@ public sealed partial class PageTintViewModel :
         {
             IsGlancePageSurfaceAvailable = args.IsPageNavigationAvailable;
         });
+
+    private async void HandleGlanceMessageReceived(object? sender, InfinityGlanceMessageReceivedEventArgs args)
+    {
+        if (!string.Equals(args.Capability, InfinityGlanceTopics.PagesCapability, StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(args.Topic, InfinityGlanceTopics.PageTitleUpdate, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        try
+        {
+            InfinityPageTitleUpdate? update = JsonSerializer.Deserialize(args.Payload, InfinityGlanceJsonContext.Default.InfinityPageTitleUpdate);
+
+            if (update is null || update.PageIndex < 0 || update.PageIndex >= pager.PageCount)
+            {
+                return;
+            }
+
+            await UpdatePageTitleAsync(update.PageIndex, update.PageTitle);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Failed to update the Infinity page title from Glance");
+        }
+    }
+
+    private async Task UpdatePageTitleAsync(int page, string title)
+    {
+        string trimmed = title.Trim();
+
+        if (trimmed.Length > 80)
+        {
+            trimmed = trimmed[..80];
+        }
+
+        Settings updated = await writableOptions.ReadAsync() ?? new Settings();
+        updated.PageTitles ??= [];
+
+        if (string.IsNullOrEmpty(trimmed))
+        {
+            updated.PageTitles.Remove(page);
+        }
+        else
+        {
+            updated.PageTitles[page] = trimmed;
+        }
+
+        await writableOptions.WriteAsync(updated);
+
+        dispatcher.Dispatch(() =>
+        {
+            if (pager.CurrentPage != page)
+            {
+                return;
+            }
+
+            PageTitle = string.IsNullOrEmpty(trimmed) ? localizer.GetText("PageTitle", page + 1) : trimmed;
+            EditingTitle = PageTitle;
+            IsEditing = false;
+            PublishPageNavigation();
+        });
+    }
 
     private void PublishPageNavigation() =>
         glanceBridge.PublishPageNavigation(new InfinityPageNavigationState(pager.CurrentPage, pager.CurrentPage + 1, PageTitle));

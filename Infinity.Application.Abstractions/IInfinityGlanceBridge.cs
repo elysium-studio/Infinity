@@ -21,6 +21,15 @@ public sealed record InfinityPageNavigationState(int PageIndex, int PageNumber, 
 
 public sealed record InfinityPageNavigationVisibility(bool IsVisible);
 
+public sealed record InfinityPageTitleUpdate(int PageIndex, string PageTitle);
+
+public static class InfinityGlanceTopics
+{
+    public const string PagesCapability = "infinity.pages.v1";
+
+    public const string PageTitleUpdate = "page-title-update";
+}
+
 [Flags]
 public enum InfinityPageNavigationSurface
 {

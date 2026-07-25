@@ -43,7 +43,8 @@ public sealed class DesktopModule :
                     provider.GetRequiredService<IPager>(),
                     provider.GetRequiredService<IPanState>(),
                     provider.GetRequiredService<IInfinityGlanceBridge>(),
-                    provider.GetRequiredService<ITextLocalizer>()))
+                    provider.GetRequiredService<ITextLocalizer>(),
+                    provider.GetRequiredService<ILogger<PageTintViewModel>>()))
             .AddViewFor(
                 ServiceLifetime.Singleton,
                 provider => new DesktopFlyoutView(provider.GetRequiredService<IWindowPreviewSurface>()),
