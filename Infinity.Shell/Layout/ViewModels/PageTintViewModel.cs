@@ -24,8 +24,6 @@ public sealed partial class PageTintViewModel :
     private readonly IPager pager;
     private readonly ITextLocalizer localizer;
     private readonly IInfinityGlanceBridge glanceBridge;
-    private CancellationTokenSource? transientNavigationCancellation;
-    private bool pageNavigationActive;
     private bool filterActive;
 
     [ObservableProperty]
@@ -164,14 +162,12 @@ public sealed partial class PageTintViewModel :
         {
             StaysOpen = true;
             PageTitle = ResolvePageTitle(pager.CurrentPage, settings.CurrentValue.PageTitles);
-            BeginPageNavigation();
             IsOpen = true;
         });
 
     private void HandleDragStopped() =>
         dispatcher.Dispatch(() =>
         {
-            EndPageNavigation();
             StaysOpen = false;
             IsOpen = false;
         });
@@ -181,14 +177,12 @@ public sealed partial class PageTintViewModel :
         {
             StaysOpen = true;
             PageTitle = ResolvePageTitle(pager.CurrentPage, settings.CurrentValue.PageTitles);
-            BeginPageNavigation();
             IsOpen = true;
         });
 
     private void HandleGestureSessionEnded() =>
         dispatcher.Dispatch(() =>
         {
-            EndPageNavigation();
             StaysOpen = false;
             IsOpen = false;
         });
@@ -207,7 +201,6 @@ public sealed partial class PageTintViewModel :
         {
             dispatcher.Dispatch(() =>
             {
-                BeginTransientPageNavigation();
                 IsOpen = true;
             });
         }
@@ -219,7 +212,6 @@ public sealed partial class PageTintViewModel :
         {
             dispatcher.Dispatch(() =>
             {
-                BeginTransientPageNavigation();
                 IsOpen = true;
             });
         }
@@ -229,77 +221,10 @@ public sealed partial class PageTintViewModel :
         dispatcher.Dispatch(() =>
         {
             IsGlancePageSurfaceAvailable = args.IsPageNavigationAvailable;
-
-            if (args.IsPageNavigationAvailable)
-            {
-                PublishPageNavigation();
-            }
         });
 
-    private void BeginPageNavigation()
-    {
-        CancelTransientPageNavigation();
-        pageNavigationActive = true;
-        PublishPageNavigation();
-    }
-
-    private void EndPageNavigation()
-    {
-        CancelTransientPageNavigation();
-        pageNavigationActive = false;
-        PublishPageNavigation();
-    }
-
-    private void BeginTransientPageNavigation()
-    {
-        CancelTransientPageNavigation();
-        pageNavigationActive = true;
-        PublishPageNavigation();
-
-        CancellationTokenSource cancellation = new();
-        transientNavigationCancellation = cancellation;
-        _ = EndTransientPageNavigationAsync(cancellation);
-    }
-
-    private async Task EndTransientPageNavigationAsync(CancellationTokenSource cancellation)
-    {
-        try
-        {
-            await Task.Delay(700, cancellation.Token);
-            dispatcher.Dispatch(() =>
-            {
-                if (!ReferenceEquals(transientNavigationCancellation, cancellation))
-                {
-                    return;
-                }
-
-                transientNavigationCancellation = null;
-                cancellation.Dispose();
-                pageNavigationActive = false;
-                PublishPageNavigation();
-            });
-        }
-        catch (OperationCanceledException)
-        {
-        }
-    }
-
-    private void CancelTransientPageNavigation()
-    {
-        CancellationTokenSource? cancellation = transientNavigationCancellation;
-        transientNavigationCancellation = null;
-
-        if (cancellation is null)
-        {
-            return;
-        }
-
-        cancellation.Cancel();
-        cancellation.Dispose();
-    }
-
     private void PublishPageNavigation() =>
-        glanceBridge.PublishPageNavigation(new InfinityPageNavigationState(pageNavigationActive, pager.CurrentPage, pager.CurrentPage + 1, PageTitle));
+        glanceBridge.PublishPageNavigation(new InfinityPageNavigationState(pager.CurrentPage, pager.CurrentPage + 1, PageTitle));
 
     private string ResolvePageTitle(int page, Dictionary<int, string>? pageTitles) =>
         pageTitles?.TryGetValue(page, out string? title) == true

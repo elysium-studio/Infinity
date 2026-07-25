@@ -14,7 +14,8 @@
     <Controls:DesktopOverlay.Header>
         <Grid
             x:Name="ShadowContainer"
-            Visibility="{x:Bind ToInverseVisibility(ViewModel.IsGlancePageSurfaceAvailable), Mode=OneWay}">
+            IsHitTestVisible="{x:Bind ToInverse(ViewModel.IsGlancePageSurfaceAvailable), Mode=OneWay}"
+            Opacity="{x:Bind ToInverseOpacity(ViewModel.IsGlancePageSurfaceAvailable), Mode=OneWay}">
             <Canvas x:Name="ShadowCanvas" />
             <Border
                 Width="240"

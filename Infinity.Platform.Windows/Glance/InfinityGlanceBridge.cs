@@ -34,14 +34,28 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
 
     public void PublishPageNavigation(InfinityPageNavigationState state)
     {
-        lock (synchronization)
+        if (!TrySetLatestState(state))
         {
-            latestState = state;
+            return;
         }
 
         if (updateSignal.CurrentCount == 0)
         {
             updateSignal.Release();
+        }
+    }
+
+    internal bool TrySetLatestState(InfinityPageNavigationState state)
+    {
+        lock (synchronization)
+        {
+            if (latestState == state)
+            {
+                return false;
+            }
+
+            latestState = state;
+            return true;
         }
     }
 

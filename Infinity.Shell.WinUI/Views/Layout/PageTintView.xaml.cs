@@ -35,6 +35,10 @@ public sealed partial class PageTintView :
 
     private Visibility ToInverseVisibility(bool value) => value ? Visibility.Collapsed : Visibility.Visible;
 
+    private bool ToInverse(bool value) => !value;
+
+    private double ToInverseOpacity(bool value) => value ? 0d : 1d;
+
     private DesktopOverlayHeaderPlacement ToHeaderPlacement(PreviewPosition position)
     {
         if (position == PreviewPosition.Auto)
@@ -79,20 +83,14 @@ public sealed partial class PageTintView :
     {
         EnsureSubscribed();
         UpdateBindings();
-        UpdateHeaderContent();
     }
 
-    protected override void OnOpened()
-    {
-        UpdateBindings();
-        UpdateHeaderContent();
-    }
+    protected override void OnOpened() => UpdateBindings();
 
     private void HandleDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {
         EnsureSubscribed();
         UpdateBindings();
-        UpdateHeaderContent();
     }
 
     private void EnsureSubscribed()
@@ -136,7 +134,6 @@ public sealed partial class PageTintView :
         if (args.PropertyName == nameof(PageTintViewModel.IsGlancePageSurfaceAvailable))
         {
             UpdateBindings();
-            UpdateHeaderContent();
         }
     }
 
@@ -149,16 +146,6 @@ public sealed partial class PageTintView :
         }
 
         Bindings.Update();
-    }
-
-    private void UpdateHeaderContent()
-    {
-        object? content = ViewModel.IsGlancePageSurfaceAvailable ? null : ShadowContainer;
-
-        if (!ReferenceEquals(Header, content))
-        {
-            Header = content;
-        }
     }
 
     private void HandleShadowContainerSizeChanged(object sender, SizeChangedEventArgs args)

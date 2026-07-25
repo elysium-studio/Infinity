@@ -15,4 +15,4 @@ public sealed record InfinityGlanceAvailabilityChangedEventArgs(bool IsPageNavig
 
 public sealed record InfinityGlanceMessageReceivedEventArgs(string Capability, string Topic, string Payload);
 
-public sealed record InfinityPageNavigationState(bool IsActive, int PageIndex, int PageNumber, string PageTitle);
+public sealed record InfinityPageNavigationState(int PageIndex, int PageNumber, string PageTitle);
