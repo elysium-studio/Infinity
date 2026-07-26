@@ -10,11 +10,9 @@ public sealed class WindowsSettingsModule :
 {
     public void Register(IServiceCollection services)
     {
-        services.AddViewFor<StartWithWindowsView, IWindowsViewModel, StartWithWindowsViewModel>(
-            ServiceLifetime.Transient,
+        services.AddViewFor<StartWithWindowsView, IWindowsViewModel, StartWithWindowsViewModel>(ServiceLifetime.Transient,
             provider => new StartWithWindowsView(),
-            provider => new StartWithWindowsViewModel(
-                provider,
+            provider => new StartWithWindowsViewModel(provider,
                 provider.GetRequiredService<IServiceFactory>(),
                 provider.GetRequiredService<IMessenger>(),
                 provider.GetRequiredService<IDisposer>(),

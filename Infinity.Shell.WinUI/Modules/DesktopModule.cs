@@ -20,16 +20,12 @@ public sealed class DesktopModule :
     public void Register(IServiceCollection services)
     {
         services
-            .AddSingleton<IDesktopBackgroundController>(provider => new DesktopBackgroundController(
-                provider.GetRequiredService<IDesktopBackgroundSource>(),
+            .AddSingleton<IDesktopBackgroundController>(provider => new DesktopBackgroundController(provider.GetRequiredService<IDesktopBackgroundSource>(),
                 provider.GetRequiredService<IDispatcher>()))
-            .AddViewFor(
-                ServiceLifetime.Singleton,
-                provider => new PageTintView(
-                    provider.GetRequiredService<IMonitorLocator>(),
+            .AddViewFor(ServiceLifetime.Singleton,
+                provider => new PageTintView(provider.GetRequiredService<IMonitorLocator>(),
                     provider.GetRequiredService<ITaskbarLocator>()),
-                provider => new PageTintViewModel(
-                    provider,
+                provider => new PageTintViewModel(provider,
                     provider.GetRequiredService<IServiceFactory>(),
                     provider.GetRequiredService<IMessenger>(),
                     provider.GetRequiredService<IDisposer>(),
@@ -45,11 +41,9 @@ public sealed class DesktopModule :
                     provider.GetRequiredService<IInfinityGlanceBridge>(),
                     provider.GetRequiredService<ITextLocalizer>(),
                     provider.GetRequiredService<ILogger<PageTintViewModel>>()))
-            .AddViewFor(
-                ServiceLifetime.Singleton,
+            .AddViewFor(ServiceLifetime.Singleton,
                 provider => new DesktopFlyoutView(provider.GetRequiredService<IWindowPreviewSurface>()),
-                provider => new DesktopFlyoutViewModel(
-                    provider,
+                provider => new DesktopFlyoutViewModel(provider,
                     provider.GetRequiredService<IServiceFactory>(),
                     provider.GetRequiredService<IMessenger>(),
                     provider.GetRequiredService<IDisposer>(),
@@ -59,11 +53,9 @@ public sealed class DesktopModule :
                     provider.GetRequiredService<IInfinityGlanceBridge>(),
                     provider.GetRequiredService<Settings>()))
             .AddView(ServiceLifetime.Singleton, provider => new ScrollTriggerView())
-            .AddViewFor(
-                ServiceLifetime.Singleton,
+            .AddViewFor(ServiceLifetime.Singleton,
                 provider => new TrackedWindowCollectionView(),
-                provider => new TrackedWindowCollectionViewModel(
-                    provider,
+                provider => new TrackedWindowCollectionViewModel(provider,
                     provider.GetRequiredService<IServiceFactory>(),
                     provider.GetRequiredService<IMessenger>(),
                     provider.GetRequiredService<IDispatcher>(),

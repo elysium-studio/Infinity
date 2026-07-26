@@ -92,7 +92,8 @@ public sealed class WindowPageMoverTests
         Height = 600
     };
 
-    private sealed class TestScroller : IScroller
+    private sealed class TestScroller :
+        IScroller
     {
         public event EventHandler? ScrollStarted;
 
@@ -130,7 +131,8 @@ public sealed class WindowPageMoverTests
         public void Stop() => ScrollStopped?.Invoke(this, EventArgs.Empty);
     }
 
-    private sealed class TestPager : IPager
+    private sealed class TestPager :
+        IPager
     {
         public event Action<int>? PageChanged;
 

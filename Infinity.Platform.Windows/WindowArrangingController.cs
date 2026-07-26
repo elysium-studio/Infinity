@@ -20,8 +20,7 @@ public sealed class WindowArrangingController(ILogger<WindowArrangingController>
     private const uint SpiSendChange = 0x0002u;
     private const SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS SpiUpdateFlags = (SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS)(SpiUpdateIniFile | SpiSendChange);
 
-    private static readonly string RecoveryFlagPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+    private static readonly string RecoveryFlagPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "Elysium",
         "Infinity",
         "windowArranging.flag");
@@ -228,8 +227,7 @@ public sealed class WindowArrangingController(ILogger<WindowArrangingController>
     {
         int desired = enabled ? 1 : 0;
 
-        return PInvoke.SystemParametersInfo(
-            (SYSTEM_PARAMETERS_INFO_ACTION)SpiSetWinArranging,
+        return PInvoke.SystemParametersInfo((SYSTEM_PARAMETERS_INFO_ACTION)SpiSetWinArranging,
             enabled ? 1u : 0u,
             &desired,
             SpiUpdateFlags);

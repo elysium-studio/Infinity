@@ -5,23 +5,16 @@ using Microsoft.Extensions.Options;
 
 namespace Infinity.Shell;
 
-public sealed class WindowPlacementRules :
+public sealed class WindowPlacementRules(IWindowApplicationIdentityProvider identityProvider,
+    IOptionsMonitor<Settings> options,
+    IWritableOptions<Settings> writer) :
     IWindowPlacementRules
 {
-    private readonly IWindowApplicationIdentityProvider identityProvider;
-    private readonly IWritableOptions<Settings> writer;
+    private readonly IWindowApplicationIdentityProvider identityProvider = identityProvider;
+    private readonly IWritableOptions<Settings> writer = writer;
     private readonly Lock syncRoot = new();
 
-    private readonly Dictionary<string, int> rules;
-
-    public WindowPlacementRules(IWindowApplicationIdentityProvider identityProvider,
-        IOptionsMonitor<Settings> options,
-        IWritableOptions<Settings> writer)
-    {
-        this.identityProvider = identityProvider;
-        this.writer = writer;
-        rules = CopyRules(options.CurrentValue.ApplicationPageRules);
-    }
+    private readonly Dictionary<string, int> rules = CopyRules(options.CurrentValue.ApplicationPageRules);
 
     public bool TryGetTargetPage(IntPtr windowHandle, out int targetPage)
     {

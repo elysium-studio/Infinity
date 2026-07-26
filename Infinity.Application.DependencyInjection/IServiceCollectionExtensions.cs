@@ -1,4 +1,4 @@
-﻿using Elysium.Application.Abstractions;
+using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
@@ -69,22 +69,18 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<IWindowPageCoordinator>(provider => provider.GetRequiredService<WindowPageCoordinator>());
             services.AddSingleton<IWindowNavigationCoordinator>(provider => provider.GetRequiredService<WindowPageCoordinator>());
             services.AddSingleton<IForegroundWindowCoordinator>(provider => provider.GetRequiredService<WindowPageCoordinator>());
-            services.AddSingleton<IWindowPageMover>(provider => new WindowPageMover(
-                provider.GetRequiredService<IWindowStore>(),
+            services.AddSingleton<IWindowPageMover>(provider => new WindowPageMover(provider.GetRequiredService<IWindowStore>(),
                 provider.GetRequiredService<IScroller>(),
                 provider.GetRequiredService<IPager>(),
                 () => provider.GetRequiredService<IWorkspace>().Width,
                 provider.GetRequiredService<ILogger<WindowPageMover>>()));
-            services.AddSingleton<IStickyWindowController>(provider => new StickyWindowController(
-                provider.GetRequiredService<IWindowStore>(),
+            services.AddSingleton<IStickyWindowController>(provider => new StickyWindowController(provider.GetRequiredService<IWindowStore>(),
                 provider.GetRequiredService<IScroller>(),
                 provider.GetRequiredService<ILogger<StickyWindowController>>()));
-            services.AddSingleton<ITrackedWindowDragController>(provider => new TrackedWindowDragController(
-                provider.GetRequiredService<IWindowStore>(),
+            services.AddSingleton<ITrackedWindowDragController>(provider => new TrackedWindowDragController(provider.GetRequiredService<IWindowStore>(),
                 provider.GetRequiredService<IScroller>(),
                 provider.GetRequiredService<ILogger<TrackedWindowDragController>>()));
-            services.AddSingleton<IThumbnailDragScroller>(provider => new ThumbnailDragScroller(
-                provider.GetRequiredService<IModifierKeyState>(),
+            services.AddSingleton<IThumbnailDragScroller>(provider => new ThumbnailDragScroller(provider.GetRequiredService<IModifierKeyState>(),
                 provider.GetRequiredService<IScroller>(),
                 provider.GetRequiredService<IPanState>(),
                 provider.GetRequiredService<IDispatcher>(),

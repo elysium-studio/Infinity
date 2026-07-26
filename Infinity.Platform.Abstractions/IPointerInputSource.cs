@@ -1,6 +1,6 @@
-﻿namespace Infinity.Platform.Abstractions;
+namespace Infinity.Platform.Abstractions;
 
-public interface IPointerInputSource : 
+public interface IPointerInputSource :
     IDisposable
 {
     event Action<int, int>? CursorMoved;

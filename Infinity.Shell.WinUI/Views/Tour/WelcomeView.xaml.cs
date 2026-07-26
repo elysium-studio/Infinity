@@ -110,8 +110,7 @@ public sealed partial class WelcomeView :
 
         CanvasDevice canvasDevice = CanvasDevice.GetSharedDevice();
         CompositionGraphicsDevice graphicsDevice = CanvasComposition.CreateCompositionGraphicsDevice(compositor, canvasDevice);
-        CompositionDrawingSurface gradientSurface = graphicsDevice.CreateDrawingSurface(
-            surfaceSize,
+        CompositionDrawingSurface gradientSurface = graphicsDevice.CreateDrawingSurface(surfaceSize,
             DirectXPixelFormat.B8G8R8A8UIntNormalized,
             DirectXAlphaMode.Premultiplied);
 

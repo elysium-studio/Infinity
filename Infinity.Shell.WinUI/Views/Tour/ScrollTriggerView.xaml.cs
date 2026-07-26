@@ -213,8 +213,7 @@ public sealed partial class ScrollTriggerView :
         CubicBezierEasingFunction releaseEasing = CreateReleaseEasing(compositor);
         float duration = CycleDuration;
 
-        visual.CenterPoint = new Vector3(
-            (float)(MouseWheel.RenderSize.Width / 2),
+        visual.CenterPoint = new Vector3((float)(MouseWheel.RenderSize.Width / 2),
             (float)(MouseWheel.RenderSize.Height / 2),
             0f);
 

@@ -2,17 +2,11 @@
 
 namespace Infinity.Application.Abstractions;
 
-public struct WindowStoreEnumerator :
+public struct WindowStoreEnumerator(TrackedWindow[] items) :
     IEnumerator<TrackedWindow>
 {
-    private readonly TrackedWindow[] items;
-    private int index;
-
-    public WindowStoreEnumerator(TrackedWindow[] items)
-    {
-        this.items = items;
-        index = -1;
-    }
+    private readonly TrackedWindow[] items = items;
+    private int index = -1;
 
     public TrackedWindow Current => items[index];
 

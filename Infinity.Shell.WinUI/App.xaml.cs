@@ -70,8 +70,7 @@ public sealed partial class App
 
         if (host.Services.GetRequiredService<Settings>() is { ShowHintOnStartup: true })
         {
-            startupNavigationTask = NavigateToStartupTourAsync(
-                host.Services.GetRequiredService<INavigator>(),
+            startupNavigationTask = NavigateToStartupTourAsync(host.Services.GetRequiredService<INavigator>(),
                 host.Services.GetRequiredService<ILogger<App>>());
         }
     }

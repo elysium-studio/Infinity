@@ -16,7 +16,7 @@ public sealed class TrackedWindowCollection :
     public bool TryGet(IntPtr handle, out ITrackedWindow? window) =>
         map.TryGetValue(handle, out window);
 
-    public bool Contains(IntPtr handle) => 
+    public bool Contains(IntPtr handle) =>
         map.ContainsKey(handle);
 
     public Dictionary<IntPtr, ITrackedWindow>.ValueCollection.Enumerator GetEnumerator() =>

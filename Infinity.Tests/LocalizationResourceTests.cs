@@ -25,11 +25,10 @@ public sealed class LocalizationResourceTests
     public void LocalizedResourcesMatchEnglishContracts()
     {
         string root = Path.Combine(AppContext.BaseDirectory, "LocalizationResources");
-        string[] languages = Directory.GetDirectories(root)
+        string[] languages = [.. Directory.GetDirectories(root)
             .Select(Path.GetFileName)
             .OfType<string>()
-            .Order()
-            .ToArray();
+            .Order()];
 
         Assert.Equal(ExpectedLanguages, languages);
 
@@ -56,15 +55,12 @@ public sealed class LocalizationResourceTests
         XDocument.Load(path)
             .Root!
             .Elements("data")
-            .Select(element => new ResourceEntry(
-                element.Attribute("name")!.Value,
+            .Select(element => new ResourceEntry(element.Attribute("name")!.Value,
                 element.Element("value")!.Value))
             .ToArray();
 
     private static string[] GetPlaceholders(string value) =>
-        Regex.Matches(value, "\\{\\d+\\}")
-            .Select(match => match.Value)
-            .ToArray();
+        [.. Regex.Matches(value, "\\{\\d+\\}").Select(match => match.Value)];
 
     private sealed record ResourceEntry(string Name, string Value);
 }

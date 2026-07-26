@@ -63,7 +63,8 @@ public sealed class WindowPlacementRulesTests
         Assert.Equal(0, writer.WriteCount);
     }
 
-    private sealed class TestIdentityProvider(string? applicationId) : IWindowApplicationIdentityProvider
+    private sealed class TestIdentityProvider(string? applicationId) :
+        IWindowApplicationIdentityProvider
     {
         public string ApplicationId { get; } = applicationId ?? string.Empty;
 
@@ -74,7 +75,8 @@ public sealed class WindowPlacementRulesTests
         }
     }
 
-    private sealed class TestOptionsMonitor(Settings currentValue) : IOptionsMonitor<Settings>
+    private sealed class TestOptionsMonitor(Settings currentValue) :
+        IOptionsMonitor<Settings>
     {
         public Settings CurrentValue { get; } = currentValue;
 
@@ -84,7 +86,8 @@ public sealed class WindowPlacementRulesTests
             throw new NotImplementedException();
     }
 
-    private sealed class TestWritableOptions(Settings value) : IWritableOptions<Settings>
+    private sealed class TestWritableOptions(Settings value) :
+        IWritableOptions<Settings>
     {
         public Settings Value { get; } = value;
 

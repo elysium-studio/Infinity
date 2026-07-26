@@ -42,7 +42,8 @@ public sealed class ShellLayoutCalculatorTests
         Height = height
     };
 
-    private sealed class StubWorkspace : IWorkspace
+    private sealed class StubWorkspace :
+        IWorkspace
     {
         public int Width { get; init; } = 1920;
 

@@ -10,8 +10,8 @@ public sealed class PageGestureSource(IKeyboardInputSource keyboardInputSource,
     ILogger<PageGestureSource> logger) :
     IPageGestureSource
 {
-    private readonly List<IPageGesture> registeredGestures = gestures.ToList();
-    private readonly HashSet<int> triggerKeys = gestures.SelectMany(gesture => gesture.TriggerKeys).ToHashSet();
+    private readonly List<IPageGesture> registeredGestures = [.. gestures];
+    private readonly HashSet<int> triggerKeys = [.. gestures.SelectMany(gesture => gesture.TriggerKeys)];
     private readonly HashSet<int> activeTriggerKeys = [];
     private bool sessionActive;
     private bool isStarted;

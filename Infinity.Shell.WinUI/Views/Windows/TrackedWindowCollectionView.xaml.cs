@@ -125,8 +125,7 @@ public sealed partial class TrackedWindowCollectionView :
 
         backgroundColour = hex;
 
-        backgroundBrush = new SolidColorBrush(Color.FromArgb(
-            255,
+        backgroundBrush = new SolidColorBrush(Color.FromArgb(255,
             Convert.ToByte(hex.Substring(1, 2), 16),
             Convert.ToByte(hex.Substring(3, 2), 16),
             Convert.ToByte(hex.Substring(5, 2), 16)));

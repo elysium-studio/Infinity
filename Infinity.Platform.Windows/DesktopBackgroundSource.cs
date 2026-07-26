@@ -132,8 +132,7 @@ public sealed unsafe partial class DesktopBackgroundSource :
 
     private static IDesktopWallpaper CreateDesktopWallpaper()
     {
-        int hr = CoCreateInstance(
-            in clsidDesktopWallpaper,
+        int hr = CoCreateInstance(in clsidDesktopWallpaper,
             nint.Zero,
             ClsctxLocalServer,
             in iidDesktopWallpaper,

@@ -67,7 +67,8 @@ public sealed class FilterPeekSourceTests
         Title = title
     };
 
-    private sealed class StubFilterState : IWindowFilterState
+    private sealed class StubFilterState :
+        IWindowFilterState
     {
         public bool IsActive { get; init; }
 

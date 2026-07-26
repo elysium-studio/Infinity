@@ -187,12 +187,12 @@ public sealed class WindowStack(IWindowStore repository,
         {
             List<TrackedWindow> trackedWindows = [.. repository];
 
-            return trackedWindows.ToArray();
+            return [.. trackedWindows];
         }
         catch (InvalidOperationException exception)
         {
             logger.LogDebug(exception, "Could not snapshot tracked windows because the repository changed during enumeration");
-            return Array.Empty<TrackedWindow>();
+            return [];
         }
     }
 
@@ -202,7 +202,7 @@ public sealed class WindowStack(IWindowStore repository,
 
         if (trackedHandles.Count == 0)
         {
-            return new Dictionary<nint, int>();
+            return [];
         }
 
         lock (refreshLock)

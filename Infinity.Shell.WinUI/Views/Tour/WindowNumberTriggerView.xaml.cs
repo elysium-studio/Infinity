@@ -62,7 +62,7 @@ public sealed partial class WindowNumberTriggerView :
     }
 
     public WindowNumberTriggerViewModel? ViewModel => DataContext as WindowNumberTriggerViewModel;
-    
+
     private static CubicBezierEasingFunction CreateEntranceEasing(Compositor compositor) =>
         compositor.CreateCubicBezierEasingFunction(new Vector2(0.16f, 1f), new Vector2(0.3f, 1f));
 

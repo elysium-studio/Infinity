@@ -77,7 +77,8 @@ public class WindowPageCoordinatorTests
             Height = 1000
         };
 
-    private class TestScroller : IScroller
+    private class TestScroller :
+        IScroller
     {
         public event EventHandler? ScrollStarted;
 
@@ -118,7 +119,8 @@ public class WindowPageCoordinatorTests
         public void Stop() => ScrollStopped?.Invoke(this, EventArgs.Empty);
     }
 
-    private class TestWorkspace : IWorkspace
+    private class TestWorkspace :
+        IWorkspace
     {
         public event EventHandler? WorkspaceLayoutChanged;
 
@@ -137,14 +139,16 @@ public class WindowPageCoordinatorTests
         }
     }
 
-    private class TestWindowActivator : IWindowActivator
+    private class TestWindowActivator :
+        IWindowActivator
     {
         public int ActivationCount { get; private set; }
 
         public void Activate(IntPtr handle) => ActivationCount++;
     }
 
-    private class TestDispatcher : IDispatcher
+    private class TestDispatcher :
+        IDispatcher
     {
         public void Dispatch(Action action) => action();
     }

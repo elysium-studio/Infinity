@@ -25,7 +25,8 @@ public sealed class PagerNavigationTests
         Assert.Equal(["SuppressForegroundFollow", "ScrollTo:2000"], operations);
     }
 
-    private sealed class TestNavigationScroller(List<string> operations) : IScroller
+    private sealed class TestNavigationScroller(List<string> operations) :
+        IScroller
     {
         public event EventHandler? ScrollStarted;
 
@@ -65,7 +66,8 @@ public sealed class PagerNavigationTests
         public void Stop() => ScrollStopped?.Invoke(this, EventArgs.Empty);
     }
 
-    private sealed class TestWorkspace : IWorkspace
+    private sealed class TestWorkspace :
+        IWorkspace
     {
         public event EventHandler? WorkspaceLayoutChanged;
 
@@ -85,7 +87,8 @@ public sealed class PagerNavigationTests
     }
 }
 
-internal sealed class TestForegroundWindowCoordinator(List<string>? operations = null) : IForegroundWindowCoordinator
+internal sealed class TestForegroundWindowCoordinator(List<string>? operations = null) :
+    IForegroundWindowCoordinator
 {
     public void HandleForegroundWindowChanged(IntPtr handle)
     {

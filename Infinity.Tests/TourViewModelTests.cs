@@ -59,7 +59,8 @@ public sealed class TourViewModelTests
             NullLogger<TourViewModel>.Instance,
             Array.Empty<ITourViewModel>());
 
-    private sealed class TestWritableOptions : IWritableOptions<Settings>
+    private sealed class TestWritableOptions :
+        IWritableOptions<Settings>
     {
         private readonly TaskCompletionSource<bool> completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -84,12 +85,14 @@ public sealed class TourViewModelTests
         public void Fail(Exception exception) => completion.TrySetException(exception);
     }
 
-    private sealed class TestServiceProvider : IServiceProvider
+    private sealed class TestServiceProvider :
+        IServiceProvider
     {
         public object? GetService(Type serviceType) => null;
     }
 
-    private sealed class TestServiceFactory : IServiceFactory
+    private sealed class TestServiceFactory :
+        IServiceFactory
     {
         public object Create(Type type, Action<object> serviceDelegate, params object?[]? parameters) =>
             throw new NotSupportedException();
@@ -102,7 +105,8 @@ public sealed class TourViewModelTests
         public TService Create<TService>(params object?[]? parameters) => throw new NotSupportedException();
     }
 
-    private sealed class TestDisposer : IDisposer
+    private sealed class TestDisposer :
+        IDisposer
     {
         public void Add(object subject, params object[] objects)
         {

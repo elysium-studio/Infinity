@@ -127,7 +127,8 @@ public sealed class StickyWindowScrollingTests
         LastPlacedY = int.MinValue
     };
 
-    private sealed class TestWindowMover : IWindowMover
+    private sealed class TestWindowMover :
+        IWindowMover
     {
         public List<(IntPtr Handle, int X)> Moves { get; } = [];
 
@@ -143,7 +144,8 @@ public sealed class StickyWindowScrollingTests
         }
     }
 
-    private sealed class TestWindowConcealer : IWindowConcealer
+    private sealed class TestWindowConcealer :
+        IWindowConcealer
     {
         public bool Conceal(IntPtr windowHandle) => true;
 
@@ -156,14 +158,16 @@ public sealed class StickyWindowScrollingTests
         public IReadOnlySet<IntPtr> ConcealedHandles() => new HashSet<IntPtr>();
     }
 
-    private sealed class TestWindowMoveGuard : IWindowMoveGuard
+    private sealed class TestWindowMoveGuard :
+        IWindowMoveGuard
     {
         public bool IsSystemMove => false;
 
         public WindowMoveScope Begin() => new(() => { });
     }
 
-    private sealed class TestWindowDragGuard : IWindowDragGuard
+    private sealed class TestWindowDragGuard :
+        IWindowDragGuard
     {
         public event Action? HoldStarted;
 
@@ -180,7 +184,8 @@ public sealed class StickyWindowScrollingTests
         }
     }
 
-    private sealed class TestScrollInputSource : IScrollInputSource
+    private sealed class TestScrollInputSource :
+        IScrollInputSource
     {
         public event Action<int>? ScrollDeltaReceived;
 
@@ -200,12 +205,14 @@ public sealed class StickyWindowScrollingTests
         }
     }
 
-    private sealed class TestDispatcher : IDispatcher
+    private sealed class TestDispatcher :
+        IDispatcher
     {
         public void Dispatch(Action action) => action();
     }
 
-    private sealed class TestDeltaScrollMotion : IDeltaScrollMotion
+    private sealed class TestDeltaScrollMotion :
+        IDeltaScrollMotion
     {
         public bool IsActive => false;
 
@@ -220,7 +227,8 @@ public sealed class StickyWindowScrollingTests
         }
     }
 
-    private sealed class TestVelocityScrollMotion : IVelocityScrollMotion
+    private sealed class TestVelocityScrollMotion :
+        IVelocityScrollMotion
     {
         public bool IsActive => false;
 
@@ -282,7 +290,8 @@ public sealed class StickyWindowPagingTests
         StickyViewportX = 250
     };
 
-    private sealed class TestWorkspace : IWorkspace
+    private sealed class TestWorkspace :
+        IWorkspace
     {
         public event EventHandler? WorkspaceLayoutChanged;
 
@@ -302,7 +311,8 @@ public sealed class StickyWindowPagingTests
     }
 }
 
-internal sealed class TestScroller : IScroller
+internal sealed class TestScroller :
+    IScroller
 {
     public event EventHandler? ScrollStarted;
 

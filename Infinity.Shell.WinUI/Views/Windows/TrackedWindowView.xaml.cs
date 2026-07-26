@@ -865,8 +865,7 @@ public sealed partial class TrackedWindowView :
 
         try
         {
-            visual.CenterPoint = new Vector3(
-                (float)(WindowContainer.ActualWidth / 2),
+            visual.CenterPoint = new Vector3((float)(WindowContainer.ActualWidth / 2),
                 (float)(WindowContainer.ActualHeight / 2),
                 0);
 

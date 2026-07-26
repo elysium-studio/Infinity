@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   test:
-    name: Unit tests (.NET 10)
+    name: Unit tests (.NET 11 Preview)
     runs-on: windows-latest
 
     env:
@@ -33,7 +33,7 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: 11.0.100-preview.6.26359.118
 
       - name: Configure private Elysium feed
         shell: pwsh

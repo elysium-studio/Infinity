@@ -80,7 +80,7 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: 11.0.100-preview.6.26359.118
 
       - name: Download native component
         uses: actions/download-artifact@v4

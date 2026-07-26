@@ -79,7 +79,8 @@ public sealed class StartupPageRestorerTests
         Height = 600
     };
 
-    private sealed class TestGeometryReader : IWindowGeometryReader
+    private sealed class TestGeometryReader :
+        IWindowGeometryReader
     {
         private readonly Dictionary<IntPtr, Geometry> visibleGeometries = [];
 
@@ -114,7 +115,8 @@ public sealed class StartupPageRestorerTests
         private readonly record struct Geometry(int X, int Y, int Width, int Height);
     }
 
-    private sealed class TestWorkspace : IWorkspace
+    private sealed class TestWorkspace :
+        IWorkspace
     {
         public event EventHandler? WorkspaceLayoutChanged;
 

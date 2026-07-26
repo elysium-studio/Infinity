@@ -24,17 +24,14 @@ public sealed class WindowingModule :
             .AddSingleton<IWindowPlacementRules, WindowPlacementRules>()
             .AddSingleton<IWindowPeekSource, ApplicationServices.WindowPeekSource>()
             .AddSingleton<IPeekSource>(provider => provider.GetRequiredService<IWindowPeekSource>())
-            .AddSingleton<IPeekSource>(provider => new ApplicationServices.FilterPeekSource(
-                provider.GetRequiredService<IWindowFilterState>()))
-            .AddSingleton<IWindowPeekController>(provider => new ApplicationServices.WindowPeekController(
-                provider.GetRequiredService<IWindowStore>(),
+            .AddSingleton<IPeekSource>(provider => new ApplicationServices.FilterPeekSource(provider.GetRequiredService<IWindowFilterState>()))
+            .AddSingleton<IWindowPeekController>(provider => new ApplicationServices.WindowPeekController(provider.GetRequiredService<IWindowStore>(),
                 provider.GetServices<IPeekSource>(),
                 provider.GetRequiredService<IWindowConcealer>(),
                 provider.GetRequiredService<IScroller>(),
                 () => provider.GetRequiredService<IOptionsMonitor<Settings>>().CurrentValue.HideFilteredWindows))
             .AddSingleton<ITrackedWindowCollection, TrackedWindowCollection>()
-            .AddSingleton<ApplicationServices.WindowCollection>(provider => new ApplicationServices.WindowCollection(
-                provider.GetRequiredService<IWindowStore>(),
+            .AddSingleton<ApplicationServices.WindowCollection>(provider => new ApplicationServices.WindowCollection(provider.GetRequiredService<IWindowStore>(),
                 provider.GetRequiredService<IScrollTimer>(),
                 provider.GetRequiredService<IScroller>(),
                 provider.GetRequiredService<IWindowStack>(),
@@ -47,8 +44,7 @@ public sealed class WindowingModule :
                 provider.GetRequiredService<ILogger<ApplicationServices.WindowCollection>>()))
             .AddSingleton<IWindowCollection>(provider => provider.GetRequiredService<ApplicationServices.WindowCollection>())
             .AddSingleton<IWindowCollectionLifetime>(provider => provider.GetRequiredService<ApplicationServices.WindowCollection>())
-            .RegisterFactory((provider, factoryArgs) => new TrackedWindowViewModel(
-                provider,
+            .RegisterFactory((provider, factoryArgs) => new TrackedWindowViewModel(provider,
                 provider.GetRequiredService<IServiceFactory>(),
                 provider.GetRequiredService<IMessenger>(),
                 provider.GetRequiredService<IDisposer>(),
@@ -62,10 +58,8 @@ public sealed class WindowingModule :
                 provider.GetRequiredService<ITextLocalizer>(),
                 provider.GetRequiredService<ILogger<TrackedWindowViewModel>>(),
                 (IntPtr)factoryArgs![0]!))
-            .AddViewFor<TrackedWindowView, TrackedWindowViewModel>(
-                ServiceLifetime.Transient,
-                provider => new TrackedWindowView(
-                    provider.GetRequiredService<IStringLocalizer>(),
+            .AddViewFor<TrackedWindowView, TrackedWindowViewModel>(ServiceLifetime.Transient,
+                provider => new TrackedWindowView(provider.GetRequiredService<IStringLocalizer>(),
                     provider.GetRequiredService<IThumbnailDragScroller>(),
                     provider.GetRequiredService<IWindowNavigationCoordinator>(),
                     provider.GetRequiredService<IWindowPreviewSurface>(),

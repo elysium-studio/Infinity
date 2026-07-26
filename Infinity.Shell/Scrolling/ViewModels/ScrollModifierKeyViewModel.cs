@@ -130,7 +130,7 @@ public sealed partial class ScrollModifierKeyViewModel(IServiceProvider provider
             return;
         }
 
-        pendingCombinations = snapshot.Combinations.Select(combination => combination.ToList()).ToList();
+        pendingCombinations = [.. snapshot.Combinations.Select(combination => combination.ToList())];
 
         builder.Stop();
 
@@ -168,8 +168,8 @@ public sealed partial class ScrollModifierKeyViewModel(IServiceProvider provider
 
     private void ApplySnapshot(HotKeysBuilderSnapshot snapshot)
     {
-        List<List<int>> combinations = snapshot.Combinations.Select(combination => combination.ToList()).ToList();
-        List<ModifierKeyViewModel> newLabels = snapshot.Keys.Select(BuildLabel).ToList();
+        List<List<int>> combinations = [.. snapshot.Combinations.Select(combination => combination.ToList())];
+        List<ModifierKeyViewModel> newLabels = [.. snapshot.Keys.Select(BuildLabel)];
 
         Dispatcher.Dispatch(() =>
         {

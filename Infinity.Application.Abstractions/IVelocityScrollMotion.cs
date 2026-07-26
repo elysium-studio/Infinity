@@ -1,6 +1,6 @@
-﻿namespace Infinity.Application.Abstractions;
+namespace Infinity.Application.Abstractions;
 
-public interface IVelocityScrollMotion : 
+public interface IVelocityScrollMotion :
     IScrollMotion
 {
     void AddVelocity(double pixelsPerTick);

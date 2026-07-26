@@ -57,7 +57,8 @@ public sealed class TrackedWindowViewModelTests
             NullLogger<TrackedWindowViewModel>.Instance,
             new IntPtr(1));
 
-    private sealed class TestPager : IPager
+    private sealed class TestPager :
+        IPager
     {
         public event Action<int>? PageChanged;
 
@@ -82,7 +83,8 @@ public sealed class TrackedWindowViewModelTests
         }
     }
 
-    private sealed class TestPageMover : IWindowPageMover
+    private sealed class TestPageMover :
+        IWindowPageMover
     {
         public bool MoveToPage(IntPtr windowHandle, int targetPage) => true;
 
@@ -93,7 +95,8 @@ public sealed class TrackedWindowViewModelTests
         }
     }
 
-    private sealed class TestPlacementRules : IWindowPlacementRules
+    private sealed class TestPlacementRules :
+        IWindowPlacementRules
     {
         public bool CanCreateRule(IntPtr windowHandle) => true;
 
@@ -108,7 +111,8 @@ public sealed class TrackedWindowViewModelTests
         }
     }
 
-    private sealed class TestStickyWindowController : IStickyWindowController
+    private sealed class TestStickyWindowController :
+        IStickyWindowController
     {
         public bool IsSticky(IntPtr windowHandle) => false;
 
@@ -117,7 +121,8 @@ public sealed class TrackedWindowViewModelTests
         public bool Unpin(IntPtr windowHandle) => true;
     }
 
-    private sealed class TestTrackedWindowDragController : ITrackedWindowDragController
+    private sealed class TestTrackedWindowDragController :
+        ITrackedWindowDragController
     {
         public IntPtr DraggingWindow => IntPtr.Zero;
 
@@ -130,7 +135,8 @@ public sealed class TrackedWindowViewModelTests
         }
     }
 
-    private sealed class TestWindowController : IWindowController
+    private sealed class TestWindowController :
+        IWindowController
     {
         public void Close(IntPtr handle)
         {
@@ -145,7 +151,8 @@ public sealed class TrackedWindowViewModelTests
         }
     }
 
-    private sealed class TestOptionsMonitor(Settings settings) : IOptionsMonitor<Settings>
+    private sealed class TestOptionsMonitor(Settings settings) :
+        IOptionsMonitor<Settings>
     {
         public Settings CurrentValue { get; } = settings;
 
@@ -155,7 +162,8 @@ public sealed class TrackedWindowViewModelTests
             throw new NotImplementedException();
     }
 
-    private sealed class TestLocalizer : ITextLocalizer
+    private sealed class TestLocalizer :
+        ITextLocalizer
     {
         public string GetText(string key, params object[] arguments)
         {
@@ -163,12 +171,14 @@ public sealed class TrackedWindowViewModelTests
         }
     }
 
-    private sealed class TestServiceProvider : IServiceProvider
+    private sealed class TestServiceProvider :
+        IServiceProvider
     {
         public object? GetService(Type serviceType) => null;
     }
 
-    private sealed class TestServiceFactory : IServiceFactory
+    private sealed class TestServiceFactory :
+        IServiceFactory
     {
         public object Create(Type type, Action<object> serviceDelegate, params object?[]? parameters) =>
             throw new NotSupportedException();
@@ -181,7 +191,8 @@ public sealed class TrackedWindowViewModelTests
         public TService Create<TService>(params object?[]? parameters) => throw new NotSupportedException();
     }
 
-    private sealed class TestDisposer : IDisposer
+    private sealed class TestDisposer :
+        IDisposer
     {
         public void Add(object subject, params object[] objects)
         {

@@ -88,8 +88,7 @@ public sealed class WindowApplicationIdentityProvider :
 
     private static bool TryGetApplicationUserModelId(uint processId, out string applicationId)
     {
-        using SafeHandle processHandle = PInvoke.OpenProcess_SafeHandle(
-            PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_LIMITED_INFORMATION,
+        using SafeHandle processHandle = PInvoke.OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_LIMITED_INFORMATION,
             false,
             processId);
 
@@ -100,7 +99,7 @@ public sealed class WindowApplicationIdentityProvider :
         }
 
         uint length = 0;
-        WIN32_ERROR result = PInvoke.GetApplicationUserModelId(processHandle, ref length, Span<char>.Empty);
+        WIN32_ERROR result = PInvoke.GetApplicationUserModelId(processHandle, ref length, []);
 
         if (result != WIN32_ERROR.ERROR_INSUFFICIENT_BUFFER || length <= 1 || length > int.MaxValue)
         {

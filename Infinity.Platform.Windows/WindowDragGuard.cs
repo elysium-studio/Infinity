@@ -352,9 +352,7 @@ public sealed class WindowDragGuard(IWindowEventListener listener,
 
                 if (disabledOrAlreadyDisabled)
                 {
-                    return draggingWindows
-                        .Where(windowHandle => !resizingWindows.Contains(windowHandle))
-                        .ToArray();
+                    return [.. draggingWindows.Where(windowHandle => !resizingWindows.Contains(windowHandle))];
                 }
             }
 

@@ -62,16 +62,14 @@ public sealed unsafe class WindowConcealer(IWindowEnumerator enumerator,
 
                 if (!Move(windowHandle, origin.X, origin.Y))
                 {
-                    logger.LogWarning(
-                        "Could not recover a concealed window. Handle={WindowHandle}, Error={Error}",
+                    logger.LogWarning("Could not recover a concealed window. Handle={WindowHandle}, Error={Error}",
                         windowHandle,
                         Marshal.GetLastPInvokeError());
                     return;
                 }
 
                 ClearRecoveryOrigin(hwnd);
-                logger.LogInformation(
-                    "Recovered a window concealed by a previous session. Handle={WindowHandle}, X={WindowX}, Y={WindowY}",
+                logger.LogInformation("Recovered a window concealed by a previous session. Handle={WindowHandle}, X={WindowX}, Y={WindowY}",
                     windowHandle,
                     origin.X,
                     origin.Y);
@@ -122,8 +120,7 @@ public sealed unsafe class WindowConcealer(IWindowEnumerator enumerator,
             {
                 concealedWindows.Remove(windowHandle);
                 ClearRecoveryOrigin(hwnd);
-                logger.LogWarning(
-                    "Could not conceal a window. Handle={WindowHandle}, Error={Error}",
+                logger.LogWarning("Could not conceal a window. Handle={WindowHandle}, Error={Error}",
                     windowHandle,
                     Marshal.GetLastPInvokeError());
                 return false;
@@ -200,8 +197,7 @@ public sealed unsafe class WindowConcealer(IWindowEnumerator enumerator,
             }
             else
             {
-                logger.LogWarning(
-                    "Could not restore a concealed window during shutdown. Handle={WindowHandle}, Error={Error}",
+                logger.LogWarning("Could not restore a concealed window during shutdown. Handle={WindowHandle}, Error={Error}",
                     windowHandle,
                     Marshal.GetLastPInvokeError());
             }
@@ -218,8 +214,7 @@ public sealed unsafe class WindowConcealer(IWindowEnumerator enumerator,
         {
             int error = Marshal.GetLastPInvokeError();
             ClearRecoveryOrigin(hwnd);
-            logger.LogWarning(
-                "Could not record concealed-window recovery data. Handle={WindowHandle}, Error={Error}",
+            logger.LogWarning("Could not record concealed-window recovery data. Handle={WindowHandle}, Error={Error}",
                 (nint)hwnd,
                 error);
             return false;

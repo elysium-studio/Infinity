@@ -41,8 +41,7 @@ public sealed class StartupPageRestorer(IWindowStore store,
             return;
         }
 
-        logger.LogInformation(
-            "Offscreen window detected during startup. Handle={WindowHandle}, Left={WindowLeft}, Top={WindowTop}, Right={WindowRight}, Bottom={WindowBottom}, PageShift={PageShift}",
+        logger.LogInformation("Offscreen window detected during startup. Handle={WindowHandle}, Left={WindowLeft}, Top={WindowTop}, Right={WindowRight}, Bottom={WindowBottom}, PageShift={PageShift}",
             leftmostOffscreenWindow.Handle,
             leftmostOffscreenWindow.Left,
             leftmostOffscreenWindow.Top,

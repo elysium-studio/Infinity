@@ -175,8 +175,7 @@ public sealed partial class PageTintView :
 
             const float margin = 24f;
             shadowVisual.Offset = new Vector3(margin, margin, 0);
-            shadowVisual.Size = new Vector2(
-                (float)ShadowContainer.ActualWidth - (margin * 2),
+            shadowVisual.Size = new Vector2((float)ShadowContainer.ActualWidth - (margin * 2),
                 (float)ShadowContainer.ActualHeight - (margin * 2));
         });
     }

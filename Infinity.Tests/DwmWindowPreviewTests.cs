@@ -44,7 +44,8 @@ public sealed class DwmWindowPreviewTests
         Assert.Null(surface.CreatePreview(new IntPtr(43)));
     }
 
-    private sealed class TestSurface : IDwmWindowPreviewSurface
+    private sealed class TestSurface :
+        IDwmWindowPreviewSurface
     {
         private int removeCount;
 

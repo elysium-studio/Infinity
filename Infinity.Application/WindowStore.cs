@@ -113,7 +113,7 @@ public sealed class WindowStore :
     {
         lock (syncRoot)
         {
-            return new(cachedAll ??= ordered.ToArray());
+            return new(cachedAll ??= [.. ordered]);
         }
     }
 

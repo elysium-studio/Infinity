@@ -120,7 +120,8 @@ public sealed class ThumbnailDragScrollerTests
             () => new WindowDragScrollerConfiguration { SpeedLevel = DragScrollSpeed.Normal },
             NullLogger<ThumbnailDragScroller>.Instance);
 
-    private sealed class TestModifierKeyState : IModifierKeyState
+    private sealed class TestModifierKeyState :
+        IModifierKeyState
     {
         public event Action<bool>? StateChanged;
 
@@ -142,12 +143,14 @@ public sealed class ThumbnailDragScrollerTests
         }
     }
 
-    private sealed class TestDispatcher : IDispatcher
+    private sealed class TestDispatcher :
+        IDispatcher
     {
         public void Dispatch(Action action) => action();
     }
 
-    private sealed class TestScroller(IPanState state) : IScroller
+    private sealed class TestScroller(IPanState state) :
+        IScroller
     {
         private readonly ConcurrentQueue<double> offsets = new();
         private readonly SemaphoreSlim offsetAvailable = new(0);

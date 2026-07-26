@@ -25,8 +25,7 @@ public sealed class ShellModule :
                     : [[VirtualKeys.VK_LWIN, VirtualKeys.VK_RWIN], [VirtualKeys.VK_LCONTROL, VirtualKeys.VK_RCONTROL]]))
             .AddSingleton<IShellLayoutCalculator, ShellLayoutCalculator>()
             .AddSingleton<IScrollTimer, DwmFlushScrollTimer>()
-            .AddSingleton<IPager>(provider => new Pager(
-                provider.GetRequiredService<IWindowStore>(),
+            .AddSingleton<IPager>(provider => new Pager(provider.GetRequiredService<IWindowStore>(),
                 provider.GetRequiredService<IPanState>(),
                 provider.GetRequiredService<IScroller>(),
                 provider.GetRequiredService<IWorkspace>(),

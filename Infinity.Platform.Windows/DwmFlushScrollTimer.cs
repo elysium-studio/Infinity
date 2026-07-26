@@ -5,7 +5,7 @@ using Windows.Win32;
 namespace Infinity.Platform.Windows;
 
 public sealed class DwmFlushScrollTimer :
-    IScrollTimer, 
+    IScrollTimer,
     IDisposable
 {
     private readonly ILogger<DwmFlushScrollTimer> logger;
