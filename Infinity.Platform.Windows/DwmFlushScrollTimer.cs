@@ -8,6 +8,8 @@ public sealed class DwmFlushScrollTimer :
     IScrollTimer,
     IDisposable
 {
+    private const int ShutdownTimeoutMilliseconds = 2000;
+
     private readonly ILogger<DwmFlushScrollTimer> logger;
     private readonly Lock lifecycleLock = new();
     private readonly Thread thread;
@@ -63,12 +65,18 @@ public sealed class DwmFlushScrollTimer :
             activeEvent.Set();
         }
 
-        if (Thread.CurrentThread != thread)
+        bool threadStopped = Thread.CurrentThread == thread ||
+            thread.Join(ShutdownTimeoutMilliseconds);
+
+        if (threadStopped)
         {
-            thread.Join();
+            activeEvent.Dispose();
+        }
+        else
+        {
+            logger.LogWarning("Scroll timer worker did not stop within the shutdown timeout");
         }
 
-        activeEvent.Dispose();
         GC.SuppressFinalize(this);
     }
 

@@ -11,6 +11,8 @@ public sealed unsafe partial class DesktopBackgroundSource :
     IDesktopBackgroundSource,
     IDisposable
 {
+    private const int ShutdownTimeoutMilliseconds = 2000;
+
     [StructLayout(LayoutKind.Sequential)]
     internal struct RECT
     {
@@ -251,12 +253,21 @@ public sealed unsafe partial class DesktopBackgroundSource :
             workQueue.CompleteAdding();
         }
 
-        if (Thread.CurrentThread != comThread)
+        if (Thread.CurrentThread == comThread)
         {
-            comThread.Join();
+            GC.SuppressFinalize(this);
+            return;
         }
 
-        workQueue.Dispose();
+        if (comThread.Join(ShutdownTimeoutMilliseconds))
+        {
+            workQueue.Dispose();
+        }
+        else
+        {
+            logger.LogWarning("Desktop background worker did not stop within the shutdown timeout");
+        }
+
         GC.SuppressFinalize(this);
     }
 }
