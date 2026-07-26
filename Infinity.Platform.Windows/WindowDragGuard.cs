@@ -342,7 +342,7 @@ public sealed class WindowDragGuard(IWindowEventListener listener,
 
     private nint[] UpdateWindowArranging()
     {
-        if (isModifierDown)
+        if (isModifierDown && draggingWindows.Count > 0)
         {
             bool disabledOrAlreadyDisabled = windowArranging.Disable();
 
