@@ -89,13 +89,20 @@ public sealed partial class App
 
         if (currentHost is not null)
         {
-            if (startupNavigationTask is not null)
+            try
             {
-                await startupNavigationTask;
+                if (startupNavigationTask is not null)
+                {
+                    await startupNavigationTask;
+                }
+
+                await currentHost.StopAsync();
+            }
+            finally
+            {
+                await CompleteShutdownAsync(currentHost);
             }
 
-            await currentHost.StopAsync();
-            await CompleteShutdownAsync(currentHost);
             return;
         }
 
@@ -136,9 +143,15 @@ public sealed partial class App
 
     private void CompleteShutdown(IHost currentHost)
     {
-        currentHost.Dispose();
-        host = null;
-        Current.Exit();
+        try
+        {
+            currentHost.Dispose();
+        }
+        finally
+        {
+            host = null;
+            Current.Exit();
+        }
     }
 
     private static async Task NavigateToStartupTourAsync(INavigator navigator, ILogger logger)
