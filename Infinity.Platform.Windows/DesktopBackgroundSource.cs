@@ -11,6 +11,9 @@ public sealed unsafe partial class DesktopBackgroundSource :
     IDesktopBackgroundSource,
     IDisposable
 {
+    private static readonly TimeSpan PollingInterval = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan RecoveryPollingInterval = TimeSpan.FromSeconds(30);
+
     private const int ShutdownTimeoutMilliseconds = 2000;
 
     [StructLayout(LayoutKind.Sequential)]
@@ -80,16 +83,37 @@ public sealed unsafe partial class DesktopBackgroundSource :
     private readonly Thread comThread;
     private readonly System.Threading.Timer changeTimer;
     private readonly ILogger<DesktopBackgroundSource> logger;
+    private readonly Func<IDesktopWallpaper> wallpaperFactory;
+    private readonly TimeSpan pollingInterval;
+    private readonly TimeSpan recoveryPollingInterval;
+    private readonly bool pollingEnabled;
     private IDesktopWallpaper? wallpaper;
-    private string lastWallpaperPath = string.Empty;
-    private uint lastColour;
+    private DesktopBackgroundSnapshot snapshot = DesktopBackgroundSnapshot.Empty;
+    private bool pollingFailed;
     private volatile bool disposed;
 
     public event EventHandler? BackgroundChanged;
 
-    public DesktopBackgroundSource(ILogger<DesktopBackgroundSource> logger)
+    public DesktopBackgroundSource(ILogger<DesktopBackgroundSource> logger) :
+        this(logger,
+            CreateDesktopWallpaper,
+            PollingInterval,
+            RecoveryPollingInterval,
+            true)
+    {
+    }
+
+    internal DesktopBackgroundSource(ILogger<DesktopBackgroundSource> logger,
+        Func<IDesktopWallpaper> wallpaperFactory,
+        TimeSpan pollingInterval,
+        TimeSpan recoveryPollingInterval,
+        bool pollingEnabled)
     {
         this.logger = logger;
+        this.wallpaperFactory = wallpaperFactory;
+        this.pollingInterval = pollingInterval;
+        this.recoveryPollingInterval = recoveryPollingInterval;
+        this.pollingEnabled = pollingEnabled;
 
         comThread = new Thread(() =>
         {
@@ -110,21 +134,20 @@ public sealed unsafe partial class DesktopBackgroundSource :
         comThread.Name = "DesktopBackgroundSource";
         comThread.Start();
 
-        lastWallpaperPath = RunOnComThread(GetWallpaperPathCore);
-        lastColour = RunOnComThread(GetBackgroundColourCore);
-        changeTimer = new Timer(CheckForChanges, null, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2));
+        changeTimer = new Timer(CheckForChanges, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        PollForChanges(false);
     }
 
     public DesktopBackground GetBackground()
     {
-        string path = RunOnComThread(GetWallpaperPathCore);
+        DesktopBackgroundSnapshot current = Volatile.Read(ref snapshot);
 
-        if (!string.IsNullOrEmpty(path) && File.Exists(path))
+        if (!string.IsNullOrEmpty(current.WallpaperPath) && File.Exists(current.WallpaperPath))
         {
-            return new DesktopBackground { Wallpaper = path };
+            return new DesktopBackground { Wallpaper = current.WallpaperPath };
         }
 
-        uint colour = RunOnComThread(GetBackgroundColourCore);
+        uint colour = current.Colour;
         byte r = (byte)(colour & 0xFF);
         byte g = (byte)((colour >> 8) & 0xFF);
         byte b = (byte)((colour >> 16) & 0xFF);
@@ -185,56 +208,91 @@ public sealed unsafe partial class DesktopBackgroundSource :
         return result;
     }
 
-    private string GetWallpaperPathCore()
+    private DesktopBackgroundSnapshot ReadSnapshotCore()
     {
         try
         {
-            wallpaper ??= CreateDesktopWallpaper();
-            return wallpaper.GetWallpaper(wallpaper.GetMonitorDevicePathAt(0));
+            wallpaper ??= wallpaperFactory();
+            string wallpaperPath = wallpaper.GetWallpaper(wallpaper.GetMonitorDevicePathAt(0));
+            uint colour = wallpaper.GetBackgroundColor();
+            return new DesktopBackgroundSnapshot(wallpaperPath, colour);
         }
-        catch (Exception ex)
+        catch (COMException)
         {
-            logger.LogWarning(ex, "Failed to get wallpaper path");
-            return string.Empty;
+            wallpaper = null;
+            throw;
         }
     }
 
-    private uint GetBackgroundColourCore()
+    internal bool PollForChanges() => PollForChanges(true);
+
+    private bool PollForChanges(bool raiseChanged)
     {
+        DesktopBackgroundSnapshot current;
+
         try
         {
-            wallpaper ??= CreateDesktopWallpaper();
-            return wallpaper.GetBackgroundColor();
+            current = RunOnComThread(ReadSnapshotCore);
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            logger.LogWarning(ex, "Failed to get background colour");
-            return 0;
+            if (!disposed && !pollingFailed)
+            {
+                logger.LogWarning(exception, "Desktop background polling failed; retrying at a reduced cadence");
+            }
+
+            pollingFailed = true;
+            ScheduleNextPoll(recoveryPollingInterval);
+            return false;
         }
+
+        if (pollingFailed)
+        {
+            logger.LogInformation("Desktop background polling recovered");
+            pollingFailed = false;
+        }
+
+        DesktopBackgroundSnapshot previous = Volatile.Read(ref snapshot);
+
+        if (current != previous)
+        {
+            Volatile.Write(ref snapshot, current);
+
+            if (raiseChanged)
+            {
+                try
+                {
+                    BackgroundChanged?.Invoke(this, EventArgs.Empty);
+                }
+                catch (Exception exception)
+                {
+                    logger.LogError(exception, "Desktop background change callback failed");
+                }
+            }
+        }
+
+        ScheduleNextPoll(pollingInterval);
+        return true;
     }
 
     private void CheckForChanges(object? state)
     {
-        if (disposed)
+        _ = PollForChanges();
+    }
+
+    private void ScheduleNextPoll(TimeSpan dueTime)
+    {
+        if (!pollingEnabled)
         {
             return;
         }
 
-        try
+        lock (lifecycleLock)
         {
-            string currentPath = RunOnComThread(GetWallpaperPathCore);
-            uint currentColour = RunOnComThread(GetBackgroundColourCore);
-
-            if (currentPath != lastWallpaperPath || currentColour != lastColour)
+            if (!disposed)
             {
-                lastWallpaperPath = currentPath;
-                lastColour = currentColour;
-                BackgroundChanged?.Invoke(this, EventArgs.Empty);
+                changeTimer.Change(dueTime, Timeout.InfiniteTimeSpan);
             }
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "Failed to check for background changes");
         }
     }
 
@@ -269,5 +327,10 @@ public sealed unsafe partial class DesktopBackgroundSource :
         }
 
         GC.SuppressFinalize(this);
+    }
+
+    private sealed record DesktopBackgroundSnapshot(string WallpaperPath, uint Colour)
+    {
+        public static DesktopBackgroundSnapshot Empty { get; } = new(string.Empty, 0);
     }
 }
