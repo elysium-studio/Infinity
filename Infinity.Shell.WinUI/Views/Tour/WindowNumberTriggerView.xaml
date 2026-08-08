@@ -60,7 +60,6 @@
                                 Text="{x:Bind ViewModel.FirstModifier, Mode=OneWay}" />
                         </Grid>
                         <TextBlock
-                            x:Uid="TourShiftKeyLabel"
                             VerticalAlignment="Center"
                             FontSize="18"
                             FontWeight="SemiBold"
@@ -109,12 +108,12 @@
                                 CornerRadius="12"
                                 Opacity="0" />
                             <TextBlock
+                                x:Uid="TourShiftKeyLabel"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 FontSize="15"
                                 FontWeight="SemiBold"
-                                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
-                            />
+                                Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
                         </Grid>
                     </StackPanel>
                     <Grid

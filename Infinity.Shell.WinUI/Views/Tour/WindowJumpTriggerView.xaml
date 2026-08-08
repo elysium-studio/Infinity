@@ -58,7 +58,6 @@
                             CornerRadius="12"
                             Opacity="0" />
                         <TextBlock
-                            x:Uid="TourShiftKeyLabel"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             FontSize="15"
@@ -121,12 +120,12 @@
                             CornerRadius="12"
                             Opacity="0" />
                         <TextBlock
+                            x:Uid="TourShiftKeyLabel"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             FontSize="15"
                             FontWeight="SemiBold"
-                            Foreground="{ThemeResource TextFillColorPrimaryBrush}"
-                            />
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
                     </Grid>
                     <StackPanel
                         Grid.Row="1"
