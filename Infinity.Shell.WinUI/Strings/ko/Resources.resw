@@ -352,4 +352,34 @@
   <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>모든 페이지에 고정됨</value>
   </data>
+  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>설정</value>
+  </data>
+  <data name="TourNavigationItem.Content" xml:space="preserve">
+    <value>둘러보기</value>
+  </data>
+  <data name="AboutNavigationItem.Content" xml:space="preserve">
+    <value>소개</value>
+  </data>
+  <data name="QuitInfinityNavigationItem.Content" xml:space="preserve">
+    <value>종료</value>
+  </data>
+  <data name="AboutDialogTitle" xml:space="preserve">
+    <value>소개</value>
+  </data>
+  <data name="AboutDialogCloseButton" xml:space="preserve">
+    <value>닫기</value>
+  </data>
+  <data name="QuitDialogTitle" xml:space="preserve">
+    <value>Infinity를 종료할까요?</value>
+  </data>
+  <data name="QuitDialogMessage" xml:space="preserve">
+    <value>Infinity가 닫힙니다. 데스크톱 페이지 이동 및 창 관리가 중지됩니다.</value>
+  </data>
+  <data name="QuitDialogPrimaryButton" xml:space="preserve">
+    <value>종료</value>
+  </data>
+  <data name="QuitDialogCloseButton" xml:space="preserve">
+    <value>취소</value>
+  </data>
 </root>

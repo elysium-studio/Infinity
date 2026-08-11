@@ -99,8 +99,9 @@
                     </Grid>
                 </Grid>
                 <Button
-                    x:Uid="WindowOptionsButton"
+                    x:Uid="WindowSettingsButton"
                     VerticalAlignment="Center"
+                    Click="{x:Bind ViewModel.NavigateToSettings}"
                     IsTabStop="False">
                     <Button.Resources>
                         <SolidColorBrush x:Key="ButtonBackground" Color="Transparent" />
@@ -118,35 +119,10 @@
                             <Setter Property="BorderBrush" Value="Transparent" />
                             <Setter Property="BorderThickness" Value="0" />
                             <Setter Property="FontSize" Value="16" />
-                            <Setter Property="Content" Value="&#xE712;" />
+                            <Setter Property="Content" Value="&#xE713;" />
                             <Setter Property="FontFamily" Value="Segoe Fluent Icons" />
                         </Style>
                     </Button.Style>
-                    <Button.Flyout>
-                        <MenuFlyout Placement="Bottom">
-                            <MenuFlyoutItem x:Uid="WindowSettingsMenuItem" Click="{x:Bind ViewModel.NavigateToSettings}">
-                                <MenuFlyoutItem.Icon>
-                                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE713;" />
-                                </MenuFlyoutItem.Icon>
-                            </MenuFlyoutItem>
-                            <MenuFlyoutItem x:Uid="WindowTourMenuItem" Click="{x:Bind ViewModel.NavigateToTour}">
-                                <MenuFlyoutItem.Icon>
-                                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE7BE;" />
-                                </MenuFlyoutItem.Icon>
-                            </MenuFlyoutItem>
-                            <MenuFlyoutItem x:Uid="WindowAboutMenuItem" Click="{x:Bind ViewModel.NavigateToAbout}">
-                                <MenuFlyoutItem.Icon>
-                                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE946;" />
-                                </MenuFlyoutItem.Icon>
-                            </MenuFlyoutItem>
-                            <MenuFlyoutSeparator />
-                            <MenuFlyoutItem x:Uid="WindowExitMenuItem" Click="{x:Bind ViewModel.ExitApplication}">
-                                <MenuFlyoutItem.Icon>
-                                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE7E8;" />
-                                </MenuFlyoutItem.Icon>
-                            </MenuFlyoutItem>
-                        </MenuFlyout>
-                    </Button.Flyout>
                 </Button>
             </Grid>
             <Grid

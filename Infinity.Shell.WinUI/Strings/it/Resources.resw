@@ -352,4 +352,34 @@
   <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Fissata su tutte le pagine</value>
   </data>
+  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Impostazioni</value>
+  </data>
+  <data name="TourNavigationItem.Content" xml:space="preserve">
+    <value>Fai un giro</value>
+  </data>
+  <data name="AboutNavigationItem.Content" xml:space="preserve">
+    <value>Informazioni</value>
+  </data>
+  <data name="QuitInfinityNavigationItem.Content" xml:space="preserve">
+    <value>Esci</value>
+  </data>
+  <data name="AboutDialogTitle" xml:space="preserve">
+    <value>Informazioni</value>
+  </data>
+  <data name="AboutDialogCloseButton" xml:space="preserve">
+    <value>Chiudi</value>
+  </data>
+  <data name="QuitDialogTitle" xml:space="preserve">
+    <value>Uscire da Infinity?</value>
+  </data>
+  <data name="QuitDialogMessage" xml:space="preserve">
+    <value>Infinity verrà chiuso. Lo scorrimento tra le pagine del desktop e la gestione delle finestre verranno interrotti.</value>
+  </data>
+  <data name="QuitDialogPrimaryButton" xml:space="preserve">
+    <value>Esci</value>
+  </data>
+  <data name="QuitDialogCloseButton" xml:space="preserve">
+    <value>Annulla</value>
+  </data>
 </root>

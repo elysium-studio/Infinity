@@ -352,4 +352,34 @@
   <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Épinglée sur toutes les pages</value>
   </data>
+  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Paramètres</value>
+  </data>
+  <data name="TourNavigationItem.Content" xml:space="preserve">
+    <value>Faire une visite</value>
+  </data>
+  <data name="AboutNavigationItem.Content" xml:space="preserve">
+    <value>À propos</value>
+  </data>
+  <data name="QuitInfinityNavigationItem.Content" xml:space="preserve">
+    <value>Quitter</value>
+  </data>
+  <data name="AboutDialogTitle" xml:space="preserve">
+    <value>À propos</value>
+  </data>
+  <data name="AboutDialogCloseButton" xml:space="preserve">
+    <value>Fermer</value>
+  </data>
+  <data name="QuitDialogTitle" xml:space="preserve">
+    <value>Quitter Infinity ?</value>
+  </data>
+  <data name="QuitDialogMessage" xml:space="preserve">
+    <value>Infinity va se fermer. La pagination du bureau et la gestion des fenêtres seront arrêtées.</value>
+  </data>
+  <data name="QuitDialogPrimaryButton" xml:space="preserve">
+    <value>Quitter</value>
+  </data>
+  <data name="QuitDialogCloseButton" xml:space="preserve">
+    <value>Annuler</value>
+  </data>
 </root>
