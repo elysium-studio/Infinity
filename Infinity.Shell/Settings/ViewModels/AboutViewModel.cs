@@ -1,15 +1,8 @@
-using CommunityToolkit.Mvvm.Messaging;
-using Elysium.Application.Abstractions;
-using Elysium.Presentation;
 using System.Reflection;
 
 namespace Infinity.Shell;
 
-public sealed partial class AboutViewModel(IServiceProvider provider,
-    IServiceFactory factory,
-    IMessenger messenger,
-    IDisposer disposer) :
-    ObservableViewModel(provider, factory, messenger, disposer)
+public sealed class AboutViewModel
 {
     private static readonly Assembly EntryAssembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
 

@@ -45,10 +45,8 @@ public sealed partial class TrackedWindowCollectionViewModel :
     private readonly IWindowNavigationCoordinator coordinator;
     private readonly INavigator navigator;
     private readonly IOptionsMonitor<Settings> settings;
-    private readonly IApplicationLifetime lifetime;
     private readonly ILogger<TrackedWindowCollectionViewModel> logger;
 
-    private bool isExitRequested;
     private bool preservePageOnFilterClear;
     private bool filterSelectionResolved;
     private string lastActivatedFilterText = string.Empty;
@@ -109,7 +107,6 @@ public sealed partial class TrackedWindowCollectionViewModel :
         IWindowNavigationCoordinator coordinator,
         INavigator navigator,
         IOptionsMonitor<Settings> settings,
-        IApplicationLifetime lifetime,
         ILogger<TrackedWindowCollectionViewModel> logger) : base(provider, factory, messenger, disposer)
     {
         this.dispatcher = dispatcher;
@@ -129,7 +126,6 @@ public sealed partial class TrackedWindowCollectionViewModel :
         this.coordinator = coordinator;
         this.navigator = navigator;
         this.settings = settings;
-        this.lifetime = lifetime;
         this.logger = logger;
 
         IsActive = true;
@@ -180,30 +176,6 @@ public sealed partial class TrackedWindowCollectionViewModel :
         Messenger.Register<WindowDragScrolledEventArgs>(this);
         Messenger.Register<DesktopBackgroundChangedEventArgs>(this);
     }
-
-    public async void ExitApplication()
-    {
-        if (isExitRequested)
-        {
-            return;
-        }
-
-        isExitRequested = true;
-
-        try
-        {
-            await lifetime.ExitAsync();
-        }
-        catch (Exception exception)
-        {
-            isExitRequested = false;
-            logger.LogError(exception, "Failed to exit the application");
-        }
-    }
-
-    public async void NavigateToAbout() => await NavigateAsync("AboutWindow");
-
-    public async void NavigateToTour() => await NavigateAsync("TourWindow");
 
     public async void NavigateToSettings() => await NavigateAsync("SettingsWindow");
 

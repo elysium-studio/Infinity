@@ -352,4 +352,34 @@
   <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>已固定到所有页面</value>
   </data>
+  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="TourNavigationItem.Content" xml:space="preserve">
+    <value>参观一下</value>
+  </data>
+  <data name="AboutNavigationItem.Content" xml:space="preserve">
+    <value>关于</value>
+  </data>
+  <data name="QuitInfinityNavigationItem.Content" xml:space="preserve">
+    <value>退出</value>
+  </data>
+  <data name="AboutDialogTitle" xml:space="preserve">
+    <value>关于</value>
+  </data>
+  <data name="AboutDialogCloseButton" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="QuitDialogTitle" xml:space="preserve">
+    <value>退出 Infinity？</value>
+  </data>
+  <data name="QuitDialogMessage" xml:space="preserve">
+    <value>Infinity 将关闭。桌面分页和窗口管理将停止。</value>
+  </data>
+  <data name="QuitDialogPrimaryButton" xml:space="preserve">
+    <value>退出</value>
+  </data>
+  <data name="QuitDialogCloseButton" xml:space="preserve">
+    <value>取消</value>
+  </data>
 </root>

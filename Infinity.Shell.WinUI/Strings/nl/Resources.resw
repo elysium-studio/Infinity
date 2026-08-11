@@ -352,4 +352,34 @@
   <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Vastgemaakt op alle pagina's</value>
   </data>
+  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Instellingen</value>
+  </data>
+  <data name="TourNavigationItem.Content" xml:space="preserve">
+    <value>Volg een rondleiding</value>
+  </data>
+  <data name="AboutNavigationItem.Content" xml:space="preserve">
+    <value>Over</value>
+  </data>
+  <data name="QuitInfinityNavigationItem.Content" xml:space="preserve">
+    <value>Afsluiten</value>
+  </data>
+  <data name="AboutDialogTitle" xml:space="preserve">
+    <value>Over</value>
+  </data>
+  <data name="AboutDialogCloseButton" xml:space="preserve">
+    <value>Sluiten</value>
+  </data>
+  <data name="QuitDialogTitle" xml:space="preserve">
+    <value>Infinity afsluiten?</value>
+  </data>
+  <data name="QuitDialogMessage" xml:space="preserve">
+    <value>Infinity wordt gesloten. Bureaubladpagina's en vensterbeheer worden gestopt.</value>
+  </data>
+  <data name="QuitDialogPrimaryButton" xml:space="preserve">
+    <value>Afsluiten</value>
+  </data>
+  <data name="QuitDialogCloseButton" xml:space="preserve">
+    <value>Annuleren</value>
+  </data>
 </root>

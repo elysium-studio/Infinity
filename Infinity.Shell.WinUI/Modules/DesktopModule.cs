@@ -10,7 +10,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
-using IApplicationLifetime = Elysium.Application.Abstractions.IApplicationLifetime;
 
 namespace Infinity.Shell.WinUI;
 
@@ -76,7 +75,6 @@ public sealed class DesktopModule :
                     provider.GetRequiredService<IWindowNavigationCoordinator>(),
                     provider.GetRequiredService<INavigator>(),
                     provider.GetRequiredService<IOptionsMonitor<Settings>>(),
-                    provider.GetRequiredService<IApplicationLifetime>(),
                     provider.GetRequiredService<ILogger<TrackedWindowCollectionViewModel>>()));
 
         services.Subscribe<IDesktopBackgroundController>((provider, backgroundController) =>

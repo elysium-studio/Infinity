@@ -352,4 +352,34 @@
   <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>すべてのページに固定済み</value>
   </data>
+  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="TourNavigationItem.Content" xml:space="preserve">
+    <value>ツアーに参加する</value>
+  </data>
+  <data name="AboutNavigationItem.Content" xml:space="preserve">
+    <value>について</value>
+  </data>
+  <data name="QuitInfinityNavigationItem.Content" xml:space="preserve">
+    <value>終了</value>
+  </data>
+  <data name="AboutDialogTitle" xml:space="preserve">
+    <value>について</value>
+  </data>
+  <data name="AboutDialogCloseButton" xml:space="preserve">
+    <value>閉じる</value>
+  </data>
+  <data name="QuitDialogTitle" xml:space="preserve">
+    <value>Infinity を終了しますか?</value>
+  </data>
+  <data name="QuitDialogMessage" xml:space="preserve">
+    <value>Infinity が閉じられます。デスクトップのページ切り替えとウィンドウ管理が停止します。</value>
+  </data>
+  <data name="QuitDialogPrimaryButton" xml:space="preserve">
+    <value>終了</value>
+  </data>
+  <data name="QuitDialogCloseButton" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
 </root>

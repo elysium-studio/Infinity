@@ -352,4 +352,34 @@
   <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>[!! Þîññëð ţô àļļ þàĝëš ~~~~~~~ !!]</value>
   </data>
+  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>[Šéţţîñĝš]</value>
+  </data>
+  <data name="TourNavigationItem.Content" xml:space="preserve">
+    <value>[!! Ţàķë à ţôûŕ ~~~~ !!]</value>
+  </data>
+  <data name="AboutNavigationItem.Content" xml:space="preserve">
+    <value>[!! Àƀôûţ ~~~ !!]</value>
+  </data>
+  <data name="QuitInfinityNavigationItem.Content" xml:space="preserve">
+    <value>[Qüït]</value>
+  </data>
+  <data name="AboutDialogTitle" xml:space="preserve">
+    <value>[!! Àƀôûţ ~~~ !!]</value>
+  </data>
+  <data name="AboutDialogCloseButton" xml:space="preserve">
+    <value>[Çløsé]</value>
+  </data>
+  <data name="QuitDialogTitle" xml:space="preserve">
+    <value>[Qüït Infinity?]</value>
+  </data>
+  <data name="QuitDialogMessage" xml:space="preserve">
+    <value>[Infinity wïll clösé. Désktöp pågïng ånd wïndöw månågémént wïll stöp.]</value>
+  </data>
+  <data name="QuitDialogPrimaryButton" xml:space="preserve">
+    <value>[Qüït]</value>
+  </data>
+  <data name="QuitDialogCloseButton" xml:space="preserve">
+    <value>[Cåncél]</value>
+  </data>
 </root>

@@ -18,6 +18,7 @@
             </TitleBar.IconSource>
         </TitleBar>
         <NavigationView
+            x:Name="SettingsNavigation"
             Grid.Row="1"
             Margin="0,8,0,0"
             IsBackButtonVisible="Collapsed"
@@ -26,6 +27,40 @@
             MenuItemsSource="{x:Bind ViewModel, Mode=OneWay}"
             PaneDisplayMode="Left"
             SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}">
+            <NavigationView.PaneFooter>
+                <StackPanel Spacing="4">
+                    <NavigationViewItem
+                        x:Name="TourNavigationItem"
+                        x:Uid="TourNavigationItem"
+                        Margin="8,0,0,0"
+                        SelectsOnInvoked="False"
+                        Tapped="{x:Bind HandleTourTapped}">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xE7BE;" />
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                    <NavigationViewItem
+                        x:Name="AboutNavigationItem"
+                        x:Uid="AboutNavigationItem"
+                        Margin="8,0,0,0"
+                        SelectsOnInvoked="False"
+                        Tapped="{x:Bind HandleAboutTapped}">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xE946;" />
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                    <NavigationViewItem
+                        x:Name="QuitInfinityNavigationItem"
+                        x:Uid="QuitInfinityNavigationItem"
+                        Margin="8,0,0,0"
+                        SelectsOnInvoked="False"
+                        Tapped="{x:Bind HandleQuitTapped}">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xE7E8;" />
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                </StackPanel>
+            </NavigationView.PaneFooter>
             <NavigationView.Resources>
                 <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent" />
                 <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
