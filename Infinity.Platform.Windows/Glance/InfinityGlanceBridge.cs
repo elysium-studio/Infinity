@@ -20,6 +20,8 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
     private bool pageUpdatePending;
     private bool visibilityUpdatePending;
     private bool isPageNavigationAvailable;
+    private int updateQueued;
+    private int disposed;
 
     public bool IsPageNavigationAvailable
     {
@@ -107,8 +109,13 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
 
     public override void Dispose()
     {
-        updateSignal.Dispose();
+        if (Interlocked.Exchange(ref disposed, 1) != 0)
+        {
+            return;
+        }
+
         base.Dispose();
+        updateSignal.Dispose();
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -218,6 +225,7 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
         while (!cancellationToken.IsCancellationRequested)
         {
             await updateSignal.WaitAsync(cancellationToken);
+            Volatile.Write(ref updateQueued, 0);
 
             if (!IsPageNavigationAvailable)
             {
@@ -269,9 +277,18 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
 
     private void SignalUpdate()
     {
-        if (updateSignal.CurrentCount == 0)
+        if (Volatile.Read(ref disposed) != 0 || Interlocked.Exchange(ref updateQueued, 1) != 0)
+        {
+            return;
+        }
+
+        try
         {
             updateSignal.Release();
+        }
+        catch (ObjectDisposedException)
+        {
+            Volatile.Write(ref updateQueued, 0);
         }
     }
 

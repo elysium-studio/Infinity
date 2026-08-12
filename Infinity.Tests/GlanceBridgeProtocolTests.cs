@@ -61,4 +61,20 @@ public sealed class GlanceBridgeProtocolTests
         Assert.Equal(state, page);
         Assert.True(visibility);
     }
+
+    [Fact]
+    public void ConcurrentUpdatesAreSafelyCoalesced()
+    {
+        using InfinityGlanceBridge bridge = new(NullLogger<InfinityGlanceBridge>.Instance);
+
+        Parallel.For(0, 1000, index =>
+        {
+            bridge.PublishPageNavigation(new InfinityPageNavigationState(index, index + 1, $"Page {index + 1}"));
+            bridge.SetPageNavigationSurfaceVisible(InfinityPageNavigationSurface.PageTint, index % 2 == 0);
+        });
+
+        (InfinityPageNavigationState? page, bool? visibility) = bridge.TakePendingUpdates();
+        Assert.NotNull(page);
+        Assert.NotNull(visibility);
+    }
 }
