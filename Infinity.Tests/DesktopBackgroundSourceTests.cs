@@ -1,6 +1,5 @@
 using Infinity.Platform.Windows;
 using Microsoft.Extensions.Logging;
-using System.Runtime.InteropServices;
 
 namespace Infinity.Tests;
 
@@ -10,23 +9,31 @@ public sealed class DesktopBackgroundSourceTests
     private static readonly TimeSpan RecoveryPollingInterval = TimeSpan.FromSeconds(30);
 
     [Fact]
-    public void RecreatesWallpaperSessionAfterComFailure()
+    public void RecoversAfterSnapshotReadFailure()
     {
         TestLogger logger = new();
-        TestDesktopWallpaper failedWallpaper = new() { Failure = CreateServerUnavailableException() };
-        TestDesktopWallpaper recoveredWallpaper = new() { Colour = 0x00332211 };
-        Queue<DesktopBackgroundSource.IDesktopWallpaper> wallpapers = new([failedWallpaper, recoveredWallpaper]);
-        int factoryCalls = 0;
+        Exception? failure = new InvalidOperationException();
+        int reads = 0;
 
         using DesktopBackgroundSource source = CreateSource(logger, () =>
         {
-            factoryCalls++;
-            return wallpapers.Dequeue();
+            reads++;
+
+            if (failure is not null)
+            {
+                throw failure;
+            }
+
+            return CreateSnapshot(0x00332211);
         });
 
-        Assert.Equal(1, factoryCalls);
+        Assert.False(source.PollForChanges());
+        Assert.Equal(1, reads);
+
+        failure = null;
+
         Assert.True(source.PollForChanges());
-        Assert.Equal(2, factoryCalls);
+        Assert.Equal(2, reads);
         Assert.Equal("#112233", source.GetBackground().Colour);
     }
 
@@ -34,13 +41,22 @@ public sealed class DesktopBackgroundSourceTests
     public void FailedPollPreservesLastKnownBackground()
     {
         TestLogger logger = new();
-        TestDesktopWallpaper wallpaper = new() { Colour = 0x00665544 };
+        Exception? failure = null;
 
-        using DesktopBackgroundSource source = CreateSource(logger, () => wallpaper);
+        using DesktopBackgroundSource source = CreateSource(logger, () =>
+        {
+            if (failure is not null)
+            {
+                throw failure;
+            }
 
+            return CreateSnapshot(0x00665544);
+        });
+
+        Assert.True(source.PollForChanges());
         Assert.Equal("#445566", source.GetBackground().Colour);
 
-        wallpaper.Failure = CreateServerUnavailableException();
+        failure = new InvalidOperationException();
 
         Assert.False(source.PollForChanges());
         Assert.Equal("#445566", source.GetBackground().Colour);
@@ -50,19 +66,30 @@ public sealed class DesktopBackgroundSourceTests
     public void RepeatedFailuresLogOnlyOnceUntilRecovery()
     {
         TestLogger logger = new();
-        TestDesktopWallpaper wallpaper = new() { Failure = CreateServerUnavailableException() };
+        Exception? failure = new InvalidOperationException();
 
-        using DesktopBackgroundSource source = CreateSource(logger, () => wallpaper);
+        using DesktopBackgroundSource source = CreateSource(logger, () =>
+        {
+            if (failure is not null)
+            {
+                throw failure;
+            }
+
+            return CreateSnapshot(0x00332211);
+        });
 
         Assert.False(source.PollForChanges());
         Assert.Equal(1, logger.WarningCount);
 
-        wallpaper.Failure = null;
+        Assert.False(source.PollForChanges());
+        Assert.Equal(1, logger.WarningCount);
+
+        failure = null;
 
         Assert.True(source.PollForChanges());
         Assert.Equal(1, logger.InformationCount);
 
-        wallpaper.Failure = CreateServerUnavailableException();
+        failure = new InvalidOperationException();
 
         Assert.False(source.PollForChanges());
         Assert.Equal(2, logger.WarningCount);
@@ -72,16 +99,17 @@ public sealed class DesktopBackgroundSourceTests
     public void RecoveryNotifiesOnlyWhenBackgroundChanged()
     {
         TestLogger logger = new();
-        TestDesktopWallpaper wallpaper = new() { Colour = 0x00332211 };
+        uint colour = 0x00332211;
 
-        using DesktopBackgroundSource source = CreateSource(logger, () => wallpaper);
+        using DesktopBackgroundSource source = CreateSource(logger, () => CreateSnapshot(colour));
+        Assert.True(source.PollForChanges());
         int notifications = 0;
         source.BackgroundChanged += (_, _) => notifications++;
 
         Assert.True(source.PollForChanges());
         Assert.Equal(0, notifications);
 
-        wallpaper.Colour = 0x00665544;
+        colour = 0x00665544;
 
         Assert.True(source.PollForChanges());
         Assert.Equal(1, notifications);
@@ -92,11 +120,12 @@ public sealed class DesktopBackgroundSourceTests
     public void ThrowingChangeSubscriberDoesNotTerminatePolling()
     {
         TestLogger logger = new();
-        TestDesktopWallpaper wallpaper = new() { Colour = 0x00332211 };
+        uint colour = 0x00332211;
 
-        using DesktopBackgroundSource source = CreateSource(logger, () => wallpaper);
+        using DesktopBackgroundSource source = CreateSource(logger, () => CreateSnapshot(colour));
+        Assert.True(source.PollForChanges());
         source.BackgroundChanged += (_, _) => throw new InvalidOperationException();
-        wallpaper.Colour = 0x00665544;
+        colour = 0x00665544;
 
         Assert.True(source.PollForChanges());
         Assert.Equal(1, logger.ErrorCount);
@@ -104,11 +133,20 @@ public sealed class DesktopBackgroundSourceTests
     }
 
     [Fact]
+    public void UnavailableWallpaperDoesNotProduceBlackFallback()
+    {
+        using DesktopBackgroundSource source = CreateSource(new TestLogger(), () => throw new InvalidOperationException());
+
+        Assert.Null(source.GetBackground().Wallpaper);
+        Assert.Null(source.GetBackground().Colour);
+        Assert.False(source.PollForChanges());
+        Assert.Null(source.GetBackground().Colour);
+    }
+
+    [Fact]
     public void DisposalIsIdempotentAndStopsPolling()
     {
-        TestLogger logger = new();
-        TestDesktopWallpaper wallpaper = new() { Colour = 0x00332211 };
-        DesktopBackgroundSource source = CreateSource(logger, () => wallpaper);
+        DesktopBackgroundSource source = CreateSource(new TestLogger(), () => CreateSnapshot(0x00332211));
 
         source.Dispose();
         source.Dispose();
@@ -116,16 +154,55 @@ public sealed class DesktopBackgroundSourceTests
         Assert.False(source.PollForChanges());
     }
 
+    [Fact]
+    public async Task StartDoesNotWaitForWallpaperRead()
+    {
+        TaskCompletionSource entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        using DesktopBackgroundSource source = new(new TestLogger(),
+            () =>
+            {
+                entered.TrySetResult();
+                release.Task.GetAwaiter().GetResult();
+                return CreateSnapshot(0x00332211);
+            },
+            PollingInterval,
+            RecoveryPollingInterval,
+            true);
+
+        try
+        {
+            await Task.Run(source.Start).WaitAsync(TimeSpan.FromSeconds(1));
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        }
+        finally
+        {
+            release.TrySetResult();
+        }
+
+        await WaitUntilAsync(() => source.GetBackground().Colour == "#112233");
+    }
+
     private static DesktopBackgroundSource CreateSource(TestLogger logger,
-        Func<DesktopBackgroundSource.IDesktopWallpaper> wallpaperFactory) =>
+        Func<DesktopBackgroundSource.DesktopBackgroundSnapshot> snapshotReader) =>
         new(logger,
-            wallpaperFactory,
+            snapshotReader,
             PollingInterval,
             RecoveryPollingInterval,
             false);
 
-    private static COMException CreateServerUnavailableException() =>
-        new("The RPC server is unavailable", unchecked((int)0x800706BA));
+    private static DesktopBackgroundSource.DesktopBackgroundSnapshot CreateSnapshot(uint colour) =>
+        new(string.Empty, colour);
+
+    private static async Task WaitUntilAsync(Func<bool> condition)
+    {
+        using CancellationTokenSource timeout = new(TimeSpan.FromSeconds(1));
+
+        while (!condition())
+        {
+            await Task.Delay(10, timeout.Token);
+        }
+    }
 
     private sealed class TestLogger :
         ILogger<DesktopBackgroundSource>
@@ -161,66 +238,5 @@ public sealed class DesktopBackgroundSourceTests
                 WarningCount++;
             }
         }
-    }
-
-    private sealed class TestDesktopWallpaper :
-        DesktopBackgroundSource.IDesktopWallpaper
-    {
-        public uint Colour { get; set; }
-
-        public COMException? Failure { get; set; }
-
-        public void SetWallpaper(string monitorID, string wallpaper) =>
-            throw new NotSupportedException();
-
-        public string GetWallpaper(string monitorID) => string.Empty;
-
-        public string GetMonitorDevicePathAt(uint monitorIndex)
-        {
-            if (Failure is not null)
-            {
-                throw Failure;
-            }
-
-            return "Monitor";
-        }
-
-        public uint GetMonitorDevicePathCount() =>
-            throw new NotSupportedException();
-
-        public DesktopBackgroundSource.RECT GetMonitorRECT(string monitorID) =>
-            throw new NotSupportedException();
-
-        public void SetBackgroundColor(uint color) =>
-            throw new NotSupportedException();
-
-        public uint GetBackgroundColor() => Colour;
-
-        public void SetPosition(int position) =>
-            throw new NotSupportedException();
-
-        public int GetPosition() =>
-            throw new NotSupportedException();
-
-        public void SetSlideshow(nint items) =>
-            throw new NotSupportedException();
-
-        public void GetSlideshow(out nint items) =>
-            throw new NotSupportedException();
-
-        public void SetSlideshowOptions(int options, uint slideshowTick) =>
-            throw new NotSupportedException();
-
-        public void GetSlideshowOptions(out int options, out uint slideshowTick) =>
-            throw new NotSupportedException();
-
-        public void AdvanceSlideshow(string monitorID, int direction) =>
-            throw new NotSupportedException();
-
-        public void GetStatus(out int state) =>
-            throw new NotSupportedException();
-
-        public bool Enable() =>
-            throw new NotSupportedException();
     }
 }

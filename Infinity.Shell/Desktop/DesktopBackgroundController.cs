@@ -25,6 +25,7 @@ public sealed class DesktopBackgroundController(IDesktopBackgroundSource source,
         isSubscribed = true;
         source.BackgroundChanged += HandleSourceChanged;
         Apply(source.GetBackground());
+        source.Start();
     }
 
     public void Unsubscribe()
@@ -36,6 +37,7 @@ public sealed class DesktopBackgroundController(IDesktopBackgroundSource source,
 
         isSubscribed = false;
         source.BackgroundChanged -= HandleSourceChanged;
+        source.Stop();
     }
 
     public void Clear()
