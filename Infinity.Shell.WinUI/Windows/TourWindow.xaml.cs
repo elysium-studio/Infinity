@@ -11,6 +11,7 @@ public sealed partial class TourWindow :
     private const int WindowWidth = 800;
     private const int WindowHeight = 660;
 
+    private bool closed;
     private bool finished;
 
     public TourWindow()
@@ -50,12 +51,35 @@ public sealed partial class TourWindow :
 
     private void HandleViewModelFinished(object? sender, EventArgs args)
     {
+        if (finished || closed)
+        {
+            return;
+        }
+
+        if (!DispatcherQueue.HasThreadAccess)
+        {
+            _ = DispatcherQueue.TryEnqueue(Finish);
+            return;
+        }
+
+        Finish();
+    }
+
+    private void Finish()
+    {
+        if (finished || closed)
+        {
+            return;
+        }
+
         finished = true;
         Close();
     }
 
     private void HandleWindowClosed(object sender, WindowEventArgs args)
     {
+        closed = true;
+
         if (!finished)
         {
             ViewModel.Cancel();
