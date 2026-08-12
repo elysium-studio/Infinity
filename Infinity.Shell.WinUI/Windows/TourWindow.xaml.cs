@@ -37,7 +37,7 @@ public sealed partial class TourWindow :
         Closed += HandleWindowClosed;
     }
 
-    public TourViewModel ViewModel => (TourViewModel)((FrameworkElement)Content).DataContext;
+    public TourViewModel ViewModel => field ??= (TourViewModel)((FrameworkElement)Content).DataContext;
 
     public Visibility ToNextVisibility(bool isLastStep) => isLastStep ? Visibility.Collapsed : Visibility.Visible;
 

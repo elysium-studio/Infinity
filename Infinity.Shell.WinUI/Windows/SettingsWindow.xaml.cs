@@ -51,7 +51,7 @@ public sealed partial class SettingsWindow :
         AppWindow.MoveAndResize(new RectInt32(centeredX, centeredY, WindowWidth, WindowHeight));
     }
 
-    public SettingsViewModel ViewModel => (SettingsViewModel)((FrameworkElement)Content).DataContext;
+    public SettingsViewModel ViewModel => field ??= (SettingsViewModel)((FrameworkElement)Content).DataContext;
 
     private async void HandleQuitTapped(object sender,
         Microsoft.UI.Xaml.Input.TappedRoutedEventArgs args)
