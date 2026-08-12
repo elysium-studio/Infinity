@@ -2,6 +2,7 @@ using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Win32;
@@ -265,6 +266,10 @@ public sealed class ForegroundWindowTracker :
         catch (InvalidOperationException exception)
         {
             logger.LogDebug(exception, "Dispatcher rejected foreground window state publication");
+        }
+        catch (COMException exception)
+        {
+            logger.LogDebug(exception, "Dispatcher failed while publishing foreground window state");
         }
     }
 

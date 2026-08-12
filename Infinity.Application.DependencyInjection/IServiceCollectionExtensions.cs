@@ -39,6 +39,7 @@ public static class IServiceCollectionExtensions
                     provider.GetRequiredService<IPager>(),
                     provider.GetRequiredService<IPanState>(),
                     provider.GetRequiredService<IDispatcher>(),
+                    provider.GetRequiredService<ILogger<WindowTracker>>(),
                     provider.GetRequiredService<IMessageWindow>().Handle));
 
             services.AddSingleton<IScrollInputSource>(provider =>

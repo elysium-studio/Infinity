@@ -218,7 +218,36 @@ public sealed class WindowDragGuard(IWindowEventListener listener,
             return;
         }
 
-        dispatcher.Dispatch(() => HandleModifierPollTick(version));
+        lock (syncRoot)
+        {
+            if (!isStarted || version != modifierPollVersion)
+            {
+                return;
+            }
+        }
+
+        try
+        {
+            dispatcher.Dispatch(() => HandleModifierPollTick(version));
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or COMException)
+        {
+            lock (syncRoot)
+            {
+                if (version == modifierPollVersion)
+                {
+                    StopModifierPolling();
+                    draggingWindows.Clear();
+                    resizingWindows.Clear();
+                    dragStartBounds.Clear();
+                    isModifierDown = false;
+                    dragRestartRequired = false;
+                }
+            }
+
+            windowArranging.Restore();
+            logger.LogDebug(exception, "The dispatcher rejected modifier drag polling");
+        }
     }
 
     private void HandleModifierPollTick(int version)

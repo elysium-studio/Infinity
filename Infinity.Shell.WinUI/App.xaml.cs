@@ -35,43 +35,66 @@ public sealed partial class App
         string applicationData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Infinity");
 
         dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+        IHost? startingHost = null;
+        ILogger<App>? logger = null;
 
-        host = Host.CreateDefaultBuilder()
-            .UseWritableContentRoot(applicationData)
-            .ConfigureServices(services => services
-                .AddSingleton<IApplicationLifetime>(new ApplicationLifetime(ShutdownAsync))
-                .AddInfinityApplication()
-                .AddInfinityPlatform()
-                .AddApplication()
-                .AddPresentation()
-                .AddModules(new ApplicationModule(applicationData, dispatcherQueue,
-                                flush => UnhandledException += (_, args) => flush(args.Exception)),
-                            new ConfigurationModule(),
-                            new LocalizationModule(),
-                            new NavigationModule(),
-                            new DesktopSettingsModule(),
-                            new DesktopModule(),
-                            new PreviewSettingsModule(),
-                            new ShellModule(),
-                            new SettingsModule(),
-                            new TourModule(),
-                            new UpdateModule(),
-                            new WindowsSettingsModule(),
-                            new WindowingModule()))
-            .Build();
-
-        ViewExtension.DefaultProvider = host.Services;
-        ViewModelExtension.DefaultProvider = host.Services;
-
-        _ = host.Services.GetRequiredKeyedService<DesktopFlyoutView>("DesktopFlyoutView");
-        _ = host.Services.GetRequiredKeyedService<PageTintView>("PageTintView");
-
-        host.Start();
-
-        if (host.Services.GetRequiredService<Settings>() is { ShowHintOnStartup: true })
+        try
         {
-            startupNavigationTask = NavigateToStartupTourAsync(host.Services.GetRequiredService<INavigator>(),
-                host.Services.GetRequiredService<ILogger<App>>());
+            startingHost = Host.CreateDefaultBuilder()
+                .UseWritableContentRoot(applicationData)
+                .ConfigureServices(services => services
+                    .AddSingleton<IApplicationLifetime>(new ApplicationLifetime(ShutdownAsync))
+                    .AddInfinityApplication()
+                    .AddInfinityPlatform()
+                    .AddApplication()
+                    .AddPresentation()
+                    .AddModules(new ApplicationModule(applicationData, dispatcherQueue,
+                                    flush => UnhandledException += (_, args) => flush(args.Exception)),
+                                new ConfigurationModule(),
+                                new LocalizationModule(),
+                                new NavigationModule(),
+                                new DesktopSettingsModule(),
+                                new DesktopModule(),
+                                new PreviewSettingsModule(),
+                                new ShellModule(),
+                                new SettingsModule(),
+                                new TourModule(),
+                                new UpdateModule(),
+                                new WindowsSettingsModule(),
+                                new WindowingModule()))
+                .Build();
+
+            host = startingHost;
+            logger = startingHost.Services.GetRequiredService<ILogger<App>>();
+            ViewExtension.DefaultProvider = startingHost.Services;
+            ViewModelExtension.DefaultProvider = startingHost.Services;
+
+            _ = startingHost.Services.GetRequiredKeyedService<DesktopFlyoutView>("DesktopFlyoutView");
+            _ = startingHost.Services.GetRequiredKeyedService<PageTintView>("PageTintView");
+
+            startingHost.Start();
+
+            if (startingHost.Services.GetRequiredService<Settings>() is { ShowHintOnStartup: true })
+            {
+                startupNavigationTask = NavigateToStartupTourAsync(startingHost.Services.GetRequiredService<INavigator>(),
+                    logger);
+            }
+        }
+        catch (Exception exception)
+        {
+            logger?.LogCritical(exception, "Infinity failed to start");
+
+            try
+            {
+                startingHost?.Dispose();
+            }
+            catch (Exception cleanupException)
+            {
+                logger?.LogError(cleanupException, "Infinity startup cleanup failed");
+            }
+
+            host = null;
+            throw;
         }
     }
 

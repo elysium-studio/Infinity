@@ -73,7 +73,6 @@ GetCurrentThreadId
 GetApplicationUserModelId
 CreateDIBSection
 GetAsyncKeyState
-GetWindowLongPtr
 ShowWindowAsync
 GetClassLong
 RemoveProp

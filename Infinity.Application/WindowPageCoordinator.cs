@@ -3,6 +3,7 @@ using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -340,6 +341,9 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         catch (InvalidOperationException)
         {
         }
+        catch (COMException)
+        {
+        }
         finally
         {
             CleanupForegroundFollowDelay(generation, cancellationTokenSource);
@@ -356,6 +360,9 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         {
         }
         catch (InvalidOperationException)
+        {
+        }
+        catch (COMException)
         {
         }
     }

@@ -2,6 +2,7 @@ using Elysium.Application.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace Infinity.Application;
@@ -283,7 +284,8 @@ public sealed class Scroller(IPanState state,
         }
     }
 
-    private void HandleMoveGuardReleaseTick(object? timerState) => dispatcher.Dispatch(ReleaseMoveGuard);
+    private void HandleMoveGuardReleaseTick(object? timerState) =>
+        DispatchInputCallback(ReleaseMoveGuard, "move guard release");
 
     private void ReleaseMoveGuard()
     {
@@ -307,7 +309,7 @@ public sealed class Scroller(IPanState state,
         double pixels = (-nativeScrollDelta / 120.0) * pixelsPerNotch * WheelScrollScale;
 
         easingMotion.AddDelta(pixels);
-        dispatcher.Dispatch(startTimer);
+        DispatchInputCallback(startTimer, "scroll input");
     }
 
     private void HandleScrollVelocityIdle(double velocity)
@@ -323,7 +325,19 @@ public sealed class Scroller(IPanState state,
         }
 
         momentumMotion.AddVelocity(velocity);
-        dispatcher.Dispatch(startTimer);
+        DispatchInputCallback(startTimer, "scroll momentum");
+    }
+
+    private void DispatchInputCallback(Action action, string operation)
+    {
+        try
+        {
+            dispatcher.Dispatch(action);
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or COMException)
+        {
+            logger.LogDebug(exception, "The dispatcher rejected {Operation}", operation);
+        }
     }
 
     private void HandleHoldStarted()

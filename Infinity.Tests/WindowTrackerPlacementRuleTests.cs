@@ -3,6 +3,7 @@ using Elysium.Platform.Abstractions;
 using Infinity.Application;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Infinity.Tests;
 
@@ -219,6 +220,7 @@ public sealed class WindowTrackerPlacementRuleTests
             new TestPager(),
             state ?? new TestPanState(),
             new TestDispatcher(),
+            NullLogger<WindowTracker>.Instance,
             new IntPtr(99));
 
     private sealed class TestGeometryReader :

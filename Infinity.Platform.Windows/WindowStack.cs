@@ -358,6 +358,10 @@ public sealed class WindowStack(IWindowStore repository,
         {
             logger.LogDebug(exception, "Dispatcher rejected window stack state publication");
         }
+        catch (COMException exception)
+        {
+            logger.LogDebug(exception, "Dispatcher failed while publishing window stack state");
+        }
     }
 
     private bool IsStarted() => Volatile.Read(ref isStarted) != 0;
@@ -374,7 +378,7 @@ public sealed class WindowStack(IWindowStore repository,
 
     private static bool IsTopmost(HWND hwnd)
     {
-        nint extendedStyle = PInvoke.GetWindowLongPtr(hwnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
-        return (extendedStyle & (long)WINDOW_EX_STYLE.WS_EX_TOPMOST) != 0;
+        int extendedStyle = PInvoke.GetWindowLong(hwnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
+        return (extendedStyle & (int)WINDOW_EX_STYLE.WS_EX_TOPMOST) != 0;
     }
 }

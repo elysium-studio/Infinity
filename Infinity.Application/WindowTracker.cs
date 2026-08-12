@@ -2,6 +2,8 @@ using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
+using Microsoft.Extensions.Logging;
+using System.Runtime.InteropServices;
 
 namespace Infinity.Application;
 
@@ -22,6 +24,7 @@ public sealed class WindowTracker(IWindowStore repository,
     IPager pager,
     IPanState state,
     IDispatcher dispatcher,
+    ILogger<WindowTracker> logger,
     IntPtr handle) :
     IWindowTracker
 {
@@ -268,6 +271,10 @@ public sealed class WindowTracker(IWindowStore repository,
         {
             CleanupMinimizeSuspension(windowHandle, cancellationTokenSource);
         }
+        catch (COMException)
+        {
+            CleanupMinimizeSuspension(windowHandle, cancellationTokenSource);
+        }
     }
 
     private void CommitMinimizeSuspension(IntPtr windowHandle, CancellationTokenSource cancellationTokenSource)
@@ -445,7 +452,15 @@ public sealed class WindowTracker(IWindowStore repository,
             return;
         }
 
-        dispatcher.Dispatch(RunSelfHeal);
+        try
+        {
+            dispatcher.Dispatch(RunSelfHeal);
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or COMException)
+        {
+            Volatile.Write(ref selfHealInProgress, 0);
+            logger.LogDebug(exception, "The dispatcher rejected window tracker self-healing");
+        }
     }
 
     private void RunSelfHeal()
