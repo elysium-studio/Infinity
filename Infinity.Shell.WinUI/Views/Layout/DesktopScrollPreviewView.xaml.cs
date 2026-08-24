@@ -2,15 +2,12 @@ using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
-using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
@@ -18,11 +15,6 @@ namespace Infinity.Shell.WinUI;
 public sealed partial class DesktopScrollPreviewView :
     UserControl
 {
-    private const float OverviewScale = 0.94f;
-
-    private static readonly TimeSpan EnterAnimationDuration = TimeSpan.FromMilliseconds(300);
-    private static readonly TimeSpan ExitAnimationDuration = TimeSpan.FromMilliseconds(220);
-
     private readonly IWindowPreviewSurface windowPreviewSurface;
     private readonly IWindowCollection windowCollection;
     private readonly IShellLayoutCalculator layoutCalculator;
@@ -30,11 +22,11 @@ public sealed partial class DesktopScrollPreviewView :
     private readonly IWorkspace workspace;
     private readonly ITaskbarLocator taskbarLocator;
     private readonly IWindowGeometryReader windowGeometryReader;
+    private readonly DesktopScrollPreviewAnimator animator;
     private readonly ILogger<DesktopScrollPreviewView> logger;
     private readonly Dictionary<nint, DesktopWindowPreview> previews = [];
     private bool eventsSubscribed;
     private bool isRunning;
-    private int scaleAnimationGeneration;
     private int monitorOriginX;
     private int monitorOriginY;
 
@@ -45,6 +37,7 @@ public sealed partial class DesktopScrollPreviewView :
         IWorkspace workspace,
         ITaskbarLocator taskbarLocator,
         IWindowGeometryReader windowGeometryReader,
+        DesktopScrollPreviewAnimator animator,
         ILogger<DesktopScrollPreviewView> logger)
     {
         InitializeComponent();
@@ -56,6 +49,7 @@ public sealed partial class DesktopScrollPreviewView :
         this.workspace = workspace;
         this.taskbarLocator = taskbarLocator;
         this.windowGeometryReader = windowGeometryReader;
+        this.animator = animator;
         this.logger = logger;
     }
 
@@ -92,14 +86,7 @@ public sealed partial class DesktopScrollPreviewView :
             return;
         }
 
-        Visual visual = GetPreviewVisual();
-        visual.StopAnimation(nameof(Visual.Scale));
-        visual.Scale = Vector3.One;
-        StartScaleAnimation(visual,
-            Vector3.One,
-            new Vector3(OverviewScale, OverviewScale, 1),
-            EnterAnimationDuration,
-            null);
+        animator.AnimateInward(PreviewCanvas, GetAnimationWidth(), GetAnimationHeight());
     }
 
     public void AnimateOutward(Action completed)
@@ -116,14 +103,7 @@ public sealed partial class DesktopScrollPreviewView :
             return;
         }
 
-        Visual visual = GetPreviewVisual();
-        visual.StopAnimation(nameof(Visual.Scale));
-        visual.Scale = new Vector3(OverviewScale, OverviewScale, 1);
-        StartScaleAnimation(visual,
-            visual.Scale,
-            Vector3.One,
-            ExitAnimationDuration,
-            completed);
+        animator.AnimateOutward(PreviewCanvas, GetAnimationWidth(), GetAnimationHeight(), completed);
     }
 
     public void Clear()
@@ -134,10 +114,7 @@ public sealed partial class DesktopScrollPreviewView :
         }
 
         isRunning = false;
-        scaleAnimationGeneration++;
-        Visual visual = GetPreviewVisual();
-        visual.StopAnimation(nameof(Visual.Scale));
-        visual.Scale = Vector3.One;
+        animator.Reset(PreviewCanvas, GetAnimationWidth(), GetAnimationHeight());
         UnsubscribeEvents();
         windowPreviewSurface.Clear();
 
@@ -249,55 +226,9 @@ public sealed partial class DesktopScrollPreviewView :
         monitorOriginY = taskbar?.MonitorBounds.Top ?? workspace.WorkAreaY;
     }
 
-    private Visual GetPreviewVisual()
-    {
-        Visual visual = ElementCompositionPreview.GetElementVisual(PreviewCanvas);
-        UpdateTransformCenter(visual);
-        return visual;
-    }
+    private double GetAnimationWidth() => ActualWidth > 0 ? ActualWidth : XamlRoot?.Size.Width ?? workspace.Width;
 
-    private void UpdateTransformCenter(Visual visual)
-    {
-        double width = ActualWidth > 0 ? ActualWidth : XamlRoot?.Size.Width ?? workspace.Width;
-        double height = ActualHeight > 0 ? ActualHeight : XamlRoot?.Size.Height ?? workspace.Height;
-        visual.CenterPoint = new Vector3(ToFloat(width / 2), ToFloat(height / 2), 0);
-    }
-
-    private void StartScaleAnimation(Visual visual,
-        Vector3 from,
-        Vector3 to,
-        TimeSpan duration,
-        Action? completed)
-    {
-        int generation = ++scaleAnimationGeneration;
-        Compositor compositor = visual.Compositor;
-        Vector3KeyFrameAnimation animation = compositor.CreateVector3KeyFrameAnimation();
-        CubicBezierEasingFunction easing = compositor.CreateCubicBezierEasingFunction(new Vector2(0.1f, 0.9f),
-            new Vector2(0.2f, 1));
-        animation.Duration = duration;
-        animation.InsertKeyFrame(0, from);
-        animation.InsertKeyFrame(1, to, easing);
-        visual.Scale = to;
-
-        if (completed is null)
-        {
-            visual.StartAnimation(nameof(Visual.Scale), animation);
-            return;
-        }
-
-        CompositionScopedBatch batch = compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
-        batch.Completed += (sender, args) =>
-        {
-            batch.Dispose();
-
-            if (generation == scaleAnimationGeneration)
-            {
-                completed();
-            }
-        };
-        visual.StartAnimation(nameof(Visual.Scale), animation);
-        batch.End();
-    }
+    private double GetAnimationHeight() => ActualHeight > 0 ? ActualHeight : XamlRoot?.Size.Height ?? workspace.Height;
 
     private void SubscribeEvents()
     {
@@ -397,72 +328,4 @@ public sealed partial class DesktopScrollPreviewView :
         PreviewCanvas.Children.Remove(preview.Host);
     }
 
-    private sealed class DesktopWindowPreview :
-        IDisposable
-    {
-        private readonly ThumbnailCompositionPreview? preview;
-        private double width;
-        private double height;
-
-        public DesktopWindowPreview(Grid host, ThumbnailCompositionPreview? preview)
-        {
-            Host = host;
-            this.preview = preview;
-            ElementCompositionPreview.SetIsTranslationEnabled(host, true);
-        }
-
-        public Grid Host { get; }
-
-        public double SourceWidth { get; private set; }
-
-        public double SourceHeight { get; private set; }
-
-        public void RefreshSourceSize(TrackedWindow trackedWindow, IWindowGeometryReader geometryReader)
-        {
-            if (geometryReader.TryReadVisibleGeometry(trackedWindow.Handle,
-                out _,
-                out _,
-                out int visibleWidth,
-                out int visibleHeight))
-            {
-                SourceWidth = visibleWidth;
-                SourceHeight = visibleHeight;
-                return;
-            }
-
-            SourceWidth = trackedWindow.Width;
-            SourceHeight = trackedWindow.Height;
-        }
-
-        public void Update(double x, double y, double width, double height, int? zIndex)
-        {
-            if (zIndex.HasValue)
-            {
-                Canvas.SetZIndex(Host, zIndex.Value);
-            }
-
-            Host.Translation = new Vector3(ToFloat(x), ToFloat(y), 0);
-
-            if (this.width != width || this.height != height)
-            {
-                this.width = width;
-                this.height = height;
-                Host.Width = width;
-                Host.Height = height;
-                preview?.Update(width, height, true);
-            }
-        }
-
-        public void Dispose()
-        {
-            preview?.Dispose();
-            GC.SuppressFinalize(this);
-        }
-
-        private static float ToFloat(double value) =>
-            (float)Math.Clamp(value, -float.MaxValue, float.MaxValue);
-    }
-
-    private static float ToFloat(double value) =>
-        (float)Math.Clamp(value, -float.MaxValue, float.MaxValue);
 }

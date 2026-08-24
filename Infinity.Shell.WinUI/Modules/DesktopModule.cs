@@ -17,6 +17,9 @@ public sealed class DesktopModule :
     public void Register(IServiceCollection services)
     {
         services
+            .AddSingleton<DesktopScrollPreviewAnimator>()
+            .AddSingleton<PageTitleStore>()
+            .AddSingleton<PageNavigationPublisher>()
             .AddSingleton(provider => new DesktopScrollPreviewView(provider.GetRequiredService<IWindowPreviewSurface>(),
                 provider.GetRequiredService<IWindowCollection>(),
                 provider.GetRequiredService<IShellLayoutCalculator>(),
@@ -24,6 +27,7 @@ public sealed class DesktopModule :
                 provider.GetRequiredService<IWorkspace>(),
                 provider.GetRequiredService<ITaskbarLocator>(),
                 provider.GetRequiredService<IWindowGeometryReader>(),
+                provider.GetRequiredService<DesktopScrollPreviewAnimator>(),
                 provider.GetRequiredService<ILogger<DesktopScrollPreviewView>>()))
             .AddViewFor(ServiceLifetime.Singleton,
                 provider => new PageTintView(provider.GetRequiredService<DesktopScrollPreviewView>()),
@@ -37,15 +41,16 @@ public sealed class DesktopModule :
                     provider.GetRequiredService<IWindowDragScroller>(),
                     provider.GetRequiredService<IPageGestureSource>(),
                     provider.GetRequiredService<IOptionsMonitor<Settings>>(),
-                    provider.GetRequiredService<IWritableOptions<Settings>>(),
-                    provider.GetRequiredService<IPager>(),
-                    provider.GetRequiredService<IPanState>(),
                     provider.GetRequiredService<IScroller>(),
                     provider.GetRequiredService<IScrollPresentationSession>(),
                     provider.GetRequiredService<IWindowPreviewSurface>(),
-                    provider.GetRequiredService<IInfinityGlanceBridge>(),
-                    provider.GetRequiredService<ITextLocalizer>(),
-                    provider.GetRequiredService<ILogger<PageTintViewModel>>()))
+                    provider.GetRequiredService<IInfinityGlanceBridge>()))
             .AddView(ServiceLifetime.Singleton, provider => new ScrollTriggerView());
+
+        services.Subscribe<PageNavigationPublisher>((provider, publisher) =>
+        {
+            publisher.Start();
+            return publisher.Stop;
+        });
     }
 }
