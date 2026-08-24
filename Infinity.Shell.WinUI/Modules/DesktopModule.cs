@@ -5,11 +5,9 @@ using Elysium.Platform.Abstractions;
 using Elysium.Presentation.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
-using Infinity.Platform.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
 
 namespace Infinity.Shell.WinUI;
 
@@ -19,8 +17,6 @@ public sealed class DesktopModule :
     public void Register(IServiceCollection services)
     {
         services
-            .AddSingleton<IDesktopBackgroundController>(provider => new DesktopBackgroundController(provider.GetRequiredService<IDesktopBackgroundSource>(),
-                provider.GetRequiredService<IDispatcher>()))
             .AddSingleton(provider => new DesktopScrollPreviewView(provider.GetRequiredService<IWindowPreviewSurface>(),
                 provider.GetRequiredService<IWindowCollection>(),
                 provider.GetRequiredService<IShellLayoutCalculator>(),
@@ -50,53 +46,6 @@ public sealed class DesktopModule :
                     provider.GetRequiredService<IInfinityGlanceBridge>(),
                     provider.GetRequiredService<ITextLocalizer>(),
                     provider.GetRequiredService<ILogger<PageTintViewModel>>()))
-            .AddViewFor(ServiceLifetime.Singleton,
-                provider => new DesktopFlyoutView(provider.GetRequiredService<IWindowPreviewSurface>()),
-                provider => new DesktopFlyoutViewModel(provider,
-                    provider.GetRequiredService<IServiceFactory>(),
-                    provider.GetRequiredService<IMessenger>(),
-                    provider.GetRequiredService<IDisposer>(),
-                    provider.GetRequiredService<IDispatcher>(),
-                    provider.GetRequiredService<IWorkspace>(),
-                    provider.GetRequiredService<IModifierKeyState>(),
-                    provider.GetRequiredService<IInfinityGlanceBridge>(),
-                    provider.GetRequiredService<Settings>()))
-            .AddView(ServiceLifetime.Singleton, provider => new ScrollTriggerView())
-            .AddViewFor(ServiceLifetime.Singleton,
-                provider => new TrackedWindowCollectionView(),
-                provider => new TrackedWindowCollectionViewModel(provider,
-                    provider.GetRequiredService<IServiceFactory>(),
-                    provider.GetRequiredService<IMessenger>(),
-                    provider.GetRequiredService<IDispatcher>(),
-                    provider.GetRequiredService<IDisposer>(),
-                    provider.GetRequiredService<IWorkspace>(),
-                    provider.GetRequiredService<IShellLayoutCalculator>(),
-                    provider.GetRequiredService<IPager>(),
-                    provider.GetRequiredService<IPanState>(),
-                    provider.GetRequiredService<IScroller>(),
-                    provider.GetRequiredService<ITrackedWindowDragController>(),
-                    provider.GetRequiredService<IWindowCollection>(),
-                    provider.GetRequiredService<ITrackedWindowCollection>(),
-                    provider.GetRequiredService<IWindowSelector>(),
-                    provider.GetRequiredService<IWindowFilterState>(),
-                    provider.GetRequiredService<IWindowPeekController>(),
-                    provider.GetRequiredService<IWindowPeekSource>(),
-                    provider.GetRequiredService<IDesktopBackgroundController>(),
-                    provider.GetRequiredService<IWindowNavigationCoordinator>(),
-                    provider.GetRequiredService<INavigator>(),
-                    provider.GetRequiredService<IOptionsMonitor<Settings>>(),
-                    provider.GetRequiredService<ILogger<TrackedWindowCollectionViewModel>>()));
-
-        services.Subscribe<IDesktopBackgroundController>((provider, backgroundController) =>
-        {
-            IMessenger messenger = provider.GetRequiredService<IMessenger>();
-
-            void HandleBackgroundChanged(object? sender, EventArgs args) =>
-                messenger.Send(new DesktopBackgroundChangedEventArgs());
-
-            backgroundController.BackgroundChanged += HandleBackgroundChanged;
-
-            return () => backgroundController.BackgroundChanged -= HandleBackgroundChanged;
-        });
+            .AddView(ServiceLifetime.Singleton, provider => new ScrollTriggerView());
     }
 }

@@ -15,10 +15,6 @@ public sealed class Settings
 
     public Dictionary<int, string>? PageTitles { get; set; } = [];
 
-    public PreviewPosition PreviewPosition { get; set; } = PreviewPosition.Bottom;
-
-    public PreviewSize PreviewSize { get; set; } = PreviewSize.Default;
-
     public List<List<int>> ScrollModifierKeys { get; set; } =
         [
             [VirtualKeys.VK_LWIN, VirtualKeys.VK_RWIN],
@@ -26,8 +22,6 @@ public sealed class Settings
         ];
 
     public ScrollSpeed ScrollSpeed { get; set; } = ScrollSpeed.Normal;
-
-    public bool ShowDesktopBackground { get; set; } = true;
 
     public bool ShowHintOnStartup { get; set; } = true;
 

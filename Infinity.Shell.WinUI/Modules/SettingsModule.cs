@@ -32,14 +32,6 @@ public sealed class SettingsModule :
                     provider.GetRequiredService<IDisposer>(),
                     provider.GetRequiredService<ITextLocalizer>(),
                     provider.GetRequiredService<IEnumerable<IDesktopViewModel>>()))
-            .AddViewFor<PreviewView, ISettingViewModel, PreviewViewModel>(ServiceLifetime.Transient,
-                provider => new PreviewView(),
-                provider => new PreviewViewModel(provider,
-                    provider.GetRequiredService<IServiceFactory>(),
-                    provider.GetRequiredService<IMessenger>(),
-                    provider.GetRequiredService<IDisposer>(),
-                    provider.GetRequiredService<ITextLocalizer>(),
-                    provider.GetRequiredService<IEnumerable<IPreviewViewModel>>()))
             .AddViewFor<WindowsView, ISettingViewModel, WindowsViewModel>(ServiceLifetime.Transient,
                 provider => new WindowsView(),
                 provider => new WindowsViewModel(provider,

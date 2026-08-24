@@ -34,6 +34,5 @@ public static class InfinityGlanceTopics
 public enum InfinityPageNavigationSurface
 {
     None = 0,
-    PageTint = 1,
-    DesktopFlyout = 2
+    PageTint = 1
 }

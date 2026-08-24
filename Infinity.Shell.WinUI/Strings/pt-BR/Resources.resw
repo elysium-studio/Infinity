@@ -100,51 +100,6 @@
   <data name="DragScrollSpeedCard.Header" xml:space="preserve">
     <value>Arraste a velocidade de rolagem</value>
   </data>
-  <data name="PreviewBackgroundCard.Description" xml:space="preserve">
-    <value>Mostre o plano de fundo da sua área de trabalho na barra de visualização</value>
-  </data>
-  <data name="PreviewBackgroundCard.Header" xml:space="preserve">
-    <value>Plano de fundo da área de trabalho</value>
-  </data>
-  <data name="PreviewDebugWaitingText.Text" xml:space="preserve">
-    <value>Esperando...</value>
-  </data>
-  <data name="PreviewDebugWindow.Title" xml:space="preserve">
-    <value>Grade de visualização da janela</value>
-  </data>
-  <data name="PreviewPositionAutoOption.Content" xml:space="preserve">
-    <value>Automático</value>
-  </data>
-  <data name="PreviewPositionBottomOption.Content" xml:space="preserve">
-    <value>Inferior</value>
-  </data>
-  <data name="PreviewPositionCard.Description" xml:space="preserve">
-    <value>Onde a barra de visualização aparece na tela</value>
-  </data>
-  <data name="PreviewPositionCard.Header" xml:space="preserve">
-    <value>Posição de visualização</value>
-  </data>
-  <data name="PreviewPositionTopOption.Content" xml:space="preserve">
-    <value>Superior</value>
-  </data>
-  <data name="PreviewSectionTitle.Text" xml:space="preserve">
-    <value>Visualização</value>
-  </data>
-  <data name="PreviewSizeCard.Description" xml:space="preserve">
-    <value>Controla a altura da barra de visualização na parte inferior da tela</value>
-  </data>
-  <data name="PreviewSizeCard.Header" xml:space="preserve">
-    <value>Tamanho da visualização</value>
-  </data>
-  <data name="PreviewSizeCompactOption.Content" xml:space="preserve">
-    <value>Compacto</value>
-  </data>
-  <data name="PreviewSizeDefaultOption.Content" xml:space="preserve">
-    <value>Padrão</value>
-  </data>
-  <data name="PreviewSizeLargeOption.Content" xml:space="preserve">
-    <value>Grande</value>
-  </data>
   <data name="PageTitle" xml:space="preserve">
     <value>Página {0}</value>
   </data>

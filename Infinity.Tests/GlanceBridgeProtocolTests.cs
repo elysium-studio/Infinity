@@ -36,14 +36,13 @@ public sealed class GlanceBridgeProtocolTests
     }
 
     [Fact]
-    public void NavigationRemainsVisibleUntilEverySurfaceCloses()
+    public void NavigationVisibilityTracksPageTintSurface()
     {
         using InfinityGlanceBridge bridge = new(NullLogger<InfinityGlanceBridge>.Instance);
 
         Assert.True(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.PageTint, true));
-        Assert.False(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.DesktopFlyout, true));
+        Assert.True(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.PageTint, false));
         Assert.False(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.PageTint, false));
-        Assert.True(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.DesktopFlyout, false));
     }
 
     [Fact]

@@ -100,51 +100,6 @@
   <data name="DragScrollSpeedCard.Header" xml:space="preserve">
     <value>Vitesse de défilement du glisser-déposer</value>
   </data>
-  <data name="PreviewBackgroundCard.Description" xml:space="preserve">
-    <value>Afficher l'arrière-plan de votre bureau dans la barre d'aperçu</value>
-  </data>
-  <data name="PreviewBackgroundCard.Header" xml:space="preserve">
-    <value>Fond d'écran</value>
-  </data>
-  <data name="PreviewDebugWaitingText.Text" xml:space="preserve">
-    <value>En attendant...</value>
-  </data>
-  <data name="PreviewDebugWindow.Title" xml:space="preserve">
-    <value>Grille d'aperçu de la fenêtre</value>
-  </data>
-  <data name="PreviewPositionAutoOption.Content" xml:space="preserve">
-    <value>Automatique</value>
-  </data>
-  <data name="PreviewPositionBottomOption.Content" xml:space="preserve">
-    <value>En bas</value>
-  </data>
-  <data name="PreviewPositionCard.Description" xml:space="preserve">
-    <value>Où la barre d'aperçu apparaît à l'écran</value>
-  </data>
-  <data name="PreviewPositionCard.Header" xml:space="preserve">
-    <value>Aperçu de la position</value>
-  </data>
-  <data name="PreviewPositionTopOption.Content" xml:space="preserve">
-    <value>Haut</value>
-  </data>
-  <data name="PreviewSectionTitle.Text" xml:space="preserve">
-    <value>Aperçu</value>
-  </data>
-  <data name="PreviewSizeCard.Description" xml:space="preserve">
-    <value>Contrôle la hauteur de la barre d'aperçu qui apparaît en bas de votre écran</value>
-  </data>
-  <data name="PreviewSizeCard.Header" xml:space="preserve">
-    <value>Taille de l'aperçu</value>
-  </data>
-  <data name="PreviewSizeCompactOption.Content" xml:space="preserve">
-    <value>Compacte</value>
-  </data>
-  <data name="PreviewSizeDefaultOption.Content" xml:space="preserve">
-    <value>Par défaut</value>
-  </data>
-  <data name="PreviewSizeLargeOption.Content" xml:space="preserve">
-    <value>Grand</value>
-  </data>
   <data name="PageTitle" xml:space="preserve">
     <value>Page {0}</value>
   </data>

@@ -100,51 +100,6 @@
   <data name="DragScrollSpeedCard.Header" xml:space="preserve">
     <value>드래그 스크롤 속도</value>
   </data>
-  <data name="PreviewBackgroundCard.Description" xml:space="preserve">
-    <value>미리보기 표시줄에 바탕화면 배경 표시</value>
-  </data>
-  <data name="PreviewBackgroundCard.Header" xml:space="preserve">
-    <value>데스크탑 배경</value>
-  </data>
-  <data name="PreviewDebugWaitingText.Text" xml:space="preserve">
-    <value>기다리는 중...</value>
-  </data>
-  <data name="PreviewDebugWindow.Title" xml:space="preserve">
-    <value>창 미리보기 그리드</value>
-  </data>
-  <data name="PreviewPositionAutoOption.Content" xml:space="preserve">
-    <value>자동</value>
-  </data>
-  <data name="PreviewPositionBottomOption.Content" xml:space="preserve">
-    <value>바닥</value>
-  </data>
-  <data name="PreviewPositionCard.Description" xml:space="preserve">
-    <value>화면에 미리보기 표시줄이 나타나는 위치</value>
-  </data>
-  <data name="PreviewPositionCard.Header" xml:space="preserve">
-    <value>미리보기 위치</value>
-  </data>
-  <data name="PreviewPositionTopOption.Content" xml:space="preserve">
-    <value>탑</value>
-  </data>
-  <data name="PreviewSectionTitle.Text" xml:space="preserve">
-    <value>미리보기</value>
-  </data>
-  <data name="PreviewSizeCard.Description" xml:space="preserve">
-    <value>화면 하단에 표시되는 미리보기 막대의 높이를 제어합니다.</value>
-  </data>
-  <data name="PreviewSizeCard.Header" xml:space="preserve">
-    <value>미리보기 크기</value>
-  </data>
-  <data name="PreviewSizeCompactOption.Content" xml:space="preserve">
-    <value>콤팩트</value>
-  </data>
-  <data name="PreviewSizeDefaultOption.Content" xml:space="preserve">
-    <value>기본값</value>
-  </data>
-  <data name="PreviewSizeLargeOption.Content" xml:space="preserve">
-    <value>대형</value>
-  </data>
   <data name="PageTitle" xml:space="preserve">
     <value>페이지 {0}</value>
   </data>

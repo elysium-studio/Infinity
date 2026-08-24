@@ -55,7 +55,6 @@ public sealed partial class App
                                 new NavigationModule(),
                                 new DesktopSettingsModule(),
                                 new DesktopModule(),
-                                new PreviewSettingsModule(),
                                 new ShellModule(),
                                 new SettingsModule(),
                                 new TourModule(),

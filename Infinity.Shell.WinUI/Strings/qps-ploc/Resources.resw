@@ -100,51 +100,6 @@
   <data name="DragScrollSpeedCard.Header" xml:space="preserve">
     <value>[!! Ðŕàĝ Šçŕôļļ Šþëëð ~~~~~~ !!]</value>
   </data>
-  <data name="PreviewBackgroundCard.Description" xml:space="preserve">
-    <value>[!! Šħôŵ ÿôûŕ ðëšķţôþ ƀàçķĝŕôûñð îñ ţħë þŕëṽîëŵ ƀàŕ ~~~~~~~~~~~~~~~ !!]</value>
-  </data>
-  <data name="PreviewBackgroundCard.Header" xml:space="preserve">
-    <value>[!! Ðëšķţôþ Ɓàçķĝŕôûñð ~~~~~~ !!]</value>
-  </data>
-  <data name="PreviewDebugWaitingText.Text" xml:space="preserve">
-    <value>[!! Ŵàîţîñĝ... ~~~ !!]</value>
-  </data>
-  <data name="PreviewDebugWindow.Title" xml:space="preserve">
-    <value>[!! Ŵîñðôŵ þŕëṽîëŵ ĝŕîð ~~~~~~ !!]</value>
-  </data>
-  <data name="PreviewPositionAutoOption.Content" xml:space="preserve">
-    <value>[!! Àûţô ~~~ !!]</value>
-  </data>
-  <data name="PreviewPositionBottomOption.Content" xml:space="preserve">
-    <value>[!! Ɓôţţôɱ ~~~ !!]</value>
-  </data>
-  <data name="PreviewPositionCard.Description" xml:space="preserve">
-    <value>[!! Ŵħëŕë ţħë þŕëṽîëŵ ƀàŕ àþþëàŕš ôñ šçŕëëñ ~~~~~~~~~~~~ !!]</value>
-  </data>
-  <data name="PreviewPositionCard.Header" xml:space="preserve">
-    <value>[!! Þŕëṽîëŵ Þôšîţîôñ ~~~~~ !!]</value>
-  </data>
-  <data name="PreviewPositionTopOption.Content" xml:space="preserve">
-    <value>[!! Ţôþ ~~~ !!]</value>
-  </data>
-  <data name="PreviewSectionTitle.Text" xml:space="preserve">
-    <value>[!! Þŕëṽîëŵ ~~~ !!]</value>
-  </data>
-  <data name="PreviewSizeCard.Description" xml:space="preserve">
-    <value>[!! Çôñţŕôļš ħôŵ ţàļļ ţħë þŕëṽîëŵ ƀàŕ àþþëàŕš àţ ţħë ƀôţţôɱ ôƒ ÿôûŕ šçŕëëñ ~~~~~~~~~~~~~~~~~~~~~ !!]</value>
-  </data>
-  <data name="PreviewSizeCard.Header" xml:space="preserve">
-    <value>[!! Þŕëṽîëŵ Šîžë ~~~~ !!]</value>
-  </data>
-  <data name="PreviewSizeCompactOption.Content" xml:space="preserve">
-    <value>[!! Çôɱþàçţ ~~~ !!]</value>
-  </data>
-  <data name="PreviewSizeDefaultOption.Content" xml:space="preserve">
-    <value>[!! Ðëƒàûļţ ~~~ !!]</value>
-  </data>
-  <data name="PreviewSizeLargeOption.Content" xml:space="preserve">
-    <value>[!! Ļàŕĝë ~~~ !!]</value>
-  </data>
   <data name="PageTitle" xml:space="preserve">
     <value>[!! Þàĝë {0} ~~~ !!]</value>
   </data>
