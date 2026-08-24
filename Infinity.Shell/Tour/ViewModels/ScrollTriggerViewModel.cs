@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
-using Elysium.Platform.Abstractions;
 using Elysium.Presentation;
 using Elysium.Presentation.Abstractions;
 using Infinity.Platform.Abstractions;

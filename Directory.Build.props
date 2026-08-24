@@ -1,6 +1,6 @@
 <Project>
     <PropertyGroup>
-        <ElysiumVersion>0.1.0-preview.109-local.1</ElysiumVersion>
+        <ElysiumVersion>0.1.0-preview.94</ElysiumVersion>
         <LangVersion>preview</LangVersion>
     </PropertyGroup>
 </Project>

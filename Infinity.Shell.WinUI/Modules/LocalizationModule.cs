@@ -1,4 +1,3 @@
-using Elysium.Application.Abstractions;
 using Elysium.Application.DependencyInjection;
 using Elysium.UI.WinUI;
 using Microsoft.Extensions.DependencyInjection;

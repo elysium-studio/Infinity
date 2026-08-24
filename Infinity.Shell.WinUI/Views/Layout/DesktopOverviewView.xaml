@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Controls:DesktopOverlay
+    x:Class="Infinity.Shell.WinUI.DesktopOverviewView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="using:Elysium.UI.Controls.WinUI"
+    xmlns:WinUI="using:Elysium.UI.WinUI"
+    BackdropKind="Transparent"
+    DataContext="{WinUI:ViewModel Key=DesktopOverviewView}"
+    HorizontalContentAlignment="Stretch"
+    IsBlurEnabled="{x:Bind ViewModel.IsBlurEnabled, Mode=TwoWay}"
+    IsOpeningFadeEnabled="False"
+    IsOpen="{x:Bind ViewModel.IsOpen, Mode=TwoWay}"
+    Loaded="{x:Bind ViewModel.Activated}"
+    StaysOpen="{x:Bind ViewModel.StaysOpen, Mode=TwoWay}"
+    VerticalContentAlignment="Stretch">
+    <Grid>
+        <SystemBackdropElement
+            x:Name="DesktopBackdrop"
+            IsHitTestVisible="False"
+            Opacity="0">
+            <SystemBackdropElement.SystemBackdrop>
+                <Controls:ActiveDesktopAcrylicBackdrop />
+            </SystemBackdropElement.SystemBackdrop>
+        </SystemBackdropElement>
+        <ContentControl x:Name="DesktopPreviewContent" />
+    </Grid>
+</Controls:DesktopOverlay>

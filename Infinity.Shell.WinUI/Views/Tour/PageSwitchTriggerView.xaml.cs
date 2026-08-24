@@ -243,6 +243,7 @@ public sealed partial class PageSwitchTriggerView :
         visual.StartAnimation("Scale", scaleAnimation);
         visual.StartAnimation("Translation.X", translateAnimation);
     }
+
     private void HandleLoaded(object sender, RoutedEventArgs args)
     {
         AnimateEntrance(HeroCard, 0f);

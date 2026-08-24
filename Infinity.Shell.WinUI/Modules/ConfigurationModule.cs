@@ -20,11 +20,11 @@ public sealed class ConfigurationModule :
         WritableOptionsBuilder<Settings> builder = new(services, "Settings", "settings.dat");
 
         builder.WithJsonOptions(new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNameCaseInsensitive = true,
-                TypeInfoResolverChain = { InfinityJsonContext.Default }
-            })
+        {
+            WriteIndented = true,
+            PropertyNameCaseInsensitive = true,
+            TypeInfoResolverChain = { InfinityJsonContext.Default }
+        })
             .UseJson()
             .WithChangeHandler((provider, options, name) =>
                 provider.GetRequiredService<IMessenger>()

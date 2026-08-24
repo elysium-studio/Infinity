@@ -1,6 +1,5 @@
 using Infinity.Shell;
 using System.ComponentModel;
-using Xunit;
 
 namespace Infinity.Tests;
 

@@ -1,5 +1,4 @@
 using Elysium.Application.Abstractions;
-using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace Infinity.Shell;

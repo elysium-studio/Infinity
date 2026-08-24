@@ -1,9 +1,7 @@
 using Elysium.Application.Abstractions;
 using Elysium.Application.DependencyInjection;
-using Elysium.Presentation.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
-using Infinity.Platform.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

@@ -161,8 +161,7 @@
                             VerticalAlignment="Center"
                             FontSize="16"
                             FontWeight="SemiBold"
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                            />
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <Grid
                             x:Name="RightArrowKeyCard"
                             Width="64"

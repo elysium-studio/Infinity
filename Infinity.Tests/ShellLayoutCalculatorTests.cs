@@ -39,5 +39,4 @@ public sealed class ShellLayoutCalculatorTests
         Width = width,
         Height = height
     };
-
 }

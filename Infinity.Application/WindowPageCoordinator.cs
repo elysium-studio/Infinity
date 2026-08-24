@@ -4,8 +4,6 @@ using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Infinity.Application;
 

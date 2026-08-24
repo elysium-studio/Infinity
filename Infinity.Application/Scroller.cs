@@ -3,7 +3,6 @@ using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
-using System.Threading;
 
 namespace Infinity.Application;
 
@@ -45,6 +44,7 @@ public sealed class Scroller(IPanState state,
     private Timer? moveGuardReleaseTimer;
 
     public event EventHandler? ScrollStarted;
+
     public event EventHandler? ScrollStopped;
 
     public double VisualOffset => state.Offset + springPosition;

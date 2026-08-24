@@ -8,14 +8,20 @@ namespace Infinity.Shell.WinUI;
 
 public sealed class DesktopScrollPreviewAnimator
 {
-    private const float OverviewScale = 0.94f;
+    private const float OverviewScale = 0.38f;
 
     private static readonly TimeSpan EnterAnimationDuration = TimeSpan.FromMilliseconds(300);
     private static readonly TimeSpan ExitAnimationDuration = TimeSpan.FromMilliseconds(220);
 
     private int animationGeneration;
 
-    public void AnimateInward(FrameworkElement element, double width, double height)
+    public double Scale => OverviewScale;
+
+    public TimeSpan EnterDuration => EnterAnimationDuration;
+
+    public TimeSpan ExitDuration => ExitAnimationDuration;
+
+    public void AnimateInward(FrameworkElement element, double width, double height, Action? completed = null)
     {
         Visual visual = GetVisual(element, width, height);
         visual.StopAnimation(nameof(Visual.Scale));
@@ -24,7 +30,7 @@ public sealed class DesktopScrollPreviewAnimator
             Vector3.One,
             new Vector3(OverviewScale, OverviewScale, 1),
             EnterAnimationDuration,
-            null);
+            completed);
     }
 
     public void AnimateOutward(FrameworkElement element, double width, double height, Action completed)

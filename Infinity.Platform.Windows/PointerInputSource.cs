@@ -23,10 +23,15 @@ public sealed class PointerInputSource :
     private bool isDisposed;
 
     public event Action<int, int>? CursorMoved;
+
     public event Action? LeftButtonClicked;
+
     public event Action? MiddleButtonClicked;
+
     public event Action? RightButtonClicked;
+
     public event Action<int>? ScrollDeltaReceived;
+
     public event Action<double>? ScrollVelocityIdle;
 
     public PointerInputSource(IMouseInputSource mouseInputSource, IModifierKeyState modifierKeyState)

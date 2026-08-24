@@ -1,5 +1,4 @@
 using Infinity.Platform.Abstractions;
-using System;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 

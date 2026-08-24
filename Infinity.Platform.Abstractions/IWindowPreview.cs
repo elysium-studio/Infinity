@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Infinity.Platform.Abstractions;
+﻿namespace Infinity.Platform.Abstractions;
 
 public interface IWindowPreview :
     IDisposable

@@ -4,12 +4,12 @@
 
 struct DwmThumbnailVisualItem
 {
-    unsigned long long PreviewId;
-    HWND SourceWindowHandle;
-    HANDLE SharedTargetHandle;
-    int Width;
-    int Height;
-    int IsVisible;
+	unsigned long long PreviewId;
+	HWND SourceWindowHandle;
+	HANDLE SharedTargetHandle;
+	int Width;
+	int Height;
+	int IsVisible;
 };
 
 extern "C" __declspec(dllexport) int __stdcall DwmThumbnailVisual_IsAvailable();

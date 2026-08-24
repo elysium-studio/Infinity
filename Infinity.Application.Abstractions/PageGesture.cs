@@ -9,7 +9,6 @@ public class PageGesture<TEventArgs>(IReadOnlyCollection<int> triggerKeys,
 
     public IReadOnlyCollection<int> RequiredKeys => requiredKeys;
 
-
     public event Action<TEventArgs>? Invoked;
 
     public void Invoke(int virtualKeyCode) => Invoked?.Invoke(createEventArgs(virtualKeyCode));

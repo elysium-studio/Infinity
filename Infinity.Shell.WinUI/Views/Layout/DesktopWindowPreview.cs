@@ -1,7 +1,8 @@
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Hosting;
+using Microsoft.UI.Xaml.Input;
 using System;
 using System.Numerics;
 
@@ -11,18 +12,22 @@ internal sealed class DesktopWindowPreview :
     IDisposable
 {
     private readonly ThumbnailCompositionPreview? preview;
+    private readonly nint windowHandle;
     private double width;
     private double height;
     private bool disposed;
 
-    public DesktopWindowPreview(Grid host, ThumbnailCompositionPreview? preview)
+    public DesktopWindowPreview(nint windowHandle, Border host, ThumbnailCompositionPreview? preview)
     {
+        this.windowHandle = windowHandle;
         Host = host;
         this.preview = preview;
-        ElementCompositionPreview.SetIsTranslationEnabled(host, true);
+        Host.Tapped += HandleTapped;
     }
 
-    public Grid Host { get; }
+    public event Action<nint>? Invoked;
+
+    public Border Host { get; }
 
     public double SourceWidth { get; private set; }
 
@@ -45,14 +50,20 @@ internal sealed class DesktopWindowPreview :
         SourceHeight = trackedWindow.Height;
     }
 
-    public void Update(double x, double y, double width, double height, int? zIndex)
-    {
-        if (zIndex.HasValue)
-        {
-            Canvas.SetZIndex(Host, zIndex.Value);
-        }
+    public void SetZIndex(int zIndex) => Canvas.SetZIndex(Host, zIndex);
 
-        Host.Translation = new Vector3(ToFloat(x), ToFloat(y), 0);
+    public void SetInteractionEnabled(bool value) => Host.IsHitTestVisible = value;
+
+    public void Update(double x,
+        double y,
+        double width,
+        double height,
+        TimeSpan? transitionDuration = null)
+    {
+        Host.TranslationTransition = transitionDuration.HasValue
+            ? new Vector3Transition { Duration = transitionDuration.Value }
+            : null;
+        Host.Translation = new Vector3(ToFloat(x), ToFloat(y), 48);
 
         if (this.width != width || this.height != height)
         {
@@ -64,6 +75,8 @@ internal sealed class DesktopWindowPreview :
         }
     }
 
+    public void ClearTranslationTransition() => Host.TranslationTransition = null;
+
     public void Dispose()
     {
         if (disposed)
@@ -72,10 +85,17 @@ internal sealed class DesktopWindowPreview :
         }
 
         disposed = true;
+        Host.Tapped -= HandleTapped;
         preview?.Dispose();
         GC.SuppressFinalize(this);
     }
 
     private static float ToFloat(double value) =>
         (float)Math.Clamp(value, -float.MaxValue, float.MaxValue);
+
+    private void HandleTapped(object sender, TappedRoutedEventArgs args)
+    {
+        args.Handled = true;
+        Invoked?.Invoke(windowHandle);
+    }
 }

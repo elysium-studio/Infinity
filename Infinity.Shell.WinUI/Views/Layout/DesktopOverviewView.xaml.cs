@@ -1,4 +1,5 @@
 using Elysium.UI.Controls.WinUI;
+using Infinity.Platform.Windows;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using System;
@@ -6,29 +7,38 @@ using WindowExtensions = Elysium.Platform.Windows.WindowExtensions;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed partial class PageTintView :
+public sealed partial class DesktopOverviewView :
     DesktopOverlay
 {
     private static readonly TimeSpan PreviewCleanupDelay = TimeSpan.FromMilliseconds(220);
 
     private readonly DesktopScrollPreviewView desktopScrollPreview;
-    private PageTintViewModel? subscribedViewModel;
+    private readonly DesktopOverviewBackdropAnimator backdropAnimator;
+    private readonly WindowInputTransparencyController inputController;
+    private DesktopOverviewViewModel? subscribedViewModel;
     private DispatcherQueueTimer? previewCleanupTimer;
     private bool isCompletingDesktopPreview;
     private bool isDesktopPreviewAnimationStarted;
 
-    public PageTintView(DesktopScrollPreviewView desktopScrollPreview)
+    public DesktopOverviewView(DesktopScrollPreviewView desktopScrollPreview,
+        DesktopOverviewBackdropAnimator backdropAnimator,
+        WindowInputTransparencyController inputController)
     {
         InitializeComponent();
 
         this.desktopScrollPreview = desktopScrollPreview;
+        this.backdropAnimator = backdropAnimator;
+        this.inputController = inputController;
         DesktopPreviewContent.Content = desktopScrollPreview;
+        desktopScrollPreview.BackgroundInvoked += HandleBackgroundInvoked;
+        desktopScrollPreview.PageInvoked += HandlePageInvoked;
+        desktopScrollPreview.WindowInvoked += HandleWindowInvoked;
 
         DataContextChanged += HandleDataContextChanged;
         Loaded += HandleLoaded;
     }
 
-    public PageTintViewModel ViewModel => (PageTintViewModel)DataContext;
+    public DesktopOverviewViewModel ViewModel => (DesktopOverviewViewModel)DataContext;
 
     private void HandleLoaded(object sender, RoutedEventArgs args)
     {
@@ -40,6 +50,8 @@ public sealed partial class PageTintView :
     {
         CancelPreviewCleanup();
         UpdateBindings();
+        backdropAnimator.AnimateIn(DesktopBackdrop);
+        DispatcherQueue.TryEnqueue(() => inputController.SetInputEnabled(Handle, true));
 
         if (ViewModel.IsDesktopPreviewActive)
         {
@@ -61,7 +73,7 @@ public sealed partial class PageTintView :
 
     private void EnsureSubscribed()
     {
-        PageTintViewModel? current = DataContext as PageTintViewModel;
+        DesktopOverviewViewModel? current = DataContext as DesktopOverviewViewModel;
 
         if (subscribedViewModel == current)
         {
@@ -83,7 +95,7 @@ public sealed partial class PageTintView :
 
     private void HandleViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
     {
-        if (args.PropertyName == nameof(PageTintViewModel.IsDesktopPreviewActive))
+        if (args.PropertyName == nameof(DesktopOverviewViewModel.IsDesktopPreviewActive))
         {
             if (ViewModel.IsDesktopPreviewActive)
             {
@@ -101,7 +113,7 @@ public sealed partial class PageTintView :
             }
         }
 
-        if (args.PropertyName == nameof(PageTintViewModel.IsDesktopPreviewCompletionRequested))
+        if (args.PropertyName == nameof(DesktopOverviewViewModel.IsDesktopPreviewCompletionRequested))
         {
             if (ViewModel.IsDesktopPreviewCompletionRequested)
             {
@@ -110,6 +122,7 @@ public sealed partial class PageTintView :
             else if (isCompletingDesktopPreview)
             {
                 isCompletingDesktopPreview = false;
+                backdropAnimator.AnimateIn(DesktopBackdrop);
                 desktopScrollPreview.AnimateInward();
             }
         }
@@ -137,12 +150,7 @@ public sealed partial class PageTintView :
         desktopScrollPreview.Prepare(Handle);
         isCompletingDesktopPreview = false;
 
-        if (!IsOpen)
-        {
-            return;
-        }
-
-        if (isDesktopPreviewAnimationStarted)
+        if (!IsOpen || isDesktopPreviewAnimationStarted)
         {
             return;
         }
@@ -172,6 +180,8 @@ public sealed partial class PageTintView :
         }
 
         isCompletingDesktopPreview = true;
+        backdropAnimator.AnimateOut(DesktopBackdrop);
+
         desktopScrollPreview.AnimateOutward(() =>
         {
             if (!isCompletingDesktopPreview)
@@ -219,7 +229,15 @@ public sealed partial class PageTintView :
     {
         isCompletingDesktopPreview = false;
         isDesktopPreviewAnimationStarted = false;
+        backdropAnimator.Reset(DesktopBackdrop);
         desktopScrollPreview.Clear();
         WindowExtensions.SetTopMost(Handle, false);
     }
+
+    private void HandleBackgroundInvoked(object? sender, EventArgs args) =>
+        ViewModel.DismissDesktopPreview();
+
+    private void HandlePageInvoked(int page) => ViewModel.SelectPage(page);
+
+    private void HandleWindowInvoked(nint handle) => ViewModel.ActivateWindow(handle);
 }

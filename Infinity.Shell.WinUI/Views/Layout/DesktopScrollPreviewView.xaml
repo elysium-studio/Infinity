@@ -3,7 +3,16 @@
     x:Class="Infinity.Shell.WinUI.DesktopScrollPreviewView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    IsHitTestVisible="False"
+    Background="Transparent"
     Opacity="0">
-    <Canvas x:Name="PreviewCanvas" />
+    <Grid x:Name="PreviewSurface">
+        <Grid
+            x:Name="DismissSurface"
+            Background="Transparent"
+            Tapped="HandleDismissSurfaceTapped" />
+        <Canvas>
+            <Canvas x:Name="PageCanvas" />
+        </Canvas>
+        <Canvas x:Name="PreviewCanvas" />
+    </Grid>
 </UserControl>

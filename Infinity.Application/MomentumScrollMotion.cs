@@ -2,7 +2,6 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Application;
 
-
 public sealed class MomentumScrollMotion :
     IVelocityScrollMotion
 {

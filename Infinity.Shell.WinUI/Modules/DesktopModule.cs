@@ -2,11 +2,10 @@ using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Application.DependencyInjection;
 using Elysium.Platform.Abstractions;
-using Elysium.Presentation.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
+using Infinity.Platform.Windows;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Infinity.Shell.WinUI;
@@ -17,21 +16,33 @@ public sealed class DesktopModule :
     public void Register(IServiceCollection services)
     {
         services
+            .AddSingleton<DesktopOverviewBackdropAnimator>()
             .AddSingleton<DesktopScrollPreviewAnimator>()
+            .AddSingleton<DesktopPageLayoutCalculator>()
+            .AddSingleton<DesktopPageStrip>()
+            .AddSingleton<DesktopWindowPreviewFactory>()
+            .AddSingleton<DesktopWindowPreviewCollection>()
+            .AddSingleton<DesktopWindowConcealmentSession>()
+            .AddSingleton<WindowInputTransparencyController>()
             .AddSingleton<PageTitleStore>()
             .AddSingleton<PageNavigationPublisher>()
             .AddSingleton(provider => new DesktopScrollPreviewView(provider.GetRequiredService<IWindowPreviewSurface>(),
                 provider.GetRequiredService<IWindowCollection>(),
                 provider.GetRequiredService<IShellLayoutCalculator>(),
+                provider.GetRequiredService<IPanState>(),
                 provider.GetRequiredService<IScroller>(),
                 provider.GetRequiredService<IWorkspace>(),
                 provider.GetRequiredService<ITaskbarLocator>(),
-                provider.GetRequiredService<IWindowGeometryReader>(),
+                provider.GetRequiredService<DesktopPageLayoutCalculator>(),
                 provider.GetRequiredService<DesktopScrollPreviewAnimator>(),
-                provider.GetRequiredService<ILogger<DesktopScrollPreviewView>>()))
+                provider.GetRequiredService<DesktopPageStrip>(),
+                provider.GetRequiredService<DesktopWindowPreviewCollection>(),
+                provider.GetRequiredService<DesktopWindowConcealmentSession>()))
             .AddViewFor(ServiceLifetime.Singleton,
-                provider => new PageTintView(provider.GetRequiredService<DesktopScrollPreviewView>()),
-                provider => new PageTintViewModel(provider,
+                provider => new DesktopOverviewView(provider.GetRequiredService<DesktopScrollPreviewView>(),
+                    provider.GetRequiredService<DesktopOverviewBackdropAnimator>(),
+                    provider.GetRequiredService<WindowInputTransparencyController>()),
+                provider => new DesktopOverviewViewModel(provider,
                     provider.GetRequiredService<IServiceFactory>(),
                     provider.GetRequiredService<IMessenger>(),
                     provider.GetRequiredService<IDisposer>(),
@@ -41,9 +52,11 @@ public sealed class DesktopModule :
                     provider.GetRequiredService<IWindowDragScroller>(),
                     provider.GetRequiredService<IPageGestureSource>(),
                     provider.GetRequiredService<IOptionsMonitor<Settings>>(),
+                    provider.GetRequiredService<IPager>(),
                     provider.GetRequiredService<IScroller>(),
                     provider.GetRequiredService<IScrollPresentationSession>(),
                     provider.GetRequiredService<IWindowPreviewSurface>(),
+                    provider.GetRequiredService<IWindowNavigationCoordinator>(),
                     provider.GetRequiredService<IInfinityGlanceBridge>()))
             .AddView(ServiceLifetime.Singleton, provider => new ScrollTriggerView());
 
@@ -51,6 +64,12 @@ public sealed class DesktopModule :
         {
             publisher.Start();
             return publisher.Stop;
+        });
+
+        services.Subscribe<IDesktopBackgroundSource>((provider, backgroundSource) =>
+        {
+            backgroundSource.Start();
+            return backgroundSource.Stop;
         });
     }
 }

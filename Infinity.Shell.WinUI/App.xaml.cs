@@ -1,7 +1,6 @@
 using Elysium.Application;
 using Elysium.Application.Abstractions;
 using Elysium.Application.DependencyInjection;
-using Elysium.Presentation;
 using Elysium.Presentation.Abstractions;
 using Elysium.UI.WinUI;
 using Infinity.Application.DependencyInjection;
@@ -68,7 +67,7 @@ public sealed partial class App
             ViewExtension.DefaultProvider = startingHost.Services;
             ViewModelExtension.DefaultProvider = startingHost.Services;
 
-            _ = startingHost.Services.GetRequiredKeyedService<PageTintView>("PageTintView");
+            _ = startingHost.Services.GetRequiredKeyedService<DesktopOverviewView>("DesktopOverviewView");
 
             startingHost.Start();
 

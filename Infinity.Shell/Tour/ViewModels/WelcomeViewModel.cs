@@ -15,4 +15,3 @@ public sealed class WelcomeViewModel(IServiceProvider provider,
 
     public bool CanGoNext => true;
 }
-

@@ -1,4 +1,3 @@
-using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;

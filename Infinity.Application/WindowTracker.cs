@@ -467,7 +467,6 @@ public sealed class WindowTracker(IWindowStore repository,
     {
         try
         {
-
             List<IntPtr> liveWindows = EnumerateTopLevelWindows();
             HashSet<IntPtr> liveWindowSet = [.. liveWindows];
             List<IntPtr> staleHandles = [];
