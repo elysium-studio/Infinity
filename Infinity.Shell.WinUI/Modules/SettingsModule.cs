@@ -30,6 +30,7 @@ public sealed class SettingsModule :
                     provider.GetRequiredService<IServiceFactory>(),
                     provider.GetRequiredService<IMessenger>(),
                     provider.GetRequiredService<IDisposer>(),
+                    provider.GetRequiredService<ITextLocalizer>(),
                     provider.GetRequiredService<IEnumerable<IDesktopViewModel>>()))
             .AddViewFor<PreviewView, ISettingViewModel, PreviewViewModel>(ServiceLifetime.Transient,
                 provider => new PreviewView(),
@@ -37,6 +38,7 @@ public sealed class SettingsModule :
                     provider.GetRequiredService<IServiceFactory>(),
                     provider.GetRequiredService<IMessenger>(),
                     provider.GetRequiredService<IDisposer>(),
+                    provider.GetRequiredService<ITextLocalizer>(),
                     provider.GetRequiredService<IEnumerable<IPreviewViewModel>>()))
             .AddViewFor<WindowsView, ISettingViewModel, WindowsViewModel>(ServiceLifetime.Transient,
                 provider => new WindowsView(),
@@ -44,6 +46,7 @@ public sealed class SettingsModule :
                     provider.GetRequiredService<IServiceFactory>(),
                     provider.GetRequiredService<IMessenger>(),
                     provider.GetRequiredService<IDisposer>(),
+                    provider.GetRequiredService<ITextLocalizer>(),
                     provider.GetRequiredService<IEnumerable<IWindowsViewModel>>()));
     }
 }

@@ -7,12 +7,44 @@
     <Window.SystemBackdrop>
         <MicaBackdrop />
     </Window.SystemBackdrop>
-    <Grid>
+    <Grid Loaded="HandleLoaded">
+        <Grid.Resources>
+            <DataTemplate x:Key="DefaultSettingsContentTemplate" x:DataType="Shell:ISettingViewModel">
+                <ListView
+                    Margin="36,0,36,36"
+                    ItemsSource="{x:Bind}"
+                    SelectionMode="None">
+                    <ListView.ItemContainerTransitions>
+                        <TransitionCollection />
+                    </ListView.ItemContainerTransitions>
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0,0,0,4" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <ContentControl
+                                HorizontalContentAlignment="Stretch"
+                                Content="{Binding}"
+                                ContentTemplateSelector="{WinUI:ViewTemplateSelector}" />
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </DataTemplate>
+        </Grid.Resources>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TitleBar x:Name="AppTitleBar" x:Uid="SettingsTitleBar">
+        <TitleBar
+            x:Name="AppTitleBar"
+            x:Uid="SettingsTitleBar"
+            BackRequested="HandleBackRequested"
+            IsBackButtonEnabled="False"
+            IsBackButtonVisible="False">
             <TitleBar.IconSource>
                 <ImageIconSource ImageSource="ms-appx:///Assets/Infinity.png" />
             </TitleBar.IconSource>
@@ -24,9 +56,8 @@
             IsBackButtonVisible="Collapsed"
             IsPaneToggleButtonVisible="False"
             IsSettingsVisible="False"
-            MenuItemsSource="{x:Bind ViewModel, Mode=OneWay}"
             PaneDisplayMode="Left"
-            SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}">
+            SelectionChanged="HandleNavigationSelectionChanged">
             <NavigationView.PaneFooter>
                 <StackPanel Spacing="4">
                     <NavigationViewItem
@@ -66,58 +97,46 @@
                 <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
                 <Thickness x:Key="NavigationViewContentGridBorderThickness">0</Thickness>
             </NavigationView.Resources>
-            <NavigationView.MenuItemTemplate>
-                <DataTemplate x:DataType="Shell:ISettingViewModel">
-                    <NavigationViewItem Margin="8,0,0,0">
-                        <ContentControl
-                            HorizontalContentAlignment="Stretch"
-                            Content="{x:Bind}"
-                            ContentTemplateSelector="{WinUI:ViewTemplateSelector}" />
-                    </NavigationViewItem>
-                </DataTemplate>
-            </NavigationView.MenuItemTemplate>
-            <ContentControl
-                HorizontalContentAlignment="Stretch"
-                VerticalContentAlignment="Stretch"
-                Content="{x:Bind ViewModel.SelectedItem, Mode=OneWay}">
-                <ContentControl.ContentTransitions>
-                    <TransitionCollection>
-                        <ContentThemeTransition />
-                    </TransitionCollection>
-                </ContentControl.ContentTransitions>
-                <ContentControl.ContentTemplate>
-                    <DataTemplate x:DataType="Shell:ISettingViewModel">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="*" />
-                            </Grid.RowDefinitions>
-                            <Grid Grid.Row="0" Margin="36,0,36,16">
-                                <Grid.Resources>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="FontFamily" Value="Segoe UI Variable Display" />
-                                        <Setter Property="FontSize" Value="28" />
-                                        <Setter Property="FontWeight" Value="SemiBold" />
-                                    </Style>
-                                </Grid.Resources>
-                                <ContentControl Content="{x:Bind}" ContentTemplateSelector="{WinUI:ViewTemplateSelector}" />
-                            </Grid>
-                            <ScrollViewer Grid.Row="1">
-                                <ItemsControl
-                                    Margin="36,0,36,36"
-                                    ItemTemplateSelector="{WinUI:ViewTemplateSelector}"
-                                    ItemsSource="{x:Bind}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel Spacing="4" />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                </ItemsControl>
-                            </ScrollViewer>
-                        </Grid>
-                    </DataTemplate>
-                </ContentControl.ContentTemplate>
-            </ContentControl>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0" Margin="36,0,36,8">
+                    <BreadcrumbBar
+                        ItemClicked="HandleBreadcrumbItemClicked"
+                        ItemsSource="{x:Bind BreadcrumbItems}">
+                        <BreadcrumbBar.Resources>
+                            <ResourceDictionary>
+                                <x:Double x:Key="BreadcrumbBarItemThemeFontSize">20</x:Double>
+                                <Thickness x:Key="BreadcrumbBarChevronPadding">8,0,8,0</Thickness>
+                                <FontWeight x:Key="BreadcrumbBarItemFontWeight">SemiBold</FontWeight>
+                                <x:Double x:Key="BreadcrumbBarChevronFontSize">16</x:Double>
+                            </ResourceDictionary>
+                        </BreadcrumbBar.Resources>
+                        <BreadcrumbBar.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontFamily="Segoe UI Variable Display"
+                                    Text="{Binding}" />
+                            </DataTemplate>
+                        </BreadcrumbBar.ItemTemplate>
+                    </BreadcrumbBar>
+                </Grid>
+                <ContentControl
+                    Grid.Row="1"
+                    HorizontalContentAlignment="Stretch"
+                    VerticalContentAlignment="Stretch"
+                    Content="{x:Bind ViewModel.CurrentView, Mode=OneWay}"
+                    ContentTemplate="{StaticResource DefaultSettingsContentTemplate}">
+                    <ContentControl.ContentTransitions>
+                        <TransitionCollection>
+                            <ContentThemeTransition />
+                        </TransitionCollection>
+                    </ContentControl.ContentTransitions>
+                </ContentControl>
+            </Grid>
         </NavigationView>
     </Grid>
 </Window>
