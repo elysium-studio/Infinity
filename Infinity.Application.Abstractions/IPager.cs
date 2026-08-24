@@ -10,6 +10,8 @@ public interface IPager
 
     int? MaxPages { get; }
 
+    bool IsPageCentered(int page);
+
     void SetMaxPages(int? maxPages);
 
     void NavigateToPage(int page);

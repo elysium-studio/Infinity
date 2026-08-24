@@ -131,23 +131,22 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             return;
         }
 
-        if (IsWindowFullyVisible(trackedWindow, workspaceWidth))
+        if (trackedWindow.IsSticky)
         {
             RequestActivation(handle);
             return;
         }
 
-        int windowPage = GetWindowPage(trackedWindow, workspaceWidth);
-        double targetOffset = GetTargetOffset(trackedWindow, workspaceWidth, windowPage);
+        int windowPage = GetWindowCenterPage(trackedWindow, workspaceWidth);
+        double targetOffset = windowPage * (double)workspaceWidth;
+
+        if (AreClose(scroller.VisualOffset, targetOffset))
+        {
+            RequestActivation(handle);
+            return;
+        }
 
         PendingActivation = handle;
-
-        if (IsNavigationSettled(windowPage, targetOffset))
-        {
-            RequestActivation(handle);
-            return;
-        }
-
         SetNavigationTarget(windowPage, targetOffset);
         NavigationStarted?.Invoke(this, new NavigationStartedEventArgs(windowPage));
         scroller.ScrollTo(targetOffset);
@@ -636,6 +635,29 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         }
 
         return (int)page;
+    }
+
+    private static int GetWindowCenterPage(TrackedWindow trackedWindow, int workspaceWidth)
+    {
+        if (workspaceWidth <= 0)
+        {
+            return 0;
+        }
+
+        double windowCenter = GetSafeCanvasX(trackedWindow) + (GetSafeWidth(trackedWindow) / 2.0);
+        double page = Math.Floor(windowCenter / workspaceWidth);
+
+        if (page > int.MaxValue)
+        {
+            return int.MaxValue;
+        }
+
+        if (page < int.MinValue)
+        {
+            return int.MinValue;
+        }
+
+        return Math.Max(0, (int)page);
     }
 
     private static double GetTargetOffset(TrackedWindow trackedWindow, int workspaceWidth, int windowPage)

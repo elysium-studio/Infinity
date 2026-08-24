@@ -35,6 +35,7 @@ GetClassName
 GetDesktopWindow
 GetShellWindow
 GetWindowLong
+GetLayeredWindowAttributes
 GetWindowText
 GetWindowThreadProcessId
 IsHungAppWindow

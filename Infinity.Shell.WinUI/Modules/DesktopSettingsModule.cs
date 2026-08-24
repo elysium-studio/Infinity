@@ -83,17 +83,6 @@ public sealed class DesktopSettingsModule :
                     provider.GetRequiredService<Settings>(),
                     provider.GetRequiredService<IWritableOptions<Settings>>(),
                     config => config.HideFilteredWindows,
-                    (config, hideFilteredWindows) => config.HideFilteredWindows = hideFilteredWindows))
-            .AddViewFor<DesktopBlurView, IDesktopViewModel, DesktopBlurViewModel>(ServiceLifetime.Transient,
-                provider => new DesktopBlurView(),
-                provider => new DesktopBlurViewModel(provider,
-                    provider.GetRequiredService<IServiceFactory>(),
-                    provider.GetRequiredService<IMessenger>(),
-                    provider.GetRequiredService<IDisposer>(),
-                    provider.GetRequiredService<IDispatcher>(),
-                    provider.GetRequiredService<Settings>(),
-                    provider.GetRequiredService<IWritableOptions<Settings>>(),
-                    config => config.DesktopBlur,
-                    (config, desktopBlur) => config.DesktopBlur = desktopBlur));
+                    (config, hideFilteredWindows) => config.HideFilteredWindows = hideFilteredWindows));
     }
 }

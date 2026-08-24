@@ -6,7 +6,6 @@ using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Infinity.Platform.Windows;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
 namespace Infinity.Shell.WinUI;
 
@@ -17,12 +16,13 @@ public sealed class DesktopModule :
     {
         services
             .AddSingleton<DesktopOverviewBackdropAnimator>()
+            .AddSingleton<DesktopOverviewWallpaperPresenter>()
             .AddSingleton<DesktopScrollPreviewAnimator>()
             .AddSingleton<DesktopPageLayoutCalculator>()
+            .AddSingleton<DesktopBackgroundBrushFactory>()
             .AddSingleton<DesktopPageStrip>()
             .AddSingleton<DesktopWindowPreviewFactory>()
             .AddSingleton<DesktopWindowPreviewCollection>()
-            .AddSingleton<DesktopWindowConcealmentSession>()
             .AddSingleton<WindowInputTransparencyController>()
             .AddSingleton<PageTitleStore>()
             .AddSingleton<PageNavigationPublisher>()
@@ -36,12 +36,13 @@ public sealed class DesktopModule :
                 provider.GetRequiredService<DesktopPageLayoutCalculator>(),
                 provider.GetRequiredService<DesktopScrollPreviewAnimator>(),
                 provider.GetRequiredService<DesktopPageStrip>(),
-                provider.GetRequiredService<DesktopWindowPreviewCollection>(),
-                provider.GetRequiredService<DesktopWindowConcealmentSession>()))
+                provider.GetRequiredService<DesktopWindowPreviewCollection>()))
             .AddViewFor(ServiceLifetime.Singleton,
                 provider => new DesktopOverviewView(provider.GetRequiredService<DesktopScrollPreviewView>(),
                     provider.GetRequiredService<DesktopOverviewBackdropAnimator>(),
-                    provider.GetRequiredService<WindowInputTransparencyController>()),
+                    provider.GetRequiredService<DesktopOverviewWallpaperPresenter>(),
+                    provider.GetRequiredService<WindowInputTransparencyController>(),
+                    provider.GetRequiredService<IDesktopBackgroundSource>()),
                 provider => new DesktopOverviewViewModel(provider,
                     provider.GetRequiredService<IServiceFactory>(),
                     provider.GetRequiredService<IMessenger>(),
@@ -51,7 +52,6 @@ public sealed class DesktopModule :
                     provider.GetRequiredService<IModifierKeyState>(),
                     provider.GetRequiredService<IWindowDragScroller>(),
                     provider.GetRequiredService<IPageGestureSource>(),
-                    provider.GetRequiredService<IOptionsMonitor<Settings>>(),
                     provider.GetRequiredService<IPager>(),
                     provider.GetRequiredService<IScroller>(),
                     provider.GetRequiredService<IScrollPresentationSession>(),

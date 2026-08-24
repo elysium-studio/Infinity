@@ -146,6 +146,8 @@ public sealed class WindowPageMoverTests
 
         public int? MaxPages { get; set; }
 
+        public bool IsPageCentered(int page) => page == CurrentPage;
+
         public void NavigateToPage(int page)
         {
             CurrentPage = page;

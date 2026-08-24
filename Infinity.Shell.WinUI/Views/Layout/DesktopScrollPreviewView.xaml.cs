@@ -22,7 +22,6 @@ public sealed partial class DesktopScrollPreviewView :
     private readonly DesktopScrollPreviewAnimator animator;
     private readonly DesktopPageStrip pageStrip;
     private readonly DesktopWindowPreviewCollection previews;
-    private readonly DesktopWindowConcealmentSession concealmentSession;
     private bool eventsSubscribed;
     private bool isRunning;
     private double spacingProgress = 1;
@@ -39,8 +38,7 @@ public sealed partial class DesktopScrollPreviewView :
         DesktopPageLayoutCalculator pageLayoutCalculator,
         DesktopScrollPreviewAnimator animator,
         DesktopPageStrip pageStrip,
-        DesktopWindowPreviewCollection previews,
-        DesktopWindowConcealmentSession concealmentSession)
+        DesktopWindowPreviewCollection previews)
     {
         InitializeComponent();
 
@@ -55,7 +53,6 @@ public sealed partial class DesktopScrollPreviewView :
         this.animator = animator;
         this.pageStrip = pageStrip;
         this.previews = previews;
-        this.concealmentSession = concealmentSession;
         this.pageStrip.PageInvoked += HandlePageInvoked;
         this.previews.WindowInvoked += HandleWindowInvoked;
     }
@@ -140,12 +137,11 @@ public sealed partial class DesktopScrollPreviewView :
         animator.AnimateOutward(PreviewSurface, GetAnimationWidth(), GetAnimationHeight(), () =>
         {
             ClearLayoutTransitions();
-            concealmentSession.RestoreTrackedWindows();
             completed();
         });
     }
 
-    public void Clear()
+    public void Deactivate()
     {
         if (!isRunning)
         {
@@ -156,11 +152,7 @@ public sealed partial class DesktopScrollPreviewView :
         SetInteractionEnabled(false);
         animator.Reset(PreviewSurface, GetAnimationWidth(), GetAnimationHeight());
         UnsubscribeEvents();
-        concealmentSession.RestoreTrackedWindows();
         pageStrip.Stop();
-        windowPreviewSurface.Clear();
-
-        previews.Clear();
         Opacity = 0;
     }
 
@@ -183,8 +175,6 @@ public sealed partial class DesktopScrollPreviewView :
                 UpdateWindowLayout(trackedWindow, preview, null);
             }
         }
-
-        concealmentSession.ConcealTrackedWindows();
     }
 
     private void RefreshLayout(TimeSpan? transitionDuration = null)

@@ -8,8 +8,8 @@ namespace Infinity.Shell.WinUI;
 
 public sealed class DesktopOverviewBackdropAnimator
 {
-    private static readonly TimeSpan EnterDuration = TimeSpan.FromMilliseconds(180);
-    private static readonly TimeSpan ExitDuration = TimeSpan.FromMilliseconds(180);
+    private static readonly TimeSpan EnterDuration = TimeSpan.FromMilliseconds(300);
+    private static readonly TimeSpan ExitDuration = TimeSpan.FromMilliseconds(220);
 
     public void AnimateIn(FrameworkElement element) => Animate(element, 0, 1, EnterDuration);
 

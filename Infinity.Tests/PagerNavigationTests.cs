@@ -25,6 +25,39 @@ public sealed class PagerNavigationTests
         Assert.Equal(["SuppressForegroundFollow", "ScrollTo:2000"], operations);
     }
 
+    [Fact]
+    public void PageIsNotCenteredWhenOffsetRoundsToPageButIsMisaligned()
+    {
+        PanState state = new();
+        state.SetOffset(950);
+        TestNavigationScroller scroller = new([]);
+        scroller.SetVisualOffset(950);
+        Pager pager = new(new WindowStore(),
+            state,
+            scroller,
+            new TestWorkspace(),
+            new TestForegroundWindowCoordinator(),
+            NullLogger<Pager>.Instance);
+
+        Assert.Equal(1, pager.CurrentPage);
+        Assert.False(pager.IsPageCentered(1));
+    }
+
+    [Fact]
+    public void PageIsCenteredAtItsExactOffset()
+    {
+        TestNavigationScroller scroller = new([]);
+        scroller.SetVisualOffset(1000);
+        Pager pager = new(new WindowStore(),
+            new PanState(),
+            scroller,
+            new TestWorkspace(),
+            new TestForegroundWindowCoordinator(),
+            NullLogger<Pager>.Instance);
+
+        Assert.True(pager.IsPageCentered(1));
+    }
+
     private sealed class TestNavigationScroller(List<string> operations) :
         IScroller
     {
@@ -64,6 +97,8 @@ public sealed class PagerNavigationTests
             operations.Add($"ScrollTo:{offset}");
             VisualOffset = offset;
         }
+
+        public void SetVisualOffset(double offset) => VisualOffset = offset;
 
         public void Start() => ScrollStarted?.Invoke(this, EventArgs.Empty);
 

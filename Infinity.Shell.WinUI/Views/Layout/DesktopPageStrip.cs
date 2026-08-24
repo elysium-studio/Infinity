@@ -7,12 +7,9 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Media.Imaging;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
 
@@ -21,6 +18,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource,
     IScroller scroller,
     IWorkspace workspace,
     DesktopPageLayoutCalculator layoutCalculator,
+    DesktopBackgroundBrushFactory backgroundBrushFactory,
     ILogger<DesktopPageStrip> logger) :
     IDisposable
 {
@@ -201,6 +199,8 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource,
             currentSpacingProgress);
         Canvas.SetLeft(preview, leadingSpace + baseX);
         Canvas.SetTop(preview, 0);
+        Canvas.SetLeft(preview.ShadowHost, leadingSpace + baseX);
+        Canvas.SetTop(preview.ShadowHost, 0);
         preview.Update(targetX - baseX, transitionDuration);
     }
 
@@ -230,11 +230,14 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource,
 
         for (int index = 0; index < capacity; index++)
         {
-            DesktopPagePreview page = new(scaleVisual);
+            DesktopPagePreview page = new(scaleVisual, overviewScale);
             page.Click += HandlePageClicked;
             page.Hide();
             pagePool.Add(page);
             availablePages.Push(page);
+            Canvas.SetZIndex(page.ShadowHost, 0);
+            Canvas.SetZIndex(page, 1);
+            host.Children.Add(page.ShadowHost);
             host.Children.Add(page);
         }
     }
@@ -282,7 +285,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource,
             if (background is null || current != backgroundSnapshot)
             {
                 backgroundSnapshot = current;
-                background = CreateBackgroundBrush(current);
+                background = backgroundBrushFactory.Create(current);
             }
 
             if (background is not null)
@@ -300,32 +303,4 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource,
         }
     }
 
-    private static Brush CreateBackgroundBrush(DesktopBackground background)
-    {
-        if (!string.IsNullOrWhiteSpace(background.Wallpaper))
-        {
-            return new ImageBrush
-            {
-                AlignmentX = AlignmentX.Center,
-                AlignmentY = AlignmentY.Center,
-                ImageSource = new BitmapImage(new Uri(background.Wallpaper, UriKind.Absolute)),
-                Stretch = Stretch.UniformToFill
-            };
-        }
-
-        return new SolidColorBrush(ParseColour(background.Colour));
-    }
-
-    private static Color ParseColour(string? value)
-    {
-        if (value is { Length: 7 } && value[0] == '#' &&
-            byte.TryParse(value.AsSpan(1, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out byte red) &&
-            byte.TryParse(value.AsSpan(3, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out byte green) &&
-            byte.TryParse(value.AsSpan(5, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out byte blue))
-        {
-            return Color.FromArgb(255, red, green, blue);
-        }
-
-        return Color.FromArgb(255, 32, 32, 32);
-    }
 }

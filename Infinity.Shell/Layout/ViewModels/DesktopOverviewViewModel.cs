@@ -5,7 +5,6 @@ using Elysium.Platform.Abstractions;
 using Elysium.Presentation;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
-using Microsoft.Extensions.Options;
 using NavigationCompletedEventArgs = Infinity.Application.Abstractions.NavigationCompletedEventArgs;
 
 namespace Infinity.Shell;
@@ -14,12 +13,10 @@ public sealed partial class DesktopOverviewViewModel :
     ObservableViewModel,
     IRecipient<NavigationCompletedEventArgs>,
     IRecipient<WindowActivationRequestedEventArgs>,
-    IRecipient<FilterChangedEventArgs>,
-    IRecipient<OptionsChangedEventArgs<Settings>>
+    IRecipient<FilterChangedEventArgs>
 {
     private readonly IDispatcher dispatcher;
     private readonly IModifierKeyState modifierKeyState;
-    private readonly IOptionsMonitor<Settings> settings;
     private readonly IPager pager;
     private readonly IScroller scroller;
     private readonly IScrollPresentationSession scrollPresentationSession;
@@ -28,10 +25,9 @@ public sealed partial class DesktopOverviewViewModel :
     private readonly IInfinityGlanceBridge glanceBridge;
     private bool filterActive;
     private bool dismissAfterPageNavigation;
-    private nint pendingActivation;
-
-    [ObservableProperty]
-    private bool isBlurEnabled;
+    private bool isDesktopPreviewExitAnimationCompleted;
+    private bool isWindowSelectionNavigationPending;
+    private bool isWindowSelectionNavigationStarting;
 
     [ObservableProperty]
     private bool isOpen;
@@ -44,6 +40,9 @@ public sealed partial class DesktopOverviewViewModel :
 
     [ObservableProperty]
     private bool isDesktopPreviewCompletionRequested;
+
+    [ObservableProperty]
+    private bool isDesktopPreviewReadyToClose;
     
     partial void OnIsOpenChanged(bool value)
     {
@@ -55,24 +54,24 @@ public sealed partial class DesktopOverviewViewModel :
             scrollPresentationSession.End();
             IsDesktopPreviewActive = false;
             IsDesktopPreviewCompletionRequested = false;
+            IsDesktopPreviewReadyToClose = false;
             dismissAfterPageNavigation = false;
-            pendingActivation = 0;
+            isDesktopPreviewExitAnimationCompleted = false;
+            isWindowSelectionNavigationPending = false;
+            isWindowSelectionNavigationStarting = false;
         }
     }
 
-    public DesktopOverviewViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IDispatcher dispatcher, IPointerInputSource pointer, IModifierKeyState modifierKeyState, IWindowDragScroller dragScroller, IPageGestureSource gestureSource, IOptionsMonitor<Settings> settings, IPager pager, IScroller scroller, IScrollPresentationSession scrollPresentationSession, IWindowPreviewSurface windowPreviewSurface, IWindowNavigationCoordinator windowNavigationCoordinator, IInfinityGlanceBridge glanceBridge) : base(provider, factory, messenger, disposer)
+    public DesktopOverviewViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IDispatcher dispatcher, IPointerInputSource pointer, IModifierKeyState modifierKeyState, IWindowDragScroller dragScroller, IPageGestureSource gestureSource, IPager pager, IScroller scroller, IScrollPresentationSession scrollPresentationSession, IWindowPreviewSurface windowPreviewSurface, IWindowNavigationCoordinator windowNavigationCoordinator, IInfinityGlanceBridge glanceBridge) : base(provider, factory, messenger, disposer)
     {
         this.dispatcher = dispatcher;
         this.modifierKeyState = modifierKeyState;
-        this.settings = settings;
         this.pager = pager;
         this.scroller = scroller;
         this.scrollPresentationSession = scrollPresentationSession;
         this.windowPreviewSurface = windowPreviewSurface;
         this.windowNavigationCoordinator = windowNavigationCoordinator;
         this.glanceBridge = glanceBridge;
-
-        isBlurEnabled = settings.CurrentValue.DesktopBlur;
 
         pointer.ScrollDeltaReceived += HandleScrollDeltaReceived;
         pointer.MiddleButtonClicked += HandleMiddleButtonClicked;
@@ -91,24 +90,20 @@ public sealed partial class DesktopOverviewViewModel :
         Messenger.Register<NavigationCompletedEventArgs>(this);
         Messenger.Register<WindowActivationRequestedEventArgs>(this);
         Messenger.Register<FilterChangedEventArgs>(this);
-        Messenger.Register<OptionsChangedEventArgs<Settings>>(this);
     }
 
     public void CompleteDesktopPreview()
     {
-        nint activation = pendingActivation;
         dismissAfterPageNavigation = false;
-        pendingActivation = 0;
+        isDesktopPreviewExitAnimationCompleted = false;
+        isWindowSelectionNavigationPending = false;
+        IsDesktopPreviewReadyToClose = false;
+        scroller.CommitPresentation();
         scrollPresentationSession.End();
         IsDesktopPreviewActive = false;
         IsDesktopPreviewCompletionRequested = false;
         StaysOpen = false;
         IsOpen = false;
-
-        if (activation != 0)
-        {
-            windowNavigationCoordinator.NavigateTo(activation);
-        }
     }
 
     public void DismissDesktopPreview()
@@ -121,6 +116,9 @@ public sealed partial class DesktopOverviewViewModel :
         scroller.Reset();
         scroller.CommitPresentation();
         dismissAfterPageNavigation = false;
+        isDesktopPreviewExitAnimationCompleted = false;
+        isWindowSelectionNavigationPending = false;
+        IsDesktopPreviewReadyToClose = false;
         IsDesktopPreviewCompletionRequested = true;
     }
 
@@ -131,8 +129,22 @@ public sealed partial class DesktopOverviewViewModel :
             return;
         }
 
-        pendingActivation = handle;
-        DismissDesktopPreview();
+        dismissAfterPageNavigation = false;
+        isDesktopPreviewExitAnimationCompleted = false;
+        isWindowSelectionNavigationPending = false;
+        IsDesktopPreviewReadyToClose = false;
+        IsDesktopPreviewCompletionRequested = true;
+        isWindowSelectionNavigationStarting = true;
+
+        try
+        {
+            windowNavigationCoordinator.NavigateTo(handle);
+            isWindowSelectionNavigationPending = windowNavigationCoordinator.NavigationTargetPage >= 0;
+        }
+        finally
+        {
+            isWindowSelectionNavigationStarting = false;
+        }
     }
 
     public void SelectPage(int page)
@@ -142,9 +154,7 @@ public sealed partial class DesktopOverviewViewModel :
             return;
         }
 
-        pendingActivation = 0;
-
-        if (page == pager.CurrentPage)
+        if (pager.IsPageCentered(page))
         {
             DismissDesktopPreview();
             return;
@@ -157,6 +167,9 @@ public sealed partial class DesktopOverviewViewModel :
     public void Receive(NavigationCompletedEventArgs args) =>
         dispatcher.Dispatch(() =>
         {
+            isWindowSelectionNavigationPending = false;
+            TryMarkDesktopPreviewReadyToClose();
+
             if (!filterActive && !IsDesktopPreviewActive)
             {
                 IsOpen = false;
@@ -181,12 +194,6 @@ public sealed partial class DesktopOverviewViewModel :
             {
                 IsOpen = args.IsActive;
             }
-        });
-
-    public void Receive(OptionsChangedEventArgs<Settings> args) =>
-        dispatcher.Dispatch(() =>
-        {
-            IsBlurEnabled = args.Options.DesktopBlur;
         });
 
     private void HandleDragStarted() =>
@@ -246,7 +253,24 @@ public sealed partial class DesktopOverviewViewModel :
         }
     }
 
-    private void HandleScrollerScrollStarted(object? sender, EventArgs args) => BeginDesktopPreview();
+    public void NotifyDesktopPreviewExitAnimationCompleted()
+    {
+        if (!IsDesktopPreviewCompletionRequested)
+        {
+            return;
+        }
+
+        isDesktopPreviewExitAnimationCompleted = true;
+        TryMarkDesktopPreviewReadyToClose();
+    }
+
+    private void HandleScrollerScrollStarted(object? sender, EventArgs args)
+    {
+        if (!isWindowSelectionNavigationStarting)
+        {
+            BeginDesktopPreview();
+        }
+    }
 
     private void HandleScrollerScrollStopped(object? sender, EventArgs args) =>
         dispatcher.Dispatch(() =>
@@ -267,6 +291,13 @@ public sealed partial class DesktopOverviewViewModel :
             return;
         }
 
+        if (!IsDesktopPreviewActive)
+        {
+            isDesktopPreviewExitAnimationCompleted = false;
+            isWindowSelectionNavigationPending = false;
+            IsDesktopPreviewReadyToClose = false;
+        }
+
         scrollPresentationSession.Begin();
 
         dispatcher.Dispatch(() =>
@@ -276,5 +307,15 @@ public sealed partial class DesktopOverviewViewModel :
             StaysOpen = true;
             IsOpen = true;
         });
+    }
+
+    private void TryMarkDesktopPreviewReadyToClose()
+    {
+        if (IsDesktopPreviewCompletionRequested &&
+            isDesktopPreviewExitAnimationCompleted &&
+            !isWindowSelectionNavigationPending)
+        {
+            IsDesktopPreviewReadyToClose = true;
+        }
     }
 }

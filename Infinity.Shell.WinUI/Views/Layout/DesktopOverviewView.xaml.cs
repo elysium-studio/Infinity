@@ -1,4 +1,5 @@
 using Elysium.UI.Controls.WinUI;
+using Infinity.Platform.Abstractions;
 using Infinity.Platform.Windows;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -14,21 +15,31 @@ public sealed partial class DesktopOverviewView :
 
     private readonly DesktopScrollPreviewView desktopScrollPreview;
     private readonly DesktopOverviewBackdropAnimator backdropAnimator;
+    private readonly DesktopOverviewWallpaperPresenter wallpaperPresenter;
     private readonly WindowInputTransparencyController inputController;
+    private readonly IDesktopBackgroundSource backgroundSource;
+    private readonly DispatcherQueue dispatcherQueue;
     private DesktopOverviewViewModel? subscribedViewModel;
     private DispatcherQueueTimer? previewCleanupTimer;
     private bool isCompletingDesktopPreview;
     private bool isDesktopPreviewAnimationStarted;
+    private int openingGeneration;
 
     public DesktopOverviewView(DesktopScrollPreviewView desktopScrollPreview,
         DesktopOverviewBackdropAnimator backdropAnimator,
-        WindowInputTransparencyController inputController)
+        DesktopOverviewWallpaperPresenter wallpaperPresenter,
+        WindowInputTransparencyController inputController,
+        IDesktopBackgroundSource backgroundSource)
     {
         InitializeComponent();
 
+        IsBlurEnabled = false;
         this.desktopScrollPreview = desktopScrollPreview;
         this.backdropAnimator = backdropAnimator;
+        this.wallpaperPresenter = wallpaperPresenter;
         this.inputController = inputController;
+        this.backgroundSource = backgroundSource;
+        dispatcherQueue = DispatcherQueue;
         DesktopPreviewContent.Content = desktopScrollPreview;
         desktopScrollPreview.BackgroundInvoked += HandleBackgroundInvoked;
         desktopScrollPreview.PageInvoked += HandlePageInvoked;
@@ -36,6 +47,7 @@ public sealed partial class DesktopOverviewView :
 
         DataContextChanged += HandleDataContextChanged;
         Loaded += HandleLoaded;
+        backgroundSource.BackgroundChanged += HandleBackgroundChanged;
     }
 
     public DesktopOverviewViewModel ViewModel => (DesktopOverviewViewModel)DataContext;
@@ -44,26 +56,23 @@ public sealed partial class DesktopOverviewView :
     {
         EnsureSubscribed();
         UpdateBindings();
+        PrepareBackground();
     }
 
     protected override void OnOpened()
     {
+        int generation = ++openingGeneration;
         CancelPreviewCleanup();
         UpdateBindings();
-        backdropAnimator.AnimateIn(DesktopBackdrop);
-        DispatcherQueue.TryEnqueue(() => inputController.SetInputEnabled(Handle, true));
-
-        if (ViewModel.IsDesktopPreviewActive)
-        {
-            BeginDesktopPreview();
-        }
-        else
-        {
-            ClearDesktopPreview();
-        }
+        OpenOverview(generation);
     }
 
-    protected override void OnClosed() => SchedulePreviewCleanup();
+    protected override void OnClosed()
+    {
+        openingGeneration++;
+        inputController.SetInputEnabled(Handle, false);
+        SchedulePreviewCleanup();
+    }
 
     private void HandleDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {
@@ -103,7 +112,7 @@ public sealed partial class DesktopOverviewView :
             }
             else
             {
-                DispatcherQueue.TryEnqueue(() =>
+                dispatcherQueue.TryEnqueue(() =>
                 {
                     if (!ViewModel.IsDesktopPreviewActive && IsOpen)
                     {
@@ -122,28 +131,94 @@ public sealed partial class DesktopOverviewView :
             else if (isCompletingDesktopPreview)
             {
                 isCompletingDesktopPreview = false;
-                backdropAnimator.AnimateIn(DesktopBackdrop);
+                backdropAnimator.AnimateIn(BackgroundSurface);
                 desktopScrollPreview.AnimateInward();
             }
+        }
+
+        if (args.PropertyName == nameof(DesktopOverviewViewModel.IsDesktopPreviewReadyToClose) &&
+            ViewModel.IsDesktopPreviewReadyToClose)
+        {
+            FinishDesktopPreview();
         }
     }
 
     private void UpdateBindings()
     {
-        if (!DispatcherQueue.HasThreadAccess)
+        if (!dispatcherQueue.HasThreadAccess)
         {
-            DispatcherQueue.TryEnqueue(UpdateBindings);
+            dispatcherQueue.TryEnqueue(UpdateBindings);
             return;
         }
 
         Bindings.Update();
     }
 
+    private void HandleBackgroundChanged(object? sender, EventArgs args)
+    {
+        if (dispatcherQueue.HasThreadAccess)
+        {
+            PrepareBackground();
+        }
+        else
+        {
+            dispatcherQueue.TryEnqueue(PrepareBackground);
+        }
+    }
+
+    private async void PrepareBackground()
+    {
+        DesktopBackground background = backgroundSource.GetBackground();
+        bool prepared = await wallpaperPresenter.PrepareAsync(BackgroundSurface, background);
+
+        if (prepared)
+        {
+            dispatcherQueue.TryEnqueue(() =>
+            {
+                if (IsOpen)
+                {
+                    wallpaperPresenter.Attach(BackgroundSurface);
+                }
+            });
+        }
+    }
+
+    private async void OpenOverview(int generation)
+    {
+        DesktopBackground background = backgroundSource.GetBackground();
+        bool prepared = await wallpaperPresenter.PrepareAsync(BackgroundSurface,
+            background);
+
+        if (!prepared)
+        {
+            return;
+        }
+
+        dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () => PresentOverview(generation));
+    }
+
+    private void PresentOverview(int generation)
+    {
+        if (generation != openingGeneration || !IsOpen || !wallpaperPresenter.Attach(BackgroundSurface))
+        {
+            return;
+        }
+
+        WindowExtensions.SetTopMost(Handle, true);
+        inputController.SetInputEnabled(Handle, true);
+        backdropAnimator.AnimateIn(BackgroundSurface);
+
+        if (ViewModel.IsDesktopPreviewActive)
+        {
+            BeginDesktopPreview();
+        }
+    }
+
     private void BeginDesktopPreview()
     {
-        if (!DispatcherQueue.HasThreadAccess)
+        if (!dispatcherQueue.HasThreadAccess)
         {
-            DispatcherQueue.TryEnqueue(BeginDesktopPreview);
+            dispatcherQueue.TryEnqueue(BeginDesktopPreview);
             return;
         }
 
@@ -156,8 +231,7 @@ public sealed partial class DesktopOverviewView :
         }
 
         isDesktopPreviewAnimationStarted = true;
-
-        DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+        dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
         {
             if (desktopScrollPreview.IsRunning && IsOpen && ViewModel.IsDesktopPreviewActive &&
                 !ViewModel.IsDesktopPreviewCompletionRequested)
@@ -180,7 +254,7 @@ public sealed partial class DesktopOverviewView :
         }
 
         isCompletingDesktopPreview = true;
-        backdropAnimator.AnimateOut(DesktopBackdrop);
+        backdropAnimator.AnimateOut(BackgroundSurface);
 
         desktopScrollPreview.AnimateOutward(() =>
         {
@@ -189,14 +263,27 @@ public sealed partial class DesktopOverviewView :
                 return;
             }
 
-            isCompletingDesktopPreview = false;
-
             if (ViewModel.IsDesktopPreviewCompletionRequested)
             {
-                isDesktopPreviewAnimationStarted = false;
-                ViewModel.CompleteDesktopPreview();
+                ViewModel.NotifyDesktopPreviewExitAnimationCompleted();
+            }
+            else
+            {
+                isCompletingDesktopPreview = false;
             }
         });
+    }
+
+    private void FinishDesktopPreview()
+    {
+        if (!isCompletingDesktopPreview || !ViewModel.IsDesktopPreviewReadyToClose)
+        {
+            return;
+        }
+
+        isCompletingDesktopPreview = false;
+        isDesktopPreviewAnimationStarted = false;
+        ViewModel.CompleteDesktopPreview();
     }
 
     private void SchedulePreviewCleanup()
@@ -208,7 +295,7 @@ public sealed partial class DesktopOverviewView :
 
     private DispatcherQueueTimer CreatePreviewCleanupTimer()
     {
-        DispatcherQueueTimer timer = DispatcherQueue.CreateTimer();
+        DispatcherQueueTimer timer = dispatcherQueue.CreateTimer();
         timer.Interval = PreviewCleanupDelay;
         timer.IsRepeating = false;
         timer.Tick += HandlePreviewCleanupTimerTick;
@@ -229,8 +316,9 @@ public sealed partial class DesktopOverviewView :
     {
         isCompletingDesktopPreview = false;
         isDesktopPreviewAnimationStarted = false;
-        backdropAnimator.Reset(DesktopBackdrop);
-        desktopScrollPreview.Clear();
+        wallpaperPresenter.Detach();
+        backdropAnimator.Reset(BackgroundSurface);
+        desktopScrollPreview.Deactivate();
         WindowExtensions.SetTopMost(Handle, false);
     }
 

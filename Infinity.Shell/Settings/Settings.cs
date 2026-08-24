@@ -7,8 +7,6 @@ public sealed class Settings
 {
     public Dictionary<string, int>? ApplicationPageRules { get; set; } = [];
 
-    public bool DesktopBlur { get; set; } = true;
-
     public DragScrollSpeed DragScrollSpeed { get; set; } = DragScrollSpeed.Normal;
 
     public bool HideFilteredWindows { get; set; } = false;

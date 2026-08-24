@@ -8,16 +8,19 @@ using System.Linq;
 namespace Infinity.Shell.WinUI;
 
 public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory factory,
-    IWindowGeometryReader geometryReader)
+    IWindowGeometryReader geometryReader) :
+    IDisposable
 {
     private readonly Dictionary<nint, DesktopWindowPreview> previews = [];
     private Canvas? host;
     private bool interactionEnabled;
+    private bool disposed;
 
     public event Action<nint>? WindowInvoked;
 
     public IReadOnlyList<TrackedWindow> Synchronise(Canvas canvas, IEnumerable<TrackedWindow> trackedWindows)
     {
+        ObjectDisposedException.ThrowIf(disposed, this);
         host = canvas;
         TrackedWindow[] orderedWindows = [.. trackedWindows
             .OrderByDescending(window => window.ZIndex)
@@ -88,6 +91,18 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         host?.Children.Clear();
         host = null;
         interactionEnabled = false;
+    }
+
+    public void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        disposed = true;
+        Clear();
+        GC.SuppressFinalize(this);
     }
 
     private void Remove(nint handle)

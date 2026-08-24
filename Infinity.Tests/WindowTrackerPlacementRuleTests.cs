@@ -475,6 +475,8 @@ public sealed class WindowTrackerPlacementRuleTests
 
         public int? MaxPages => null;
 
+        public bool IsPageCentered(int page) => page == CurrentPage;
+
         public void NavigateToPage(int page) => PageChanged?.Invoke(page);
 
         public void SetMaxPages(int? maxPages)

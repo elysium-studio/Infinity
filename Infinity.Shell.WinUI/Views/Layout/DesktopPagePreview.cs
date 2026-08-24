@@ -15,24 +15,41 @@ public sealed partial class DesktopPagePreview :
     IDisposable
 {
     private const float VisibleCornerRadius = 8;
+    private const float ShadowDepth = 128;
 
     private readonly Border wallpaperHost;
     private readonly Border interactionLayer;
     private readonly CompositionRoundedRectangleGeometry clipGeometry;
     private readonly CompositionGeometricClip clip;
     private readonly ExpressionAnimation cornerRadiusExpression;
+    private readonly Visual shadowVisual;
     private readonly Visual visual;
     private Vector3 translation;
     private bool disposed;
 
-    public DesktopPagePreview(Visual scaleVisual)
+    public DesktopPagePreview(Visual scaleVisual, double overviewScale)
     {
+        SolidColorBrush transparentBrush = new(Color.FromArgb(0, 0, 0, 0));
+        ShadowHost = new Border
+        {
+            Background = FluentVisualResources.GetBrush("CardBackgroundFillColorDefaultBrush",
+                Color.FromArgb(255, 32, 32, 32)),
+            CornerRadius = new CornerRadius(VisibleCornerRadius / overviewScale),
+            IsHitTestVisible = false,
+            Shadow = new ThemeShadow()
+        };
         Padding = new Thickness(0);
-        Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+        Background = transparentBrush;
         BorderThickness = new Thickness(0);
         CornerRadius = new CornerRadius(0);
         HorizontalContentAlignment = HorizontalAlignment.Stretch;
         VerticalContentAlignment = VerticalAlignment.Stretch;
+        Resources["ButtonBackgroundPointerOver"] = transparentBrush;
+        Resources["ButtonBackgroundPressed"] = transparentBrush;
+        Resources["ButtonBackgroundDisabled"] = transparentBrush;
+        Resources["ButtonBorderBrushPointerOver"] = transparentBrush;
+        Resources["ButtonBorderBrushPressed"] = transparentBrush;
+        Resources["ButtonBorderBrushDisabled"] = transparentBrush;
 
         wallpaperHost = new Border();
         interactionLayer = new Border
@@ -56,6 +73,9 @@ public sealed partial class DesktopPagePreview :
         visual = ElementCompositionPreview.GetElementVisual(this);
         Compositor compositor = visual.Compositor;
         visual.Properties.InsertVector3("Translation", Vector3.Zero);
+        ElementCompositionPreview.SetIsTranslationEnabled(ShadowHost, true);
+        ShadowHost.Translation = new Vector3(0, 0, ShadowDepth);
+        shadowVisual = ElementCompositionPreview.GetElementVisual(ShadowHost);
         clipGeometry = compositor.CreateRoundedRectangleGeometry();
         clip = compositor.CreateGeometricClip(clipGeometry);
         cornerRadiusExpression = compositor.CreateExpressionAnimation(
@@ -67,6 +87,8 @@ public sealed partial class DesktopPagePreview :
         visual.Clip = clip;
     }
 
+    public Border ShadowHost { get; }
+
     public int Page { get; private set; }
 
     public void Bind(int page,
@@ -77,14 +99,18 @@ public sealed partial class DesktopPagePreview :
         Page = page;
         Width = width;
         Height = height;
+        ShadowHost.Width = width;
+        ShadowHost.Height = height;
         wallpaperHost.Background = background;
         clipGeometry.Size = new Vector2(ToFloat(width), ToFloat(height));
+        ShadowHost.Opacity = 1;
         IsHitTestVisible = true;
         Opacity = 1;
     }
 
     public void Hide()
     {
+        ShadowHost.Opacity = 0;
         IsHitTestVisible = false;
         Opacity = 0;
         ApplyInteractionState(false, false);
@@ -109,13 +135,23 @@ public sealed partial class DesktopPagePreview :
         animation.Duration = transitionDuration.Value;
         animation.InsertExpressionKeyFrame(0, "this.StartingValue");
         animation.InsertKeyFrame(1, translation, easing);
+        Vector3KeyFrameAnimation shadowAnimation = compositor.CreateVector3KeyFrameAnimation();
+        shadowAnimation.Duration = transitionDuration.Value;
+        shadowAnimation.InsertExpressionKeyFrame(0, "this.StartingValue");
+        shadowAnimation.InsertKeyFrame(1,
+            new Vector3(ToFloat(translationX), 0, ShadowDepth),
+            easing);
         visual.Properties.StartAnimation("Translation", animation);
+        shadowVisual.Properties.StartAnimation("Translation", shadowAnimation);
     }
 
     public void ClearTranslationTransition()
     {
         visual.Properties.StopAnimation("Translation");
         visual.Properties.InsertVector3("Translation", translation);
+        shadowVisual.Properties.StopAnimation("Translation");
+        shadowVisual.Properties.InsertVector3("Translation",
+            new Vector3(translation.X, translation.Y, ShadowDepth));
     }
 
     public void SetInteractionEnabled(bool value)
@@ -145,6 +181,7 @@ public sealed partial class DesktopPagePreview :
 
         disposed = true;
         visual.Properties.StopAnimation("Translation");
+        shadowVisual.Properties.StopAnimation("Translation");
         clipGeometry.StopAnimation(nameof(CompositionRoundedRectangleGeometry.CornerRadius));
         visual.Clip = null;
         cornerRadiusExpression.Dispose();

@@ -82,6 +82,55 @@ public class WindowPageCoordinatorTests
         Assert.Equal(IntPtr.Zero, coordinator.PendingActivation);
     }
 
+    [Fact]
+    public void OverviewSelectionAlignsTheContainingPageInsteadOfTheWindowCentre()
+    {
+        WindowStore store = new();
+        TestScroller scroller = new();
+        TestWindowActivator activator = new();
+        WindowPageCoordinator coordinator = CreateCoordinator(store, scroller, activator);
+        IntPtr handle = new(5);
+        store.Add(new TrackedWindow
+        {
+            Handle = handle,
+            CanvasX = 1750,
+            CanvasY = 0,
+            Width = 500,
+            Height = 500
+        });
+
+        coordinator.NavigateTo(handle);
+
+        Assert.Equal(2000, scroller.LastTargetOffset);
+        Assert.Equal(2, coordinator.NavigationTargetPage);
+        Assert.Equal(2000, coordinator.NavigationTargetOffset);
+        Assert.Equal(0, activator.ActivationCount);
+    }
+
+    [Fact]
+    public void OverviewSelectionAlignsThePageWhenTheWindowIsVisibleBetweenPages()
+    {
+        WindowStore store = new();
+        TestScroller scroller = new();
+        TestWindowActivator activator = new();
+        WindowPageCoordinator coordinator = CreateCoordinator(store, scroller, activator);
+        IntPtr handle = new(6);
+        store.Add(new TrackedWindow
+        {
+            Handle = handle,
+            CanvasX = 1750,
+            CanvasY = 0,
+            Width = 500,
+            Height = 500
+        });
+        scroller.SetVisualOffset(1500);
+
+        coordinator.NavigateTo(handle);
+
+        Assert.Equal(2000, scroller.LastTargetOffset);
+        Assert.Equal(0, activator.ActivationCount);
+    }
+
     private static WindowPageCoordinator CreateCoordinator(IWindowStore store,
         IScroller scroller,
         IWindowActivator activator) =>

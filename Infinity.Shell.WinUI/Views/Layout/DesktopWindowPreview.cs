@@ -11,6 +11,8 @@ namespace Infinity.Shell.WinUI;
 internal sealed class DesktopWindowPreview :
     IDisposable
 {
+    private const float ShadowDepth = 72;
+
     private readonly ThumbnailCompositionPreview? preview;
     private readonly nint windowHandle;
     private double width;
@@ -63,7 +65,7 @@ internal sealed class DesktopWindowPreview :
         Host.TranslationTransition = transitionDuration.HasValue
             ? new Vector3Transition { Duration = transitionDuration.Value }
             : null;
-        Host.Translation = new Vector3(ToFloat(x), ToFloat(y), 48);
+        Host.Translation = new Vector3(ToFloat(x), ToFloat(y), ShadowDepth);
 
         if (this.width != width || this.height != height)
         {
