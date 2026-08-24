@@ -69,7 +69,6 @@ public sealed partial class App
             ViewExtension.DefaultProvider = startingHost.Services;
             ViewModelExtension.DefaultProvider = startingHost.Services;
 
-            _ = startingHost.Services.GetRequiredKeyedService<DesktopFlyoutView>("DesktopFlyoutView");
             _ = startingHost.Services.GetRequiredKeyedService<PageTintView>("PageTintView");
 
             startingHost.Start();

@@ -34,6 +34,10 @@ public sealed class PagerNavigationTests
 
         public double VisualOffset { get; private set; }
 
+        public void CommitPresentation()
+        {
+        }
+
         public void Dispose()
         {
             GC.SuppressFinalize(this);

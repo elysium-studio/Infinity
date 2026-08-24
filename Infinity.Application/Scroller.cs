@@ -8,6 +8,7 @@ using System.Threading;
 namespace Infinity.Application;
 
 public sealed class Scroller(IPanState state,
+    IScrollPresentationSession presentationSession,
     IWindowStore store,
     IWindowMover mover,
     IWindowConcealer concealer,
@@ -54,6 +55,23 @@ public sealed class Scroller(IPanState state,
         GC.SuppressFinalize(this);
     }
 
+    public void CommitPresentation()
+    {
+        if (!presentationSession.IsActive)
+        {
+            return;
+        }
+
+        try
+        {
+            RepositionWindows((int)Math.Round(state.Offset));
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Failed to reconcile window positions after scrolling");
+        }
+    }
+
     public void Reset()
     {
         pixelMotion.Reset();
@@ -76,8 +94,7 @@ public sealed class Scroller(IPanState state,
             springVelocity = 0;
             isSpinging = false;
             haltRequested = false;
-            stopTimer();
-            ScrollStopped?.Invoke(this, EventArgs.Empty);
+            CompleteScroll();
             return;
         }
 
@@ -136,17 +153,29 @@ public sealed class Scroller(IPanState state,
         double exactOffset = state.Offset + springPosition;
         int intOffset = (int)Math.Round(exactOffset);
 
-        RepositionWindows(intOffset);
+        if (!presentationSession.IsActive)
+        {
+            RepositionWindows(intOffset);
+        }
 
         if (!pixelMotion.IsActive && !easingMotion.IsActive && !momentumMotion.IsActive && !isSpinging)
         {
-            stopTimer();
-            ScrollStopped?.Invoke(this, EventArgs.Empty);
+            CompleteScroll();
         }
     }
 
     public void ScrollBy(double pixels)
     {
+        if (pixels == 0)
+        {
+            return;
+        }
+
+        if (!IsMotionActive())
+        {
+            ScrollStarted?.Invoke(this, EventArgs.Empty);
+        }
+
         haltRequested = false;
         pixelMotion.AddDelta(pixels);
         dispatcher.Dispatch(startTimer);
@@ -158,6 +187,16 @@ public sealed class Scroller(IPanState state,
 
         if (animate)
         {
+            if (Math.Abs(target - state.Offset) < 0.01)
+            {
+                return;
+            }
+
+            if (!IsMotionActive())
+            {
+                ScrollStarted?.Invoke(this, EventArgs.Empty);
+            }
+
             haltRequested = false;
             easingMotion.Reset();
             easingMotion.AddDelta(target - state.Offset);
@@ -173,11 +212,20 @@ public sealed class Scroller(IPanState state,
             isSpinging = false;
             haltRequested = false;
             state.SetOffset(target);
-            RepositionWindows((int)Math.Round(target));
+            if (!presentationSession.IsActive)
+            {
+                RepositionWindows((int)Math.Round(target));
+            }
         }
     }
 
-    public void Reposition() => RepositionWindows((int)Math.Round(VisualOffset));
+    public void Reposition()
+    {
+        if (!presentationSession.IsActive)
+        {
+            RepositionWindows((int)Math.Round(VisualOffset));
+        }
+    }
 
     public void Start()
     {
@@ -206,6 +254,22 @@ public sealed class Scroller(IPanState state,
 
         stopTimer();
 
+        if (presentationSession.IsActive)
+        {
+            try
+            {
+                RepositionWindows((int)Math.Round(state.Offset));
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, "Failed to reconcile window positions while stopping the scroller");
+            }
+            finally
+            {
+                presentationSession.End();
+            }
+        }
+
         moveGuardReleaseTimer?.Dispose();
         moveGuardReleaseTimer = null;
 
@@ -222,55 +286,69 @@ public sealed class Scroller(IPanState state,
 
         mover.BeginBatch(store.Count);
 
-        foreach (TrackedWindow trackedWindow in store)
+        try
         {
-            if (anyDragging && dragGuard.IsDragging(trackedWindow.Handle))
+            foreach (TrackedWindow trackedWindow in store)
             {
-                continue;
-            }
-
-            int targetX;
-
-            if (trackedWindow.IsSticky)
-            {
-                long stickyCanvasX = (long)intOffset + trackedWindow.StickyViewportX;
-
-                if (stickyCanvasX is < int.MinValue or > int.MaxValue)
+                if (anyDragging && dragGuard.IsDragging(trackedWindow.Handle))
                 {
-                    logger.LogWarning("Sticky window {Handle} exceeded the supported canvas range", trackedWindow.Handle);
                     continue;
                 }
 
-                trackedWindow.CanvasX = (int)stickyCanvasX;
-                targetX = trackedWindow.StickyViewportX;
-            }
-            else
-            {
-                targetX = trackedWindow.CanvasX - intOffset;
-            }
+                int targetX;
 
-            if (concealedHandles.Contains(trackedWindow.Handle))
-            {
-                continue;
+                if (trackedWindow.IsSticky)
+                {
+                    long stickyCanvasX = (long)intOffset + trackedWindow.StickyViewportX;
+
+                    if (stickyCanvasX is < int.MinValue or > int.MaxValue)
+                    {
+                        logger.LogWarning("Sticky window {Handle} exceeded the supported canvas range", trackedWindow.Handle);
+                        continue;
+                    }
+
+                    trackedWindow.CanvasX = (int)stickyCanvasX;
+                    targetX = trackedWindow.StickyViewportX;
+                }
+                else
+                {
+                    targetX = trackedWindow.CanvasX - intOffset;
+                }
+
+                if (concealedHandles.Contains(trackedWindow.Handle))
+                {
+                    continue;
+                }
+
+                int targetY = trackedWindow.CanvasY;
+
+                if (trackedWindow.LastPlacedX == targetX &&
+                    trackedWindow.LastPlacedY == targetY)
+                {
+                    continue;
+                }
+
+                mover.MoveTo(trackedWindow.Handle, targetX, targetY, trackedWindow.Width, trackedWindow.Height);
+                trackedWindow.LastPlacedX = targetX;
+                trackedWindow.LastPlacedY = targetY;
             }
-
-            int targetY = trackedWindow.CanvasY;
-
-            if (trackedWindow.LastPlacedX == targetX &&
-                trackedWindow.LastPlacedY == targetY)
-            {
-                continue;
-            }
-
-            mover.MoveTo(trackedWindow.Handle, targetX, targetY, trackedWindow.Width, trackedWindow.Height);
-            trackedWindow.LastPlacedX = targetX;
-            trackedWindow.LastPlacedY = targetY;
         }
-
-        mover.EndBatch();
+        finally
+        {
+            mover.EndBatch();
+        }
 
         ScheduleMoveGuardRelease();
     }
+
+    private void CompleteScroll()
+    {
+        stopTimer();
+        ScrollStopped?.Invoke(this, EventArgs.Empty);
+    }
+
+    private bool IsMotionActive() =>
+        pixelMotion.IsActive || easingMotion.IsActive || momentumMotion.IsActive || isSpinging;
 
     private void ScheduleMoveGuardRelease()
     {
@@ -300,9 +378,17 @@ public sealed class Scroller(IPanState state,
             return;
         }
 
-        if (!pixelMotion.IsActive && !easingMotion.IsActive && !momentumMotion.IsActive && !isSpinging)
+        bool wasPresentationActive = presentationSession.IsActive;
+
+        if (!IsMotionActive())
         {
             ScrollStarted?.Invoke(this, EventArgs.Empty);
+        }
+
+        if (!wasPresentationActive && presentationSession.IsActive)
+        {
+            DispatchInputCallback(startTimer, "scroll input");
+            return;
         }
 
         double pixelsPerNotch = configurationFactory().PixelsPerScrollNotch;
@@ -319,7 +405,7 @@ public sealed class Scroller(IPanState state,
             return;
         }
 
-        if (!pixelMotion.IsActive && !easingMotion.IsActive && !momentumMotion.IsActive && !isSpinging)
+        if (!IsMotionActive())
         {
             ScrollStarted?.Invoke(this, EventArgs.Empty);
         }

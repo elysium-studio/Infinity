@@ -1,83 +1,34 @@
-using Elysium.Platform.Abstractions;
 using Elysium.UI.Controls.WinUI;
-using Microsoft.UI.Composition;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Hosting;
-using System.Numerics;
+using System;
+using WindowExtensions = Elysium.Platform.Windows.WindowExtensions;
 
 namespace Infinity.Shell.WinUI;
 
 public sealed partial class PageTintView :
     DesktopOverlay
 {
-    private readonly IMonitorLocator monitorLocator;
-    private readonly ITaskbarLocator taskbarLocator;
-    private PageTintViewModel? subscribedViewModel;
-    private DropShadow? dropShadow;
-    private SpriteVisual? shadowVisual;
+    private static readonly TimeSpan PreviewCleanupDelay = TimeSpan.FromMilliseconds(220);
 
-    public PageTintView(IMonitorLocator monitorLocator, ITaskbarLocator taskbarLocator)
+    private readonly DesktopScrollPreviewView desktopScrollPreview;
+    private PageTintViewModel? subscribedViewModel;
+    private DispatcherQueueTimer? previewCleanupTimer;
+    private bool isCompletingDesktopPreview;
+    private bool isDesktopPreviewAnimationStarted;
+
+    public PageTintView(DesktopScrollPreviewView desktopScrollPreview)
     {
         InitializeComponent();
 
-        this.monitorLocator = monitorLocator;
-        this.taskbarLocator = taskbarLocator;
+        this.desktopScrollPreview = desktopScrollPreview;
+        DesktopPreviewContent.Content = desktopScrollPreview;
 
-        ShadowContainer.SizeChanged += HandleShadowContainerSizeChanged;
         DataContextChanged += HandleDataContextChanged;
         Loaded += HandleLoaded;
     }
 
     public PageTintViewModel ViewModel => (PageTintViewModel)DataContext;
-
-    private Visibility ToVisibility(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
-
-    private Visibility ToInverseVisibility(bool value) => value ? Visibility.Collapsed : Visibility.Visible;
-
-    private bool ToInverse(bool value) => !value;
-
-    private double ToInverseOpacity(bool value) => value ? 0d : 1d;
-
-    private DesktopOverlayHeaderPlacement ToHeaderPlacement(PreviewPosition position)
-    {
-        if (position == PreviewPosition.Auto)
-        {
-            return ResolveAutoHeaderPlacement();
-        }
-
-        return position switch
-        {
-            PreviewPosition.Top => DesktopOverlayHeaderPlacement.Bottom,
-            PreviewPosition.Bottom => DesktopOverlayHeaderPlacement.Top,
-            _ => DesktopOverlayHeaderPlacement.Bottom
-        };
-    }
-
-    private DesktopOverlayHeaderPlacement ResolveAutoHeaderPlacement()
-    {
-        WindowHandle window = new(Handle);
-
-        if (window.IsNull)
-        {
-            return DesktopOverlayHeaderPlacement.Bottom;
-        }
-
-        MonitorHandle monitor = monitorLocator.GetMonitorForWindow(window);
-        TaskbarInfo? taskbar = taskbarLocator.GetTaskbarForMonitor(monitor);
-
-        if (taskbar is null)
-        {
-            return DesktopOverlayHeaderPlacement.Bottom;
-        }
-
-        return taskbar.Value.Edge switch
-        {
-            TaskbarEdge.Top => DesktopOverlayHeaderPlacement.Bottom,
-            TaskbarEdge.Bottom => DesktopOverlayHeaderPlacement.Top,
-            _ => DesktopOverlayHeaderPlacement.Bottom
-        };
-    }
 
     private void HandleLoaded(object sender, RoutedEventArgs args)
     {
@@ -85,7 +36,22 @@ public sealed partial class PageTintView :
         UpdateBindings();
     }
 
-    protected override void OnOpened() => UpdateBindings();
+    protected override void OnOpened()
+    {
+        CancelPreviewCleanup();
+        UpdateBindings();
+
+        if (ViewModel.IsDesktopPreviewActive)
+        {
+            BeginDesktopPreview();
+        }
+        else
+        {
+            ClearDesktopPreview();
+        }
+    }
+
+    protected override void OnClosed() => SchedulePreviewCleanup();
 
     private void HandleDataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {
@@ -117,23 +83,35 @@ public sealed partial class PageTintView :
 
     private void HandleViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
     {
-        if (args.PropertyName == nameof(PageTintViewModel.IsEditing) && ViewModel.IsEditing)
+        if (args.PropertyName == nameof(PageTintViewModel.IsDesktopPreviewActive))
         {
-            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+            if (ViewModel.IsDesktopPreviewActive)
             {
-                TitleTextBox.Focus(FocusState.Programmatic);
-                TitleTextBox.SelectAll();
-            });
+                BeginDesktopPreview();
+            }
+            else
+            {
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    if (!ViewModel.IsDesktopPreviewActive && IsOpen)
+                    {
+                        ClearDesktopPreview();
+                    }
+                });
+            }
         }
 
-        if (args.PropertyName == nameof(PageTintViewModel.PreviewPosition))
+        if (args.PropertyName == nameof(PageTintViewModel.IsDesktopPreviewCompletionRequested))
         {
-            UpdateBindings();
-        }
-
-        if (args.PropertyName == nameof(PageTintViewModel.IsGlancePageSurfaceAvailable))
-        {
-            UpdateBindings();
+            if (ViewModel.IsDesktopPreviewCompletionRequested)
+            {
+                CompleteDesktopPreview();
+            }
+            else if (isCompletingDesktopPreview)
+            {
+                isCompletingDesktopPreview = false;
+                desktopScrollPreview.AnimateInward();
+            }
         }
     }
 
@@ -148,35 +126,100 @@ public sealed partial class PageTintView :
         Bindings.Update();
     }
 
-    private void HandleShadowContainerSizeChanged(object sender, SizeChangedEventArgs args)
+    private void BeginDesktopPreview()
     {
-        ShadowContainer.DispatcherQueue.TryEnqueue(() =>
+        if (!DispatcherQueue.HasThreadAccess)
         {
-            Visual visual = ElementCompositionPreview.GetElementVisual(ShadowCanvas);
-            Compositor compositor = visual.Compositor;
+            DispatcherQueue.TryEnqueue(BeginDesktopPreview);
+            return;
+        }
 
-            if (shadowVisual is null)
+        desktopScrollPreview.Prepare(Handle);
+        isCompletingDesktopPreview = false;
+
+        if (!IsOpen)
+        {
+            return;
+        }
+
+        if (isDesktopPreviewAnimationStarted)
+        {
+            return;
+        }
+
+        isDesktopPreviewAnimationStarted = true;
+
+        DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+        {
+            if (desktopScrollPreview.IsRunning && IsOpen && ViewModel.IsDesktopPreviewActive &&
+                !ViewModel.IsDesktopPreviewCompletionRequested)
             {
-                dropShadow = compositor.CreateDropShadow();
-                dropShadow.Color = Windows.UI.Color.FromArgb(120, 0, 0, 0);
-                dropShadow.BlurRadius = 24f;
-                dropShadow.Offset = new Vector3(0, 8, 0);
-
-                shadowVisual = compositor.CreateSpriteVisual();
-                shadowVisual.Shadow = dropShadow;
-
-                ElementCompositionPreview.SetElementChildVisual(ShadowCanvas, shadowVisual);
+                desktopScrollPreview.AnimateInward();
+                WindowExtensions.SetTopMost(Handle, true);
             }
+            else
+            {
+                isDesktopPreviewAnimationStarted = false;
+            }
+        });
+    }
 
-            if (ShadowContainer.ActualWidth <= 0 || ShadowContainer.ActualHeight <= 0)
+    private void CompleteDesktopPreview()
+    {
+        if (!ViewModel.IsDesktopPreviewCompletionRequested || isCompletingDesktopPreview)
+        {
+            return;
+        }
+
+        isCompletingDesktopPreview = true;
+        desktopScrollPreview.AnimateOutward(() =>
+        {
+            if (!isCompletingDesktopPreview)
             {
                 return;
             }
 
-            const float margin = 24f;
-            shadowVisual.Offset = new Vector3(margin, margin, 0);
-            shadowVisual.Size = new Vector2((float)ShadowContainer.ActualWidth - (margin * 2),
-                (float)ShadowContainer.ActualHeight - (margin * 2));
+            isCompletingDesktopPreview = false;
+
+            if (ViewModel.IsDesktopPreviewCompletionRequested)
+            {
+                isDesktopPreviewAnimationStarted = false;
+                ViewModel.CompleteDesktopPreview();
+            }
         });
+    }
+
+    private void SchedulePreviewCleanup()
+    {
+        previewCleanupTimer ??= CreatePreviewCleanupTimer();
+        previewCleanupTimer.Stop();
+        previewCleanupTimer.Start();
+    }
+
+    private DispatcherQueueTimer CreatePreviewCleanupTimer()
+    {
+        DispatcherQueueTimer timer = DispatcherQueue.CreateTimer();
+        timer.Interval = PreviewCleanupDelay;
+        timer.IsRepeating = false;
+        timer.Tick += HandlePreviewCleanupTimerTick;
+        return timer;
+    }
+
+    private void HandlePreviewCleanupTimerTick(DispatcherQueueTimer sender, object args)
+    {
+        if (!IsOpen)
+        {
+            ClearDesktopPreview();
+        }
+    }
+
+    private void CancelPreviewCleanup() => previewCleanupTimer?.Stop();
+
+    private void ClearDesktopPreview()
+    {
+        isCompletingDesktopPreview = false;
+        isDesktopPreviewAnimationStarted = false;
+        desktopScrollPreview.Clear();
+        WindowExtensions.SetTopMost(Handle, false);
     }
 }

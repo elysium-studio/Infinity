@@ -103,6 +103,10 @@ public sealed class WindowPageMoverTests
 
         public int RepositionCount { get; private set; }
 
+        public void CommitPresentation()
+        {
+        }
+
         public void Dispose()
         {
             GC.SuppressFinalize(this);

@@ -7,9 +7,6 @@
     Loaded="{x:Bind ViewModel.Activate}"
     Unloaded="{x:Bind ViewModel.Deactivate}">
     <CommunityToolkit:SettingsCard x:Uid="DesktopBlurCard">
-        <ToggleSwitch
-            x:Uid="BooleanToggle"
-            IsOn="{x:Bind ViewModel.Value, Mode=TwoWay}"
-            />
+        <ToggleSwitch x:Uid="BooleanToggle" IsOn="{x:Bind ViewModel.Value, Mode=TwoWay}" />
     </CommunityToolkit:SettingsCard>
 </UserControl>

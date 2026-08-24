@@ -40,6 +40,7 @@ public sealed class WindowingModule :
                 provider.GetRequiredService<global::Elysium.Platform.Abstractions.IWorkspace>(),
                 provider.GetRequiredService<IWindowFilterState>(),
                 provider.GetRequiredService<IForegroundWindowCoordinator>(),
+                provider.GetRequiredService<IWindowNavigationCoordinator>(),
                 provider.GetRequiredService<IDispatcher>(),
                 provider.GetRequiredService<ILogger<ApplicationServices.WindowCollection>>()))
             .AddSingleton<IWindowCollection>(provider => provider.GetRequiredService<ApplicationServices.WindowCollection>())

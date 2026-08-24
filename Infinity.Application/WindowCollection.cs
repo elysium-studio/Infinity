@@ -14,7 +14,8 @@ public sealed class WindowCollection(IWindowStore store,
     IWindowEventListener listener,
     IWorkspace workspace,
     IWindowFilterState filterState,
-    IForegroundWindowCoordinator coordinator,
+    IForegroundWindowCoordinator foregroundCoordinator,
+    IWindowNavigationCoordinator navigationCoordinator,
     IDispatcher dispatcher,
     ILogger<WindowCollection> logger) :
     IWindowCollection
@@ -144,7 +145,7 @@ public sealed class WindowCollection(IWindowStore store,
     {
         logger.LogInformation("Window removed: {Handle}", handle);
 
-        coordinator.NotifyWindowClosed(handle);
+        foregroundCoordinator.NotifyWindowClosed(handle);
 
         dispatcher.Dispatch(() =>
         {
@@ -160,19 +161,23 @@ public sealed class WindowCollection(IWindowStore store,
         Queue(false, false);
 
     private void HandleScrollStopped(object? sender, EventArgs args) =>
-        ScrollStopped?.Invoke(this, EventArgs.Empty);
+        dispatcher.Dispatch(() =>
+        {
+            navigationCoordinator.CompleteNavigation();
+            ScrollStopped?.Invoke(this, EventArgs.Empty);
+        });
 
     private void HandleWindowStackChanged(object? sender, EventArgs args) =>
         QueueReorder();
 
     private void HandleForegroundWindowChanged(object? sender, IntPtr handle) =>
-        dispatcher.Dispatch(() => coordinator.HandleForegroundWindowChanged(handle));
+        dispatcher.Dispatch(() => foregroundCoordinator.HandleForegroundWindowChanged(handle));
 
     private void HandleWindowMinimizeStarted(IntPtr handle) =>
-        dispatcher.Dispatch(() => coordinator.HandleWindowMinimizeStarted(handle));
+        dispatcher.Dispatch(() => foregroundCoordinator.HandleWindowMinimizeStarted(handle));
 
     private void HandleWindowMinimizeEnded(IntPtr handle) =>
-        dispatcher.Dispatch(() => coordinator.HandleWindowMinimizeEnded(handle));
+        dispatcher.Dispatch(() => foregroundCoordinator.HandleWindowMinimizeEnded(handle));
 
     private void HandleWorkspaceLayoutChanged(object? sender, EventArgs args)
     {

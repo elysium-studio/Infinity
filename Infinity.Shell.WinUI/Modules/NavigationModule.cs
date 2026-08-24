@@ -10,6 +10,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using System;
+using NavigationCompletedEventArgs = Infinity.Application.Abstractions.NavigationCompletedEventArgs;
 using NavigationStartedEventArgs = Infinity.Application.Abstractions.NavigationStartedEventArgs;
 
 namespace Infinity.Shell.WinUI;
@@ -67,17 +68,24 @@ public sealed class NavigationModule :
                     messenger.Send(args);
                 }
 
+                void HandleNavigationCompleted(object? sender, EventArgs args)
+                {
+                    messenger.Send(new NavigationCompletedEventArgs());
+                }
+
                 void HandleWindowActivationRequested(object? sender, EventArgs args)
                 {
                     messenger.Send(new WindowActivationRequestedEventArgs());
                 }
 
                 coordinator.NavigationStarted += HandleNavigationStarted;
+                coordinator.NavigationCompleted += HandleNavigationCompleted;
                 coordinator.WindowActivationRequested += HandleWindowActivationRequested;
 
                 return () =>
                 {
                     coordinator.NavigationStarted -= HandleNavigationStarted;
+                    coordinator.NavigationCompleted -= HandleNavigationCompleted;
                     coordinator.WindowActivationRequested -= HandleWindowActivationRequested;
                 };
             });

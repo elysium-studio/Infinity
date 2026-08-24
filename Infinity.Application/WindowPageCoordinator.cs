@@ -39,6 +39,8 @@ public sealed class WindowPageCoordinator(IWindowStore store,
 
     public event EventHandler<NavigationStartedEventArgs>? NavigationStarted;
 
+    public event EventHandler? NavigationCompleted;
+
     public event EventHandler? WindowActivationRequested;
 
     public int NavigationTargetPage
@@ -299,6 +301,31 @@ public sealed class WindowPageCoordinator(IWindowStore store,
 
         ExpectProgrammaticActivation(handle);
         activator.Activate(handle);
+    }
+
+    public void CompleteNavigation()
+    {
+        IntPtr handle;
+
+        lock (syncRoot)
+        {
+            if (navigationTargetPage < 0 || !AreClose(scroller.VisualOffset, navigationTargetOffset))
+            {
+                return;
+            }
+
+            navigationTargetPage = -1;
+            navigationTargetOffset = -1;
+            handle = pendingActivation;
+            pendingActivation = default;
+        }
+
+        NavigationCompleted?.Invoke(this, EventArgs.Empty);
+
+        if (handle != default)
+        {
+            RequestActivation(handle);
+        }
     }
 
     private void RequestActivation(IntPtr handle)

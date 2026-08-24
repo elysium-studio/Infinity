@@ -9,6 +9,8 @@ public interface IScroller :
 
     double VisualOffset { get; }
 
+    void CommitPresentation();
+
     void OnTick();
 
     void Reposition();

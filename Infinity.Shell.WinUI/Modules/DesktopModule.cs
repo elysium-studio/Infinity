@@ -21,9 +21,16 @@ public sealed class DesktopModule :
         services
             .AddSingleton<IDesktopBackgroundController>(provider => new DesktopBackgroundController(provider.GetRequiredService<IDesktopBackgroundSource>(),
                 provider.GetRequiredService<IDispatcher>()))
+            .AddSingleton(provider => new DesktopScrollPreviewView(provider.GetRequiredService<IWindowPreviewSurface>(),
+                provider.GetRequiredService<IWindowCollection>(),
+                provider.GetRequiredService<IShellLayoutCalculator>(),
+                provider.GetRequiredService<IScroller>(),
+                provider.GetRequiredService<IWorkspace>(),
+                provider.GetRequiredService<ITaskbarLocator>(),
+                provider.GetRequiredService<IWindowGeometryReader>(),
+                provider.GetRequiredService<ILogger<DesktopScrollPreviewView>>()))
             .AddViewFor(ServiceLifetime.Singleton,
-                provider => new PageTintView(provider.GetRequiredService<IMonitorLocator>(),
-                    provider.GetRequiredService<ITaskbarLocator>()),
+                provider => new PageTintView(provider.GetRequiredService<DesktopScrollPreviewView>()),
                 provider => new PageTintViewModel(provider,
                     provider.GetRequiredService<IServiceFactory>(),
                     provider.GetRequiredService<IMessenger>(),
@@ -37,6 +44,9 @@ public sealed class DesktopModule :
                     provider.GetRequiredService<IWritableOptions<Settings>>(),
                     provider.GetRequiredService<IPager>(),
                     provider.GetRequiredService<IPanState>(),
+                    provider.GetRequiredService<IScroller>(),
+                    provider.GetRequiredService<IScrollPresentationSession>(),
+                    provider.GetRequiredService<IWindowPreviewSurface>(),
                     provider.GetRequiredService<IInfinityGlanceBridge>(),
                     provider.GetRequiredService<ITextLocalizer>(),
                     provider.GetRequiredService<ILogger<PageTintViewModel>>()))

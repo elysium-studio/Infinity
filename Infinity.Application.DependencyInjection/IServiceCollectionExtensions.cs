@@ -15,6 +15,7 @@ public static class IServiceCollectionExtensions
         {
             services.AddSingleton<IScrollDeltaAccumulator, ScrollDeltaAccumulator>();
             services.AddSingleton<IPanState, PanState>();
+            services.AddSingleton<IScrollPresentationSession, ScrollPresentationSession>();
 
             services.AddSingleton<IWindowStore, WindowStore>();
             services.AddSingleton<IWindowTitleSynchronizer, WindowTitleSynchronizer>();
@@ -50,6 +51,7 @@ public static class IServiceCollectionExtensions
             {
                 IScrollTimer scrollTimer = provider.GetRequiredService<IScrollTimer>();
                 return new Scroller(provider.GetRequiredService<IPanState>(),
+                    provider.GetRequiredService<IScrollPresentationSession>(),
                     provider.GetRequiredService<IWindowStore>(),
                     provider.GetRequiredService<IWindowMover>(),
                     provider.GetRequiredService<IWindowConcealer>(),

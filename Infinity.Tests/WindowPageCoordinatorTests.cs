@@ -58,6 +58,30 @@ public class WindowPageCoordinatorTests
         Assert.Equal(0, activator.ActivationCount);
     }
 
+    [Fact]
+    public void CompletingNavigationActivatesThePendingWindowOnce()
+    {
+        WindowStore store = new();
+        TestScroller scroller = new();
+        TestWindowActivator activator = new();
+        WindowPageCoordinator coordinator = CreateCoordinator(store, scroller, activator);
+        IntPtr handle = new(4);
+        store.Add(CreateWindow(handle, 1000));
+        int completionCount = 0;
+        coordinator.NavigationCompleted += (_, _) => completionCount++;
+
+        coordinator.NavigateTo(handle);
+        scroller.SetVisualOffset(1000);
+        coordinator.CompleteNavigation();
+        coordinator.CompleteNavigation();
+
+        Assert.Equal(1, completionCount);
+        Assert.Equal(1, activator.ActivationCount);
+        Assert.Equal(-1, coordinator.NavigationTargetPage);
+        Assert.Equal(-1, coordinator.NavigationTargetOffset);
+        Assert.Equal(IntPtr.Zero, coordinator.PendingActivation);
+    }
+
     private static WindowPageCoordinator CreateCoordinator(IWindowStore store,
         IScroller scroller,
         IWindowActivator activator) =>
@@ -87,6 +111,12 @@ public class WindowPageCoordinatorTests
         public double? LastTargetOffset { get; private set; }
 
         public double VisualOffset { get; private set; }
+
+        public void CommitPresentation()
+        {
+        }
+
+        public void SetVisualOffset(double value) => VisualOffset = value;
 
         public void Dispose()
         {

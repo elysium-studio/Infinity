@@ -4,6 +4,8 @@ public interface IWindowNavigationCoordinator
 {
     event EventHandler<NavigationStartedEventArgs>? NavigationStarted;
 
+    event EventHandler? NavigationCompleted;
+
     event EventHandler? WindowActivationRequested;
 
     int NavigationTargetPage { get; set; }
@@ -19,4 +21,6 @@ public interface IWindowNavigationCoordinator
     void NavigateToPage(IntPtr handle);
 
     void Activate(IntPtr handle);
+
+    void CompleteNavigation();
 }

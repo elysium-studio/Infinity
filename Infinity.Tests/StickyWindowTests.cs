@@ -97,18 +97,86 @@ public sealed class StickyWindowScrollingTests
             move => Assert.Equal((pageWindow.Handle, 500), (move.Handle, move.X)));
     }
 
-    private static Scroller CreateScroller(PanState state, WindowStore store, TestWindowMover mover) =>
+    [Fact]
+    public void PresentationSessionDefersWindowMovementUntilExplicitCommit()
+    {
+        WindowStore store = new();
+        TrackedWindow window = CreateWindow(500, false);
+        store.Add(window);
+        PanState state = new();
+        TestWindowMover mover = new();
+        ScrollPresentationSession presentationSession = new();
+        presentationSession.Begin();
+        QueuedDeltaScrollMotion motion = new(100, 100);
+        using Scroller scroller = CreateScroller(state, store, mover, presentationSession, motion);
+
+        scroller.OnTick();
+
+        Assert.Empty(mover.Moves);
+        Assert.Equal(100, state.Offset);
+
+        scroller.OnTick();
+
+        Assert.Empty(mover.Moves);
+        Assert.Equal(200, state.Offset);
+        Assert.True(presentationSession.IsActive);
+
+        scroller.CommitPresentation();
+
+        Assert.Collection(mover.Moves,
+            move => Assert.Equal((window.Handle, 300), (move.Handle, move.X)));
+    }
+
+    [Fact]
+    public void FirstWheelInputOpensPresentationWithoutChangingOffset()
+    {
+        WindowStore store = new();
+        PanState state = new();
+        state.SetMaxOffset(1000);
+        TestWindowMover mover = new();
+        ScrollPresentationSession presentationSession = new();
+        TestScrollInputSource source = new();
+        QueuedDeltaScrollMotion easingMotion = new();
+        using Scroller scroller = CreateScroller(state,
+            store,
+            mover,
+            presentationSession,
+            source: source,
+            easingMotion: easingMotion);
+        scroller.ScrollStarted += (_, _) => presentationSession.Begin();
+        scroller.Start();
+
+        source.RaiseScroll(-120);
+        scroller.OnTick();
+
+        Assert.True(presentationSession.IsActive);
+        Assert.Equal(0, state.Offset);
+
+        source.RaiseScroll(-120);
+        scroller.OnTick();
+
+        Assert.Equal(60, state.Offset);
+    }
+
+    private static Scroller CreateScroller(PanState state,
+        WindowStore store,
+        TestWindowMover mover,
+        IScrollPresentationSession? presentationSession = null,
+        IDeltaScrollMotion? pixelMotion = null,
+        IScrollInputSource? source = null,
+        IDeltaScrollMotion? easingMotion = null) =>
         new(state,
+            presentationSession ?? new ScrollPresentationSession(),
             store,
             mover,
             new TestWindowConcealer(),
             new TestWindowMoveGuard(),
             new TestWindowDragGuard(),
-            new TestScrollInputSource(),
+            source ?? new TestScrollInputSource(),
             new TestDispatcher(),
             () => new ScrollerConfiguration { PixelsPerScrollNotch = 120 },
-            new TestDeltaScrollMotion(),
-            new TestDeltaScrollMotion(),
+            pixelMotion ?? new TestDeltaScrollMotion(),
+            easingMotion ?? new TestDeltaScrollMotion(),
             new TestVelocityScrollMotion(),
             () => { },
             () => { },
@@ -193,11 +261,14 @@ public sealed class StickyWindowScrollingTests
 
         public event Action? MiddleButtonClicked;
 
+        public void RaiseScroll(int delta) => ScrollDeltaReceived?.Invoke(delta);
+
+        public void RaiseVelocity(double velocity) => ScrollVelocityIdle?.Invoke(velocity);
+
+        public void RaiseMiddleButton() => MiddleButtonClicked?.Invoke();
+
         public void Start()
         {
-            ScrollDeltaReceived?.Invoke(0);
-            ScrollVelocityIdle?.Invoke(0);
-            MiddleButtonClicked?.Invoke();
         }
 
         public void Stop()
@@ -225,6 +296,20 @@ public sealed class StickyWindowScrollingTests
         public void Reset()
         {
         }
+    }
+
+    private sealed class QueuedDeltaScrollMotion(params double[] deltas) :
+        IDeltaScrollMotion
+    {
+        private readonly Queue<double> deltas = new(deltas);
+
+        public bool IsActive => deltas.Count > 0;
+
+        public void AddDelta(double pixels) => deltas.Enqueue(pixels);
+
+        public double Drain() => deltas.Count > 0 ? deltas.Dequeue() : 0;
+
+        public void Reset() => deltas.Clear();
     }
 
     private sealed class TestVelocityScrollMotion :
@@ -327,6 +412,10 @@ internal sealed class TestScroller :
     public void Dispose()
     {
         GC.SuppressFinalize(this);
+    }
+
+    public void CommitPresentation()
+    {
     }
 
     public void OnTick()

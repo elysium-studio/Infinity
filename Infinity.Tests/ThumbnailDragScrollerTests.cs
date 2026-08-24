@@ -161,6 +161,10 @@ public sealed class ThumbnailDragScrollerTests
 
         public double VisualOffset => state.Offset;
 
+        public void CommitPresentation()
+        {
+        }
+
         public void Dispose()
         {
             offsetAvailable.Dispose();

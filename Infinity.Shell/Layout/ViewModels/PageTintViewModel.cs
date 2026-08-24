@@ -24,10 +24,14 @@ public sealed partial class PageTintViewModel :
     private readonly IOptionsMonitor<Settings> settings;
     private readonly IWritableOptions<Settings> writableOptions;
     private readonly IPager pager;
+    private readonly IScroller scroller;
+    private readonly IScrollPresentationSession scrollPresentationSession;
+    private readonly IWindowPreviewSurface windowPreviewSurface;
     private readonly ITextLocalizer localizer;
     private readonly IInfinityGlanceBridge glanceBridge;
     private readonly ILogger<PageTintViewModel> logger;
     private bool filterActive;
+    private bool scrollMotionActive;
 
     [ObservableProperty]
     private bool isBlurEnabled;
@@ -39,46 +43,53 @@ public sealed partial class PageTintViewModel :
     private bool staysOpen;
 
     [ObservableProperty]
-    private bool isEditing;
-
-    [ObservableProperty]
     private string pageTitle = string.Empty;
 
     [ObservableProperty]
-    private string editingTitle = string.Empty;
+    private bool isDesktopPreviewActive;
 
     [ObservableProperty]
-    private PreviewPosition previewPosition;
+    private bool isDesktopPreviewCompletionRequested;
 
-    [ObservableProperty]
-    private bool isGlancePageSurfaceAvailable;
-
-    partial void OnIsOpenChanged(bool value) =>
+    partial void OnIsOpenChanged(bool value)
+    {
         glanceBridge.SetPageNavigationSurfaceVisible(InfinityPageNavigationSurface.PageTint, value);
 
-    public PageTintViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IDispatcher dispatcher, IPointerInputSource pointer, IModifierKeyState modifierKeyState, IWindowDragScroller dragScroller, IPageGestureSource gestureSource, IOptionsMonitor<Settings> settings, IWritableOptions<Settings> writableOptions, IPager pager, IPanState panState, IInfinityGlanceBridge glanceBridge, ITextLocalizer localizer, ILogger<PageTintViewModel> logger) : base(provider, factory, messenger, disposer)
+        if (!value && IsDesktopPreviewActive)
+        {
+            scroller.CommitPresentation();
+            scrollPresentationSession.End();
+            IsDesktopPreviewActive = false;
+            IsDesktopPreviewCompletionRequested = false;
+        }
+    }
+
+    public PageTintViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IDispatcher dispatcher, IPointerInputSource pointer, IModifierKeyState modifierKeyState, IWindowDragScroller dragScroller, IPageGestureSource gestureSource, IOptionsMonitor<Settings> settings, IWritableOptions<Settings> writableOptions, IPager pager, IPanState panState, IScroller scroller, IScrollPresentationSession scrollPresentationSession, IWindowPreviewSurface windowPreviewSurface, IInfinityGlanceBridge glanceBridge, ITextLocalizer localizer, ILogger<PageTintViewModel> logger) : base(provider, factory, messenger, disposer)
     {
         this.dispatcher = dispatcher;
         this.modifierKeyState = modifierKeyState;
         this.settings = settings;
         this.writableOptions = writableOptions;
         this.pager = pager;
+        this.scroller = scroller;
+        this.scrollPresentationSession = scrollPresentationSession;
+        this.windowPreviewSurface = windowPreviewSurface;
         this.glanceBridge = glanceBridge;
         this.localizer = localizer;
         this.logger = logger;
 
         isBlurEnabled = settings.CurrentValue.DesktopBlur;
-        previewPosition = settings.CurrentValue.PreviewPosition;
-        isGlancePageSurfaceAvailable = glanceBridge.IsPageNavigationAvailable;
 
         pointer.ScrollDeltaReceived += HandleScrollDeltaReceived;
         pointer.MiddleButtonClicked += HandleMiddleButtonClicked;
         pager.PageChanged += HandlePageChanged;
+        modifierKeyState.StateChanged += HandleModifierKeyStateChanged;
+        scroller.ScrollStarted += HandleScrollerScrollStarted;
+        scroller.ScrollStopped += HandleScrollerScrollStopped;
         dragScroller.DragStarted += HandleDragStarted;
         dragScroller.DragStopped += HandleDragStopped;
         gestureSource.SessionStarted += HandleGestureSessionStarted;
         gestureSource.SessionEnded += HandleGestureSessionEnded;
-        glanceBridge.AvailabilityChanged += HandleGlanceAvailabilityChanged;
         glanceBridge.MessageReceived += HandleGlanceMessageReceived;
 
         Activate();
@@ -98,23 +109,24 @@ public sealed partial class PageTintViewModel :
         Messenger.Register<OptionsChangedEventArgs<Settings>>(this);
     }
 
-    public void BeginEditing()
+    public void CompleteDesktopPreview()
     {
-        EditingTitle = PageTitle;
-        IsEditing = true;
-    }
+        scrollPresentationSession.End();
+        scrollMotionActive = false;
+        IsDesktopPreviewActive = false;
+        IsDesktopPreviewCompletionRequested = false;
+        StaysOpen = false;
 
-    public async Task CommitEditAsync()
-    {
-        await UpdatePageTitleAsync(pager.CurrentPage, EditingTitle);
+        if (!filterActive)
+        {
+            IsOpen = false;
+        }
     }
-
-    public void CancelEditing() => IsEditing = false;
 
     public void Receive(NavigationCompletedEventArgs args) =>
         dispatcher.Dispatch(() =>
         {
-            if (!filterActive)
+            if (!filterActive && !IsDesktopPreviewActive)
             {
                 IsOpen = false;
             }
@@ -123,7 +135,7 @@ public sealed partial class PageTintViewModel :
     public void Receive(WindowActivationRequestedEventArgs args) =>
         dispatcher.Dispatch(() =>
         {
-            if (!filterActive)
+            if (!filterActive && !IsDesktopPreviewActive)
             {
                 IsOpen = false;
             }
@@ -140,7 +152,6 @@ public sealed partial class PageTintViewModel :
         dispatcher.Dispatch(() =>
         {
             IsBlurEnabled = args.Options.DesktopBlur;
-            PreviewPosition = args.Options.PreviewPosition;
         });
 
     private void HandleDragStarted() =>
@@ -154,6 +165,11 @@ public sealed partial class PageTintViewModel :
     private void HandleDragStopped() =>
         dispatcher.Dispatch(() =>
         {
+            if (IsDesktopPreviewActive)
+            {
+                return;
+            }
+
             StaysOpen = false;
             IsOpen = false;
         });
@@ -169,6 +185,11 @@ public sealed partial class PageTintViewModel :
     private void HandleGestureSessionEnded() =>
         dispatcher.Dispatch(() =>
         {
+            if (IsDesktopPreviewActive)
+            {
+                return;
+            }
+
             StaysOpen = false;
             IsOpen = false;
         });
@@ -176,7 +197,6 @@ public sealed partial class PageTintViewModel :
     private void HandlePageChanged(int page) =>
         dispatcher.Dispatch(() =>
         {
-            IsEditing = false;
             PageTitle = ResolvePageTitle(page, settings.CurrentValue.PageTitles);
             PublishPageNavigation();
         });
@@ -196,18 +216,65 @@ public sealed partial class PageTintViewModel :
     {
         if (modifierKeyState.IsActive)
         {
-            dispatcher.Dispatch(() =>
-            {
-                IsOpen = true;
-            });
+            BeginDesktopPreview(false);
         }
     }
 
-    private void HandleGlanceAvailabilityChanged(object? sender, InfinityGlanceAvailabilityChangedEventArgs args) =>
+    private void HandleScrollerScrollStarted(object? sender, EventArgs args) => BeginDesktopPreview(true);
+
+    private void BeginDesktopPreview(bool scrollStarted)
+    {
+        if (!windowPreviewSurface.IsAvailable)
+        {
+            return;
+        }
+
+        scrollPresentationSession.Begin();
+
         dispatcher.Dispatch(() =>
         {
-            IsGlancePageSurfaceAvailable = args.IsPageNavigationAvailable;
+            scrollMotionActive |= scrollStarted;
+            IsDesktopPreviewCompletionRequested = false;
+            IsDesktopPreviewActive = true;
+            StaysOpen = true;
+            PageTitle = ResolvePageTitle(pager.CurrentPage, settings.CurrentValue.PageTitles);
+            IsOpen = true;
         });
+    }
+
+    private void HandleScrollerScrollStopped(object? sender, EventArgs args) =>
+        dispatcher.Dispatch(() =>
+        {
+            scrollMotionActive = false;
+
+            if (!IsDesktopPreviewActive)
+            {
+                scrollPresentationSession.End();
+                return;
+            }
+
+            TryCompleteDesktopPreview();
+        });
+
+    private void HandleModifierKeyStateChanged(bool isActive)
+    {
+        if (!isActive)
+        {
+            dispatcher.Dispatch(TryCompleteDesktopPreview);
+        }
+    }
+
+    private void TryCompleteDesktopPreview()
+    {
+        if (!IsDesktopPreviewActive || IsDesktopPreviewCompletionRequested ||
+            scrollMotionActive || modifierKeyState.IsActive)
+        {
+            return;
+        }
+
+        scroller.CommitPresentation();
+        IsDesktopPreviewCompletionRequested = true;
+    }
 
     private async void HandleGlanceMessageReceived(object? sender, InfinityGlanceMessageReceivedEventArgs args)
     {
@@ -265,8 +332,6 @@ public sealed partial class PageTintViewModel :
             }
 
             PageTitle = string.IsNullOrEmpty(trimmed) ? localizer.GetText("PageTitle", page + 1) : trimmed;
-            EditingTitle = PageTitle;
-            IsEditing = false;
             PublishPageNavigation();
         });
     }

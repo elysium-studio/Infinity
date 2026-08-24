@@ -8,7 +8,6 @@ using Elysium.Presentation.Abstractions;
 using Infinity.Application.Abstractions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NavigationCompletedEventArgs = Infinity.Application.Abstractions.NavigationCompletedEventArgs;
 
 namespace Infinity.Shell;
 
@@ -418,24 +417,6 @@ public sealed partial class TrackedWindowCollectionViewModel :
         PageCount = newPageCount;
         CurrentPage = newCurrentPage;
 
-        if (coordinator.NavigationTargetPage >= 0)
-        {
-            if (Math.Abs(state.Offset - coordinator.NavigationTargetOffset) < 2)
-            {
-                coordinator.NavigationTargetPage = -1;
-                coordinator.NavigationTargetOffset = -1;
-                Messenger.Send(new NavigationCompletedEventArgs());
-
-                if (coordinator.PendingActivation != default)
-                {
-                    IntPtr handle = coordinator.PendingActivation;
-                    coordinator.PendingActivation = default;
-                    Messenger.Send(new WindowActivationRequestedEventArgs());
-                    coordinator.Activate(handle);
-                }
-            }
-        }
-
         foreach (TrackedWindow trackedWindow in windowCollection.AllTrackedWindows.OrderByDescending(window => window.ZIndex))
         {
             if (!trackedWindowCollection.TryGet(trackedWindow.Handle, out ITrackedWindow? windowViewModel))
@@ -451,6 +432,7 @@ public sealed partial class TrackedWindowCollectionViewModel :
             ShellWindowLayout layout = calculator.Calculate(trackedWindow,
                 scroller.VisualOffset,
                 workspace.WorkAreaX,
+                workspace.WorkAreaY,
                 ScaleFactor,
                 ScreenWidth,
                 ScreenHeight);
