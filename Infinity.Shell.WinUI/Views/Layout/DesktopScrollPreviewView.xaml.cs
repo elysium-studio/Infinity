@@ -67,6 +67,8 @@ public sealed partial class DesktopScrollPreviewView :
 
     public event EventHandler? BackgroundInvoked;
 
+    public event EventHandler? InputFocusRequested;
+
     public event Action<int>? PageInvoked;
 
     public event Action<nint>? WindowInvoked;
@@ -87,7 +89,7 @@ public sealed partial class DesktopScrollPreviewView :
             spacingProgress = 1;
             SubscribeEvents();
             windowPreviewSurface.Initialize(ownerWindowHandle);
-            pageStrip.Start(PageCanvas, PreviewSurface, animator.Scale);
+            pageStrip.Start(PageCanvas, PageTitleCanvas, PreviewSurface, animator.Scale);
             Synchronise();
             SetInteractionEnabled(false);
             Opacity = 1;
@@ -141,12 +143,7 @@ public sealed partial class DesktopScrollPreviewView :
 
         spacingProgress = 0;
         SetInteractionEnabled(false);
-        RefreshLayout(animator.ExitDuration);
-        animator.AnimateOutward(PreviewSurface, GetAnimationWidth(), GetAnimationHeight(), () =>
-        {
-            ClearLayoutTransitions();
-            completed();
-        });
+        BeginAnimateOutward(completed);
     }
 
     public void Deactivate()
@@ -252,6 +249,22 @@ public sealed partial class DesktopScrollPreviewView :
         {
             _ = WindowSearchBox.Focus(Microsoft.UI.Xaml.FocusState.Programmatic);
         }
+    }
+
+    private void BeginAnimateOutward(Action completed)
+    {
+        if (!isRunning)
+        {
+            completed();
+            return;
+        }
+
+        RefreshLayout(animator.ExitDuration);
+        animator.AnimateOutward(PreviewSurface, GetAnimationWidth(), GetAnimationHeight(), () =>
+        {
+            ClearLayoutTransitions();
+            completed();
+        });
     }
 
     private void RefreshMonitorOrigin()
@@ -401,6 +414,14 @@ public sealed partial class DesktopScrollPreviewView :
         if (args.Key == VirtualKey.Tab)
         {
             nint selectedHandle = previews.SelectNext(!shiftKeyDown, windowCollection.AllTrackedWindows);
+
+            if (previews.Activate(selectedHandle))
+            {
+                InputFocusRequested?.Invoke(this, EventArgs.Empty);
+                DispatcherQueue.TryEnqueue(() =>
+                    _ = WindowSearchBox.Focus(Microsoft.UI.Xaml.FocusState.Programmatic));
+            }
+
             NavigateToFilterMatch(selectedHandle);
             args.Handled = true;
             return;

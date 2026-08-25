@@ -1,3 +1,4 @@
+using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
@@ -17,6 +18,8 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource,
     IPager pager,
     IScroller scroller,
     IWorkspace workspace,
+    PageTitleStore pageTitleStore,
+    ITextLocalizer localizer,
     DesktopPageLayoutCalculator layoutCalculator,
     DesktopBackgroundBrushFactory backgroundBrushFactory,
     ILogger<DesktopPageStrip> logger) :
@@ -26,6 +29,8 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource,
     private readonly List<DesktopPagePreview> pagePool = [];
     private readonly Stack<DesktopPagePreview> availablePages = [];
     private Canvas? host;
+    private Canvas? titleHost;
+    private FrameworkElement? scaleHost;
     private Brush? background;
     private DesktopBackground? backgroundSnapshot;
     private double currentOffset;
@@ -38,7 +43,10 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource,
 
     public event Action<int>? PageInvoked;
 
-    public void Start(Canvas canvas, FrameworkElement scaleHost, double scale)
+    public void Start(Canvas canvas,
+        Canvas titleCanvas,
+        FrameworkElement scaleElement,
+        double scale)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
 
@@ -49,11 +57,14 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource,
 
         started = true;
         host = canvas;
+        titleHost = titleCanvas;
+        scaleHost = scaleElement;
         overviewScale = scale;
         interactionEnabled = false;
         ConfigureHost();
-        CreatePagePool(scaleHost);
+        CreatePagePool(scaleElement);
         backgroundSource.BackgroundChanged += HandleBackgroundChanged;
+        pageTitleStore.TitleChanged += HandlePageTitleChanged;
         RefreshBackground();
         Synchronise(scroller.VisualOffset);
     }
@@ -67,10 +78,12 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource,
 
         started = false;
         backgroundSource.BackgroundChanged -= HandleBackgroundChanged;
+        pageTitleStore.TitleChanged -= HandlePageTitleChanged;
 
         foreach (DesktopPagePreview page in pagePool)
         {
             page.Click -= HandlePageClicked;
+            page.TitleEditor.ViewModel.TitleSubmitted -= HandleTitleSubmitted;
             page.Reset();
             page.Dispose();
         }
@@ -79,7 +92,10 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource,
         availablePages.Clear();
         pagePool.Clear();
         host?.Children.Clear();
+        titleHost?.Children.Clear();
         host = null;
+        titleHost = null;
+        scaleHost = null;
         interactionEnabled = false;
     }
 
@@ -174,12 +190,20 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource,
                     continue;
                 }
 
-                preview.Bind(page, workspace.Width, workspace.Height, background);
+                preview.Bind(page,
+                    workspace.Width,
+                    workspace.Height,
+                    background,
+                    pageTitleStore.GetTitle(page));
                 visiblePages.Add(page, preview);
             }
             else
             {
-                preview.Bind(page, workspace.Width, workspace.Height, background);
+                preview.Bind(page,
+                    workspace.Width,
+                    workspace.Height,
+                    background,
+                    pageTitleStore.GetTitle(page));
             }
 
             preview.SetInteractionEnabled(interactionEnabled);
@@ -197,16 +221,23 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource,
             workspace.Width,
             currentOffset,
             currentSpacingProgress);
-        Canvas.SetLeft(preview, leadingSpace + baseX);
-        Canvas.SetTop(preview, 0);
-        Canvas.SetLeft(preview.ShadowHost, leadingSpace + baseX);
-        Canvas.SetTop(preview.ShadowHost, 0);
-        preview.Update(targetX - baseX, transitionDuration);
+        double viewportWidth = GetViewportWidth();
+        double viewportHeight = GetViewportHeight();
+        double pageScreenX = (viewportWidth / 2) + ((baseX - (viewportWidth / 2)) * overviewScale);
+        double pageScreenY = (viewportHeight / 2) * (1 - overviewScale);
+        double titleX = pageScreenX + ((workspace.Width * overviewScale) - preview.TitleEditor.Width) / 2;
+        double translationX = targetX - baseX;
+
+        Canvas.SetLeft(preview.PageHost, leadingSpace + baseX);
+        Canvas.SetTop(preview.PageHost, 0);
+        Canvas.SetLeft(preview.TitleEditor, titleX);
+        Canvas.SetTop(preview.TitleEditor, pageScreenY - preview.TitleEditor.Height);
+        preview.Update(translationX, translationX * overviewScale, transitionDuration);
     }
 
     private void ConfigureHost()
     {
-        if (host is null || overviewScale <= 0)
+        if (host is null || titleHost is null || overviewScale <= 0)
         {
             return;
         }
@@ -216,11 +247,13 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource,
         host.Width = viewportWidth;
         host.Height = workspace.Height;
         Canvas.SetLeft(host, -leadingSpace);
+        titleHost.Width = GetViewportWidth();
+        titleHost.Height = GetViewportHeight();
     }
 
     private void CreatePagePool(FrameworkElement scaleHost)
     {
-        if (host is null)
+        if (host is null || titleHost is null)
         {
             return;
         }
@@ -230,23 +263,65 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource,
 
         for (int index = 0; index < capacity; index++)
         {
-            DesktopPagePreview page = new(scaleVisual, overviewScale);
+            DesktopPagePreview page = new(scaleVisual,
+                overviewScale,
+                localizer.GetText("PageTitleEditButton"),
+                localizer.GetText("PageTitleSaveButton"),
+                localizer.GetText("PageTitleCancelButton"));
             page.Click += HandlePageClicked;
+            page.TitleEditor.ViewModel.TitleSubmitted += HandleTitleSubmitted;
             page.Hide();
             pagePool.Add(page);
             availablePages.Push(page);
-            Canvas.SetZIndex(page.ShadowHost, 0);
-            Canvas.SetZIndex(page, 1);
-            host.Children.Add(page.ShadowHost);
-            host.Children.Add(page);
+            host.Children.Add(page.PageHost);
+            titleHost.Children.Add(page.TitleEditor);
         }
     }
+
+    private double GetViewportWidth() =>
+        scaleHost?.ActualWidth > 0 ? scaleHost.ActualWidth : workspace.Width;
+
+    private double GetViewportHeight() =>
+        scaleHost?.ActualHeight > 0 ? scaleHost.ActualHeight : workspace.Height;
 
     private void HandlePageClicked(object sender, RoutedEventArgs args)
     {
         if (started && sender is DesktopPagePreview page)
         {
             PageInvoked?.Invoke(page.Page);
+        }
+    }
+
+    private async void HandleTitleSubmitted(DesktopPageTitleViewModel viewModel, string title)
+    {
+        try
+        {
+            await pageTitleStore.UpdateAsync(viewModel.Page, title);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Failed to update the title for desktop page {Page}", viewModel.Page);
+            viewModel.Bind(viewModel.Page, pageTitleStore.GetTitle(viewModel.Page));
+        }
+    }
+
+    private void HandlePageTitleChanged(int page, string title)
+    {
+        void RefreshTitle()
+        {
+            if (started && visiblePages.TryGetValue(page, out DesktopPagePreview? preview))
+            {
+                preview.TitleEditor.ViewModel.Bind(page, title);
+            }
+        }
+
+        if (host?.DispatcherQueue.HasThreadAccess == true)
+        {
+            RefreshTitle();
+        }
+        else
+        {
+            host?.DispatcherQueue.TryEnqueue(RefreshTitle);
         }
     }
 
@@ -292,7 +367,11 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource,
             {
                 foreach (DesktopPagePreview page in visiblePages.Values)
                 {
-                    page.Bind(page.Page, workspace.Width, workspace.Height, background);
+                    page.Bind(page.Page,
+                        workspace.Width,
+                        workspace.Height,
+                        background,
+                        pageTitleStore.GetTitle(page.Page));
                     page.SetInteractionEnabled(interactionEnabled);
                 }
             }

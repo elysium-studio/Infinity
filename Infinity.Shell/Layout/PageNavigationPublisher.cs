@@ -22,6 +22,7 @@ public sealed class PageNavigationPublisher(IDispatcher dispatcher,
 
         started = true;
         pager.PageChanged += HandlePageChanged;
+        pageTitleStore.TitleChanged += HandlePageTitleChanged;
         glanceBridge.MessageReceived += HandleGlanceMessageReceived;
         PublishPageNavigation();
     }
@@ -35,6 +36,7 @@ public sealed class PageNavigationPublisher(IDispatcher dispatcher,
 
         started = false;
         pager.PageChanged -= HandlePageChanged;
+        pageTitleStore.TitleChanged -= HandlePageTitleChanged;
         glanceBridge.MessageReceived -= HandleGlanceMessageReceived;
     }
 
@@ -57,7 +59,7 @@ public sealed class PageNavigationPublisher(IDispatcher dispatcher,
                 return;
             }
 
-            await UpdatePageTitleAsync(update.PageIndex, update.PageTitle);
+            await pageTitleStore.UpdateAsync(update.PageIndex, update.PageTitle);
         }
         catch (Exception exception)
         {
@@ -65,18 +67,13 @@ public sealed class PageNavigationPublisher(IDispatcher dispatcher,
         }
     }
 
-    private async Task UpdatePageTitleAsync(int page, string title)
+    private void HandlePageTitleChanged(int page, string title) => dispatcher.Dispatch(() =>
     {
-        string updatedTitle = await pageTitleStore.UpdateAsync(page, title);
-
-        dispatcher.Dispatch(() =>
+        if (pager.CurrentPage == page)
         {
-            if (pager.CurrentPage == page)
-            {
-                PublishPageNavigation(page, updatedTitle);
-            }
-        });
-    }
+            PublishPageNavigation(page, title);
+        }
+    });
 
     private void PublishPageNavigation() => PublishPageNavigation(pager.CurrentPage);
 

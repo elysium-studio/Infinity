@@ -110,6 +110,17 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         return SetSelected(matches[nextIndex].Handle);
     }
 
+    public bool Activate(nint handle)
+    {
+        if (!previews.TryGetValue(handle, out DesktopWindowPreview? preview))
+        {
+            return false;
+        }
+
+        preview.Activate();
+        return true;
+    }
+
     public void Refresh(TrackedWindow trackedWindow)
     {
         if (previews.TryGetValue(trackedWindow.Handle, out DesktopWindowPreview? preview))

@@ -42,6 +42,7 @@ public sealed partial class DesktopOverviewView :
         dispatcherQueue = DispatcherQueue;
         DesktopPreviewContent.Content = desktopScrollPreview;
         desktopScrollPreview.BackgroundInvoked += HandleBackgroundInvoked;
+        desktopScrollPreview.InputFocusRequested += HandleInputFocusRequested;
         desktopScrollPreview.PageInvoked += HandlePageInvoked;
         desktopScrollPreview.WindowInvoked += HandleWindowInvoked;
 
@@ -324,6 +325,9 @@ public sealed partial class DesktopOverviewView :
 
     private void HandleBackgroundInvoked(object? sender, EventArgs args) =>
         ViewModel.DismissDesktopPreview();
+
+    private void HandleInputFocusRequested(object? sender, EventArgs args) =>
+        inputController.SetInputEnabled(Handle, true);
 
     private void HandlePageInvoked(int page) => ViewModel.SelectPage(page);
 

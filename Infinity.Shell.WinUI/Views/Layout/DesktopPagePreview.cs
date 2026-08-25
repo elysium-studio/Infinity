@@ -17,26 +17,36 @@ public sealed partial class DesktopPagePreview :
     private const float VisibleCornerRadius = 8;
     private const float ShadowDepth = 128;
 
+    private readonly Border shadowHost;
+    private readonly ThemeShadow pageShadow;
     private readonly Border wallpaperHost;
     private readonly Border interactionLayer;
     private readonly CompositionRoundedRectangleGeometry clipGeometry;
     private readonly CompositionGeometricClip clip;
     private readonly ExpressionAnimation cornerRadiusExpression;
-    private readonly Visual shadowVisual;
-    private readonly Visual visual;
-    private Vector3 translation;
+    private readonly Visual pageHostVisual;
+    private readonly Visual pageVisual;
+    private readonly Visual titleVisual;
+    private Vector3 pageTranslation;
+    private Vector3 titleTranslation;
+    private bool interactionEnabled;
     private bool disposed;
 
-    public DesktopPagePreview(Visual scaleVisual, double overviewScale)
+    public DesktopPagePreview(Visual scaleVisual,
+        double overviewScale,
+        string editLabel,
+        string saveLabel,
+        string cancelLabel)
     {
+        double visualScale = double.IsFinite(overviewScale) && overviewScale > 0 ? overviewScale : 1;
         SolidColorBrush transparentBrush = new(Color.FromArgb(0, 0, 0, 0));
-        ShadowHost = new Border
+        pageShadow = new ThemeShadow();
+        shadowHost = new Border
         {
             Background = FluentVisualResources.GetBrush("CardBackgroundFillColorDefaultBrush",
                 Color.FromArgb(255, 32, 32, 32)),
-            CornerRadius = new CornerRadius(VisibleCornerRadius / overviewScale),
-            IsHitTestVisible = false,
-            Shadow = new ThemeShadow()
+            CornerRadius = new CornerRadius(VisibleCornerRadius / visualScale),
+            IsHitTestVisible = false
         };
         Padding = new Thickness(0);
         Background = transparentBrush;
@@ -56,11 +66,18 @@ public sealed partial class DesktopPagePreview :
         {
             IsHitTestVisible = false
         };
+        TitleEditor = new DesktopPageTitleEditor(editLabel,
+            saveLabel,
+            cancelLabel);
 
         Grid content = new();
         content.Children.Add(wallpaperHost);
         content.Children.Add(interactionLayer);
         Content = content;
+
+        PageHost = new Grid();
+        PageHost.Children.Add(shadowHost);
+        PageHost.Children.Add(this);
 
         PointerEntered += HandlePointerEntered;
         PointerExited += HandlePointerExited;
@@ -69,13 +86,16 @@ public sealed partial class DesktopPagePreview :
         ActualThemeChanged += HandleActualThemeChanged;
         ApplyInteractionState(false, false);
 
-        ElementCompositionPreview.SetIsTranslationEnabled(this, true);
-        visual = ElementCompositionPreview.GetElementVisual(this);
-        Compositor compositor = visual.Compositor;
-        visual.Properties.InsertVector3("Translation", Vector3.Zero);
-        ElementCompositionPreview.SetIsTranslationEnabled(ShadowHost, true);
-        ShadowHost.Translation = new Vector3(0, 0, ShadowDepth);
-        shadowVisual = ElementCompositionPreview.GetElementVisual(ShadowHost);
+        ElementCompositionPreview.SetIsTranslationEnabled(PageHost, true);
+        pageHostVisual = ElementCompositionPreview.GetElementVisual(PageHost);
+        Compositor compositor = pageHostVisual.Compositor;
+        pageHostVisual.Properties.InsertVector3("Translation", Vector3.Zero);
+        ElementCompositionPreview.SetIsTranslationEnabled(TitleEditor, true);
+        titleVisual = ElementCompositionPreview.GetElementVisual(TitleEditor);
+        titleVisual.Properties.InsertVector3("Translation", Vector3.Zero);
+        ElementCompositionPreview.SetIsTranslationEnabled(shadowHost, true);
+        shadowHost.Translation = new Vector3(0, 0, ShadowDepth);
+        pageVisual = ElementCompositionPreview.GetElementVisual(this);
         clipGeometry = compositor.CreateRoundedRectangleGeometry();
         clip = compositor.CreateGeometricClip(clipGeometry);
         cornerRadiusExpression = compositor.CreateExpressionAnimation(
@@ -84,42 +104,56 @@ public sealed partial class DesktopPagePreview :
         cornerRadiusExpression.SetReferenceParameter("scaleVisual", scaleVisual);
         clipGeometry.StartAnimation(nameof(CompositionRoundedRectangleGeometry.CornerRadius),
             cornerRadiusExpression);
-        visual.Clip = clip;
+        pageVisual.Clip = clip;
     }
 
-    public Border ShadowHost { get; }
+    public Grid PageHost { get; }
+
+    public DesktopPageTitleEditor TitleEditor { get; }
 
     public int Page { get; private set; }
 
     public void Bind(int page,
         double width,
         double height,
-        Brush background)
+        Brush background,
+        string title)
     {
         Page = page;
+        PageHost.Width = width;
+        PageHost.Height = height;
         Width = width;
         Height = height;
-        ShadowHost.Width = width;
-        ShadowHost.Height = height;
+        shadowHost.Width = width;
+        shadowHost.Height = height;
         wallpaperHost.Background = background;
+        TitleEditor.ViewModel.Bind(page, title);
         clipGeometry.Size = new Vector2(ToFloat(width), ToFloat(height));
-        ShadowHost.Opacity = 1;
-        IsHitTestVisible = true;
+        PageHost.Opacity = 1;
+        shadowHost.Opacity = 1;
+        PageHost.IsHitTestVisible = interactionEnabled;
+        IsHitTestVisible = interactionEnabled;
         Opacity = 1;
     }
 
     public void Hide()
     {
-        ShadowHost.Opacity = 0;
+        PageHost.Opacity = 0;
+        shadowHost.Opacity = 0;
+        shadowHost.Shadow = null;
+        TitleEditor.Hide();
+        PageHost.IsHitTestVisible = false;
         IsHitTestVisible = false;
         Opacity = 0;
         ApplyInteractionState(false, false);
     }
 
-    public void Update(double translationX,
+    public void Update(double pageTranslationX,
+        double titleTranslationX,
         TimeSpan? transitionDuration = null)
     {
-        translation = new Vector3(ToFloat(translationX), 0, 0);
+        pageTranslation = new Vector3(ToFloat(pageTranslationX), 0, 0);
+        titleTranslation = new Vector3(ToFloat(titleTranslationX), 0, 0);
 
         if (!transitionDuration.HasValue)
         {
@@ -127,36 +161,34 @@ public sealed partial class DesktopPagePreview :
             return;
         }
 
-        Compositor compositor = visual.Compositor;
-        Vector3KeyFrameAnimation animation = compositor.CreateVector3KeyFrameAnimation();
-        CubicBezierEasingFunction easing = compositor.CreateCubicBezierEasingFunction(
-            new Vector2(0.1f, 0.9f),
-            new Vector2(0.2f, 1));
-        animation.Duration = transitionDuration.Value;
-        animation.InsertExpressionKeyFrame(0, "this.StartingValue");
-        animation.InsertKeyFrame(1, translation, easing);
-        Vector3KeyFrameAnimation shadowAnimation = compositor.CreateVector3KeyFrameAnimation();
-        shadowAnimation.Duration = transitionDuration.Value;
-        shadowAnimation.InsertExpressionKeyFrame(0, "this.StartingValue");
-        shadowAnimation.InsertKeyFrame(1,
-            new Vector3(ToFloat(translationX), 0, ShadowDepth),
-            easing);
-        visual.Properties.StartAnimation("Translation", animation);
-        shadowVisual.Properties.StartAnimation("Translation", shadowAnimation);
+        StartTranslationAnimation(pageHostVisual, pageTranslation, transitionDuration.Value);
+        StartTranslationAnimation(titleVisual, titleTranslation, transitionDuration.Value);
     }
 
     public void ClearTranslationTransition()
     {
-        visual.Properties.StopAnimation("Translation");
-        visual.Properties.InsertVector3("Translation", translation);
-        shadowVisual.Properties.StopAnimation("Translation");
-        shadowVisual.Properties.InsertVector3("Translation",
-            new Vector3(translation.X, translation.Y, ShadowDepth));
+        pageHostVisual.Properties.StopAnimation("Translation");
+        pageHostVisual.Properties.InsertVector3("Translation", pageTranslation);
+        titleVisual.Properties.StopAnimation("Translation");
+        titleVisual.Properties.InsertVector3("Translation", titleTranslation);
     }
 
     public void SetInteractionEnabled(bool value)
     {
+        interactionEnabled = value;
+        PageHost.IsHitTestVisible = value;
         IsHitTestVisible = value;
+
+        if (value)
+        {
+            shadowHost.Shadow = pageShadow;
+            TitleEditor.Show();
+        }
+        else
+        {
+            shadowHost.Shadow = null;
+            TitleEditor.Hide();
+        }
 
         if (!value)
         {
@@ -167,7 +199,9 @@ public sealed partial class DesktopPagePreview :
     public void Reset()
     {
         Page = 0;
-        translation = Vector3.Zero;
+        pageTranslation = Vector3.Zero;
+        titleTranslation = Vector3.Zero;
+        TitleEditor.ViewModel.Reset();
         ClearTranslationTransition();
         Hide();
     }
@@ -180,14 +214,31 @@ public sealed partial class DesktopPagePreview :
         }
 
         disposed = true;
-        visual.Properties.StopAnimation("Translation");
-        shadowVisual.Properties.StopAnimation("Translation");
+        pageHostVisual.Properties.StopAnimation("Translation");
+        titleVisual.Properties.StopAnimation("Translation");
         clipGeometry.StopAnimation(nameof(CompositionRoundedRectangleGeometry.CornerRadius));
-        visual.Clip = null;
+        pageVisual.Clip = null;
+        shadowHost.Shadow = null;
+        TitleEditor.Dispose();
         cornerRadiusExpression.Dispose();
         clip.Dispose();
         clipGeometry.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private static void StartTranslationAnimation(Visual visual,
+        Vector3 target,
+        TimeSpan duration)
+    {
+        Compositor compositor = visual.Compositor;
+        Vector3KeyFrameAnimation animation = compositor.CreateVector3KeyFrameAnimation();
+        CubicBezierEasingFunction easing = compositor.CreateCubicBezierEasingFunction(
+            new Vector2(0.1f, 0.9f),
+            new Vector2(0.2f, 1));
+        animation.Duration = duration;
+        animation.InsertExpressionKeyFrame(0, "this.StartingValue");
+        animation.InsertKeyFrame(1, target, easing);
+        visual.Properties.StartAnimation("Translation", animation);
     }
 
     private void ApplyInteractionState(bool isHovered, bool isPressed)

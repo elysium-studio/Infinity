@@ -6,9 +6,14 @@ namespace Infinity.Shell.WinUI;
 
 public sealed class DesktopWindowDragDeltaResolver(IWindowCollection windowCollection,
     IWorkspace workspace,
+    IScroller scroller,
     DesktopPageLayoutCalculator layoutCalculator)
 {
-    public double ResolveHorizontalDelta(nint windowHandle, double visualDelta)
+    public double CurrentScrollOffset => scroller.VisualOffset;
+
+    public double ResolveHorizontalDelta(nint windowHandle,
+        double visualDelta,
+        double initialScrollOffset)
     {
         if (!double.IsFinite(visualDelta) || workspace.Width <= 0 ||
             !windowCollection.TryGetTrackedWindow(windowHandle, out TrackedWindow? trackedWindow) ||
@@ -25,6 +30,8 @@ public sealed class DesktopWindowDragDeltaResolver(IWindowCollection windowColle
         int targetPage = Math.Max(0,
             (int)Math.Floor(targetVisualCenter / (desktopWidth + pageSpacing)));
         double targetWindowCenter = targetVisualCenter - (targetPage * pageSpacing);
-        return targetWindowCenter - windowCenter;
+        double canvasDelta = targetWindowCenter - windowCenter;
+        double scrollDelta = scroller.VisualOffset - initialScrollOffset;
+        return canvasDelta - scrollDelta;
     }
 }

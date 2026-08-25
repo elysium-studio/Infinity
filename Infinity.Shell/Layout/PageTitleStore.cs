@@ -7,6 +7,8 @@ public sealed class PageTitleStore(IOptionsMonitor<Settings> settings,
     IWritableOptions<Settings> writer,
     ITextLocalizer localizer)
 {
+    public event Action<int, string>? TitleChanged;
+
     public string GetTitle(int page) =>
         settings.CurrentValue.PageTitles?.TryGetValue(page, out string? configuredTitle) == true
             ? configuredTitle
@@ -34,6 +36,10 @@ public sealed class PageTitleStore(IOptionsMonitor<Settings> settings,
         }
 
         await writer.WriteAsync(updated);
-        return string.IsNullOrEmpty(trimmed) ? localizer.GetText("PageTitle", page + 1) : trimmed;
+        string updatedTitle = string.IsNullOrEmpty(trimmed)
+            ? localizer.GetText("PageTitle", page + 1)
+            : trimmed;
+        TitleChanged?.Invoke(page, updatedTitle);
+        return updatedTitle;
     }
 }

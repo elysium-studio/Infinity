@@ -21,12 +21,16 @@ internal sealed class DesktopWindowPreview :
     private readonly Grid focusVisual;
     private readonly ITrackedWindowDragController dragController;
     private readonly IWindowNavigationCoordinator windowNavigationCoordinator;
+    private readonly DesktopOverviewDragScroller overviewDragScroller;
     private readonly DesktopWindowDragDeltaResolver dragDeltaResolver;
     private readonly nint windowHandle;
     private readonly double layoutScale;
+    private readonly float shadowDepth;
     private uint? dragPointerId;
     private Point dragStartPoint;
+    private Point dragLastPoint;
     private UIElement? dragCoordinateRoot;
+    private double dragStartScrollOffset;
     private double dragHorizontalDelta;
     private double dragVerticalDelta;
     private double x;
@@ -48,6 +52,7 @@ internal sealed class DesktopWindowPreview :
         Grid focusVisual,
         ITrackedWindowDragController dragController,
         IWindowNavigationCoordinator windowNavigationCoordinator,
+        DesktopOverviewDragScroller overviewDragScroller,
         DesktopWindowDragDeltaResolver dragDeltaResolver,
         double layoutScale)
     {
@@ -58,8 +63,10 @@ internal sealed class DesktopWindowPreview :
         this.focusVisual = focusVisual;
         this.dragController = dragController;
         this.windowNavigationCoordinator = windowNavigationCoordinator;
+        this.overviewDragScroller = overviewDragScroller;
         this.dragDeltaResolver = dragDeltaResolver;
-        this.layoutScale = layoutScale;
+        this.layoutScale = double.IsFinite(layoutScale) && layoutScale > 0 ? layoutScale : 1;
+        shadowDepth = ToFloat(ShadowDepth / this.layoutScale);
         Host.PointerPressed += HandlePointerPressed;
         Host.PointerMoved += HandlePointerMoved;
         Host.PointerReleased += HandlePointerReleased;
@@ -144,6 +151,12 @@ internal sealed class DesktopWindowPreview :
     public void SetSelected(bool value) =>
         focusVisual.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
 
+    public void Activate()
+    {
+        windowNavigationCoordinator.Activate(windowHandle);
+        Foregrounded?.Invoke(windowHandle);
+    }
+
     public void Update(double x,
         double y,
         double width,
@@ -156,6 +169,12 @@ internal sealed class DesktopWindowPreview :
         focusHost.TranslationTransition = transitionDuration.HasValue
             ? new Vector3Transition { Duration = transitionDuration.Value }
             : null;
+        if (isDragging)
+        {
+            dragHorizontalDelta += this.x - x;
+            dragVerticalDelta += this.y - y;
+        }
+
         this.x = x;
         this.y = y;
         ApplyTranslation();
@@ -234,9 +253,9 @@ internal sealed class DesktopWindowPreview :
         dragPointerId = args.Pointer.PointerId;
         dragCoordinateRoot = coordinateRoot;
         dragStartPoint = args.GetCurrentPoint(coordinateRoot).Position;
-        windowNavigationCoordinator.Activate(windowHandle);
+        dragLastPoint = dragStartPoint;
+        Activate();
         SetPromoted(true);
-        Foregrounded?.Invoke(windowHandle);
 
         args.Handled = true;
     }
@@ -270,11 +289,21 @@ internal sealed class DesktopWindowPreview :
 
             isDragging = true;
             suppressNextTap = true;
+            dragStartScrollOffset = dragDeltaResolver.CurrentScrollOffset;
+            dragHorizontalDelta = horizontalDelta / layoutScale;
+            dragVerticalDelta = verticalDelta / layoutScale;
+            dragLastPoint = currentPoint;
             ClearTranslationTransition();
         }
+        else
+        {
+            dragHorizontalDelta += (currentPoint.X - dragLastPoint.X) / layoutScale;
+            dragVerticalDelta += (currentPoint.Y - dragLastPoint.Y) / layoutScale;
+            dragLastPoint = currentPoint;
+        }
 
-        dragHorizontalDelta = horizontalDelta / layoutScale;
-        dragVerticalDelta = verticalDelta / layoutScale;
+        double viewportWidth = Host.XamlRoot?.Size.Width ?? 0;
+        overviewDragScroller.Update(Host.DispatcherQueue, currentPoint.X, viewportWidth);
         ApplyTranslation();
         args.Handled = true;
     }
@@ -317,8 +346,16 @@ internal sealed class DesktopWindowPreview :
         bool wasDragging = isDragging;
         double horizontalDelta = dragHorizontalDelta;
         double verticalDelta = dragVerticalDelta;
+        double initialScrollOffset = dragStartScrollOffset;
+
+        if (wasDragging)
+        {
+            overviewDragScroller.Stop();
+        }
+
         dragPointerId = null;
         dragCoordinateRoot = null;
+        dragStartScrollOffset = 0;
         dragHorizontalDelta = 0;
         dragVerticalDelta = 0;
         isDragging = false;
@@ -326,7 +363,9 @@ internal sealed class DesktopWindowPreview :
 
         if (wasDragging)
         {
-            double resolvedHorizontalDelta = dragDeltaResolver.ResolveHorizontalDelta(windowHandle, horizontalDelta);
+            double resolvedHorizontalDelta = dragDeltaResolver.ResolveHorizontalDelta(windowHandle,
+                horizontalDelta,
+                initialScrollOffset);
             bool moved = dragController.Move(windowHandle, resolvedHorizontalDelta, verticalDelta);
             dragController.End(windowHandle);
 
@@ -344,7 +383,7 @@ internal sealed class DesktopWindowPreview :
     {
         Vector3 translation = new(ToFloat(x + dragHorizontalDelta),
             ToFloat(y + dragVerticalDelta),
-            ShadowDepth);
+            shadowDepth);
         Host.Translation = translation;
         focusHost.Translation = translation;
     }
