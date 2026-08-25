@@ -5,11 +5,7 @@ namespace Infinity.Shell;
 
 public sealed class Settings
 {
-    public Dictionary<string, int>? ApplicationPageRules { get; set; } = [];
-
     public DragScrollSpeed DragScrollSpeed { get; set; } = DragScrollSpeed.Normal;
-
-    public bool HideFilteredWindows { get; set; } = false;
 
     public Dictionary<int, string>? PageTitles { get; set; } = [];
 

@@ -30,9 +30,7 @@ public sealed class TrackedWindowDragController(IWindowStore store,
             return false;
         }
 
-        long viewportX = trackedWindow.IsSticky
-            ? trackedWindow.StickyViewportX
-            : (long)trackedWindow.CanvasX - visualOffset;
+        long viewportX = (long)trackedWindow.CanvasX - visualOffset;
 
         if (viewportX is < int.MinValue or > int.MaxValue)
         {
@@ -94,11 +92,6 @@ public sealed class TrackedWindowDragController(IWindowStore store,
 
         trackedWindow.CanvasX = (int)canvasX;
         trackedWindow.CanvasY = (int)canvasY;
-
-        if (trackedWindow.IsSticky)
-        {
-            trackedWindow.StickyViewportX = (int)viewportX;
-        }
 
         scroller.Reposition();
         return true;

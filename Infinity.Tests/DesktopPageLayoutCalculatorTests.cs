@@ -66,7 +66,6 @@ public sealed class DesktopPageLayoutCalculatorTests
             0,
             width,
             0,
-            false,
             0);
 
         Assert.Equal(2000, x);
@@ -81,8 +80,7 @@ public sealed class DesktopPageLayoutCalculatorTests
             800,
             0,
             width,
-            0,
-            false);
+            0);
 
         Assert.Equal(2064, x);
     }

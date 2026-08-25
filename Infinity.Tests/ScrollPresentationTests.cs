@@ -7,101 +7,13 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Infinity.Tests;
 
-public sealed class StickyWindowControllerTests
+public sealed class ScrollPresentationTests
 {
-    [Fact]
-    public void PinCapturesViewportPositionAndRequestsReposition()
-    {
-        WindowStore store = new();
-        TrackedWindow window = CreateWindow(2250);
-        store.Add(window);
-        TestScroller scroller = new() { VisualOffset = 2000 };
-        StickyWindowController controller = new(store, scroller, NullLogger<StickyWindowController>.Instance);
-        int changedCount = 0;
-        store.WindowChanged += (_, _) => changedCount++;
-
-        bool pinned = controller.Pin(window.Handle);
-
-        Assert.True(pinned);
-        Assert.True(window.IsSticky);
-        Assert.Equal(250, window.StickyViewportX);
-        Assert.Equal(1, changedCount);
-        Assert.Equal(1, scroller.RepositionCount);
-    }
-
-    [Fact]
-    public void UnpinAttachesWindowToCurrentPageAtItsVisiblePosition()
-    {
-        WindowStore store = new();
-        TrackedWindow window = CreateWindow(2250);
-        window.IsSticky = true;
-        window.StickyViewportX = 250;
-        store.Add(window);
-        TestScroller scroller = new() { VisualOffset = 4000 };
-        StickyWindowController controller = new(store, scroller, NullLogger<StickyWindowController>.Instance);
-
-        bool unpinned = controller.Unpin(window.Handle);
-
-        Assert.True(unpinned);
-        Assert.False(window.IsSticky);
-        Assert.Equal(4250, window.CanvasX);
-        Assert.Equal(0, window.StickyViewportX);
-        Assert.Equal(1, scroller.RepositionCount);
-    }
-
-    [Fact]
-    public void PinRejectsUnknownWindowsAndInvalidOffsets()
-    {
-        WindowStore store = new();
-        TrackedWindow window = CreateWindow(250);
-        store.Add(window);
-        TestScroller scroller = new() { VisualOffset = double.NaN };
-        StickyWindowController controller = new(store, scroller, NullLogger<StickyWindowController>.Instance);
-
-        Assert.False(controller.Pin(new IntPtr(99)));
-        Assert.False(controller.Pin(window.Handle));
-        Assert.False(window.IsSticky);
-        Assert.Equal(0, scroller.RepositionCount);
-    }
-
-    private static TrackedWindow CreateWindow(int canvasX) => new()
-    {
-        Handle = new IntPtr(1),
-        CanvasX = canvasX,
-        CanvasY = 100,
-        Width = 800,
-        Height = 600
-    };
-}
-
-public sealed class StickyWindowScrollingTests
-{
-    [Fact]
-    public void RepositionKeepsStickyWindowAtItsViewportAnchor()
-    {
-        WindowStore store = new();
-        TrackedWindow stickyWindow = CreateWindow(250, true);
-        TrackedWindow pageWindow = CreateWindow(2500, false, 2);
-        store.Add(stickyWindow);
-        store.Add(pageWindow);
-        PanState state = new();
-        state.SetOffset(2000);
-        TestWindowMover mover = new();
-        using Scroller scroller = CreateScroller(state, store, mover);
-
-        scroller.Reposition();
-
-        Assert.Equal(2250, stickyWindow.CanvasX);
-        Assert.Collection(mover.Moves,
-            move => Assert.Equal((stickyWindow.Handle, 250), (move.Handle, move.X)),
-            move => Assert.Equal((pageWindow.Handle, 500), (move.Handle, move.X)));
-    }
-
     [Fact]
     public void PresentationSessionDefersWindowMovementUntilExplicitCommit()
     {
         WindowStore store = new();
-        TrackedWindow window = CreateWindow(500, false);
+        TrackedWindow window = CreateWindow(500);
         store.Add(window);
         PanState state = new();
         TestWindowMover mover = new();
@@ -182,15 +94,13 @@ public sealed class StickyWindowScrollingTests
             () => { },
             NullLogger<Scroller>.Instance);
 
-    private static TrackedWindow CreateWindow(int canvasX, bool isSticky, int handle = 1) => new()
+    private static TrackedWindow CreateWindow(int canvasX, int handle = 1) => new()
     {
         Handle = new IntPtr(handle),
         CanvasX = canvasX,
         CanvasY = 100,
         Width = 800,
         Height = 600,
-        IsSticky = isSticky,
-        StickyViewportX = isSticky ? 250 : 0,
         LastPlacedX = int.MinValue,
         LastPlacedY = int.MinValue
     };
@@ -325,73 +235,6 @@ public sealed class StickyWindowScrollingTests
 
         public void Reset()
         {
-        }
-    }
-}
-
-public sealed class StickyWindowPagingTests
-{
-    [Fact]
-    public void StickyWindowsDoNotIncreasePageCount()
-    {
-        WindowStore store = new();
-        store.Add(CreateWindow(2500, false, 1));
-        store.Add(CreateWindow(9250, true, 2));
-        Pager pager = new(store,
-            new PanState(),
-            new TestScroller(),
-            new TestWorkspace(),
-            new TestForegroundWindowCoordinator(),
-            NullLogger<Pager>.Instance);
-
-        Assert.Equal(4, pager.PageCount);
-    }
-
-    [Fact]
-    public void CurrentPageRemainsAvailableWhenAllWindowsAreSticky()
-    {
-        WindowStore store = new();
-        store.Add(CreateWindow(5250, true, 1));
-        PanState state = new();
-        state.SetOffset(5000);
-        Pager pager = new(store,
-            state,
-            new TestScroller(),
-            new TestWorkspace(),
-            new TestForegroundWindowCoordinator(),
-            NullLogger<Pager>.Instance);
-
-        Assert.Equal(6, pager.PageCount);
-    }
-
-    private static TrackedWindow CreateWindow(int canvasX, bool isSticky, int handle) => new()
-    {
-        Handle = new IntPtr(handle),
-        CanvasX = canvasX,
-        CanvasY = 100,
-        Width = 800,
-        Height = 600,
-        IsSticky = isSticky,
-        StickyViewportX = 250
-    };
-
-    private sealed class TestWorkspace :
-        IWorkspace
-    {
-        public event EventHandler? WorkspaceLayoutChanged;
-
-        public int Height => 1080;
-
-        public int Width => 1000;
-
-        public int WorkAreaX => 0;
-
-        public int WorkAreaY => 0;
-
-        public IntPtr GetCurrentWorkspace()
-        {
-            WorkspaceLayoutChanged?.Invoke(this, EventArgs.Empty);
-            return IntPtr.Zero;
         }
     }
 }

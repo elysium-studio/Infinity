@@ -73,23 +73,11 @@
   <data name="UpdateReadyToastTitle" xml:space="preserve">
     <value>Update gereed</value>
   </data>
-  <data name="AboutTitleBar.Title" xml:space="preserve">
-    <value>Over</value>
-  </data>
   <data name="BooleanToggle.OffContent" xml:space="preserve">
     <value>Nee</value>
   </data>
   <data name="BooleanToggle.OnContent" xml:space="preserve">
     <value>Ja</value>
-  </data>
-  <data name="CloseWindowButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Sluit venster</value>
-  </data>
-  <data name="DesktopBlurCard.Description" xml:space="preserve">
-    <value>Vervaag de achtergrond tijdens het scrollen en filteren</value>
-  </data>
-  <data name="DesktopBlurCard.Header" xml:space="preserve">
-    <value>Achtergrondvervaging</value>
   </data>
   <data name="DesktopSectionTitle.Text" xml:space="preserve">
     <value>Bureaublad</value>
@@ -262,53 +250,11 @@
   <data name="VirtualPagesUnlimitedOption.Content" xml:space="preserve">
     <value>Onbeperkt</value>
   </data>
-  <data name="WindowAboutMenuItem.Text" xml:space="preserve">
-    <value>Over</value>
-  </data>
-  <data name="WindowExitMenuItem.Text" xml:space="preserve">
-    <value>Afsluiten</value>
-  </data>
-  <data name="WindowOptionsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Opties</value>
-  </data>
-  <data name="WindowPeekCard.Description" xml:space="preserve">
-    <value>Wanneer u de muisaanwijzer op een vensterminiatuur beweegt of een filter toepast, verberg dan alle andere vensters zodat alleen de overeenkomende vensters zichtbaar blijven.</value>
-  </data>
-  <data name="WindowPeekCard.Header" xml:space="preserve">
-    <value>Window Peek</value>
-  </data>
   <data name="WindowSearchBox.PlaceholderText" xml:space="preserve">
     <value>Zoek een bureaubladvenster...</value>
   </data>
   <data name="WindowsSectionTitle.Text" xml:space="preserve">
     <value>Ramen</value>
-  </data>
-  <data name="WindowSettingsMenuItem.Text" xml:space="preserve">
-    <value>Instellingen</value>
-  </data>
-  <data name="WindowTourMenuItem.Text" xml:space="preserve">
-    <value>Volg een rondleiding</value>
-  </data>
-  <data name="AlwaysOpenApplicationOnPageMenuItem" xml:space="preserve">
-    <value>Deze app altijd openen op</value>
-  </data>
-  <data name="MoveWindowToPageMenuItem" xml:space="preserve">
-    <value>Venster verplaatsen naar</value>
-  </data>
-  <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
-    <value>Openingsregel verwijderen</value>
-  </data>
-  <data name="PinWindowMenuItem" xml:space="preserve">
-    <value>Vastmaken op alle pagina's</value>
-  </data>
-  <data name="UnpinWindowMenuItem" xml:space="preserve">
-    <value>Losmaken van alle pagina's</value>
-  </data>
-  <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Vastgemaakt op alle pagina's</value>
-  </data>
-  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Instellingen</value>
   </data>
   <data name="TourNavigationItem.Content" xml:space="preserve">
     <value>Volg een rondleiding</value>

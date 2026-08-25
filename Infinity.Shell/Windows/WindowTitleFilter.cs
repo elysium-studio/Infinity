@@ -1,22 +1,15 @@
-using Infinity.Application.Abstractions;
-
 namespace Infinity.Shell;
 
-public sealed class TrackedWindowFilter :
-    IWindowFilterState
+public static class WindowTitleFilter
 {
-    public string Filter { get; set; } = string.Empty;
-
-    public bool IsActive => !string.IsNullOrWhiteSpace(Filter);
-
-    public bool IsMatch(string title)
+    public static bool Matches(string title, string filter)
     {
-        if (!IsActive)
+        if (string.IsNullOrWhiteSpace(filter))
         {
             return true;
         }
 
-        string[] filterWords = Filter.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        string[] filterWords = filter.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
         return filterWords.All(word => MatchesWord(title, word));
     }

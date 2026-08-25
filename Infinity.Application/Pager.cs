@@ -28,9 +28,7 @@ public sealed class Pager(IWindowStore repository,
         get
         {
             int currentPage = CurrentPage;
-            TrackedWindow? rightmostWindow = repository
-                .Where(window => !window.IsSticky)
-                .MaxBy(window => (long)window.CanvasX + window.Width);
+            TrackedWindow? rightmostWindow = repository.MaxBy(window => (long)window.CanvasX + window.Width);
 
             int pageCount = rightmostWindow is not null && workspace.Width > 0
                 ? (int)Math.Ceiling(((long)rightmostWindow.CanvasX + rightmostWindow.Width - 1) / (double)workspace.Width)

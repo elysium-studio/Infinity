@@ -53,10 +53,9 @@ public sealed class DesktopPageLayoutCalculator
         int monitorOriginX,
         double desktopWidth,
         double offset,
-        bool isSticky,
         double spacingProgress = 1)
     {
-        if (isSticky || desktopWidth <= 0)
+        if (desktopWidth <= 0)
         {
             return x;
         }

@@ -73,23 +73,11 @@
   <data name="UpdateReadyToastTitle" xml:space="preserve">
     <value>[!! Ûþðàţë ŕëàðÿ ~~~~ !!]</value>
   </data>
-  <data name="AboutTitleBar.Title" xml:space="preserve">
-    <value>[!! Àƀôûţ ~~~ !!]</value>
-  </data>
   <data name="BooleanToggle.OffContent" xml:space="preserve">
     <value>[!! Ñô ~~~ !!]</value>
   </data>
   <data name="BooleanToggle.OnContent" xml:space="preserve">
     <value>[!! Ÿëš ~~~ !!]</value>
-  </data>
-  <data name="CloseWindowButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>[!! Çļôšë ŵîñðôŵ ~~~~ !!]</value>
-  </data>
-  <data name="DesktopBlurCard.Description" xml:space="preserve">
-    <value>[!! Ɓļûŕ ţħë ƀàçķĝŕôûñð ðûŕîñĝ šçŕôļļîñĝ àñð ƒîļţëŕîñĝ ~~~~~~~~~~~~~~~ !!]</value>
-  </data>
-  <data name="DesktopBlurCard.Header" xml:space="preserve">
-    <value>[!! Ɓàçķĝŕôûñð Ɓļûŕ ~~~~~ !!]</value>
   </data>
   <data name="DesktopSectionTitle.Text" xml:space="preserve">
     <value>[!! Ðëšķţôþ ~~~ !!]</value>
@@ -262,53 +250,11 @@
   <data name="VirtualPagesUnlimitedOption.Content" xml:space="preserve">
     <value>[!! Ûñļîɱîţëð ~~~ !!]</value>
   </data>
-  <data name="WindowAboutMenuItem.Text" xml:space="preserve">
-    <value>[!! Àƀôûţ ~~~ !!]</value>
-  </data>
-  <data name="WindowExitMenuItem.Text" xml:space="preserve">
-    <value>[!! Ëẋîţ ~~~ !!]</value>
-  </data>
-  <data name="WindowOptionsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>[!! Ôþţîôñš ~~~ !!]</value>
-  </data>
-  <data name="WindowPeekCard.Description" xml:space="preserve">
-    <value>[!! Ŵħëñ ħôṽëŕîñĝ à ŵîñðôŵ ţħûɱƀñàîļ ôŕ àþþļÿîñĝ à ƒîļţëŕ, ħîðë àļļ ôţħëŕ ŵîñðôŵš šô ôñļÿ ţħë ɱàţçħîñĝ ôñë (ôŕ ôñëš) šţàÿ ṽîšîƀļë. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]</value>
-  </data>
-  <data name="WindowPeekCard.Header" xml:space="preserve">
-    <value>[!! Ŵîñðôŵ Þëëķ ~~~~ !!]</value>
-  </data>
   <data name="WindowSearchBox.PlaceholderText" xml:space="preserve">
     <value>[!! Ƒîñð à ðëšķţôþ ŵîñðôŵ... ~~~~~~~~ !!]</value>
   </data>
   <data name="WindowsSectionTitle.Text" xml:space="preserve">
     <value>[!! Ŵîñðôŵš ~~~ !!]</value>
-  </data>
-  <data name="WindowSettingsMenuItem.Text" xml:space="preserve">
-    <value>[!! Šëţţîñĝš ~~~ !!]</value>
-  </data>
-  <data name="WindowTourMenuItem.Text" xml:space="preserve">
-    <value>[!! Ţàķë à ţôûŕ ~~~~ !!]</value>
-  </data>
-  <data name="AlwaysOpenApplicationOnPageMenuItem" xml:space="preserve">
-    <value>[!! Àļŵàÿš ôþëñ ţħîš àþþ ôñ ~~~~~~~~~ !!]</value>
-  </data>
-  <data name="MoveWindowToPageMenuItem" xml:space="preserve">
-    <value>[!! Ṁôṽë ŵîñðôŵ ţô ~~~~~~ !!]</value>
-  </data>
-  <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
-    <value>[!! Ŕëɱôṽë ôþëñîñĝ ŕûļë ~~~~~~~~ !!]</value>
-  </data>
-  <data name="PinWindowMenuItem" xml:space="preserve">
-    <value>[!! Þîñ ţô àļļ þàĝëš ~~~~~~ !!]</value>
-  </data>
-  <data name="UnpinWindowMenuItem" xml:space="preserve">
-    <value>[!! Ûñþîñ ƒŕôɱ àļļ þàĝëš ~~~~~~~~ !!]</value>
-  </data>
-  <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>[!! Þîññëð ţô àļļ þàĝëš ~~~~~~~ !!]</value>
-  </data>
-  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>[Šéţţîñĝš]</value>
   </data>
   <data name="TourNavigationItem.Content" xml:space="preserve">
     <value>[!! Ţàķë à ţôûŕ ~~~~ !!]</value>

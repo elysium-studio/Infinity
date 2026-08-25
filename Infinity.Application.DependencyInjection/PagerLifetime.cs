@@ -23,7 +23,7 @@ public sealed class PagerLifetime(IWindowTracker tracker,
     IWindowConcealmentRecovery concealmentRecovery,
     StartupPageRestorer startupPageRestorer,
     IPager pager,
-    IWindowCollectionLifetime windowCollection,
+    IWindowCollection windowCollection,
     IScrollTimer timer,
     ILogger<PagerLifetime> logger) :
     IHostedService,

@@ -37,27 +37,6 @@ public sealed class TrackedWindowDragControllerTests
     }
 
     [Fact]
-    public void MoveUpdatesStickyWindowViewportAnchor()
-    {
-        WindowStore store = new();
-        TrackedWindow window = CreateWindow(2250, 100);
-        window.IsSticky = true;
-        window.StickyViewportX = 250;
-        store.Add(window);
-        TestScroller scroller = new() { VisualOffset = 2000 };
-        TrackedWindowDragController controller = new(store,
-            scroller,
-            NullLogger<TrackedWindowDragController>.Instance);
-
-        Assert.True(controller.Begin(window.Handle));
-        Assert.True(controller.Move(window.Handle, -75, 25));
-
-        Assert.Equal(175, window.StickyViewportX);
-        Assert.Equal(2175, window.CanvasX);
-        Assert.Equal(125, window.CanvasY);
-    }
-
-    [Fact]
     public void EndClearsOnlyMatchingDrag()
     {
         WindowStore store = new();

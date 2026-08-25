@@ -40,7 +40,7 @@ public sealed class PointerInputSource :
         this.modifierKeyState = modifierKeyState;
 
         this.mouseInputSource.LeftButtonDown += HandleLeftButtonDown;
-        this.mouseInputSource.MiddleButtonDown += HandleMiddleButtonDown;
+        this.mouseInputSource.MiddleButtonPressed += HandleMiddleButtonPressed;
         this.mouseInputSource.RightButtonDown += HandleRightButtonDown;
         this.mouseInputSource.MouseMoved += HandleMouseMoved;
         this.mouseInputSource.WheelScrolled += HandleWheelScrolled;
@@ -48,7 +48,16 @@ public sealed class PointerInputSource :
 
     private void HandleLeftButtonDown() => LeftButtonClicked?.Invoke();
 
-    private void HandleMiddleButtonDown() => MiddleButtonClicked?.Invoke();
+    private void HandleMiddleButtonPressed(object? sender, MouseButtonEventArgs args)
+    {
+        if (!modifierKeyState.IsActive)
+        {
+            return;
+        }
+
+        args.Handled = true;
+        MiddleButtonClicked?.Invoke();
+    }
 
     private void HandleRightButtonDown() => RightButtonClicked?.Invoke();
 
@@ -186,7 +195,7 @@ public sealed class PointerInputSource :
         }
 
         mouseInputSource.LeftButtonDown -= HandleLeftButtonDown;
-        mouseInputSource.MiddleButtonDown -= HandleMiddleButtonDown;
+        mouseInputSource.MiddleButtonPressed -= HandleMiddleButtonPressed;
         mouseInputSource.RightButtonDown -= HandleRightButtonDown;
         mouseInputSource.MouseMoved -= HandleMouseMoved;
         mouseInputSource.WheelScrolled -= HandleWheelScrolled;

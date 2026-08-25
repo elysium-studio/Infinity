@@ -295,25 +295,7 @@ public sealed class Scroller(IPanState state,
                     continue;
                 }
 
-                int targetX;
-
-                if (trackedWindow.IsSticky)
-                {
-                    long stickyCanvasX = (long)intOffset + trackedWindow.StickyViewportX;
-
-                    if (stickyCanvasX is < int.MinValue or > int.MaxValue)
-                    {
-                        logger.LogWarning("Sticky window {Handle} exceeded the supported canvas range", trackedWindow.Handle);
-                        continue;
-                    }
-
-                    trackedWindow.CanvasX = (int)stickyCanvasX;
-                    targetX = trackedWindow.StickyViewportX;
-                }
-                else
-                {
-                    targetX = trackedWindow.CanvasX - intOffset;
-                }
+                int targetX = trackedWindow.CanvasX - intOffset;
 
                 if (concealedHandles.Contains(trackedWindow.Handle))
                 {

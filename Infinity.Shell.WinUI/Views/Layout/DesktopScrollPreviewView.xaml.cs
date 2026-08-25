@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using System;
 using System.Collections.Generic;
+using Windows.System;
 
 namespace Infinity.Shell.WinUI;
 
@@ -16,6 +17,7 @@ public sealed partial class DesktopScrollPreviewView :
     private readonly IShellLayoutCalculator layoutCalculator;
     private readonly IPanState panState;
     private readonly IScroller scroller;
+    private readonly IPager pager;
     private readonly IWorkspace workspace;
     private readonly ITaskbarLocator taskbarLocator;
     private readonly DesktopPageLayoutCalculator pageLayoutCalculator;
@@ -23,7 +25,9 @@ public sealed partial class DesktopScrollPreviewView :
     private readonly DesktopPageStrip pageStrip;
     private readonly DesktopWindowPreviewCollection previews;
     private bool eventsSubscribed;
+    private bool filterActive;
     private bool isRunning;
+    private int pageBeforeFilter = -1;
     private double spacingProgress = 1;
     private int monitorOriginX;
     private int monitorOriginY;
@@ -33,6 +37,7 @@ public sealed partial class DesktopScrollPreviewView :
         IShellLayoutCalculator layoutCalculator,
         IPanState panState,
         IScroller scroller,
+        IPager pager,
         IWorkspace workspace,
         ITaskbarLocator taskbarLocator,
         DesktopPageLayoutCalculator pageLayoutCalculator,
@@ -47,6 +52,7 @@ public sealed partial class DesktopScrollPreviewView :
         this.layoutCalculator = layoutCalculator;
         this.panState = panState;
         this.scroller = scroller;
+        this.pager = pager;
         this.workspace = workspace;
         this.taskbarLocator = taskbarLocator;
         this.pageLayoutCalculator = pageLayoutCalculator;
@@ -55,6 +61,7 @@ public sealed partial class DesktopScrollPreviewView :
         this.previews = previews;
         this.pageStrip.PageInvoked += HandlePageInvoked;
         this.previews.WindowInvoked += HandleWindowInvoked;
+        this.previews.WindowPositionChanged += HandleWindowPositionChanged;
     }
 
     public event EventHandler? BackgroundInvoked;
@@ -150,6 +157,7 @@ public sealed partial class DesktopScrollPreviewView :
 
         isRunning = false;
         SetInteractionEnabled(false);
+        WindowSearchBox.Text = string.Empty;
         animator.Reset(PreviewSurface, GetAnimationWidth(), GetAnimationHeight());
         UnsubscribeEvents();
         pageStrip.Stop();
@@ -164,7 +172,8 @@ public sealed partial class DesktopScrollPreviewView :
         }
 
         IReadOnlyList<TrackedWindow> windows = previews.Synchronise(PreviewCanvas,
-            windowCollection.AllTrackedWindows);
+            windowCollection.AllTrackedWindows,
+            animator.Scale);
         RefreshMonitorOrigin();
         pageStrip.Synchronise(scroller.VisualOffset);
 
@@ -208,16 +217,12 @@ public sealed partial class DesktopScrollPreviewView :
             1,
             workspace.Width,
             workspace.Height);
-        double x = trackedWindow.IsSticky
-            ? trackedWindow.StickyViewportX - monitorOriginX
-            : layout.X;
-        x = pageLayoutCalculator.CalculateWindowX(x,
+        double x = pageLayoutCalculator.CalculateWindowX(layout.X,
             trackedWindow.CanvasX,
             trackedWindow.Width,
             monitorOriginX,
             workspace.Width,
             scroller.VisualOffset,
-            trackedWindow.IsSticky,
             spacingProgress);
 
         preview.Update(x,
@@ -236,6 +241,8 @@ public sealed partial class DesktopScrollPreviewView :
     private void SetInteractionEnabled(bool value)
     {
         DismissSurface.IsHitTestVisible = value;
+        WindowSearchBox.IsHitTestVisible = value;
+        WindowSearchBox.IsTabStop = value;
         pageStrip.SetInteractionEnabled(value);
         previews.SetInteractionEnabled(value);
     }
@@ -317,6 +324,92 @@ public sealed partial class DesktopScrollPreviewView :
         WindowInvoked?.Invoke(handle);
     }
 
+    private void HandleWindowPositionChanged(nint handle)
+    {
+        if (isRunning &&
+            windowCollection.TryGetTrackedWindow(handle, out TrackedWindow? trackedWindow) &&
+            trackedWindow is not null &&
+            previews.TryGet(handle, out DesktopWindowPreview? preview) &&
+            preview is not null)
+        {
+            UpdateWindowLayout(trackedWindow, preview, null);
+        }
+    }
+
+    private void HandleWindowSearchBoxTextChanged(object sender, TextChangedEventArgs args)
+    {
+        bool isActive = !string.IsNullOrWhiteSpace(WindowSearchBox.Text);
+        IReadOnlyList<TrackedWindow> windows = [.. windowCollection.AllTrackedWindows];
+        previews.SetFilter(WindowSearchBox.Text, windows);
+
+        if (!isRunning)
+        {
+            filterActive = false;
+            pageBeforeFilter = -1;
+            return;
+        }
+
+        if (!filterActive && isActive)
+        {
+            pageBeforeFilter = pager.CurrentPage;
+        }
+
+        filterActive = isActive;
+
+        if (!isActive)
+        {
+            if (pageBeforeFilter >= 0 && !pager.IsPageCentered(pageBeforeFilter))
+            {
+                pager.NavigateToPage(pageBeforeFilter);
+            }
+
+            pageBeforeFilter = -1;
+            return;
+        }
+
+        nint handle = previews.GetFirstMatchingWindow(windows);
+
+        if (handle == 0 ||
+            workspace.Width <= 0 ||
+            !windowCollection.TryGetTrackedWindow(handle, out TrackedWindow? trackedWindow) ||
+            trackedWindow is null)
+        {
+            return;
+        }
+
+        double calculatedPage = Math.Floor((trackedWindow.CanvasX + (trackedWindow.Width / 2.0)) /
+            workspace.Width);
+        int page = (int)Math.Clamp(calculatedPage, 0, int.MaxValue);
+
+        if (!pager.IsPageCentered(page))
+        {
+            pager.NavigateToPage(page);
+        }
+    }
+
+    private void HandleWindowSearchBoxKeyDown(object sender, KeyRoutedEventArgs args)
+    {
+        if (args.Key == VirtualKey.Escape && WindowSearchBox.Text.Length > 0)
+        {
+            WindowSearchBox.Text = string.Empty;
+            args.Handled = true;
+            return;
+        }
+
+        if (args.Key != VirtualKey.Enter)
+        {
+            return;
+        }
+
+        nint handle = previews.GetFirstMatchingWindow(windowCollection.AllTrackedWindows);
+
+        if (handle != 0)
+        {
+            args.Handled = true;
+            HandleWindowInvoked(handle);
+        }
+    }
+
     private void QueueSynchronise()
     {
         if (DispatcherQueue.HasThreadAccess)
@@ -347,7 +440,7 @@ public sealed partial class DesktopScrollPreviewView :
         {
             if (isRunning && previews.TryGet(trackedWindow.Handle, out _))
             {
-                previews.RefreshSourceSize(trackedWindow);
+                previews.Refresh(trackedWindow);
                 RefreshLayout();
             }
         }

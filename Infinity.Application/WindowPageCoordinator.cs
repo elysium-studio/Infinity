@@ -12,7 +12,8 @@ public sealed class WindowPageCoordinator(IWindowStore store,
     IWorkspace workspace,
     IWindowActivator activator,
     IDispatcher dispatcher) :
-    IWindowPageCoordinator
+    IWindowNavigationCoordinator,
+    IForegroundWindowCoordinator
 {
     private const double ScrollTolerance = 2.0;
     private const double MeaningfulVisibilityRatio = 0.60;
@@ -32,7 +33,6 @@ public sealed class WindowPageCoordinator(IWindowStore store,
 
     private int navigationTargetPage = -1;
     private double navigationTargetOffset = -1;
-    private int pageBeforeFilter = -1;
     private IntPtr pendingActivation;
 
     public event EventHandler<NavigationStartedEventArgs>? NavigationStarted;
@@ -77,24 +77,6 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         }
     }
 
-    public int PageBeforeFilter
-    {
-        get
-        {
-            lock (syncRoot)
-            {
-                return pageBeforeFilter;
-            }
-        }
-        set
-        {
-            lock (syncRoot)
-            {
-                pageBeforeFilter = value;
-            }
-        }
-    }
-
     public IntPtr PendingActivation
     {
         get
@@ -126,12 +108,6 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         }
 
         if (!TryGetWorkspaceWidth(out int workspaceWidth))
-        {
-            RequestActivation(handle);
-            return;
-        }
-
-        if (trackedWindow.IsSticky)
         {
             RequestActivation(handle);
             return;

@@ -13,7 +13,6 @@ public static class IServiceCollectionExtensions
     {
         public IServiceCollection AddInfinityApplication()
         {
-            services.AddSingleton<IScrollDeltaAccumulator, ScrollDeltaAccumulator>();
             services.AddSingleton<IPanState, PanState>();
             services.AddSingleton<IScrollPresentationSession, ScrollPresentationSession>();
 
@@ -28,16 +27,12 @@ public static class IServiceCollectionExtensions
                     provider.GetRequiredService<IWindowFilter>(),
                     provider.GetRequiredService<IWindowAncestorResolver>(),
                     provider.GetRequiredService<IWindowRestoreGuard>(),
-                    provider.GetRequiredService<IWindowPlacementRules>(),
                     provider.GetRequiredService<IWindowMoveGuard>(),
-                    provider.GetRequiredService<IWindowMover>(),
                     provider.GetRequiredService<IWindowConcealer>(),
                     provider.GetRequiredService<IWindowDragGuard>(),
                     provider.GetRequiredService<ITrackedWindowDragController>(),
                     provider.GetRequiredService<IWindowEnumerator>(),
                     provider.GetRequiredService<IWindowEventListener>(),
-                    provider.GetRequiredService<IWorkspace>(),
-                    provider.GetRequiredService<IPager>(),
                     provider.GetRequiredService<IPanState>(),
                     provider.GetRequiredService<IDispatcher>(),
                     provider.GetRequiredService<ILogger<WindowTracker>>(),
@@ -69,17 +64,8 @@ public static class IServiceCollectionExtensions
             });
 
             services.AddSingleton<WindowPageCoordinator>();
-            services.AddSingleton<IWindowPageCoordinator>(provider => provider.GetRequiredService<WindowPageCoordinator>());
             services.AddSingleton<IWindowNavigationCoordinator>(provider => provider.GetRequiredService<WindowPageCoordinator>());
             services.AddSingleton<IForegroundWindowCoordinator>(provider => provider.GetRequiredService<WindowPageCoordinator>());
-            services.AddSingleton<IWindowPageMover>(provider => new WindowPageMover(provider.GetRequiredService<IWindowStore>(),
-                provider.GetRequiredService<IScroller>(),
-                provider.GetRequiredService<IPager>(),
-                () => provider.GetRequiredService<IWorkspace>().Width,
-                provider.GetRequiredService<ILogger<WindowPageMover>>()));
-            services.AddSingleton<IStickyWindowController>(provider => new StickyWindowController(provider.GetRequiredService<IWindowStore>(),
-                provider.GetRequiredService<IScroller>(),
-                provider.GetRequiredService<ILogger<StickyWindowController>>()));
             services.AddSingleton<ITrackedWindowDragController>(provider => new TrackedWindowDragController(provider.GetRequiredService<IWindowStore>(),
                 provider.GetRequiredService<IScroller>(),
                 provider.GetRequiredService<ILogger<TrackedWindowDragController>>()));

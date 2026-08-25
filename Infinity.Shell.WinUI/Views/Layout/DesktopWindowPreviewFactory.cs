@@ -1,3 +1,4 @@
+using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml.Controls;
@@ -7,9 +8,10 @@ using Windows.UI;
 namespace Infinity.Shell.WinUI;
 
 public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSurface,
+    ITrackedWindowDragController dragController,
     ILogger<DesktopWindowPreviewFactory> logger)
 {
-    internal DesktopWindowPreview Create(Canvas canvas, nint windowHandle)
+    internal DesktopWindowPreview Create(Canvas canvas, nint windowHandle, double layoutScale)
     {
         Border previewHost = new()
         {
@@ -32,6 +34,10 @@ public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSur
             windowHandle,
             previewHost,
             logger);
-        return new DesktopWindowPreview(windowHandle, host, preview);
+        return new DesktopWindowPreview(windowHandle,
+            host,
+            preview,
+            dragController,
+            layoutScale);
     }
 }

@@ -34,7 +34,7 @@ public sealed partial class SystemVisualProxyVisualPrivate :
         nint proxyUnknown = 0;
         nint proxyVisual = 0;
         Visual? visual = null;
-        IObjectReference? compositorReference;
+        IObjectReference? compositorReference = null;
         try
         {
             classId = CreateHString("Microsoft.UI.Composition.Private.SystemVisualProxyVisualPrivate");
@@ -79,7 +79,7 @@ public sealed partial class SystemVisualProxyVisualPrivate :
                 WindowsDeleteString(classId);
             }
 
-            compositorReference = null;
+            GC.KeepAlive(compositorReference);
 
             if (statics != 0)
             {

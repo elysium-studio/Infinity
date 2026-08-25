@@ -73,23 +73,11 @@
   <data name="UpdateReadyToastTitle" xml:space="preserve">
     <value>Mise à jour prête</value>
   </data>
-  <data name="AboutTitleBar.Title" xml:space="preserve">
-    <value>À propos</value>
-  </data>
   <data name="BooleanToggle.OffContent" xml:space="preserve">
     <value>Non</value>
   </data>
   <data name="BooleanToggle.OnContent" xml:space="preserve">
     <value>Oui</value>
-  </data>
-  <data name="CloseWindowButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Fermer la fenêtre</value>
-  </data>
-  <data name="DesktopBlurCard.Description" xml:space="preserve">
-    <value>Flou l'arrière-plan pendant le défilement et le filtrage</value>
-  </data>
-  <data name="DesktopBlurCard.Header" xml:space="preserve">
-    <value>Flou d'arrière-plan</value>
   </data>
   <data name="DesktopSectionTitle.Text" xml:space="preserve">
     <value>Bureau</value>
@@ -262,53 +250,11 @@
   <data name="VirtualPagesUnlimitedOption.Content" xml:space="preserve">
     <value>Illimité</value>
   </data>
-  <data name="WindowAboutMenuItem.Text" xml:space="preserve">
-    <value>À propos</value>
-  </data>
-  <data name="WindowExitMenuItem.Text" xml:space="preserve">
-    <value>Quitter</value>
-  </data>
-  <data name="WindowOptionsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Possibilités</value>
-  </data>
-  <data name="WindowPeekCard.Description" xml:space="preserve">
-    <value>Lorsque vous survolez une vignette de fenêtre ou appliquez un filtre, masquez toutes les autres fenêtres afin que seule celle (ou celles) correspondante(s) reste visible.</value>
-  </data>
-  <data name="WindowPeekCard.Header" xml:space="preserve">
-    <value>Window Peek</value>
-  </data>
   <data name="WindowSearchBox.PlaceholderText" xml:space="preserve">
     <value>Trouver une fenêtre de bureau...</value>
   </data>
   <data name="WindowsSectionTitle.Text" xml:space="preserve">
     <value>Fenêtres</value>
-  </data>
-  <data name="WindowSettingsMenuItem.Text" xml:space="preserve">
-    <value>Paramètres</value>
-  </data>
-  <data name="WindowTourMenuItem.Text" xml:space="preserve">
-    <value>Faites un tour</value>
-  </data>
-  <data name="AlwaysOpenApplicationOnPageMenuItem" xml:space="preserve">
-    <value>Toujours ouvrir cette application sur</value>
-  </data>
-  <data name="MoveWindowToPageMenuItem" xml:space="preserve">
-    <value>Déplacer la fenêtre vers</value>
-  </data>
-  <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
-    <value>Supprimer la règle d’ouverture</value>
-  </data>
-  <data name="PinWindowMenuItem" xml:space="preserve">
-    <value>Épingler sur toutes les pages</value>
-  </data>
-  <data name="UnpinWindowMenuItem" xml:space="preserve">
-    <value>Désépingler de toutes les pages</value>
-  </data>
-  <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Épinglée sur toutes les pages</value>
-  </data>
-  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Paramètres</value>
   </data>
   <data name="TourNavigationItem.Content" xml:space="preserve">
     <value>Faire une visite</value>

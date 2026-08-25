@@ -12,8 +12,6 @@ public interface IWindowNavigationCoordinator
 
     double NavigationTargetOffset { get; set; }
 
-    int PageBeforeFilter { get; set; }
-
     IntPtr PendingActivation { get; set; }
 
     void NavigateTo(IntPtr handle);

@@ -73,23 +73,11 @@
   <data name="UpdateReadyToastTitle" xml:space="preserve">
     <value>アップデートの準備ができました</value>
   </data>
-  <data name="AboutTitleBar.Title" xml:space="preserve">
-    <value>について</value>
-  </data>
   <data name="BooleanToggle.OffContent" xml:space="preserve">
     <value>いいえ</value>
   </data>
   <data name="BooleanToggle.OnContent" xml:space="preserve">
     <value>はい</value>
-  </data>
-  <data name="CloseWindowButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>ウィンドウを閉じる</value>
-  </data>
-  <data name="DesktopBlurCard.Description" xml:space="preserve">
-    <value>スクロールやフィルタリング中に背景をぼかします</value>
-  </data>
-  <data name="DesktopBlurCard.Header" xml:space="preserve">
-    <value>背景ぼかし</value>
   </data>
   <data name="DesktopSectionTitle.Text" xml:space="preserve">
     <value>デスクトップ</value>
@@ -262,53 +250,11 @@
   <data name="VirtualPagesUnlimitedOption.Content" xml:space="preserve">
     <value>無制限</value>
   </data>
-  <data name="WindowAboutMenuItem.Text" xml:space="preserve">
-    <value>について</value>
-  </data>
-  <data name="WindowExitMenuItem.Text" xml:space="preserve">
-    <value>終了</value>
-  </data>
-  <data name="WindowOptionsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>オプション</value>
-  </data>
-  <data name="WindowPeekCard.Description" xml:space="preserve">
-    <value>ウィンドウのサムネールにカーソルを合わせるとき、またはフィルターを適用するときは、他のすべてのウィンドウを非表示にして、一致するウィンドウのみが表示されるようにします。</value>
-  </data>
-  <data name="WindowPeekCard.Header" xml:space="preserve">
-    <value>Window Peek</value>
-  </data>
   <data name="WindowSearchBox.PlaceholderText" xml:space="preserve">
     <value>デスクトップウィンドウを探します...</value>
   </data>
   <data name="WindowsSectionTitle.Text" xml:space="preserve">
     <value>窓</value>
-  </data>
-  <data name="WindowSettingsMenuItem.Text" xml:space="preserve">
-    <value>設定</value>
-  </data>
-  <data name="WindowTourMenuItem.Text" xml:space="preserve">
-    <value>ツアーに参加する</value>
-  </data>
-  <data name="AlwaysOpenApplicationOnPageMenuItem" xml:space="preserve">
-    <value>このアプリを常に次のページで開く</value>
-  </data>
-  <data name="MoveWindowToPageMenuItem" xml:space="preserve">
-    <value>ウィンドウの移動先</value>
-  </data>
-  <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
-    <value>起動ページのルールを削除</value>
-  </data>
-  <data name="PinWindowMenuItem" xml:space="preserve">
-    <value>すべてのページに固定</value>
-  </data>
-  <data name="UnpinWindowMenuItem" xml:space="preserve">
-    <value>すべてのページから固定解除</value>
-  </data>
-  <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>すべてのページに固定済み</value>
-  </data>
-  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>設定</value>
   </data>
   <data name="TourNavigationItem.Content" xml:space="preserve">
     <value>ツアーに参加する</value>

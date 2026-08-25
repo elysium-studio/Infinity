@@ -73,23 +73,11 @@
   <data name="UpdateReadyToastTitle" xml:space="preserve">
     <value>업데이트 준비됨</value>
   </data>
-  <data name="AboutTitleBar.Title" xml:space="preserve">
-    <value>소개</value>
-  </data>
   <data name="BooleanToggle.OffContent" xml:space="preserve">
     <value>아니요</value>
   </data>
   <data name="BooleanToggle.OnContent" xml:space="preserve">
     <value>예</value>
-  </data>
-  <data name="CloseWindowButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>창 닫기</value>
-  </data>
-  <data name="DesktopBlurCard.Description" xml:space="preserve">
-    <value>스크롤 및 필터링 중에 배경을 흐리게 합니다.</value>
-  </data>
-  <data name="DesktopBlurCard.Header" xml:space="preserve">
-    <value>배경 흐림</value>
   </data>
   <data name="DesktopSectionTitle.Text" xml:space="preserve">
     <value>데스크탑</value>
@@ -262,53 +250,11 @@
   <data name="VirtualPagesUnlimitedOption.Content" xml:space="preserve">
     <value>무제한</value>
   </data>
-  <data name="WindowAboutMenuItem.Text" xml:space="preserve">
-    <value>소개</value>
-  </data>
-  <data name="WindowExitMenuItem.Text" xml:space="preserve">
-    <value>종료</value>
-  </data>
-  <data name="WindowOptionsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>옵션</value>
-  </data>
-  <data name="WindowPeekCard.Description" xml:space="preserve">
-    <value>창 축소판을 가리키거나 필터를 적용할 때 일치하는 창만 표시되도록 다른 모든 창을 숨깁니다.</value>
-  </data>
-  <data name="WindowPeekCard.Header" xml:space="preserve">
-    <value>Window Peek</value>
-  </data>
   <data name="WindowSearchBox.PlaceholderText" xml:space="preserve">
     <value>데스크톱 창 찾기...</value>
   </data>
   <data name="WindowsSectionTitle.Text" xml:space="preserve">
     <value>윈도우</value>
-  </data>
-  <data name="WindowSettingsMenuItem.Text" xml:space="preserve">
-    <value>설정</value>
-  </data>
-  <data name="WindowTourMenuItem.Text" xml:space="preserve">
-    <value>둘러보기</value>
-  </data>
-  <data name="AlwaysOpenApplicationOnPageMenuItem" xml:space="preserve">
-    <value>항상 이 페이지에서 앱 열기</value>
-  </data>
-  <data name="MoveWindowToPageMenuItem" xml:space="preserve">
-    <value>창 이동 위치</value>
-  </data>
-  <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
-    <value>시작 페이지 규칙 제거</value>
-  </data>
-  <data name="PinWindowMenuItem" xml:space="preserve">
-    <value>모든 페이지에 고정</value>
-  </data>
-  <data name="UnpinWindowMenuItem" xml:space="preserve">
-    <value>모든 페이지에서 고정 해제</value>
-  </data>
-  <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>모든 페이지에 고정됨</value>
-  </data>
-  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>설정</value>
   </data>
   <data name="TourNavigationItem.Content" xml:space="preserve">
     <value>둘러보기</value>

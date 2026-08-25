@@ -12,8 +12,7 @@ namespace Infinity.Shell;
 public sealed partial class DesktopOverviewViewModel :
     ObservableViewModel,
     IRecipient<NavigationCompletedEventArgs>,
-    IRecipient<WindowActivationRequestedEventArgs>,
-    IRecipient<FilterChangedEventArgs>
+    IRecipient<WindowActivationRequestedEventArgs>
 {
     private readonly IDispatcher dispatcher;
     private readonly IModifierKeyState modifierKeyState;
@@ -23,7 +22,6 @@ public sealed partial class DesktopOverviewViewModel :
     private readonly IWindowPreviewSurface windowPreviewSurface;
     private readonly IWindowNavigationCoordinator windowNavigationCoordinator;
     private readonly IInfinityGlanceBridge glanceBridge;
-    private bool filterActive;
     private bool dismissAfterPageNavigation;
     private bool isDesktopPreviewExitAnimationCompleted;
     private bool isWindowSelectionNavigationPending;
@@ -43,7 +41,7 @@ public sealed partial class DesktopOverviewViewModel :
 
     [ObservableProperty]
     private bool isDesktopPreviewReadyToClose;
-    
+
     partial void OnIsOpenChanged(bool value)
     {
         glanceBridge.SetPageNavigationSurfaceVisible(InfinityPageNavigationSurface.DesktopOverview, value);
@@ -89,7 +87,6 @@ public sealed partial class DesktopOverviewViewModel :
     {
         Messenger.Register<NavigationCompletedEventArgs>(this);
         Messenger.Register<WindowActivationRequestedEventArgs>(this);
-        Messenger.Register<FilterChangedEventArgs>(this);
     }
 
     public void CompleteDesktopPreview()
@@ -170,7 +167,7 @@ public sealed partial class DesktopOverviewViewModel :
             isWindowSelectionNavigationPending = false;
             TryMarkDesktopPreviewReadyToClose();
 
-            if (!filterActive && !IsDesktopPreviewActive)
+            if (!IsDesktopPreviewActive)
             {
                 IsOpen = false;
             }
@@ -179,20 +176,9 @@ public sealed partial class DesktopOverviewViewModel :
     public void Receive(WindowActivationRequestedEventArgs args) =>
         dispatcher.Dispatch(() =>
         {
-            if (!filterActive && !IsDesktopPreviewActive)
-            {
-                IsOpen = false;
-            }
-        });
-
-    public void Receive(FilterChangedEventArgs args) =>
-        dispatcher.Dispatch(() =>
-        {
-            filterActive = args.IsActive;
-
             if (!IsDesktopPreviewActive)
             {
-                IsOpen = args.IsActive;
+                IsOpen = false;
             }
         });
 

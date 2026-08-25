@@ -13,12 +13,17 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 {
     private readonly Dictionary<nint, DesktopWindowPreview> previews = [];
     private Canvas? host;
+    private string filterText = string.Empty;
     private bool interactionEnabled;
     private bool disposed;
 
     public event Action<nint>? WindowInvoked;
 
-    public IReadOnlyList<TrackedWindow> Synchronise(Canvas canvas, IEnumerable<TrackedWindow> trackedWindows)
+    public event Action<nint>? WindowPositionChanged;
+
+    public IReadOnlyList<TrackedWindow> Synchronise(Canvas canvas,
+        IEnumerable<TrackedWindow> trackedWindows,
+        double layoutScale)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
         host = canvas;
@@ -38,13 +43,15 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
             if (!previews.TryGetValue(trackedWindow.Handle, out DesktopWindowPreview? preview))
             {
-                preview = factory.Create(canvas, trackedWindow.Handle);
+                preview = factory.Create(canvas, trackedWindow.Handle, layoutScale);
                 preview.Invoked += HandleWindowInvoked;
+                preview.PositionChanged += HandleWindowPositionChanged;
                 preview.SetInteractionEnabled(interactionEnabled);
                 previews.Add(trackedWindow.Handle, preview);
             }
 
             preview.RefreshSourceSize(trackedWindow, geometryReader);
+            preview.SetFilterMatch(WindowTitleFilter.Matches(trackedWindow.Title, filterText));
             preview.SetZIndex(zIndex);
         }
 
@@ -53,11 +60,35 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
     internal bool TryGet(nint handle, out DesktopWindowPreview? preview) => previews.TryGetValue(handle, out preview);
 
-    public void RefreshSourceSize(TrackedWindow trackedWindow)
+    public void SetFilter(string value, IEnumerable<TrackedWindow> trackedWindows)
+    {
+        filterText = value;
+
+        foreach (TrackedWindow trackedWindow in trackedWindows)
+        {
+            if (previews.TryGetValue(trackedWindow.Handle, out DesktopWindowPreview? preview))
+            {
+                preview.SetFilterMatch(WindowTitleFilter.Matches(trackedWindow.Title, filterText));
+            }
+        }
+    }
+
+    public nint GetFirstMatchingWindow(IEnumerable<TrackedWindow> trackedWindows)
+    {
+        return trackedWindows
+            .Where(window => WindowTitleFilter.Matches(window.Title, filterText))
+            .OrderBy(window => window.CanvasX)
+            .ThenBy(window => window.CanvasY)
+            .Select(window => window.Handle)
+            .FirstOrDefault();
+    }
+
+    public void Refresh(TrackedWindow trackedWindow)
     {
         if (previews.TryGetValue(trackedWindow.Handle, out DesktopWindowPreview? preview))
         {
             preview.RefreshSourceSize(trackedWindow, geometryReader);
+            preview.SetFilterMatch(WindowTitleFilter.Matches(trackedWindow.Title, filterText));
         }
     }
 
@@ -84,12 +115,14 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         foreach (DesktopWindowPreview preview in previews.Values)
         {
             preview.Invoked -= HandleWindowInvoked;
+            preview.PositionChanged -= HandleWindowPositionChanged;
             preview.Dispose();
         }
 
         previews.Clear();
         host?.Children.Clear();
         host = null;
+        filterText = string.Empty;
         interactionEnabled = false;
     }
 
@@ -113,9 +146,12 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         }
 
         preview.Invoked -= HandleWindowInvoked;
+        preview.PositionChanged -= HandleWindowPositionChanged;
         preview.Dispose();
         host?.Children.Remove(preview.Host);
     }
 
     private void HandleWindowInvoked(nint handle) => WindowInvoked?.Invoke(handle);
+
+    private void HandleWindowPositionChanged(nint handle) => WindowPositionChanged?.Invoke(handle);
 }

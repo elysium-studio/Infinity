@@ -31,6 +31,7 @@ public sealed class DesktopModule :
                 provider.GetRequiredService<IShellLayoutCalculator>(),
                 provider.GetRequiredService<IPanState>(),
                 provider.GetRequiredService<IScroller>(),
+                provider.GetRequiredService<IPager>(),
                 provider.GetRequiredService<IWorkspace>(),
                 provider.GetRequiredService<ITaskbarLocator>(),
                 provider.GetRequiredService<DesktopPageLayoutCalculator>(),

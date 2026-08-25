@@ -72,17 +72,6 @@ public sealed class DesktopSettingsModule :
                     provider.GetRequiredService<IHotKeysBuilder>(),
                     provider.GetRequiredService<HotKeysBuilderOptions>(),
                     provider.GetRequiredService<IKeyLabelProvider>(),
-                    provider.GetRequiredService<ITextLocalizer>()))
-            .AddViewFor<WindowPeekView, IDesktopViewModel, WindowPeekViewModel>(ServiceLifetime.Transient,
-                provider => new WindowPeekView(),
-                provider => new WindowPeekViewModel(provider,
-                    provider.GetRequiredService<IServiceFactory>(),
-                    provider.GetRequiredService<IMessenger>(),
-                    provider.GetRequiredService<IDisposer>(),
-                    provider.GetRequiredService<IDispatcher>(),
-                    provider.GetRequiredService<Settings>(),
-                    provider.GetRequiredService<IWritableOptions<Settings>>(),
-                    config => config.HideFilteredWindows,
-                    (config, hideFilteredWindows) => config.HideFilteredWindows = hideFilteredWindows));
+                    provider.GetRequiredService<ITextLocalizer>()));
     }
 }
