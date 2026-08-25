@@ -1,5 +1,6 @@
 using Elysium.Application.Abstractions;
 using Elysium.Presentation.Abstractions;
+using Infinity.Application.Abstractions;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;

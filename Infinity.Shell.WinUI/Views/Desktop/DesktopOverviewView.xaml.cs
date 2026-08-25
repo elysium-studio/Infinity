@@ -25,11 +25,7 @@ public sealed partial class DesktopOverviewView :
     private bool isDesktopPreviewAnimationStarted;
     private int openingGeneration;
 
-    public DesktopOverviewView(DesktopScrollPreviewView desktopScrollPreview,
-        DesktopOverviewBackdropAnimator backdropAnimator,
-        DesktopOverviewWallpaperPresenter wallpaperPresenter,
-        WindowInputTransparencyController inputController,
-        IDesktopBackgroundSource backgroundSource)
+    public DesktopOverviewView(DesktopScrollPreviewView desktopScrollPreview, DesktopOverviewBackdropAnimator backdropAnimator, DesktopOverviewWallpaperPresenter wallpaperPresenter, WindowInputTransparencyController inputController, IDesktopBackgroundSource backgroundSource)
     {
         InitializeComponent();
 
@@ -40,7 +36,9 @@ public sealed partial class DesktopOverviewView :
         this.inputController = inputController;
         this.backgroundSource = backgroundSource;
         dispatcherQueue = DispatcherQueue;
+
         DesktopPreviewContent.Content = desktopScrollPreview;
+
         desktopScrollPreview.BackgroundInvoked += HandleBackgroundInvoked;
         desktopScrollPreview.InputFocusRequested += HandleInputFocusRequested;
         desktopScrollPreview.PageInvoked += HandlePageInvoked;
@@ -137,8 +135,7 @@ public sealed partial class DesktopOverviewView :
             }
         }
 
-        if (args.PropertyName == nameof(DesktopOverviewViewModel.IsDesktopPreviewReadyToClose) &&
-            ViewModel.IsDesktopPreviewReadyToClose)
+        if (args.PropertyName == nameof(DesktopOverviewViewModel.IsDesktopPreviewReadyToClose) && ViewModel.IsDesktopPreviewReadyToClose)
         {
             FinishDesktopPreview();
         }
@@ -187,8 +184,7 @@ public sealed partial class DesktopOverviewView :
     private async void OpenOverview(int generation)
     {
         DesktopBackground background = backgroundSource.GetBackground();
-        bool prepared = await wallpaperPresenter.PrepareAsync(BackgroundSurface,
-            background);
+        bool prepared = await wallpaperPresenter.PrepareAsync(BackgroundSurface, background);
 
         if (!prepared)
         {
@@ -234,8 +230,7 @@ public sealed partial class DesktopOverviewView :
         isDesktopPreviewAnimationStarted = true;
         dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
         {
-            if (desktopScrollPreview.IsRunning && IsOpen && ViewModel.IsDesktopPreviewActive &&
-                !ViewModel.IsDesktopPreviewCompletionRequested)
+            if (desktopScrollPreview.IsRunning && IsOpen && ViewModel.IsDesktopPreviewActive && !ViewModel.IsDesktopPreviewCompletionRequested)
             {
                 desktopScrollPreview.AnimateInward();
                 WindowExtensions.SetTopMost(Handle, true);
@@ -323,11 +318,9 @@ public sealed partial class DesktopOverviewView :
         WindowExtensions.SetTopMost(Handle, false);
     }
 
-    private void HandleBackgroundInvoked(object? sender, EventArgs args) =>
-        ViewModel.DismissDesktopPreview();
+    private void HandleBackgroundInvoked(object? sender, EventArgs args) => ViewModel.DismissDesktopPreview();
 
-    private void HandleInputFocusRequested(object? sender, EventArgs args) =>
-        inputController.SetInputEnabled(Handle, true);
+    private void HandleInputFocusRequested(object? sender, EventArgs args) => inputController.SetInputEnabled(Handle, true);
 
     private void HandlePageInvoked(int page) => ViewModel.SelectPage(page);
 

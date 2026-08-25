@@ -18,32 +18,30 @@ public sealed partial class DesktopPageTitleEditor :
 
     private bool disposed;
 
-    public DesktopPageTitleEditor() :
-        this(string.Empty, string.Empty, string.Empty)
+    public DesktopPageTitleEditor() : this(string.Empty, string.Empty, string.Empty)
     {
     }
 
-    public DesktopPageTitleEditor(string editLabel,
-        string saveLabel,
-        string cancelLabel)
+    public DesktopPageTitleEditor(string editLabel, string saveLabel, string cancelLabel)
     {
         ViewModel = new DesktopPageTitleViewModel(editLabel, saveLabel, cancelLabel);
 
         InitializeComponent();
+
         ViewModel.PropertyChanged += HandleViewModelPropertyChanged;
+
         ElementCompositionPreview.SetIsTranslationEnabled(HeaderSurface, true);
         HeaderSurface.Shadow = new ThemeShadow();
         HeaderSurface.Translation = new Vector3(0, 0, ShadowDepth);
+
         Hide();
     }
 
     public DesktopPageTitleViewModel ViewModel { get; }
 
-    public Visibility ToDisplayVisibility(bool isEditing) =>
-        isEditing ? Visibility.Collapsed : Visibility.Visible;
+    public Visibility ToDisplayVisibility(bool isEditing) => isEditing ? Visibility.Collapsed : Visibility.Visible;
 
-    public Visibility ToEditVisibility(bool isEditing) =>
-        isEditing ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility ToEditVisibility(bool isEditing) => isEditing ? Visibility.Visible : Visibility.Collapsed;
 
     public void Show()
     {
@@ -65,7 +63,9 @@ public sealed partial class DesktopPageTitleEditor :
         }
 
         disposed = true;
+
         ViewModel.PropertyChanged -= HandleViewModelPropertyChanged;
+
         GC.SuppressFinalize(this);
     }
 

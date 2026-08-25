@@ -4,9 +4,7 @@ using System;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopOverviewDragScroller(IPanState panState,
-    IScroller scroller,
-    Func<WindowDragScrollerConfiguration> configurationFactory) :
+public sealed class DesktopOverviewDragScroller(IPanState panState, IScroller scroller, Func<WindowDragScrollerConfiguration> configurationFactory) :
     IDisposable
 {
     private const double EdgeThreshold = 160;
@@ -18,6 +16,10 @@ public sealed class DesktopOverviewDragScroller(IPanState panState,
     private double scrollAmount;
     private int direction;
     private bool disposed;
+
+    public event Action? ScrollLimitReached;
+
+    public bool IsActive => timer?.IsRunning == true;
 
     public void Update(DispatcherQueue dispatcherQueue, double pointerX, double viewportWidth)
     {
@@ -102,13 +104,12 @@ public sealed class DesktopOverviewDragScroller(IPanState panState,
     private void HandleTick(DispatcherQueueTimer sender, object args)
     {
         double current = panState.Offset;
-        double next = Math.Clamp(current + (scrollAmount * direction),
-            panState.MinOffset,
-            panState.MaxOffset);
+        double next = Math.Clamp(current + (scrollAmount * direction), panState.MinOffset, panState.MaxOffset);
 
         if (next == current)
         {
             Stop();
+            ScrollLimitReached?.Invoke();
             return;
         }
 

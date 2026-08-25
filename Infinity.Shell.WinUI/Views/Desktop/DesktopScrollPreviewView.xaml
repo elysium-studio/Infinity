@@ -9,6 +9,7 @@
         <KeyboardAccelerator Key="Escape" Invoked="HandleEscapeInvoked" />
     </UserControl.KeyboardAccelerators>
     <Grid>
+        <Canvas x:Name="PageShadowCanvas" IsHitTestVisible="False" />
         <Grid x:Name="PreviewSurface">
             <Grid
                 x:Name="DismissSurface"

@@ -1,5 +1,6 @@
 using Elysium.Application.DependencyInjection;
 using Elysium.UI.WinUI;
+using Infinity.Application.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Infinity.Shell.WinUI;

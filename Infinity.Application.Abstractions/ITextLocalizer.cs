@@ -1,4 +1,4 @@
-namespace Infinity.Shell;
+namespace Infinity.Application.Abstractions;
 
 public interface ITextLocalizer
 {

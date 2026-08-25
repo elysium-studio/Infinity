@@ -7,8 +7,7 @@ using System.Linq;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory factory,
-    IWindowGeometryReader geometryReader) :
+public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory factory, IWindowGeometryReader geometryReader) :
     IDisposable
 {
     private readonly Dictionary<nint, DesktopWindowPreview> previews = [];
@@ -24,14 +23,13 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
     public event Action<nint>? WindowPositionChanged;
 
-    public IReadOnlyList<TrackedWindow> Synchronise(Canvas canvas,
-        Canvas focusCanvas,
-        IEnumerable<TrackedWindow> trackedWindows,
-        double layoutScale)
+    public IReadOnlyList<TrackedWindow> Synchronise(Canvas canvas, Canvas focusCanvas, IEnumerable<TrackedWindow> trackedWindows, double layoutScale)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
+
         host = canvas;
         focusHost = focusCanvas;
+
         TrackedWindow[] orderedWindows = OrderWindows(trackedWindows);
         HashSet<nint> currentHandles = [.. orderedWindows.Select(window => window.Handle)];
 
@@ -159,8 +157,10 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         }
 
         previews.Clear();
+
         host?.Children.Clear();
         focusHost?.Children.Clear();
+
         host = null;
         focusHost = null;
         filterText = string.Empty;
@@ -177,6 +177,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         }
 
         disposed = true;
+
         Clear();
         GC.SuppressFinalize(this);
     }
@@ -206,8 +207,18 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         }
     }
 
-    public void RefreshSelection(IEnumerable<TrackedWindow> trackedWindows) =>
-        EnsureSelection(trackedWindows);
+    public void SetPageReorderState(DesktopPageReorderPreviewState? state, IEnumerable<TrackedWindow> trackedWindows, double workspaceWidth)
+    {
+        foreach (TrackedWindow window in trackedWindows)
+        {
+            if (previews.TryGetValue(window.Handle, out DesktopWindowPreview? preview))
+            {
+                preview.SetPagePromoted(state is not null && PageReorderMapping.GetPage(window, workspaceWidth) == state.SourcePage);
+            }
+        }
+    }
+
+    public void RefreshSelection(IEnumerable<TrackedWindow> trackedWindows) => EnsureSelection(trackedWindows);
 
     private void HandleWindowInvoked(nint handle) => WindowInvoked?.Invoke(handle);
 
@@ -221,6 +232,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         }
 
         pendingForegroundHandle = handle;
+
         DesktopWindowPreview[] orderedPreviews = [.. previews
             .Where(item => item.Key != handle)
             .OrderBy(item => item.Value.ZIndex)
@@ -246,8 +258,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
             return orderedWindows;
         }
 
-        int foregroundIndex = Array.FindIndex(orderedWindows,
-            window => window.Handle == pendingForegroundHandle);
+        int foregroundIndex = Array.FindIndex(orderedWindows, window => window.Handle == pendingForegroundHandle);
 
         if (foregroundIndex < 0)
         {
@@ -264,8 +275,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
         orderedWindows[^1] = foregroundWindow;
 
-        if (orderedWindows.All(window => window.Handle == pendingForegroundHandle ||
-            foregroundWindow.ZIndex <= window.ZIndex))
+        if (orderedWindows.All(window => window.Handle == pendingForegroundHandle || foregroundWindow.ZIndex <= window.ZIndex))
         {
             pendingForegroundHandle = 0;
         }
@@ -281,9 +291,8 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         }
 
         TrackedWindow[] matches = GetOrderedMatches(trackedWindows);
-        nint handle = matches.Any(window => window.Handle == selectedHandle)
-            ? selectedHandle
-            : matches.FirstOrDefault()?.Handle ?? 0;
+        nint handle = matches.Any(window => window.Handle == selectedHandle) ? selectedHandle : matches.FirstOrDefault()?.Handle ?? 0;
+
         return SetSelected(handle);
     }
 

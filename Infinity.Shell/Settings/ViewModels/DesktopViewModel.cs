@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Presentation;
+using Infinity.Application.Abstractions;
 
 namespace Infinity.Shell;
 

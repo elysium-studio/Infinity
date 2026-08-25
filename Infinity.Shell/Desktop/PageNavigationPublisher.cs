@@ -5,11 +5,7 @@ using System.Text.Json;
 
 namespace Infinity.Shell;
 
-public sealed class PageNavigationPublisher(IDispatcher dispatcher,
-    IPager pager,
-    IInfinityGlanceBridge glanceBridge,
-    PageTitleStore pageTitleStore,
-    ILogger<PageNavigationPublisher> logger)
+public sealed class PageNavigationPublisher(IDispatcher dispatcher, IPager pager, IInfinityGlanceBridge glanceBridge, PageTitleStore pageTitleStore, ILogger<PageNavigationPublisher> logger)
 {
     private bool started;
 
@@ -44,8 +40,7 @@ public sealed class PageNavigationPublisher(IDispatcher dispatcher,
 
     private async void HandleGlanceMessageReceived(object? sender, InfinityGlanceMessageReceivedEventArgs args)
     {
-        if (!string.Equals(args.Capability, InfinityGlanceTopics.PagesCapability, StringComparison.OrdinalIgnoreCase) ||
-            !string.Equals(args.Topic, InfinityGlanceTopics.PageTitleUpdate, StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(args.Capability, InfinityGlanceTopics.PagesCapability, StringComparison.OrdinalIgnoreCase) || !string.Equals(args.Topic, InfinityGlanceTopics.PageTitleUpdate, StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
@@ -77,9 +72,7 @@ public sealed class PageNavigationPublisher(IDispatcher dispatcher,
 
     private void PublishPageNavigation() => PublishPageNavigation(pager.CurrentPage);
 
-    private void PublishPageNavigation(int page)
-        => PublishPageNavigation(page, pageTitleStore.GetTitle(page));
+    private void PublishPageNavigation(int page) => PublishPageNavigation(page, pageTitleStore.GetTitle(page));
 
-    private void PublishPageNavigation(int page, string title) =>
-        glanceBridge.PublishPageNavigation(new InfinityPageNavigationState(page, page + 1, title));
+    private void PublishPageNavigation(int page, string title) => glanceBridge.PublishPageNavigation(new InfinityPageNavigationState(page, page + 1, title));
 }

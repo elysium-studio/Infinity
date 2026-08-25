@@ -15,6 +15,7 @@ internal sealed class DesktopWindowPreview :
     private const float ShadowDepth = 72;
     private const double DragThreshold = 4;
     private const int DraggedZIndex = 1_000_000;
+    private const int DraggedPageZIndex = 999_000;
 
     private readonly ThumbnailCompositionPreview? preview;
     private readonly Border focusHost;
@@ -40,21 +41,13 @@ internal sealed class DesktopWindowPreview :
     private bool interactionEnabled;
     private bool isFilterMatch = true;
     private bool isDragging;
+    private bool isPagePromoted;
     private bool isPromoted;
     private bool suppressNextTap;
     private bool disposed;
     private int zIndex;
 
-    public DesktopWindowPreview(nint windowHandle,
-        Border host,
-        Border focusHost,
-        ThumbnailCompositionPreview? preview,
-        Grid focusVisual,
-        ITrackedWindowDragController dragController,
-        IWindowNavigationCoordinator windowNavigationCoordinator,
-        DesktopOverviewDragScroller overviewDragScroller,
-        DesktopWindowDragDeltaResolver dragDeltaResolver,
-        double layoutScale)
+    public DesktopWindowPreview(nint windowHandle, Border host, Border focusHost, ThumbnailCompositionPreview? preview, Grid focusVisual, ITrackedWindowDragController dragController, IWindowNavigationCoordinator windowNavigationCoordinator, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragDeltaResolver dragDeltaResolver, double layoutScale)
     {
         this.windowHandle = windowHandle;
         Host = host;
@@ -67,6 +60,7 @@ internal sealed class DesktopWindowPreview :
         this.dragDeltaResolver = dragDeltaResolver;
         this.layoutScale = double.IsFinite(layoutScale) && layoutScale > 0 ? layoutScale : 1;
         shadowDepth = ToFloat(ShadowDepth / this.layoutScale);
+
         Host.PointerPressed += HandlePointerPressed;
         Host.PointerMoved += HandlePointerMoved;
         Host.PointerReleased += HandlePointerReleased;
@@ -93,11 +87,7 @@ internal sealed class DesktopWindowPreview :
 
     public void RefreshSourceSize(TrackedWindow trackedWindow, IWindowGeometryReader geometryReader)
     {
-        if (geometryReader.TryReadVisibleGeometry(trackedWindow.Handle,
-            out _,
-            out _,
-            out int visibleWidth,
-            out int visibleHeight))
+        if (geometryReader.TryReadVisibleGeometry(trackedWindow.Handle, out _, out _, out int visibleWidth, out int visibleHeight))
         {
             SourceWidth = visibleWidth;
             SourceHeight = visibleHeight;
@@ -111,12 +101,18 @@ internal sealed class DesktopWindowPreview :
     public void SetZIndex(int value)
     {
         zIndex = value;
+        ApplyZIndex();
+    }
 
-        if (!isPromoted)
+    public void SetPagePromoted(bool value)
+    {
+        if (isPagePromoted == value)
         {
-            Canvas.SetZIndex(Host, value);
-            Canvas.SetZIndex(focusHost, value);
+            return;
         }
+
+        isPagePromoted = value;
+        ApplyZIndex();
     }
 
     public void SetInteractionEnabled(bool value)
@@ -148,8 +144,7 @@ internal sealed class DesktopWindowPreview :
         ApplyInteractionState();
     }
 
-    public void SetSelected(bool value) =>
-        focusVisual.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+    public void SetSelected(bool value) => focusVisual.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
 
     public void Activate()
     {
@@ -157,18 +152,11 @@ internal sealed class DesktopWindowPreview :
         Foregrounded?.Invoke(windowHandle);
     }
 
-    public void Update(double x,
-        double y,
-        double width,
-        double height,
-        TimeSpan? transitionDuration = null)
+    public void Update(double x, double y, double width, double height, TimeSpan? transitionDuration = null)
     {
-        Host.TranslationTransition = transitionDuration.HasValue
-            ? new Vector3Transition { Duration = transitionDuration.Value }
-            : null;
-        focusHost.TranslationTransition = transitionDuration.HasValue
-            ? new Vector3Transition { Duration = transitionDuration.Value }
-            : null;
+        Host.TranslationTransition = transitionDuration.HasValue ? new Vector3Transition { Duration = transitionDuration.Value } : null;
+        focusHost.TranslationTransition = transitionDuration.HasValue ? new Vector3Transition { Duration = transitionDuration.Value } : null;
+
         if (isDragging)
         {
             dragHorizontalDelta += this.x - x;
@@ -205,20 +193,22 @@ internal sealed class DesktopWindowPreview :
         }
 
         disposed = true;
+
         CompleteDrag();
         Host.ReleasePointerCaptures();
+
         Host.PointerPressed -= HandlePointerPressed;
         Host.PointerMoved -= HandlePointerMoved;
         Host.PointerReleased -= HandlePointerReleased;
         Host.PointerCanceled -= HandlePointerCanceled;
         Host.PointerCaptureLost -= HandlePointerCaptureLost;
         Host.Tapped -= HandleTapped;
+
         preview?.Dispose();
         GC.SuppressFinalize(this);
     }
 
-    private static float ToFloat(double value) =>
-        (float)Math.Clamp(value, -float.MaxValue, float.MaxValue);
+    private static float ToFloat(double value) => (float)Math.Clamp(value, -float.MaxValue, float.MaxValue);
 
     private void HandleTapped(object sender, TappedRoutedEventArgs args)
     {
@@ -254,6 +244,7 @@ internal sealed class DesktopWindowPreview :
         dragCoordinateRoot = coordinateRoot;
         dragStartPoint = args.GetCurrentPoint(coordinateRoot).Position;
         dragLastPoint = dragStartPoint;
+
         Activate();
         SetPromoted(true);
 
@@ -316,8 +307,10 @@ internal sealed class DesktopWindowPreview :
         }
 
         bool wasDragging = isDragging;
+
         CompleteDrag();
         Host.ReleasePointerCapture(args.Pointer);
+
         args.Handled = wasDragging;
     }
 
@@ -359,14 +352,14 @@ internal sealed class DesktopWindowPreview :
         dragHorizontalDelta = 0;
         dragVerticalDelta = 0;
         isDragging = false;
+
         SetPromoted(false);
 
         if (wasDragging)
         {
-            double resolvedHorizontalDelta = dragDeltaResolver.ResolveHorizontalDelta(windowHandle,
-                horizontalDelta,
-                initialScrollOffset);
+            double resolvedHorizontalDelta = dragDeltaResolver.ResolveHorizontalDelta(windowHandle, horizontalDelta, initialScrollOffset);
             bool moved = dragController.Move(windowHandle, resolvedHorizontalDelta, verticalDelta);
+
             dragController.End(windowHandle);
 
             if (moved)
@@ -381,9 +374,8 @@ internal sealed class DesktopWindowPreview :
 
     private void ApplyTranslation()
     {
-        Vector3 translation = new(ToFloat(x + dragHorizontalDelta),
-            ToFloat(y + dragVerticalDelta),
-            shadowDepth);
+        Vector3 translation = new(ToFloat(x + dragHorizontalDelta), ToFloat(y + dragVerticalDelta), shadowDepth);
+
         Host.Translation = translation;
         focusHost.Translation = translation;
     }
@@ -396,7 +388,13 @@ internal sealed class DesktopWindowPreview :
         }
 
         isPromoted = value;
-        int valueToApply = value ? DraggedZIndex : zIndex;
+        ApplyZIndex();
+    }
+
+    private void ApplyZIndex()
+    {
+        int valueToApply = isPromoted ? DraggedZIndex : isPagePromoted ? DraggedPageZIndex + Math.Clamp(zIndex, 0, DraggedZIndex - DraggedPageZIndex - 1) : zIndex;
+
         Canvas.SetZIndex(Host, valueToApply);
         Canvas.SetZIndex(focusHost, valueToApply);
     }

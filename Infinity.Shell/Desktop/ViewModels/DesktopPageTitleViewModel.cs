@@ -3,9 +3,7 @@ using System;
 
 namespace Infinity.Shell;
 
-public sealed partial class DesktopPageTitleViewModel(string editLabel,
-    string saveLabel,
-    string cancelLabel) :
+public sealed partial class DesktopPageTitleViewModel(string editLabel, string saveLabel, string cancelLabel) :
     ObservableObject
 {
     [ObservableProperty]

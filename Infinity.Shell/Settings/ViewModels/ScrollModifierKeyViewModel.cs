@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
 using Elysium.Presentation;
+using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 
 namespace Infinity.Shell;

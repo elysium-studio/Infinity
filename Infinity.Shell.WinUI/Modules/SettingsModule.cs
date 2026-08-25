@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Application.DependencyInjection;
 using Elysium.Presentation.Abstractions;
+using Infinity.Application.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
 
