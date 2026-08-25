@@ -17,6 +17,7 @@ internal sealed class DesktopWindowPreview :
     private const int DraggedZIndex = 1_000_000;
 
     private readonly ThumbnailCompositionPreview? preview;
+    private readonly Grid focusVisual;
     private readonly ITrackedWindowDragController dragController;
     private readonly IWindowPreviewSurface previewSurface;
     private readonly Canvas coordinateHost;
@@ -41,6 +42,7 @@ internal sealed class DesktopWindowPreview :
     public DesktopWindowPreview(nint windowHandle,
         Border host,
         ThumbnailCompositionPreview? preview,
+        Grid focusVisual,
         ITrackedWindowDragController dragController,
         IWindowPreviewSurface previewSurface,
         Canvas coordinateHost,
@@ -49,6 +51,7 @@ internal sealed class DesktopWindowPreview :
         this.windowHandle = windowHandle;
         Host = host;
         this.preview = preview;
+        this.focusVisual = focusVisual;
         this.dragController = dragController;
         this.previewSurface = previewSurface;
         this.coordinateHost = coordinateHost;
@@ -132,6 +135,9 @@ internal sealed class DesktopWindowPreview :
         Host.Opacity = value ? 1 : 0;
         ApplyInteractionState();
     }
+
+    public void SetSelected(bool value) =>
+        focusVisual.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
 
     public void Update(double x,
         double y,

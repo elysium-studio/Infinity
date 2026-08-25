@@ -33,6 +33,7 @@
                 IsHitTestVisible="False"
                 IsTabStop="False"
                 KeyDown="HandleWindowSearchBoxKeyDown"
+                KeyUp="HandleWindowSearchBoxKeyUp"
                 TextChanged="HandleWindowSearchBoxTextChanged"
                 VerticalContentAlignment="Center">
                 <TextBox.Resources>

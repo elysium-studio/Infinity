@@ -14,6 +14,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
     private readonly Dictionary<nint, DesktopWindowPreview> previews = [];
     private Canvas? host;
     private nint promotedWindowHandle;
+    private nint selectedHandle;
     private string filterText = string.Empty;
     private bool interactionEnabled;
     private bool disposed;
@@ -58,32 +59,55 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
             preview.SetZIndex(zIndex);
         }
 
+        EnsureSelection(orderedWindows);
+
         return orderedWindows;
     }
 
     internal bool TryGet(nint handle, out DesktopWindowPreview? preview) => previews.TryGetValue(handle, out preview);
 
-    public void SetFilter(string value, IEnumerable<TrackedWindow> trackedWindows)
+    public nint SetFilter(string value, IEnumerable<TrackedWindow> trackedWindows)
     {
         filterText = value;
+        TrackedWindow[] windows = [.. trackedWindows];
 
-        foreach (TrackedWindow trackedWindow in trackedWindows)
+        foreach (TrackedWindow trackedWindow in windows)
         {
             if (previews.TryGetValue(trackedWindow.Handle, out DesktopWindowPreview? preview))
             {
                 preview.SetFilterMatch(WindowTitleFilter.Matches(trackedWindow.Title, filterText));
             }
         }
+
+        return EnsureSelection(windows);
     }
 
-    public nint GetFirstMatchingWindow(IEnumerable<TrackedWindow> trackedWindows)
+    public nint GetSelectedMatchingWindow(IEnumerable<TrackedWindow> trackedWindows)
     {
-        return trackedWindows
-            .Where(window => WindowTitleFilter.Matches(window.Title, filterText))
-            .OrderBy(window => window.CanvasX)
-            .ThenBy(window => window.CanvasY)
-            .Select(window => window.Handle)
-            .FirstOrDefault();
+        TrackedWindow[] matches = GetOrderedMatches(trackedWindows);
+
+        if (matches.Any(window => window.Handle == selectedHandle))
+        {
+            return selectedHandle;
+        }
+
+        return SetSelected(matches.FirstOrDefault()?.Handle ?? 0);
+    }
+
+    public nint SelectNext(bool forward, IEnumerable<TrackedWindow> trackedWindows)
+    {
+        TrackedWindow[] matches = GetOrderedMatches(trackedWindows);
+
+        if (matches.Length == 0)
+        {
+            return SetSelected(0);
+        }
+
+        int currentIndex = Array.FindIndex(matches, window => window.Handle == selectedHandle);
+        int nextIndex = forward
+            ? currentIndex >= 0 && currentIndex < matches.Length - 1 ? currentIndex + 1 : 0
+            : currentIndex > 0 ? currentIndex - 1 : matches.Length - 1;
+        return SetSelected(matches[nextIndex].Handle);
     }
 
     public void Refresh(TrackedWindow trackedWindow)
@@ -128,6 +152,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         host?.Children.Clear();
         host = null;
         filterText = string.Empty;
+        selectedHandle = 0;
         interactionEnabled = false;
         promotedWindowHandle = 0;
     }
@@ -162,7 +187,15 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         {
             promotedWindowHandle = 0;
         }
+
+        if (selectedHandle == handle)
+        {
+            selectedHandle = 0;
+        }
     }
+
+    public void RefreshSelection(IEnumerable<TrackedWindow> trackedWindows) =>
+        EnsureSelection(trackedWindows);
 
     private void HandleWindowInvoked(nint handle) => WindowInvoked?.Invoke(handle);
 
@@ -191,5 +224,53 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         {
             promotedWindowHandle = 0;
         }
+    }
+
+    private nint EnsureSelection(IEnumerable<TrackedWindow> trackedWindows)
+    {
+        if (string.IsNullOrWhiteSpace(filterText))
+        {
+            return SetSelected(0);
+        }
+
+        TrackedWindow[] matches = GetOrderedMatches(trackedWindows);
+        nint handle = matches.Any(window => window.Handle == selectedHandle)
+            ? selectedHandle
+            : matches.FirstOrDefault()?.Handle ?? 0;
+        return SetSelected(handle);
+    }
+
+    private TrackedWindow[] GetOrderedMatches(IEnumerable<TrackedWindow> trackedWindows) =>
+        [.. trackedWindows
+            .Where(window => WindowTitleFilter.Matches(window.Title, filterText))
+            .OrderBy(window => window.CanvasX)
+            .ThenBy(window => window.CanvasY)
+            .ThenBy(window => (long)window.Handle)];
+
+    private nint SetSelected(nint handle)
+    {
+        if (selectedHandle == handle)
+        {
+            if (previews.TryGetValue(handle, out DesktopWindowPreview? selected))
+            {
+                selected.SetSelected(handle != 0);
+            }
+
+            return handle;
+        }
+
+        if (previews.TryGetValue(selectedHandle, out DesktopWindowPreview? previous))
+        {
+            previous.SetSelected(false);
+        }
+
+        selectedHandle = handle;
+
+        if (previews.TryGetValue(selectedHandle, out DesktopWindowPreview? current))
+        {
+            current.SetSelected(true);
+        }
+
+        return handle;
     }
 }

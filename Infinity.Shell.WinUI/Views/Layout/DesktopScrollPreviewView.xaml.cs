@@ -26,6 +26,7 @@ public sealed partial class DesktopScrollPreviewView :
     private readonly DesktopWindowPreviewCollection previews;
     private bool eventsSubscribed;
     private bool filterActive;
+    private bool shiftKeyDown;
     private bool isRunning;
     private int pageBeforeFilter = -1;
     private double spacingProgress = 1;
@@ -358,7 +359,7 @@ public sealed partial class DesktopScrollPreviewView :
     {
         bool isActive = !string.IsNullOrWhiteSpace(WindowSearchBox.Text);
         IReadOnlyList<TrackedWindow> windows = [.. windowCollection.AllTrackedWindows];
-        previews.SetFilter(WindowSearchBox.Text, windows);
+        nint selectedHandle = previews.SetFilter(WindowSearchBox.Text, windows);
 
         if (!isRunning)
         {
@@ -385,8 +386,70 @@ public sealed partial class DesktopScrollPreviewView :
             return;
         }
 
-        nint handle = previews.GetFirstMatchingWindow(windows);
+        NavigateToFilterMatch(selectedHandle);
+    }
 
+    private void HandleWindowSearchBoxKeyDown(object sender, KeyRoutedEventArgs args)
+    {
+        if (args.Key == VirtualKey.Shift)
+        {
+            shiftKeyDown = true;
+            return;
+        }
+
+        if (args.Key == VirtualKey.Tab)
+        {
+            nint selectedHandle = previews.SelectNext(!shiftKeyDown, windowCollection.AllTrackedWindows);
+            NavigateToFilterMatch(selectedHandle);
+            args.Handled = true;
+            return;
+        }
+
+        if (args.Key != VirtualKey.Enter)
+        {
+            return;
+        }
+
+        nint handle = previews.GetSelectedMatchingWindow(windowCollection.AllTrackedWindows);
+
+        if (handle != 0)
+        {
+            args.Handled = true;
+            HandleWindowInvoked(handle);
+        }
+    }
+
+    private void HandleWindowSearchBoxKeyUp(object sender, KeyRoutedEventArgs args)
+    {
+        if (args.Key == VirtualKey.Shift)
+        {
+            shiftKeyDown = false;
+        }
+    }
+
+    private void Dismiss()
+    {
+        ResetFilter();
+        SetInteractionEnabled(false);
+        BackgroundInvoked?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void ResetFilter()
+    {
+        filterActive = false;
+        pageBeforeFilter = -1;
+        shiftKeyDown = false;
+
+        if (WindowSearchBox.Text.Length > 0)
+        {
+            WindowSearchBox.Text = string.Empty;
+        }
+
+        previews.SetFilter(string.Empty, windowCollection.AllTrackedWindows);
+    }
+
+    private void NavigateToFilterMatch(nint handle)
+    {
         if (handle == 0 ||
             workspace.Width <= 0 ||
             !windowCollection.TryGetTrackedWindow(handle, out TrackedWindow? trackedWindow) ||
@@ -403,42 +466,6 @@ public sealed partial class DesktopScrollPreviewView :
         {
             pager.NavigateToPage(page);
         }
-    }
-
-    private void HandleWindowSearchBoxKeyDown(object sender, KeyRoutedEventArgs args)
-    {
-        if (args.Key != VirtualKey.Enter)
-        {
-            return;
-        }
-
-        nint handle = previews.GetFirstMatchingWindow(windowCollection.AllTrackedWindows);
-
-        if (handle != 0)
-        {
-            args.Handled = true;
-            HandleWindowInvoked(handle);
-        }
-    }
-
-    private void Dismiss()
-    {
-        ResetFilter();
-        SetInteractionEnabled(false);
-        BackgroundInvoked?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void ResetFilter()
-    {
-        filterActive = false;
-        pageBeforeFilter = -1;
-
-        if (WindowSearchBox.Text.Length > 0)
-        {
-            WindowSearchBox.Text = string.Empty;
-        }
-
-        previews.SetFilter(string.Empty, windowCollection.AllTrackedWindows);
     }
 
     private void QueueSynchronise()
@@ -472,6 +499,7 @@ public sealed partial class DesktopScrollPreviewView :
             if (isRunning && previews.TryGet(trackedWindow.Handle, out _))
             {
                 previews.Refresh(trackedWindow);
+                previews.RefreshSelection(windowCollection.AllTrackedWindows);
                 RefreshLayout();
             }
         }
