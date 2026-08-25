@@ -83,20 +83,6 @@ namespace Infinity::Platform::Windows::Native
 		ComPtr<IDCompositionVisual2> ThumbnailVisual;
 	};
 
-	struct ElevatedThumbnailTarget
-	{
-		HWND WindowHandle{};
-		HWND OwnerWindowHandle{};
-		HWND SourceWindowHandle{};
-		HTHUMBNAIL ThumbnailHandle{};
-		SIZE SourceSize{};
-		int Width{};
-		int Height{};
-		ComPtr<IDCompositionTarget> CompositionTarget;
-		ComPtr<IDCompositionVisual2> RootVisual;
-		ComPtr<IDCompositionVisual2> ThumbnailVisual;
-	};
-
 	static HMODULE dwmapiModule;
 	static DwmpCreateSharedThumbnailVisual createSharedThumbnailVisual;
 	static DwmpQueryWindowThumbnailSourceSize queryWindowThumbnailSourceSize;
@@ -113,24 +99,6 @@ namespace Infinity::Platform::Windows::Native
 	static ComPtr<ICompositionPartner> compositionPartner;
 	static ComPtr<IDCompositionDesktopDevice> compositionDesktopDevice;
 	static ComPtr<IDCompositionDevice> compositionDevice;
-	static ElevatedThumbnailTarget elevatedTarget;
-	static constexpr wchar_t ElevatedWindowClassName[] = L"Infinity.DwmThumbnail.Elevated";
-	static bool elevatedWindowClassRegistered;
-
-	static LRESULT CALLBACK ElevatedWindowProcedure(HWND windowHandle, UINT message, WPARAM wordParameter, LPARAM longParameter)
-	{
-		if (message == WM_NCHITTEST)
-		{
-			return HTTRANSPARENT;
-		}
-
-		if (message == WM_MOUSEACTIVATE)
-		{
-			return MA_NOACTIVATEANDEAT;
-		}
-
-		return DefWindowProcW(windowHandle, message, wordParameter, longParameter);
-	}
 
 	static LONG MaxLong(LONG left, LONG right)
 	{
@@ -372,206 +340,6 @@ namespace Infinity::Platform::Windows::Native
 		properties.rcDestination = RECT{ 0, 0, width, height };
 		properties.rcSource = RECT{ 0, 0, sourceSize.cx, sourceSize.cy };
 		return properties;
-	}
-
-	static void DestroyElevatedThumbnail()
-	{
-		if (elevatedTarget.RootVisual)
-		{
-			elevatedTarget.RootVisual->RemoveAllVisuals();
-		}
-
-		if (elevatedTarget.ThumbnailHandle)
-		{
-			DwmUnregisterThumbnail(elevatedTarget.ThumbnailHandle);
-			elevatedTarget.ThumbnailHandle = nullptr;
-		}
-
-		elevatedTarget.ThumbnailVisual.Reset();
-		elevatedTarget.SourceWindowHandle = nullptr;
-		elevatedTarget.SourceSize = {};
-		elevatedTarget.Width = 0;
-		elevatedTarget.Height = 0;
-	}
-
-	static void DestroyElevatedVisual()
-	{
-		DestroyElevatedThumbnail();
-
-		if (elevatedTarget.CompositionTarget)
-		{
-			elevatedTarget.CompositionTarget->SetRoot(nullptr);
-		}
-
-		elevatedTarget.RootVisual.Reset();
-		elevatedTarget.CompositionTarget.Reset();
-	}
-
-	static void DestroyElevatedWindow()
-	{
-		DestroyElevatedVisual();
-
-		if (elevatedTarget.WindowHandle)
-		{
-			DestroyWindow(elevatedTarget.WindowHandle);
-			elevatedTarget.WindowHandle = nullptr;
-		}
-
-		elevatedTarget.OwnerWindowHandle = nullptr;
-	}
-
-	static HRESULT EnsureElevatedWindow(HWND currentOwnerWindowHandle)
-	{
-		if (elevatedTarget.WindowHandle && elevatedTarget.OwnerWindowHandle == currentOwnerWindowHandle)
-		{
-			return S_OK;
-		}
-
-		DestroyElevatedWindow();
-
-		HINSTANCE instance = GetModuleHandleW(nullptr);
-
-		if (!elevatedWindowClassRegistered)
-		{
-			WNDCLASSEXW windowClass{};
-			windowClass.cbSize = sizeof(windowClass);
-			windowClass.hInstance = instance;
-			windowClass.lpfnWndProc = ElevatedWindowProcedure;
-			windowClass.lpszClassName = ElevatedWindowClassName;
-
-			if (!RegisterClassExW(&windowClass) && GetLastError() != ERROR_CLASS_ALREADY_EXISTS)
-			{
-				return HRESULT_FROM_WIN32(GetLastError());
-			}
-
-			elevatedWindowClassRegistered = true;
-		}
-
-		elevatedTarget.WindowHandle = CreateWindowExW(
-			WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_NOREDIRECTIONBITMAP,
-			ElevatedWindowClassName,
-			L"",
-			WS_POPUP,
-			0,
-			0,
-			1,
-			1,
-			currentOwnerWindowHandle,
-			nullptr,
-			instance,
-			nullptr);
-
-		if (!elevatedTarget.WindowHandle)
-		{
-			return HRESULT_FROM_WIN32(GetLastError());
-		}
-
-		elevatedTarget.OwnerWindowHandle = currentOwnerWindowHandle;
-		return S_OK;
-	}
-
-	static HRESULT CreateElevatedVisual(HWND sourceWindowHandle, int width, int height)
-	{
-		DestroyElevatedThumbnail();
-		HRESULT result = S_OK;
-
-		if (!elevatedTarget.CompositionTarget || !elevatedTarget.RootVisual)
-		{
-			result = compositionDesktopDevice->CreateTargetForHwnd(
-				elevatedTarget.WindowHandle,
-				TRUE,
-				elevatedTarget.CompositionTarget.GetAddressOf());
-
-			if (FAILED(result))
-			{
-				return result;
-			}
-
-			ComPtr<IDCompositionVisual> rootVisualBase;
-			result = compositionDevice->CreateVisual(rootVisualBase.GetAddressOf());
-
-			if (FAILED(result))
-			{
-				return result;
-			}
-
-			result = rootVisualBase.As(&elevatedTarget.RootVisual);
-
-			if (FAILED(result))
-			{
-				return result;
-			}
-
-			result = elevatedTarget.CompositionTarget->SetRoot(elevatedTarget.RootVisual.Get());
-
-			if (FAILED(result))
-			{
-				return result;
-			}
-		}
-
-		elevatedTarget.SourceWindowHandle = sourceWindowHandle;
-		elevatedTarget.SourceSize = GetSourceSize(sourceWindowHandle);
-		elevatedTarget.Width = width;
-		elevatedTarget.Height = height;
-		DWM_THUMBNAIL_PROPERTIES properties = CreateThumbnailProperties(
-			elevatedTarget.SourceSize,
-			width,
-			height,
-			true);
-		void* visual = nullptr;
-		result = SafeCreateSharedThumbnailVisual(
-			createSharedThumbnailVisual,
-			elevatedTarget.WindowHandle,
-			sourceWindowHandle,
-			2,
-			&properties,
-			compositionDevice.Get(),
-			&visual,
-			&elevatedTarget.ThumbnailHandle);
-
-		if (visual)
-		{
-			elevatedTarget.ThumbnailVisual.Attach(static_cast<IDCompositionVisual2*>(visual));
-		}
-
-		if (FAILED(result) || !elevatedTarget.ThumbnailVisual || !elevatedTarget.ThumbnailHandle)
-		{
-			return FAILED(result) ? result : E_FAIL;
-		}
-
-		return elevatedTarget.RootVisual->AddVisual(elevatedTarget.ThumbnailVisual.Get(), TRUE, nullptr);
-	}
-
-	static HRESULT PositionElevatedWindow(int x, int y, int width, int height)
-	{
-		POINT ownerOrigin{};
-
-		if (!ClientToScreen(elevatedTarget.OwnerWindowHandle, &ownerOrigin))
-		{
-			return HRESULT_FROM_WIN32(GetLastError());
-		}
-
-		HRGN region = CreateRoundRectRgn(0, 0, width + 1, height + 1, 16, 16);
-
-		if (region && !SetWindowRgn(elevatedTarget.WindowHandle, region, FALSE))
-		{
-			DeleteObject(region);
-		}
-
-		if (!SetWindowPos(
-			elevatedTarget.WindowHandle,
-			HWND_TOPMOST,
-			ownerOrigin.x + x,
-			ownerOrigin.y + y,
-			width,
-			height,
-			SWP_NOACTIVATE | SWP_SHOWWINDOW))
-		{
-			return HRESULT_FROM_WIN32(GetLastError());
-		}
-
-		return S_OK;
 	}
 
 	static void DestroyTarget(ThumbnailTarget& target)
@@ -841,91 +609,8 @@ namespace Infinity::Platform::Windows::Native
 		return lastItemResult;
 	}
 
-	int DwmThumbnailVisual_ShowElevated(HWND currentOwnerWindowHandle, HWND sourceWindowHandle, int x, int y, int width, int height)
-	{
-		if (!currentOwnerWindowHandle || !sourceWindowHandle || width <= 0 || height <= 0)
-		{
-			return E_INVALIDARG;
-		}
-
-		HRESULT result = LoadPrivateDwmApi();
-
-		if (FAILED(result))
-		{
-			return result;
-		}
-
-		result = EnsureInteropCompositionDevice();
-
-		if (FAILED(result))
-		{
-			return result;
-		}
-
-		result = EnsureElevatedWindow(currentOwnerWindowHandle);
-
-		if (FAILED(result))
-		{
-			return result;
-		}
-
-		if (elevatedTarget.SourceWindowHandle != sourceWindowHandle ||
-			!elevatedTarget.ThumbnailVisual ||
-			!elevatedTarget.ThumbnailHandle)
-		{
-			result = CreateElevatedVisual(sourceWindowHandle, width, height);
-
-			if (FAILED(result))
-			{
-				DestroyElevatedVisual();
-				return result;
-			}
-		}
-		else if (elevatedTarget.Width != width || elevatedTarget.Height != height)
-		{
-			elevatedTarget.Width = width;
-			elevatedTarget.Height = height;
-			DWM_THUMBNAIL_PROPERTIES properties = CreateThumbnailProperties(
-				elevatedTarget.SourceSize,
-				width,
-				height,
-				true);
-			result = DwmUpdateThumbnailProperties(elevatedTarget.ThumbnailHandle, &properties);
-
-			if (FAILED(result))
-			{
-				return result;
-			}
-		}
-
-		result = compositionDevice->Commit();
-
-		if (FAILED(result))
-		{
-			return result;
-		}
-
-		return PositionElevatedWindow(x, y, width, height);
-	}
-
-	void DwmThumbnailVisual_HideElevated()
-	{
-		if (elevatedTarget.WindowHandle)
-		{
-			ShowWindow(elevatedTarget.WindowHandle, SW_HIDE);
-		}
-
-		DestroyElevatedThumbnail();
-
-		if (compositionDevice)
-		{
-			compositionDevice->Commit();
-		}
-	}
-
 	void DwmThumbnailVisual_Clear()
 	{
-		DestroyElevatedWindow();
 		DestroyVisualTree();
 		ownerWindowHandle = nullptr;
 
@@ -935,4 +620,5 @@ namespace Infinity::Platform::Windows::Native
 			return;
 		}
 	}
+
 }

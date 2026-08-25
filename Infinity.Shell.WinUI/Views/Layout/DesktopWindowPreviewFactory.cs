@@ -10,6 +10,7 @@ namespace Infinity.Shell.WinUI;
 
 public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSurface,
     ITrackedWindowDragController dragController,
+    IWindowNavigationCoordinator windowNavigationCoordinator,
     DesktopWindowDragDeltaResolver dragDeltaResolver,
     ILogger<DesktopWindowPreviewFactory> logger)
 {
@@ -78,9 +79,8 @@ public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSur
             preview,
             focusVisual,
             dragController,
+            windowNavigationCoordinator,
             dragDeltaResolver,
-            previewSurface,
-            canvas,
             layoutScale);
     }
 }

@@ -14,7 +14,6 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
     private readonly Dictionary<nint, DesktopWindowPreview> previews = [];
     private Canvas? host;
     private Canvas? focusHost;
-    private nint promotedWindowHandle;
     private nint selectedHandle;
     private string filterText = string.Empty;
     private bool interactionEnabled;
@@ -51,8 +50,6 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
                 preview = factory.Create(canvas, focusCanvas, trackedWindow.Handle, layoutScale);
                 preview.Invoked += HandleWindowInvoked;
                 preview.PositionChanged += HandleWindowPositionChanged;
-                preview.Promoted += HandleWindowPromoted;
-                preview.PromotionReleased += HandleWindowPromotionReleased;
                 preview.SetInteractionEnabled(interactionEnabled);
                 previews.Add(trackedWindow.Handle, preview);
             }
@@ -146,8 +143,6 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         {
             preview.Invoked -= HandleWindowInvoked;
             preview.PositionChanged -= HandleWindowPositionChanged;
-            preview.Promoted -= HandleWindowPromoted;
-            preview.PromotionReleased -= HandleWindowPromotionReleased;
             preview.Dispose();
         }
 
@@ -159,7 +154,6 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         filterText = string.Empty;
         selectedHandle = 0;
         interactionEnabled = false;
-        promotedWindowHandle = 0;
     }
 
     public void Dispose()
@@ -183,16 +177,9 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
         preview.Invoked -= HandleWindowInvoked;
         preview.PositionChanged -= HandleWindowPositionChanged;
-        preview.Promoted -= HandleWindowPromoted;
-        preview.PromotionReleased -= HandleWindowPromotionReleased;
         preview.Dispose();
         host?.Children.Remove(preview.Host);
         focusHost?.Children.Remove(preview.FocusHost);
-
-        if (promotedWindowHandle == handle)
-        {
-            promotedWindowHandle = 0;
-        }
 
         if (selectedHandle == handle)
         {
@@ -206,31 +193,6 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
     private void HandleWindowInvoked(nint handle) => WindowInvoked?.Invoke(handle);
 
     private void HandleWindowPositionChanged(nint handle) => WindowPositionChanged?.Invoke(handle);
-
-    private void HandleWindowPromoted(nint handle)
-    {
-        nint previousHandle = promotedWindowHandle;
-        promotedWindowHandle = handle;
-
-        if (previousHandle != 0 && previousHandle != handle &&
-            previews.TryGetValue(previousHandle, out DesktopWindowPreview? previousPreview))
-        {
-            previousPreview.SetPromoted(false);
-        }
-
-        if (previews.TryGetValue(handle, out DesktopWindowPreview? preview))
-        {
-            preview.SetPromoted(true);
-        }
-    }
-
-    private void HandleWindowPromotionReleased(nint handle)
-    {
-        if (promotedWindowHandle == handle)
-        {
-            promotedWindowHandle = 0;
-        }
-    }
 
     private nint EnsureSelection(IEnumerable<TrackedWindow> trackedWindows)
     {

@@ -20,9 +20,8 @@ internal sealed class DesktopWindowPreview :
     private readonly Border focusHost;
     private readonly Grid focusVisual;
     private readonly ITrackedWindowDragController dragController;
+    private readonly IWindowNavigationCoordinator windowNavigationCoordinator;
     private readonly DesktopWindowDragDeltaResolver dragDeltaResolver;
-    private readonly IWindowPreviewSurface previewSurface;
-    private readonly Canvas coordinateHost;
     private readonly nint windowHandle;
     private readonly double layoutScale;
     private uint? dragPointerId;
@@ -37,6 +36,7 @@ internal sealed class DesktopWindowPreview :
     private bool interactionEnabled;
     private bool isFilterMatch = true;
     private bool isDragging;
+    private bool isPromoted;
     private bool suppressNextTap;
     private bool disposed;
     private int zIndex;
@@ -47,9 +47,8 @@ internal sealed class DesktopWindowPreview :
         ThumbnailCompositionPreview? preview,
         Grid focusVisual,
         ITrackedWindowDragController dragController,
+        IWindowNavigationCoordinator windowNavigationCoordinator,
         DesktopWindowDragDeltaResolver dragDeltaResolver,
-        IWindowPreviewSurface previewSurface,
-        Canvas coordinateHost,
         double layoutScale)
     {
         this.windowHandle = windowHandle;
@@ -58,9 +57,8 @@ internal sealed class DesktopWindowPreview :
         this.preview = preview;
         this.focusVisual = focusVisual;
         this.dragController = dragController;
+        this.windowNavigationCoordinator = windowNavigationCoordinator;
         this.dragDeltaResolver = dragDeltaResolver;
-        this.previewSurface = previewSurface;
-        this.coordinateHost = coordinateHost;
         this.layoutScale = layoutScale;
         Host.PointerPressed += HandlePointerPressed;
         Host.PointerMoved += HandlePointerMoved;
@@ -73,10 +71,6 @@ internal sealed class DesktopWindowPreview :
     public event Action<nint>? Invoked;
 
     public event Action<nint>? PositionChanged;
-
-    public event Action<nint>? Promoted;
-
-    public event Action<nint>? PromotionReleased;
 
     public Border Host { get; }
 
@@ -107,19 +101,11 @@ internal sealed class DesktopWindowPreview :
     {
         zIndex = value;
 
-        if (!previewSurface.IsElevated(windowHandle))
+        if (!isPromoted)
         {
             Canvas.SetZIndex(Host, value);
+            Canvas.SetZIndex(focusHost, value);
         }
-
-        Canvas.SetZIndex(focusHost, value);
-    }
-
-    public void SetPromoted(bool value)
-    {
-        int valueToApply = value ? DraggedZIndex : zIndex;
-        Canvas.SetZIndex(Host, valueToApply);
-        Canvas.SetZIndex(focusHost, valueToApply);
     }
 
     public void SetInteractionEnabled(bool value)
@@ -130,7 +116,6 @@ internal sealed class DesktopWindowPreview :
         {
             CompleteDrag();
             Host.ReleasePointerCaptures();
-            ReleasePromotion();
         }
 
         ApplyInteractionState();
@@ -144,7 +129,6 @@ internal sealed class DesktopWindowPreview :
         {
             CompleteDrag();
             Host.ReleasePointerCaptures();
-            ReleasePromotion();
         }
 
         double opacity = value ? 1 : 0;
@@ -182,8 +166,6 @@ internal sealed class DesktopWindowPreview :
             focusHost.Height = height;
             preview?.Update(width, height, true);
         }
-
-        UpdateElevatedPreview();
     }
 
     public void ClearTranslationTransition()
@@ -201,7 +183,6 @@ internal sealed class DesktopWindowPreview :
 
         disposed = true;
         CompleteDrag();
-        ReleasePromotion();
         Host.ReleasePointerCaptures();
         Host.PointerPressed -= HandlePointerPressed;
         Host.PointerMoved -= HandlePointerMoved;
@@ -249,11 +230,8 @@ internal sealed class DesktopWindowPreview :
         dragPointerId = args.Pointer.PointerId;
         dragCoordinateRoot = coordinateRoot;
         dragStartPoint = args.GetCurrentPoint(coordinateRoot).Position;
-
-        if (ShowElevatedPreview())
-        {
-            Promoted?.Invoke(windowHandle);
-        }
+        windowNavigationCoordinator.Activate(windowHandle);
+        SetPromoted(true);
 
         args.Handled = true;
     }
@@ -293,7 +271,6 @@ internal sealed class DesktopWindowPreview :
         dragHorizontalDelta = horizontalDelta / layoutScale;
         dragVerticalDelta = verticalDelta / layoutScale;
         ApplyTranslation();
-        UpdateElevatedPreview();
         args.Handled = true;
     }
 
@@ -340,6 +317,7 @@ internal sealed class DesktopWindowPreview :
         dragHorizontalDelta = 0;
         dragVerticalDelta = 0;
         isDragging = false;
+        SetPromoted(false);
 
         if (wasDragging)
         {
@@ -366,85 +344,17 @@ internal sealed class DesktopWindowPreview :
         focusHost.Translation = translation;
     }
 
-    private bool ShowElevatedPreview()
+    private void SetPromoted(bool value)
     {
-        if (!TryGetElevatedBounds(out int left, out int top, out int pixelWidth, out int pixelHeight))
-        {
-            return false;
-        }
-
-        return previewSurface.ShowElevated(windowHandle, left, top, pixelWidth, pixelHeight);
-    }
-
-    private void UpdateElevatedPreview()
-    {
-        if (previewSurface.IsElevated(windowHandle))
-        {
-            ShowElevatedPreview();
-        }
-    }
-
-    private bool TryGetElevatedBounds(out int left, out int top, out int pixelWidth, out int pixelHeight)
-    {
-        left = 0;
-        top = 0;
-        pixelWidth = 0;
-        pixelHeight = 0;
-        XamlRoot? xamlRoot = Host.XamlRoot;
-
-        if (xamlRoot?.Content is not UIElement root || width <= 0 || height <= 0)
-        {
-            return false;
-        }
-
-        try
-        {
-            Point origin = coordinateHost.TransformToVisual(root).TransformPoint(default);
-            double scale = xamlRoot.RasterizationScale;
-
-            if (!double.IsFinite(origin.X) || !double.IsFinite(origin.Y) ||
-                !double.IsFinite(scale) || scale <= 0)
-            {
-                return false;
-            }
-
-            left = ToInt32((origin.X + x + dragHorizontalDelta) * scale);
-            top = ToInt32((origin.Y + y + dragVerticalDelta) * scale);
-            pixelWidth = Math.Max(1, ToInt32(width * scale));
-            pixelHeight = Math.Max(1, ToInt32(height * scale));
-            return true;
-        }
-        catch (ArgumentException)
-        {
-            return false;
-        }
-        catch (InvalidOperationException)
-        {
-            return false;
-        }
-    }
-
-    private void ReleasePromotion()
-    {
-        if (!previewSurface.IsElevated(windowHandle))
+        if (isPromoted == value)
         {
             return;
         }
 
-        previewSurface.HideElevated(windowHandle);
-        Canvas.SetZIndex(Host, zIndex);
-        Canvas.SetZIndex(focusHost, zIndex);
-        PromotionReleased?.Invoke(windowHandle);
-    }
-
-    private static int ToInt32(double value)
-    {
-        if (!double.IsFinite(value))
-        {
-            return 0;
-        }
-
-        return (int)Math.Clamp(Math.Round(value), int.MinValue, int.MaxValue);
+        isPromoted = value;
+        int valueToApply = value ? DraggedZIndex : zIndex;
+        Canvas.SetZIndex(Host, valueToApply);
+        Canvas.SetZIndex(focusHost, valueToApply);
     }
 
     private void ApplyInteractionState() => Host.IsHitTestVisible = interactionEnabled && isFilterMatch;

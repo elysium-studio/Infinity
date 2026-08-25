@@ -16,10 +16,8 @@ public sealed class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> log
     private DwmThumbnailVisualItem[] renderItems = [];
     private bool isDisposed;
     private bool? bridgeAvailable;
-    private int lastElevatedFailure;
     private int lastRenderFailure;
     private long nextPreviewId;
-    private nint elevatedWindowHandle;
     private nint ownerWindowHandle;
 
     public bool IsAvailable
@@ -75,66 +73,8 @@ public sealed class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> log
             if (!isDisposed)
             {
                 TryClear();
-                elevatedWindowHandle = 0;
                 ownerWindowHandle = 0;
             }
-        }
-    }
-
-    public bool IsElevated(nint windowHandle)
-    {
-        lock (syncLock)
-        {
-            return !isDisposed && windowHandle != 0 && elevatedWindowHandle == windowHandle;
-        }
-    }
-
-    public bool ShowElevated(nint windowHandle, int x, int y, int width, int height)
-    {
-        if (windowHandle == 0 || width <= 0 || height <= 0)
-        {
-            return false;
-        }
-
-        lock (syncLock)
-        {
-            if (isDisposed || ownerWindowHandle == 0 || (bridgeAvailable ??= TryIsAvailable()) is false)
-            {
-                return false;
-            }
-
-            int result = TryShowElevated(ownerWindowHandle, windowHandle, x, y, width, height);
-
-            if (result < 0)
-            {
-                if (result != lastElevatedFailure)
-                {
-                    lastElevatedFailure = result;
-                    logger.LogWarning("Elevated DWM thumbnail composition failed with HRESULT 0x{HResult:X8}", result);
-                }
-
-                return false;
-            }
-
-            lastElevatedFailure = 0;
-            elevatedWindowHandle = windowHandle;
-            return true;
-        }
-    }
-
-    public void HideElevated(nint windowHandle)
-    {
-        lock (syncLock)
-        {
-            if (isDisposed || elevatedWindowHandle == 0 ||
-                (windowHandle != 0 && elevatedWindowHandle != windowHandle))
-            {
-                return;
-            }
-
-            TryHideElevated();
-            elevatedWindowHandle = 0;
-            lastElevatedFailure = 0;
         }
     }
 
@@ -175,7 +115,6 @@ public sealed class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> log
 
             previews.Clear();
             TryClear();
-            elevatedWindowHandle = 0;
             ownerWindowHandle = 0;
             isDisposed = true;
         }
@@ -200,7 +139,6 @@ public sealed class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> log
             if (this.ownerWindowHandle != ownerWindowHandle)
             {
                 TryClear();
-                elevatedWindowHandle = 0;
                 this.ownerWindowHandle = ownerWindowHandle;
             }
 
@@ -219,13 +157,6 @@ public sealed class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> log
             }
 
             previews.Remove(preview.Id);
-
-            if (elevatedWindowHandle == preview.WindowHandle)
-            {
-                TryHideElevated();
-                elevatedWindowHandle = 0;
-            }
-
             RenderCore();
         }
     }
@@ -235,17 +166,6 @@ public sealed class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> log
 
     [DllImport(LibraryName, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
     private static extern int DwmThumbnailVisual_IsAvailable();
-
-    [DllImport(LibraryName, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
-    private static extern int DwmThumbnailVisual_ShowElevated(nint ownerWindowHandle,
-        nint sourceWindowHandle,
-        int x,
-        int y,
-        int width,
-        int height);
-
-    [DllImport(LibraryName, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
-    private static extern void DwmThumbnailVisual_HideElevated();
 
     [DllImport(LibraryName, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
     private static extern int DwmThumbnailVisual_RenderBatch(nint ownerWindowHandle,
@@ -276,46 +196,6 @@ public sealed class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> log
         catch (EntryPointNotFoundException)
         {
             return false;
-        }
-    }
-
-    private static void TryHideElevated()
-    {
-        try
-        {
-            DwmThumbnailVisual_HideElevated();
-        }
-        catch (DllNotFoundException)
-        {
-        }
-        catch (EntryPointNotFoundException)
-        {
-        }
-    }
-
-    private static int TryShowElevated(nint ownerWindowHandle,
-        nint sourceWindowHandle,
-        int x,
-        int y,
-        int width,
-        int height)
-    {
-        try
-        {
-            return DwmThumbnailVisual_ShowElevated(ownerWindowHandle,
-                sourceWindowHandle,
-                x,
-                y,
-                width,
-                height);
-        }
-        catch (DllNotFoundException)
-        {
-            return unchecked((int)0x8007007E);
-        }
-        catch (EntryPointNotFoundException)
-        {
-            return unchecked((int)0x8007007F);
         }
     }
 
