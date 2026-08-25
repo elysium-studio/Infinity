@@ -173,6 +173,7 @@ public sealed partial class DesktopScrollPreviewView :
         }
 
         IReadOnlyList<TrackedWindow> windows = previews.Synchronise(PreviewCanvas,
+            FocusCanvas,
             windowCollection.AllTrackedWindows,
             animator.Scale);
         RefreshMonitorOrigin();

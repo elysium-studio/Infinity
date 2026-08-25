@@ -18,6 +18,7 @@
                 <Canvas x:Name="PageCanvas" />
             </Canvas>
             <Canvas x:Name="PreviewCanvas" />
+            <Canvas x:Name="FocusCanvas" IsHitTestVisible="False" />
         </Grid>
         <Grid
             Width="560"

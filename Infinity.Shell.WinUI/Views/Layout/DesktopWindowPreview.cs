@@ -17,8 +17,10 @@ internal sealed class DesktopWindowPreview :
     private const int DraggedZIndex = 1_000_000;
 
     private readonly ThumbnailCompositionPreview? preview;
+    private readonly Border focusHost;
     private readonly Grid focusVisual;
     private readonly ITrackedWindowDragController dragController;
+    private readonly DesktopWindowDragDeltaResolver dragDeltaResolver;
     private readonly IWindowPreviewSurface previewSurface;
     private readonly Canvas coordinateHost;
     private readonly nint windowHandle;
@@ -41,18 +43,22 @@ internal sealed class DesktopWindowPreview :
 
     public DesktopWindowPreview(nint windowHandle,
         Border host,
+        Border focusHost,
         ThumbnailCompositionPreview? preview,
         Grid focusVisual,
         ITrackedWindowDragController dragController,
+        DesktopWindowDragDeltaResolver dragDeltaResolver,
         IWindowPreviewSurface previewSurface,
         Canvas coordinateHost,
         double layoutScale)
     {
         this.windowHandle = windowHandle;
         Host = host;
+        this.focusHost = focusHost;
         this.preview = preview;
         this.focusVisual = focusVisual;
         this.dragController = dragController;
+        this.dragDeltaResolver = dragDeltaResolver;
         this.previewSurface = previewSurface;
         this.coordinateHost = coordinateHost;
         this.layoutScale = layoutScale;
@@ -73,6 +79,8 @@ internal sealed class DesktopWindowPreview :
     public event Action<nint>? PromotionReleased;
 
     public Border Host { get; }
+
+    public Border FocusHost => focusHost;
 
     public double SourceWidth { get; private set; }
 
@@ -103,9 +111,16 @@ internal sealed class DesktopWindowPreview :
         {
             Canvas.SetZIndex(Host, value);
         }
+
+        Canvas.SetZIndex(focusHost, value);
     }
 
-    public void SetPromoted(bool value) => Canvas.SetZIndex(Host, value ? DraggedZIndex : zIndex);
+    public void SetPromoted(bool value)
+    {
+        int valueToApply = value ? DraggedZIndex : zIndex;
+        Canvas.SetZIndex(Host, valueToApply);
+        Canvas.SetZIndex(focusHost, valueToApply);
+    }
 
     public void SetInteractionEnabled(bool value)
     {
@@ -132,7 +147,9 @@ internal sealed class DesktopWindowPreview :
             ReleasePromotion();
         }
 
-        Host.Opacity = value ? 1 : 0;
+        double opacity = value ? 1 : 0;
+        Host.Opacity = opacity;
+        focusHost.Opacity = opacity;
         ApplyInteractionState();
     }
 
@@ -148,6 +165,9 @@ internal sealed class DesktopWindowPreview :
         Host.TranslationTransition = transitionDuration.HasValue
             ? new Vector3Transition { Duration = transitionDuration.Value }
             : null;
+        focusHost.TranslationTransition = transitionDuration.HasValue
+            ? new Vector3Transition { Duration = transitionDuration.Value }
+            : null;
         this.x = x;
         this.y = y;
         ApplyTranslation();
@@ -158,13 +178,19 @@ internal sealed class DesktopWindowPreview :
             this.height = height;
             Host.Width = width;
             Host.Height = height;
+            focusHost.Width = width;
+            focusHost.Height = height;
             preview?.Update(width, height, true);
         }
 
         UpdateElevatedPreview();
     }
 
-    public void ClearTranslationTransition() => Host.TranslationTransition = null;
+    public void ClearTranslationTransition()
+    {
+        Host.TranslationTransition = null;
+        focusHost.TranslationTransition = null;
+    }
 
     public void Dispose()
     {
@@ -317,7 +343,8 @@ internal sealed class DesktopWindowPreview :
 
         if (wasDragging)
         {
-            bool moved = dragController.Move(windowHandle, horizontalDelta, verticalDelta);
+            double resolvedHorizontalDelta = dragDeltaResolver.ResolveHorizontalDelta(windowHandle, horizontalDelta);
+            bool moved = dragController.Move(windowHandle, resolvedHorizontalDelta, verticalDelta);
             dragController.End(windowHandle);
 
             if (moved)
@@ -330,9 +357,14 @@ internal sealed class DesktopWindowPreview :
         ApplyTranslation();
     }
 
-    private void ApplyTranslation() => Host.Translation = new Vector3(ToFloat(x + dragHorizontalDelta),
-        ToFloat(y + dragVerticalDelta),
-        ShadowDepth);
+    private void ApplyTranslation()
+    {
+        Vector3 translation = new(ToFloat(x + dragHorizontalDelta),
+            ToFloat(y + dragVerticalDelta),
+            ShadowDepth);
+        Host.Translation = translation;
+        focusHost.Translation = translation;
+    }
 
     private bool ShowElevatedPreview()
     {
@@ -401,6 +433,7 @@ internal sealed class DesktopWindowPreview :
 
         previewSurface.HideElevated(windowHandle);
         Canvas.SetZIndex(Host, zIndex);
+        Canvas.SetZIndex(focusHost, zIndex);
         PromotionReleased?.Invoke(windowHandle);
     }
 

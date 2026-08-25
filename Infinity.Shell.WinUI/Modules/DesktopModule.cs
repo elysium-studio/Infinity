@@ -21,6 +21,7 @@ public sealed class DesktopModule :
             .AddSingleton<DesktopPageLayoutCalculator>()
             .AddSingleton<DesktopBackgroundBrushFactory>()
             .AddSingleton<DesktopPageStrip>()
+            .AddSingleton<DesktopWindowDragDeltaResolver>()
             .AddSingleton<DesktopWindowPreviewFactory>()
             .AddSingleton<DesktopWindowPreviewCollection>()
             .AddSingleton<WindowInputTransparencyController>()

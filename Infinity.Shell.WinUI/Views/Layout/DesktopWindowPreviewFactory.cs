@@ -10,9 +10,13 @@ namespace Infinity.Shell.WinUI;
 
 public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSurface,
     ITrackedWindowDragController dragController,
+    DesktopWindowDragDeltaResolver dragDeltaResolver,
     ILogger<DesktopWindowPreviewFactory> logger)
 {
-    internal DesktopWindowPreview Create(Canvas canvas, nint windowHandle, double layoutScale)
+    internal DesktopWindowPreview Create(Canvas canvas,
+        Canvas focusCanvas,
+        nint windowHandle,
+        double layoutScale)
     {
         double visualScale = double.IsFinite(layoutScale) && layoutScale > 0 ? layoutScale : 1;
         double focusOuterMargin = 4 / visualScale;
@@ -47,29 +51,34 @@ public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSur
             CornerRadius = cornerRadius,
             IsHitTestVisible = false
         };
-        Grid content = new();
-        content.Children.Add(previewHost);
-        content.Children.Add(focusVisual);
         Border host = new()
         {
             Background = FluentVisualResources.GetBrush("CardBackgroundFillColorDefaultBrush",
                 Color.FromArgb(255, 32, 32, 32)),
-            Child = content,
+            Child = previewHost,
             CornerRadius = cornerRadius,
             IsHitTestVisible = false,
             Shadow = new ThemeShadow()
         };
+        Border focusHost = new()
+        {
+            Child = focusVisual,
+            IsHitTestVisible = false
+        };
 
         canvas.Children.Add(host);
+        focusCanvas.Children.Add(focusHost);
         ThumbnailCompositionPreview? preview = ThumbnailCompositionPreview.Create(previewSurface,
             windowHandle,
             previewHost,
             logger);
         return new DesktopWindowPreview(windowHandle,
             host,
+            focusHost,
             preview,
             focusVisual,
             dragController,
+            dragDeltaResolver,
             previewSurface,
             canvas,
             layoutScale);

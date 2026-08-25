@@ -13,6 +13,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 {
     private readonly Dictionary<nint, DesktopWindowPreview> previews = [];
     private Canvas? host;
+    private Canvas? focusHost;
     private nint promotedWindowHandle;
     private nint selectedHandle;
     private string filterText = string.Empty;
@@ -24,11 +25,13 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
     public event Action<nint>? WindowPositionChanged;
 
     public IReadOnlyList<TrackedWindow> Synchronise(Canvas canvas,
+        Canvas focusCanvas,
         IEnumerable<TrackedWindow> trackedWindows,
         double layoutScale)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
         host = canvas;
+        focusHost = focusCanvas;
         TrackedWindow[] orderedWindows = [.. trackedWindows
             .OrderByDescending(window => window.ZIndex)
             .ThenBy(window => (long)window.Handle)];
@@ -45,7 +48,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
             if (!previews.TryGetValue(trackedWindow.Handle, out DesktopWindowPreview? preview))
             {
-                preview = factory.Create(canvas, trackedWindow.Handle, layoutScale);
+                preview = factory.Create(canvas, focusCanvas, trackedWindow.Handle, layoutScale);
                 preview.Invoked += HandleWindowInvoked;
                 preview.PositionChanged += HandleWindowPositionChanged;
                 preview.Promoted += HandleWindowPromoted;
@@ -150,7 +153,9 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
         previews.Clear();
         host?.Children.Clear();
+        focusHost?.Children.Clear();
         host = null;
+        focusHost = null;
         filterText = string.Empty;
         selectedHandle = 0;
         interactionEnabled = false;
@@ -182,6 +187,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         preview.PromotionReleased -= HandleWindowPromotionReleased;
         preview.Dispose();
         host?.Children.Remove(preview.Host);
+        focusHost?.Children.Remove(preview.FocusHost);
 
         if (promotedWindowHandle == handle)
         {
