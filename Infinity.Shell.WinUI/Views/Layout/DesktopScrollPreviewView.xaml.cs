@@ -245,6 +245,11 @@ public sealed partial class DesktopScrollPreviewView :
         WindowSearchBox.IsTabStop = value;
         pageStrip.SetInteractionEnabled(value);
         previews.SetInteractionEnabled(value);
+
+        if (value)
+        {
+            _ = WindowSearchBox.Focus(Microsoft.UI.Xaml.FocusState.Programmatic);
+        }
     }
 
     private void RefreshMonitorOrigin()
@@ -308,18 +313,31 @@ public sealed partial class DesktopScrollPreviewView :
     private void HandleDismissSurfaceTapped(object sender, TappedRoutedEventArgs args)
     {
         args.Handled = true;
-        SetInteractionEnabled(false);
-        BackgroundInvoked?.Invoke(this, EventArgs.Empty);
+        Dismiss();
+    }
+
+    private void HandleEscapeInvoked(KeyboardAccelerator sender,
+        KeyboardAcceleratorInvokedEventArgs args)
+    {
+        if (!isRunning)
+        {
+            return;
+        }
+
+        args.Handled = true;
+        Dismiss();
     }
 
     private void HandlePageInvoked(int page)
     {
+        ResetFilter();
         SetInteractionEnabled(false);
         PageInvoked?.Invoke(page);
     }
 
     private void HandleWindowInvoked(nint handle)
     {
+        ResetFilter();
         SetInteractionEnabled(false);
         WindowInvoked?.Invoke(handle);
     }
@@ -389,13 +407,6 @@ public sealed partial class DesktopScrollPreviewView :
 
     private void HandleWindowSearchBoxKeyDown(object sender, KeyRoutedEventArgs args)
     {
-        if (args.Key == VirtualKey.Escape && WindowSearchBox.Text.Length > 0)
-        {
-            WindowSearchBox.Text = string.Empty;
-            args.Handled = true;
-            return;
-        }
-
         if (args.Key != VirtualKey.Enter)
         {
             return;
@@ -408,6 +419,26 @@ public sealed partial class DesktopScrollPreviewView :
             args.Handled = true;
             HandleWindowInvoked(handle);
         }
+    }
+
+    private void Dismiss()
+    {
+        ResetFilter();
+        SetInteractionEnabled(false);
+        BackgroundInvoked?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void ResetFilter()
+    {
+        filterActive = false;
+        pageBeforeFilter = -1;
+
+        if (WindowSearchBox.Text.Length > 0)
+        {
+            WindowSearchBox.Text = string.Empty;
+        }
+
+        previews.SetFilter(string.Empty, windowCollection.AllTrackedWindows);
     }
 
     private void QueueSynchronise()

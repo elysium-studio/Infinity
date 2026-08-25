@@ -5,6 +5,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Background="Transparent"
     Opacity="0">
+    <UserControl.KeyboardAccelerators>
+        <KeyboardAccelerator Key="Escape" Invoked="HandleEscapeInvoked" />
+    </UserControl.KeyboardAccelerators>
     <Grid>
         <Grid x:Name="PreviewSurface">
             <Grid
@@ -25,12 +28,13 @@
             <TextBox
                 x:Name="WindowSearchBox"
                 x:Uid="WindowSearchBox"
-                Padding="48,7,40,7"
+                Padding="48,10,40,4"
                 CornerRadius="22"
                 IsHitTestVisible="False"
                 IsTabStop="False"
                 KeyDown="HandleWindowSearchBoxKeyDown"
-                TextChanged="HandleWindowSearchBoxTextChanged">
+                TextChanged="HandleWindowSearchBoxTextChanged"
+                VerticalContentAlignment="Center">
                 <TextBox.Resources>
                     <StaticResource x:Key="TextControlBackground" ResourceKey="ControlFillColorDefaultBrush" />
                     <StaticResource x:Key="TextControlBackgroundPointerOver" ResourceKey="ControlFillColorSecondaryBrush" />
