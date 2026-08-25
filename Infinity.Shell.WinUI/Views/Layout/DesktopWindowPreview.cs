@@ -72,9 +72,13 @@ internal sealed class DesktopWindowPreview :
 
     public event Action<nint>? PositionChanged;
 
+    public event Action<nint>? Foregrounded;
+
     public Border Host { get; }
 
     public Border FocusHost => focusHost;
+
+    public int ZIndex => zIndex;
 
     public double SourceWidth { get; private set; }
 
@@ -232,6 +236,7 @@ internal sealed class DesktopWindowPreview :
         dragStartPoint = args.GetCurrentPoint(coordinateRoot).Position;
         windowNavigationCoordinator.Activate(windowHandle);
         SetPromoted(true);
+        Foregrounded?.Invoke(windowHandle);
 
         args.Handled = true;
     }

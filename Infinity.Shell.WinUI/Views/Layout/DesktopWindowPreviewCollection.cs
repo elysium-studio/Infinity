@@ -14,6 +14,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
     private readonly Dictionary<nint, DesktopWindowPreview> previews = [];
     private Canvas? host;
     private Canvas? focusHost;
+    private nint pendingForegroundHandle;
     private nint selectedHandle;
     private string filterText = string.Empty;
     private bool interactionEnabled;
@@ -31,9 +32,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         ObjectDisposedException.ThrowIf(disposed, this);
         host = canvas;
         focusHost = focusCanvas;
-        TrackedWindow[] orderedWindows = [.. trackedWindows
-            .OrderByDescending(window => window.ZIndex)
-            .ThenBy(window => (long)window.Handle)];
+        TrackedWindow[] orderedWindows = OrderWindows(trackedWindows);
         HashSet<nint> currentHandles = [.. orderedWindows.Select(window => window.Handle)];
 
         foreach (nint handle in previews.Keys.Where(handle => !currentHandles.Contains(handle)).ToArray())
@@ -50,6 +49,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
                 preview = factory.Create(canvas, focusCanvas, trackedWindow.Handle, layoutScale);
                 preview.Invoked += HandleWindowInvoked;
                 preview.PositionChanged += HandleWindowPositionChanged;
+                preview.Foregrounded += HandleWindowForegrounded;
                 preview.SetInteractionEnabled(interactionEnabled);
                 previews.Add(trackedWindow.Handle, preview);
             }
@@ -143,6 +143,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         {
             preview.Invoked -= HandleWindowInvoked;
             preview.PositionChanged -= HandleWindowPositionChanged;
+            preview.Foregrounded -= HandleWindowForegrounded;
             preview.Dispose();
         }
 
@@ -153,6 +154,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         focusHost = null;
         filterText = string.Empty;
         selectedHandle = 0;
+        pendingForegroundHandle = 0;
         interactionEnabled = false;
     }
 
@@ -177,6 +179,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
         preview.Invoked -= HandleWindowInvoked;
         preview.PositionChanged -= HandleWindowPositionChanged;
+        preview.Foregrounded -= HandleWindowForegrounded;
         preview.Dispose();
         host?.Children.Remove(preview.Host);
         focusHost?.Children.Remove(preview.FocusHost);
@@ -184,6 +187,11 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         if (selectedHandle == handle)
         {
             selectedHandle = 0;
+        }
+
+        if (pendingForegroundHandle == handle)
+        {
+            pendingForegroundHandle = 0;
         }
     }
 
@@ -193,6 +201,66 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
     private void HandleWindowInvoked(nint handle) => WindowInvoked?.Invoke(handle);
 
     private void HandleWindowPositionChanged(nint handle) => WindowPositionChanged?.Invoke(handle);
+
+    private void HandleWindowForegrounded(nint handle)
+    {
+        if (!previews.ContainsKey(handle))
+        {
+            return;
+        }
+
+        pendingForegroundHandle = handle;
+        DesktopWindowPreview[] orderedPreviews = [.. previews
+            .Where(item => item.Key != handle)
+            .OrderBy(item => item.Value.ZIndex)
+            .ThenBy(item => (long)item.Key)
+            .Select(item => item.Value)];
+
+        for (int zIndex = 0; zIndex < orderedPreviews.Length; zIndex++)
+        {
+            orderedPreviews[zIndex].SetZIndex(zIndex);
+        }
+
+        previews[handle].SetZIndex(orderedPreviews.Length);
+    }
+
+    private TrackedWindow[] OrderWindows(IEnumerable<TrackedWindow> trackedWindows)
+    {
+        TrackedWindow[] orderedWindows = [.. trackedWindows
+            .OrderByDescending(window => window.ZIndex)
+            .ThenBy(window => (long)window.Handle)];
+
+        if (pendingForegroundHandle == 0)
+        {
+            return orderedWindows;
+        }
+
+        int foregroundIndex = Array.FindIndex(orderedWindows,
+            window => window.Handle == pendingForegroundHandle);
+
+        if (foregroundIndex < 0)
+        {
+            pendingForegroundHandle = 0;
+            return orderedWindows;
+        }
+
+        TrackedWindow foregroundWindow = orderedWindows[foregroundIndex];
+
+        for (int index = foregroundIndex; index < orderedWindows.Length - 1; index++)
+        {
+            orderedWindows[index] = orderedWindows[index + 1];
+        }
+
+        orderedWindows[^1] = foregroundWindow;
+
+        if (orderedWindows.All(window => window.Handle == pendingForegroundHandle ||
+            foregroundWindow.ZIndex <= window.ZIndex))
+        {
+            pendingForegroundHandle = 0;
+        }
+
+        return orderedWindows;
+    }
 
     private nint EnsureSelection(IEnumerable<TrackedWindow> trackedWindows)
     {
