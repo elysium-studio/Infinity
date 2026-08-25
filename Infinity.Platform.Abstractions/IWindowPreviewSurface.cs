@@ -8,5 +8,11 @@ public interface IWindowPreviewSurface
 
     IWindowPreview? CreatePreview(nint windowHandle);
 
+    bool IsElevated(nint windowHandle);
+
+    bool ShowElevated(nint windowHandle, int x, int y, int width, int height);
+
+    void HideElevated(nint windowHandle);
+
     void Clear();
 }

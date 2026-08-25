@@ -38,6 +38,8 @@ public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSur
             host,
             preview,
             dragController,
+            previewSurface,
+            canvas,
             layoutScale);
     }
 }
