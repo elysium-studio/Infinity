@@ -131,6 +131,77 @@ public class WindowPageCoordinatorTests
         Assert.Equal(0, activator.ActivationCount);
     }
 
+    [Fact]
+    public async Task TaskbarSelectionOfAnotherWindowIsNotLostDuringPageSuppression()
+    {
+        WindowStore store = new();
+        TestScroller scroller = new();
+        TestWindowActivator activator = new();
+        WindowPageCoordinator coordinator = CreateCoordinator(store, scroller, activator);
+        IntPtr firstVisualStudioWindow = new(7);
+        IntPtr secondVisualStudioWindow = new(8);
+        store.Add(CreateWindow(firstVisualStudioWindow, 0));
+        store.Add(CreateWindow(secondVisualStudioWindow, 2000));
+
+        coordinator.HandleForegroundWindowChanged(firstVisualStudioWindow);
+        coordinator.SuppressForegroundFollow();
+        coordinator.HandleForegroundWindowChanged(secondVisualStudioWindow);
+
+        await WaitForAsync(() => scroller.LastTargetOffset.HasValue);
+
+        Assert.Equal(2000, scroller.LastTargetOffset);
+        Assert.Equal(secondVisualStudioWindow, coordinator.PendingActivation);
+    }
+
+    [Fact]
+    public async Task PageSuppressionStillIgnoresTheExistingForegroundWindow()
+    {
+        WindowStore store = new();
+        TestScroller scroller = new();
+        TestWindowActivator activator = new();
+        WindowPageCoordinator coordinator = CreateCoordinator(store, scroller, activator);
+        IntPtr handle = new(9);
+        TrackedWindow trackedWindow = CreateWindow(handle, 0);
+        store.Add(trackedWindow);
+
+        coordinator.HandleForegroundWindowChanged(handle);
+        trackedWindow.CanvasX = 1000;
+        coordinator.SuppressForegroundFollow();
+        coordinator.HandleForegroundWindowChanged(handle);
+
+        await Task.Delay(150);
+
+        Assert.Null(scroller.LastTargetOffset);
+    }
+
+    [Fact]
+    public void DirectActivationPromotesWindowWithoutRequestingNavigation()
+    {
+        TestScroller scroller = new();
+        TestWindowActivator activator = new();
+        WindowPageCoordinator coordinator = CreateCoordinator(new WindowStore(), scroller, activator);
+        int activationRequestCount = 0;
+        coordinator.WindowActivationRequested += (_, _) => activationRequestCount++;
+
+        coordinator.Activate(new IntPtr(10));
+
+        Assert.Equal(1, activator.ActivationCount);
+        Assert.Equal(0, activationRequestCount);
+        Assert.Null(scroller.LastTargetOffset);
+    }
+
+    private static async Task WaitForAsync(Func<bool> condition)
+    {
+        DateTime timeout = DateTime.UtcNow.AddSeconds(2);
+
+        while (!condition() && DateTime.UtcNow < timeout)
+        {
+            await Task.Delay(10);
+        }
+
+        Assert.True(condition());
+    }
+
     private static WindowPageCoordinator CreateCoordinator(IWindowStore store,
         IScroller scroller,
         IWindowActivator activator) =>

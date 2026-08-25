@@ -27,9 +27,11 @@ public sealed class WindowPageCoordinator(IWindowStore store,
     private CancellationTokenSource? foregroundFollowCancellationTokenSource;
     private IntPtr expectedProgrammaticHandle;
     private IntPtr foregroundWindowHandle;
+    private IntPtr suppressedForegroundWindowHandle;
     private long expectedProgrammaticAtTimestamp;
     private long foregroundFollowSuppressedAtTimestamp;
     private long foregroundFollowGeneration;
+    private bool suppressAllForegroundFollow;
 
     private int navigationTargetPage = -1;
     private double navigationTargetOffset = -1;
@@ -201,7 +203,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             return;
         }
 
-        SuppressForegroundFollow();
+        SuppressAllForegroundFollow();
 
         lock (syncRoot)
         {
@@ -219,7 +221,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             return;
         }
 
-        SuppressForegroundFollow();
+        SuppressAllForegroundFollow();
 
         lock (syncRoot)
         {
@@ -233,7 +235,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
     {
         lock (syncRoot)
         {
-            StartForegroundFollowSuppressionCore();
+            StartForegroundFollowSuppressionCore(true);
 
             if (handle != default && handle == expectedProgrammaticHandle)
             {
@@ -374,7 +376,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             return;
         }
 
-        if (!ShouldCommitForegroundFollow(generation))
+        if (!ShouldCommitForegroundFollow(generation, handle))
         {
             return;
         }
@@ -409,7 +411,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         scroller.ScrollTo(targetOffset);
     }
 
-    private bool ShouldCommitForegroundFollow(long generation)
+    private bool ShouldCommitForegroundFollow(long generation, IntPtr handle)
     {
         lock (syncRoot)
         {
@@ -418,7 +420,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
                 return false;
             }
 
-            if (IsForegroundFollowSuppressedCore())
+            if (IsForegroundFollowSuppressedCore(handle))
             {
                 return false;
             }
@@ -431,7 +433,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
     {
         lock (syncRoot)
         {
-            if (IsForegroundFollowSuppressedCore())
+            if (IsForegroundFollowSuppressedCore(handle))
             {
                 return true;
             }
@@ -471,17 +473,27 @@ public sealed class WindowPageCoordinator(IWindowStore store,
     {
         lock (syncRoot)
         {
-            StartForegroundFollowSuppressionCore();
+            StartForegroundFollowSuppressionCore(false);
         }
     }
 
-    private void StartForegroundFollowSuppressionCore()
+    private void SuppressAllForegroundFollow()
+    {
+        lock (syncRoot)
+        {
+            StartForegroundFollowSuppressionCore(true);
+        }
+    }
+
+    private void StartForegroundFollowSuppressionCore(bool suppressAll)
     {
         foregroundFollowSuppressedAtTimestamp = Stopwatch.GetTimestamp();
+        suppressedForegroundWindowHandle = foregroundWindowHandle;
+        suppressAllForegroundFollow = suppressAll;
         CancelPendingForegroundFollowCore();
     }
 
-    private bool IsForegroundFollowSuppressedCore()
+    private bool IsForegroundFollowSuppressedCore(IntPtr handle)
     {
         if (foregroundFollowSuppressedAtTimestamp == 0)
         {
@@ -490,10 +502,12 @@ public sealed class WindowPageCoordinator(IWindowStore store,
 
         if (Stopwatch.GetElapsedTime(foregroundFollowSuppressedAtTimestamp) < ForegroundFollowSuppressionWindow)
         {
-            return true;
+            return suppressAllForegroundFollow || handle == suppressedForegroundWindowHandle;
         }
 
         foregroundFollowSuppressedAtTimestamp = 0;
+        suppressedForegroundWindowHandle = default;
+        suppressAllForegroundFollow = false;
         return false;
     }
 
