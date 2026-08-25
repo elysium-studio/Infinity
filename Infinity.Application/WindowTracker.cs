@@ -428,7 +428,8 @@ public sealed class WindowTracker(IWindowStore repository,
 
             foreach (TrackedWindow trackedWindow in repository)
             {
-                if (!liveWindowSet.Contains(trackedWindow.Handle))
+                if (!liveWindowSet.Contains(trackedWindow.Handle) ||
+                    !filter.ShouldTrack(trackedWindow.Handle, handle))
                 {
                     staleHandles.Add(trackedWindow.Handle);
                 }

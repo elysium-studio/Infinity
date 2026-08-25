@@ -65,7 +65,6 @@ public sealed class WindowFilter(WindowFilterOptions options) :
 
         int exStyle = PInvoke.GetWindowLong(hwnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
         bool isToolWindow = (exStyle & 0x00000080) != 0;
-        bool isAppWindow = (exStyle & 0x00040000) != 0;
 
         if ((exStyle & 0x00080000) != 0)
         {
@@ -81,7 +80,7 @@ public sealed class WindowFilter(WindowFilterOptions options) :
             }
         }
 
-        if (isToolWindow && !isAppWindow)
+        if (isToolWindow)
         {
             return false;
         }
