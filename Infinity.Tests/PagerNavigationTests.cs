@@ -67,6 +67,10 @@ public sealed class PagerNavigationTests
 
         public double VisualOffset { get; private set; }
 
+        public void CancelNavigation()
+        {
+        }
+
         public void CommitPresentation()
         {
         }

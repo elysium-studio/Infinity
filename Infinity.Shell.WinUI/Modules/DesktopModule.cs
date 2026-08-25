@@ -2,10 +2,12 @@ using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Application.DependencyInjection;
 using Elysium.Platform.Abstractions;
+using Elysium.Presentation.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Infinity.Platform.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 
 namespace Infinity.Shell.WinUI;
@@ -92,7 +94,9 @@ public sealed class DesktopModule :
         IWindowPreviewSurface windowPreviewSurface = provider.GetRequiredService<IWindowPreviewSurface>();
         IWindowNavigationCoordinator windowNavigationCoordinator = provider.GetRequiredService<IWindowNavigationCoordinator>();
         IInfinityGlanceBridge infinityGlanceBridge = provider.GetRequiredService<IInfinityGlanceBridge>();
+        INavigator navigator = provider.GetRequiredService<INavigator>();
+        ILogger<DesktopOverviewViewModel> logger = provider.GetRequiredService<ILogger<DesktopOverviewViewModel>>();
 
-        return new DesktopOverviewViewModel(provider, serviceFactory, messenger, disposer, dispatcher, pointerInputSource, modifierKeyState, windowDragScroller, pageGestureSource, pager, scroller, scrollPresentationSession, windowPreviewSurface, windowNavigationCoordinator, infinityGlanceBridge);
+        return new DesktopOverviewViewModel(provider, serviceFactory, messenger, disposer, dispatcher, pointerInputSource, modifierKeyState, windowDragScroller, pageGestureSource, pager, scroller, scrollPresentationSession, windowPreviewSurface, windowNavigationCoordinator, infinityGlanceBridge, navigator, logger);
     }
 }

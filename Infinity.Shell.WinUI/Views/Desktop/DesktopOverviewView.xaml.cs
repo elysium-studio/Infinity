@@ -42,6 +42,7 @@ public sealed partial class DesktopOverviewView :
         desktopScrollPreview.BackgroundInvoked += HandleBackgroundInvoked;
         desktopScrollPreview.InputFocusRequested += HandleInputFocusRequested;
         desktopScrollPreview.PageInvoked += HandlePageInvoked;
+        desktopScrollPreview.SettingsInvoked += HandleSettingsInvoked;
         desktopScrollPreview.WindowInvoked += HandleWindowInvoked;
 
         DataContextChanged += HandleDataContextChanged;
@@ -130,7 +131,6 @@ public sealed partial class DesktopOverviewView :
             else if (isCompletingDesktopPreview)
             {
                 isCompletingDesktopPreview = false;
-                backdropAnimator.AnimateIn(BackgroundSurface);
                 desktopScrollPreview.AnimateInward();
             }
         }
@@ -250,7 +250,6 @@ public sealed partial class DesktopOverviewView :
         }
 
         isCompletingDesktopPreview = true;
-        backdropAnimator.AnimateOut(BackgroundSurface);
 
         desktopScrollPreview.AnimateOutward(() =>
         {
@@ -323,6 +322,8 @@ public sealed partial class DesktopOverviewView :
     private void HandleInputFocusRequested(object? sender, EventArgs args) => inputController.SetInputEnabled(Handle, true);
 
     private void HandlePageInvoked(int page) => ViewModel.SelectPage(page);
+
+    private void HandleSettingsInvoked(object? sender, EventArgs args) => ViewModel.NavigateToSettings();
 
     private void HandleWindowInvoked(nint handle) => ViewModel.ActivateWindow(handle);
 }

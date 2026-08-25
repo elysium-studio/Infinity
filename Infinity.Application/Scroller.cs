@@ -18,6 +18,7 @@ public sealed class Scroller(IPanState state,
     Func<ScrollerConfiguration> configurationFactory,
     IDeltaScrollMotion pixelMotion,
     IDeltaScrollMotion easingMotion,
+    IDeltaScrollMotion navigationMotion,
     IVelocityScrollMotion momentumMotion,
     Action startTimer,
     Action stopTimer,
@@ -49,6 +50,8 @@ public sealed class Scroller(IPanState state,
 
     public double VisualOffset => state.Offset + springPosition;
 
+    public void CancelNavigation() => navigationMotion.Reset();
+
     public void Dispose()
     {
         Stop();
@@ -76,6 +79,7 @@ public sealed class Scroller(IPanState state,
     {
         pixelMotion.Reset();
         easingMotion.Reset();
+        navigationMotion.Reset();
         momentumMotion.Reset();
         springPosition = 0;
         springVelocity = 0;
@@ -89,6 +93,7 @@ public sealed class Scroller(IPanState state,
         {
             pixelMotion.Reset();
             easingMotion.Reset();
+            navigationMotion.Reset();
             momentumMotion.Reset();
             springPosition = 0;
             springVelocity = 0;
@@ -98,7 +103,7 @@ public sealed class Scroller(IPanState state,
             return;
         }
 
-        double delta = pixelMotion.Drain() + easingMotion.Drain() + momentumMotion.Drain();
+        double delta = pixelMotion.Drain() + easingMotion.Drain() + navigationMotion.Drain() + momentumMotion.Drain();
 
         if (Math.Abs(delta) > 0.01)
         {
@@ -158,7 +163,7 @@ public sealed class Scroller(IPanState state,
             RepositionWindows(intOffset);
         }
 
-        if (!pixelMotion.IsActive && !easingMotion.IsActive && !momentumMotion.IsActive && !isSpinging)
+        if (!pixelMotion.IsActive && !easingMotion.IsActive && !navigationMotion.IsActive && !momentumMotion.IsActive && !isSpinging)
         {
             CompleteScroll();
         }
@@ -197,15 +202,22 @@ public sealed class Scroller(IPanState state,
                 ScrollStarted?.Invoke(this, EventArgs.Empty);
             }
 
-            haltRequested = false;
+            pixelMotion.Reset();
             easingMotion.Reset();
-            easingMotion.AddDelta(target - state.Offset);
+            momentumMotion.Reset();
+            springPosition = 0;
+            springVelocity = 0;
+            isSpinging = false;
+            haltRequested = false;
+            navigationMotion.Reset();
+            navigationMotion.AddDelta(target - state.Offset);
             dispatcher.Dispatch(startTimer);
         }
         else
         {
             pixelMotion.Reset();
             easingMotion.Reset();
+            navigationMotion.Reset();
             momentumMotion.Reset();
             springPosition = 0;
             springVelocity = 0;
@@ -330,7 +342,7 @@ public sealed class Scroller(IPanState state,
     }
 
     private bool IsMotionActive() =>
-        pixelMotion.IsActive || easingMotion.IsActive || momentumMotion.IsActive || isSpinging;
+        pixelMotion.IsActive || easingMotion.IsActive || navigationMotion.IsActive || momentumMotion.IsActive || isSpinging;
 
     private void ScheduleMoveGuardRelease()
     {
@@ -360,6 +372,7 @@ public sealed class Scroller(IPanState state,
             return;
         }
 
+        navigationMotion.Reset();
         bool wasPresentationActive = presentationSession.IsActive;
 
         if (!IsMotionActive())

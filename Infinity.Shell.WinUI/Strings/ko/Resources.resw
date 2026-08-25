@@ -133,6 +133,9 @@
   <data name="SettingsTitleBar.Title" xml:space="preserve">
     <value>설정</value>
   </data>
+  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>설정</value>
+  </data>
   <data name="SpeedFastOption.Content" xml:space="preserve">
     <value>빠르게</value>
   </data>

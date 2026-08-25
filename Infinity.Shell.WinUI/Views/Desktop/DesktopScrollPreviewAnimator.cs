@@ -11,7 +11,7 @@ public sealed class DesktopScrollPreviewAnimator
     private const float OverviewScale = 0.38f;
 
     private static readonly TimeSpan EnterAnimationDuration = TimeSpan.FromMilliseconds(300);
-    private static readonly TimeSpan ExitAnimationDuration = TimeSpan.FromMilliseconds(220);
+    private static readonly TimeSpan ExitAnimationDuration = TimeSpan.FromMilliseconds(250);
 
     private int animationGeneration;
 
@@ -24,25 +24,13 @@ public sealed class DesktopScrollPreviewAnimator
     public void AnimateInward(FrameworkElement element, double width, double height, Action? completed = null)
     {
         Visual visual = GetVisual(element, width, height);
-        visual.StopAnimation(nameof(Visual.Scale));
-        visual.Scale = Vector3.One;
-        StartScaleAnimation(visual,
-            Vector3.One,
-            new Vector3(OverviewScale, OverviewScale, 1),
-            EnterAnimationDuration,
-            completed);
+        StartScaleAnimation(visual, new Vector3(OverviewScale, OverviewScale, 1), EnterAnimationDuration, CreateEntranceEasing(visual.Compositor), completed);
     }
 
     public void AnimateOutward(FrameworkElement element, double width, double height, Action completed)
     {
         Visual visual = GetVisual(element, width, height);
-        visual.StopAnimation(nameof(Visual.Scale));
-        visual.Scale = new Vector3(OverviewScale, OverviewScale, 1);
-        StartScaleAnimation(visual,
-            visual.Scale,
-            Vector3.One,
-            ExitAnimationDuration,
-            completed);
+        StartScaleAnimation(visual, Vector3.One, ExitAnimationDuration, CreateExistingElementEasing(visual.Compositor), completed);
     }
 
     public void Reset(FrameworkElement element, double width, double height)
@@ -60,21 +48,14 @@ public sealed class DesktopScrollPreviewAnimator
         return visual;
     }
 
-    private void StartScaleAnimation(Visual visual,
-        Vector3 from,
-        Vector3 to,
-        TimeSpan duration,
-        Action? completed)
+    private void StartScaleAnimation(Visual visual, Vector3 target, TimeSpan duration, CubicBezierEasingFunction easing, Action? completed)
     {
         int generation = ++animationGeneration;
         Compositor compositor = visual.Compositor;
         Vector3KeyFrameAnimation animation = compositor.CreateVector3KeyFrameAnimation();
-        CubicBezierEasingFunction easing = compositor.CreateCubicBezierEasingFunction(new Vector2(0.1f, 0.9f),
-            new Vector2(0.2f, 1));
         animation.Duration = duration;
-        animation.InsertKeyFrame(0, from);
-        animation.InsertKeyFrame(1, to, easing);
-        visual.Scale = to;
+        animation.InsertExpressionKeyFrame(0, "this.StartingValue");
+        animation.InsertKeyFrame(1, target, easing);
 
         if (completed is null)
         {
@@ -96,6 +77,9 @@ public sealed class DesktopScrollPreviewAnimator
         batch.End();
     }
 
-    private static float ToFloat(double value) =>
-        (float)Math.Clamp(value, -float.MaxValue, float.MaxValue);
+    private static CubicBezierEasingFunction CreateEntranceEasing(Compositor compositor) => compositor.CreateCubicBezierEasingFunction(new Vector2(0.1f, 0.9f), new Vector2(0.2f, 1));
+
+    private static CubicBezierEasingFunction CreateExistingElementEasing(Compositor compositor) => compositor.CreateCubicBezierEasingFunction(new Vector2(0.55f, 0.55f), new Vector2(0, 1));
+
+    private static float ToFloat(double value) => (float)Math.Clamp(value, -float.MaxValue, float.MaxValue);
 }

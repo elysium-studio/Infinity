@@ -57,6 +57,7 @@ public static class IServiceCollectionExtensions
                     provider.GetRequiredService<Func<ScrollerConfiguration>>(),
                     new PixelScrollMotion(),
                     new EasingScrollMotion(),
+                    new FluentNavigationScrollMotion(TimeProvider.System),
                     new MomentumScrollMotion(),
                     scrollTimer.Start,
                     scrollTimer.Stop,

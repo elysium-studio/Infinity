@@ -63,6 +63,8 @@ public sealed partial class DesktopScrollPreviewView :
 
     public event Action<int>? PageInvoked;
 
+    public event EventHandler? SettingsInvoked;
+
     public event Action<nint>? WindowInvoked;
 
     public bool IsRunning => isRunning;
@@ -235,6 +237,8 @@ public sealed partial class DesktopScrollPreviewView :
         DismissSurface.IsHitTestVisible = value;
         WindowSearchBox.IsHitTestVisible = value;
         WindowSearchBox.IsTabStop = value;
+        SettingsButton.IsHitTestVisible = value;
+        SettingsButton.IsTabStop = value;
         pageStrip.SetInteractionEnabled(value);
         previews.SetInteractionEnabled(value);
 
@@ -336,6 +340,14 @@ public sealed partial class DesktopScrollPreviewView :
         args.Handled = true;
 
         Dismiss();
+    }
+
+    private void HandleSettingsButtonClicked(object sender, Microsoft.UI.Xaml.RoutedEventArgs args)
+    {
+        ResetFilter();
+        SetInteractionEnabled(false);
+
+        SettingsInvoked?.Invoke(this, EventArgs.Empty);
     }
 
     private void HandlePageInvoked(int page)

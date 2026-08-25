@@ -293,6 +293,16 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         activator.Activate(handle);
     }
 
+    public void CancelNavigation()
+    {
+        lock (syncRoot)
+        {
+            navigationTargetPage = -1;
+            navigationTargetOffset = -1;
+            pendingActivation = default;
+        }
+    }
+
     public void CompleteNavigation()
     {
         IntPtr handle;

@@ -83,6 +83,27 @@ public class WindowPageCoordinatorTests
     }
 
     [Fact]
+    public void CancelingNavigationPreventsPendingWindowActivation()
+    {
+        WindowStore store = new();
+        TestScroller scroller = new();
+        TestWindowActivator activator = new();
+        WindowPageCoordinator coordinator = CreateCoordinator(store, scroller, activator);
+        IntPtr handle = new(13);
+        store.Add(CreateWindow(handle, 1000));
+
+        coordinator.NavigateTo(handle);
+        coordinator.CancelNavigation();
+        scroller.SetVisualOffset(1000);
+        coordinator.CompleteNavigation();
+
+        Assert.Equal(0, activator.ActivationCount);
+        Assert.Equal(-1, coordinator.NavigationTargetPage);
+        Assert.Equal(-1, coordinator.NavigationTargetOffset);
+        Assert.Equal(IntPtr.Zero, coordinator.PendingActivation);
+    }
+
+    [Fact]
     public void OverviewSelectionAlignsTheContainingPageInsteadOfTheWindowCentre()
     {
         WindowStore store = new();
@@ -247,6 +268,10 @@ public class WindowPageCoordinatorTests
         public double? LastTargetOffset { get; private set; }
 
         public double VisualOffset { get; private set; }
+
+        public void CancelNavigation()
+        {
+        }
 
         public void CommitPresentation()
         {

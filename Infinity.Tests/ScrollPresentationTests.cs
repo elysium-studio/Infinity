@@ -70,13 +70,37 @@ public sealed class ScrollPresentationTests
         Assert.Equal(60, state.Offset);
     }
 
+    [Fact]
+    public void WheelInputTakesControlFromProgrammaticNavigation()
+    {
+        WindowStore store = new();
+        PanState state = new();
+        state.SetMaxOffset(1000);
+        TestWindowMover mover = new();
+        ScrollPresentationSession presentationSession = new();
+        TestScrollInputSource source = new();
+        QueuedDeltaScrollMotion easingMotion = new();
+        QueuedDeltaScrollMotion navigationMotion = new();
+        using Scroller scroller = CreateScroller(state, store, mover, presentationSession, source: source, easingMotion: easingMotion, navigationMotion: navigationMotion);
+        presentationSession.Begin();
+        scroller.Start();
+        scroller.ScrollTo(1000);
+
+        source.RaiseScroll(-120);
+        scroller.OnTick();
+
+        Assert.False(navigationMotion.IsActive);
+        Assert.Equal(60, state.Offset);
+    }
+
     private static Scroller CreateScroller(PanState state,
         WindowStore store,
         TestWindowMover mover,
         IScrollPresentationSession? presentationSession = null,
         IDeltaScrollMotion? pixelMotion = null,
         IScrollInputSource? source = null,
-        IDeltaScrollMotion? easingMotion = null) =>
+        IDeltaScrollMotion? easingMotion = null,
+        IDeltaScrollMotion? navigationMotion = null) =>
         new(state,
             presentationSession ?? new ScrollPresentationSession(),
             store,
@@ -89,6 +113,7 @@ public sealed class ScrollPresentationTests
             () => new ScrollerConfiguration { PixelsPerScrollNotch = 120 },
             pixelMotion ?? new TestDeltaScrollMotion(),
             easingMotion ?? new TestDeltaScrollMotion(),
+            navigationMotion ?? new TestDeltaScrollMotion(),
             new TestVelocityScrollMotion(),
             () => { },
             () => { },
@@ -251,6 +276,10 @@ internal sealed class TestScroller :
     public int RepositionCount { get; private set; }
 
     public int ResetCount { get; private set; }
+
+    public void CancelNavigation()
+    {
+    }
 
     public void Dispose()
     {

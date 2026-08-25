@@ -20,5 +20,7 @@ public interface IWindowNavigationCoordinator
 
     void Activate(IntPtr handle);
 
+    void CancelNavigation();
+
     void CompleteNavigation();
 }
