@@ -66,6 +66,7 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<WindowPageCoordinator>();
             services.AddSingleton<IWindowNavigationCoordinator>(provider => provider.GetRequiredService<WindowPageCoordinator>());
             services.AddSingleton<IForegroundWindowCoordinator>(provider => provider.GetRequiredService<WindowPageCoordinator>());
+            services.AddSingleton<ITrackedForegroundWindowSource>(provider => provider.GetRequiredService<WindowPageCoordinator>());
             services.AddSingleton<ITrackedWindowDragController>(provider => new TrackedWindowDragController(provider.GetRequiredService<IWindowStore>(),
                 provider.GetRequiredService<IScroller>(),
                 provider.GetRequiredService<ILogger<TrackedWindowDragController>>()));

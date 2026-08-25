@@ -13,7 +13,8 @@ public sealed class WindowPageCoordinator(IWindowStore store,
     IWindowActivator activator,
     IDispatcher dispatcher) :
     IWindowNavigationCoordinator,
-    IForegroundWindowCoordinator
+    IForegroundWindowCoordinator,
+    ITrackedForegroundWindowSource
 {
     private const double ScrollTolerance = 2.0;
     private const double MeaningfulVisibilityRatio = 0.60;
@@ -27,6 +28,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
     private CancellationTokenSource? foregroundFollowCancellationTokenSource;
     private IntPtr expectedProgrammaticHandle;
     private IntPtr foregroundWindowHandle;
+    private IntPtr trackedForegroundWindowHandle;
     private IntPtr suppressedForegroundWindowHandle;
     private long expectedProgrammaticAtTimestamp;
     private long foregroundFollowSuppressedAtTimestamp;
@@ -176,12 +178,13 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             return;
         }
 
-        RecordForegroundWindow(handle);
-
         if (!store.TryGet(handle, out TrackedWindow? trackedWindow))
         {
+            RecordForegroundWindow(handle, false);
             return;
         }
+
+        RecordForegroundWindow(handle, true);
 
         if (!TryGetWorkspaceWidth(out int workspaceWidth))
         {
@@ -211,6 +214,11 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             {
                 foregroundWindowHandle = default;
             }
+
+            if (handle == trackedForegroundWindowHandle)
+            {
+                trackedForegroundWindowHandle = default;
+            }
         }
     }
 
@@ -226,6 +234,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         lock (syncRoot)
         {
             foregroundWindowHandle = handle;
+            trackedForegroundWindowHandle = handle;
         }
 
         NavigateToPage(handle);
@@ -246,6 +255,11 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             {
                 foregroundWindowHandle = default;
             }
+
+            if (handle != default && handle == trackedForegroundWindowHandle)
+            {
+                trackedForegroundWindowHandle = default;
+            }
         }
     }
 
@@ -263,6 +277,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
 
             expectedProgrammaticHandle = handle;
             foregroundWindowHandle = handle;
+            trackedForegroundWindowHandle = handle;
             expectedProgrammaticAtTimestamp = Stopwatch.GetTimestamp();
         }
     }
@@ -461,11 +476,24 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         }
     }
 
-    private void RecordForegroundWindow(IntPtr handle)
+    public IntPtr GetTrackedForegroundWindow()
+    {
+        lock (syncRoot)
+        {
+            return trackedForegroundWindowHandle;
+        }
+    }
+
+    private void RecordForegroundWindow(IntPtr handle, bool isTracked)
     {
         lock (syncRoot)
         {
             foregroundWindowHandle = handle;
+
+            if (isTracked)
+            {
+                trackedForegroundWindowHandle = handle;
+            }
         }
     }
 

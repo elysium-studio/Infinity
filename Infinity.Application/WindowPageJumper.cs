@@ -9,6 +9,7 @@ public sealed class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
     WindowNumberSwitchGesture numberSwitch,
     WindowNumberMoveGesture numberMove,
     IForegroundWindowSource foregroundWindowSource,
+    ITrackedForegroundWindowSource trackedForegroundWindowSource,
     IWindowStore store,
     IPager pager,
     IWorkspace workspace,
@@ -112,9 +113,7 @@ public sealed class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
 
     private void JumpForegroundWindow(JumpDirection direction)
     {
-        nint windowHandle = foregroundWindowSource.GetForegroundWindow();
-
-        if (!store.TryGet(windowHandle, out TrackedWindow trackedWindow))
+        if (!TryGetForegroundWindow(out nint windowHandle, out TrackedWindow trackedWindow))
         {
             logger.LogDebug("Window jump ignored — foreground window is not tracked");
             return;
@@ -134,9 +133,7 @@ public sealed class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
 
     private void JumpForegroundWindowToPage(int targetPage)
     {
-        nint windowHandle = foregroundWindowSource.GetForegroundWindow();
-
-        if (!store.TryGet(windowHandle, out TrackedWindow trackedWindow))
+        if (!TryGetForegroundWindow(out nint windowHandle, out TrackedWindow trackedWindow))
         {
             logger.LogDebug("Page jump ignored — foreground window is not tracked");
             return;
@@ -162,5 +159,18 @@ public sealed class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
         logger.LogInformation("Window {Handle} jumped to page {Page}", windowHandle, targetPage);
 
         pager.NavigateToPage(targetPage);
+    }
+
+    private bool TryGetForegroundWindow(out nint windowHandle, out TrackedWindow trackedWindow)
+    {
+        windowHandle = foregroundWindowSource.GetForegroundWindow();
+
+        if (store.TryGet(windowHandle, out trackedWindow))
+        {
+            return true;
+        }
+
+        windowHandle = trackedForegroundWindowSource.GetTrackedForegroundWindow();
+        return store.TryGet(windowHandle, out trackedWindow);
     }
 }

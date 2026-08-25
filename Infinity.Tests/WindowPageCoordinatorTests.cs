@@ -190,6 +190,22 @@ public class WindowPageCoordinatorTests
         Assert.Null(scroller.LastTargetOffset);
     }
 
+    [Fact]
+    public void UntrackedOverlayDoesNotReplaceTheTrackedForegroundWindow()
+    {
+        WindowStore store = new();
+        WindowPageCoordinator coordinator = CreateCoordinator(store,
+            new TestScroller(),
+            new TestWindowActivator());
+        IntPtr applicationWindow = new(11);
+        store.Add(CreateWindow(applicationWindow, 0));
+
+        coordinator.HandleForegroundWindowChanged(applicationWindow);
+        coordinator.HandleForegroundWindowChanged(new IntPtr(12));
+
+        Assert.Equal(applicationWindow, coordinator.GetTrackedForegroundWindow());
+    }
+
     private static async Task WaitForAsync(Func<bool> condition)
     {
         DateTime timeout = DateTime.UtcNow.AddSeconds(2);
