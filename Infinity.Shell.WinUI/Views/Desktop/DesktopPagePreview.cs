@@ -21,6 +21,8 @@ public sealed partial class DesktopPagePreview :
     private const double DragThreshold = 4;
     private const int DraggedZIndex = 1_000_000;
 
+    private static readonly TimeSpan HoverAnimationDuration = TimeSpan.FromMilliseconds(167);
+
     private readonly Border shadowHost;
     private readonly ThemeShadow pageShadow;
     private readonly Border wallpaperHost;
@@ -31,6 +33,7 @@ public sealed partial class DesktopPagePreview :
     private readonly ExpressionAnimation cornerRadiusExpression;
     private readonly Visual pageHostVisual;
     private readonly Visual pageVisual;
+    private readonly Visual interactionVisual;
     private readonly Visual shadowVisual;
     private readonly Visual titleVisual;
     private Vector3 pageTranslation;
@@ -40,6 +43,8 @@ public sealed partial class DesktopPagePreview :
     private UIElement? dragCoordinateRoot;
     private uint? dragPointerId;
     private Point dragStartPoint;
+    private bool isHovered;
+    private bool isPressed;
     private bool isDragging;
     private bool interactionEnabled;
     private bool disposed;
@@ -72,7 +77,8 @@ public sealed partial class DesktopPagePreview :
         wallpaperHost = new Border();
         interactionLayer = new Border
         {
-            IsHitTestVisible = false
+            IsHitTestVisible = false,
+            Opacity = 0
         };
         TitleEditor = new DesktopPageTitleEditor(editLabel, saveLabel, cancelLabel);
 
@@ -98,9 +104,6 @@ public sealed partial class DesktopPagePreview :
         TitleEditor.PointerCanceled += HandlePointerCanceled;
         TitleEditor.PointerCaptureLost += HandlePointerCaptureLost;
 
-        ActualThemeChanged += HandleActualThemeChanged;
-        ApplyInteractionState(false, false);
-
         ElementCompositionPreview.SetIsTranslationEnabled(PageHost, true);
         pageHostVisual = ElementCompositionPreview.GetElementVisual(PageHost);
         Compositor compositor = pageHostVisual.Compositor;
@@ -116,6 +119,10 @@ public sealed partial class DesktopPagePreview :
 
         shadowHost.Translation = new Vector3(0, 0, ShadowDepth);
         pageVisual = ElementCompositionPreview.GetElementVisual(this);
+        interactionVisual = ElementCompositionPreview.GetElementVisual(interactionLayer);
+
+        ActualThemeChanged += HandleActualThemeChanged;
+        ApplyInteractionState(false, false);
 
         clipGeometry = compositor.CreateRoundedRectangleGeometry();
         clip = compositor.CreateGeometricClip(clipGeometry);
@@ -263,6 +270,7 @@ public sealed partial class DesktopPagePreview :
         pageHostVisual.Properties.StopAnimation("Translation");
         shadowVisual.Properties.StopAnimation("Translation");
         titleVisual.Properties.StopAnimation("Translation");
+        interactionVisual.StopAnimation(nameof(Visual.Opacity));
 
         CancelPointerOperation(false);
 
@@ -303,17 +311,39 @@ public sealed partial class DesktopPagePreview :
         visual.Properties.StartAnimation("Translation", animation);
     }
 
-    private void ApplyInteractionState(bool isHovered, bool isPressed)
+    private void ApplyInteractionState(bool hovered, bool pressed, bool animate = false)
     {
-        string resourceKey = isPressed ? "SubtleFillColorTertiaryBrush" : isHovered ? "SubtleFillColorSecondaryBrush" : "SubtleFillColorTransparentBrush";
-        Color fallbackColor = isPressed ? Color.FromArgb(72, 255, 255, 255) : isHovered ? Color.FromArgb(48, 255, 255, 255) : Color.FromArgb(0, 255, 255, 255);
+        isHovered = hovered;
+        isPressed = pressed;
+        float targetOpacity = hovered || pressed ? 1 : 0;
 
-        interactionLayer.Background = FluentVisualResources.GetBrush(resourceKey, fallbackColor);
+        if (targetOpacity > 0)
+        {
+            string resourceKey = pressed ? "SubtleFillColorTertiaryBrush" : "SubtleFillColorSecondaryBrush";
+            Color fallbackColor = pressed ? Color.FromArgb(72, 255, 255, 255) : Color.FromArgb(48, 255, 255, 255);
+            interactionLayer.Background = FluentVisualResources.GetBrush(resourceKey, fallbackColor);
+        }
+
+        if (!animate)
+        {
+            interactionVisual.StopAnimation(nameof(Visual.Opacity));
+            interactionVisual.Opacity = targetOpacity;
+            return;
+        }
+
+        Compositor compositor = interactionVisual.Compositor;
+        ScalarKeyFrameAnimation animation = compositor.CreateScalarKeyFrameAnimation();
+        CubicBezierEasingFunction easing = targetOpacity > 0 ? compositor.CreateCubicBezierEasingFunction(new Vector2(0.1f, 0.9f), new Vector2(0.2f, 1)) : compositor.CreateCubicBezierEasingFunction(new Vector2(0.55f, 0.55f), new Vector2(0, 1));
+
+        animation.Duration = HoverAnimationDuration;
+        animation.InsertExpressionKeyFrame(0, "this.StartingValue");
+        animation.InsertKeyFrame(1, targetOpacity, easing);
+        interactionVisual.StartAnimation(nameof(Visual.Opacity), animation);
     }
 
-    private void HandlePointerEntered(object sender, PointerRoutedEventArgs args) => ApplyInteractionState(true, false);
+    private void HandlePointerEntered(object sender, PointerRoutedEventArgs args) => ApplyInteractionState(true, false, true);
 
-    private void HandlePointerExited(object sender, PointerRoutedEventArgs args) => ApplyInteractionState(false, false);
+    private void HandlePointerExited(object sender, PointerRoutedEventArgs args) => ApplyInteractionState(false, false, true);
 
     private void HandlePointerPressed(object sender, PointerRoutedEventArgs args)
     {
@@ -338,7 +368,7 @@ public sealed partial class DesktopPagePreview :
         dragCoordinateRoot = inputSource.XamlRoot?.Content as UIElement ?? inputSource;
         dragPointerId = args.Pointer.PointerId;
         dragStartPoint = args.GetCurrentPoint(dragCoordinateRoot).Position;
-        ApplyInteractionState(true, true);
+        ApplyInteractionState(true, true, true);
     }
 
     private void HandlePointerMoved(object sender, PointerRoutedEventArgs args)
@@ -399,7 +429,7 @@ public sealed partial class DesktopPagePreview :
 
         ResetPointerOperation();
         captureElement?.ReleasePointerCapture(args.Pointer);
-        ApplyInteractionState(true, false);
+        ApplyInteractionState(true, false, true);
 
         if (completedDrag)
         {
@@ -433,7 +463,7 @@ public sealed partial class DesktopPagePreview :
                 DragCompleted?.Invoke(this);
 
                 ResetPointerOperation();
-                ApplyInteractionState(false, false);
+                ApplyInteractionState(false, false, true);
             }
             else
             {
@@ -481,7 +511,7 @@ public sealed partial class DesktopPagePreview :
         return false;
     }
 
-    private void HandleActualThemeChanged(FrameworkElement sender, object args) => ApplyInteractionState(false, false);
+    private void HandleActualThemeChanged(FrameworkElement sender, object args) => ApplyInteractionState(isHovered, isPressed);
 
     private static float ToFloat(double value) => (float)Math.Clamp(value, -float.MaxValue, float.MaxValue);
 }
