@@ -12,7 +12,7 @@ namespace Infinity.Shell.WinUI;
 internal sealed class DesktopWindowPreview :
     IDisposable
 {
-    private const float ShadowDepth = 72;
+    private const float ShadowDepth = 40;
     private const double DragThreshold = 4;
     private const int DraggedZIndex = 1_000_000;
     private const int DraggedPageZIndex = 999_000;

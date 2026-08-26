@@ -14,7 +14,7 @@ public sealed partial class DesktopPageTitleEditor :
     UserControl,
     IDisposable
 {
-    private const float ShadowDepth = 128;
+    private const float ShadowDepth = 64;
 
     private bool disposed;
 
