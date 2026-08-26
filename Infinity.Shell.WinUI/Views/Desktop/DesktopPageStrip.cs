@@ -14,7 +14,7 @@ using System.Linq;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, IPager pager, IScroller scroller, IWorkspace workspace, PageTitleStore pageTitleStore, DesktopPageReorderController reorderController, DesktopOverviewDragScroller overviewDragScroller, ITextLocalizer localizer, DesktopPageLayoutCalculator layoutCalculator, DesktopBackgroundBrushFactory backgroundBrushFactory, ILogger<DesktopPageStrip> logger) :
+public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, IPager pager, IScroller scroller, IWorkspace workspace, PageTitleStore pageTitleStore, DesktopPageReorderController reorderController, DesktopOverviewDragScroller overviewDragScroller, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, ITextLocalizer localizer, DesktopPageLayoutCalculator layoutCalculator, DesktopBackgroundBrushFactory backgroundBrushFactory, ILogger<DesktopPageStrip> logger) :
     IDisposable
 {
     private static readonly TimeSpan ReorderAnimationDuration = TimeSpan.FromMilliseconds(180);
@@ -80,6 +80,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
 
         started = false;
         overviewDragScroller.Stop();
+        cursorConfinement.Release();
 
         backgroundSource.BackgroundChanged -= HandleBackgroundChanged;
         pageTitleStore.TitleChanged -= HandlePageTitleChanged;
@@ -172,6 +173,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         if (canceledReorder)
         {
             overviewDragScroller.Stop();
+            cursorConfinement.Release();
             reorderState = null;
             reorderPointerDelta = 0;
             reorderStartContentOffset = 0;
@@ -355,6 +357,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         reorderState = new(page.Page, page.Page, 0);
         reorderPointerDelta = 0;
         reorderStartContentOffset = layoutCalculator.CalculateContentOffset(currentOffset, workspace.Width, currentSpacingProgress);
+        cursorConfinement.Begin(GetViewportWidth(), GetViewportHeight(), overviewScale, scaleHost?.XamlRoot?.RasterizationScale ?? 1, constrainVertical: false);
 
         ReorderPreviewChanged?.Invoke(reorderState, null);
     }
@@ -366,8 +369,11 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             return;
         }
 
-        reorderPointerDelta = horizontalDelta;
-        overviewDragScroller.Update(page.DispatcherQueue, pointerX, GetViewportWidth());
+        double viewportWidth = GetViewportWidth();
+        double constrainedPointerX = dragBoundaryCalculator.ConstrainHorizontal(pointerX, viewportWidth, overviewScale);
+        reorderPointerDelta = horizontalDelta + constrainedPointerX - pointerX;
+        overviewDragScroller.Update(page.DispatcherQueue, constrainedPointerX, viewportWidth);
+        cursorConfinement.Update(viewportWidth, GetViewportHeight(), overviewScale, scaleHost?.XamlRoot?.RasterizationScale ?? 1);
 
         DesktopPageReorderPreviewState previousState = reorderState;
         UpdateReorderState(!overviewDragScroller.IsActive);
@@ -398,6 +404,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
 
         var dispatcherQueue = page.DispatcherQueue;
         overviewDragScroller.Stop();
+        cursorConfinement.Release();
         UpdateReorderState(true);
 
         DesktopPageReorderPreviewState completedState = reorderState ?? currentState;
@@ -463,6 +470,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         reorderStartContentOffset = 0;
 
         overviewDragScroller.Stop();
+        cursorConfinement.Release();
         RefreshVisiblePages(ReorderAnimationDuration);
 
         ReorderPreviewChanged?.Invoke(null, ReorderAnimationDuration);

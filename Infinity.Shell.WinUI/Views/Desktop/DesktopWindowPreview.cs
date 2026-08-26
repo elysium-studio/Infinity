@@ -23,7 +23,9 @@ internal sealed class DesktopWindowPreview :
     private readonly ITrackedWindowDragController dragController;
     private readonly IWindowNavigationCoordinator windowNavigationCoordinator;
     private readonly DesktopOverviewDragScroller overviewDragScroller;
-    private readonly DesktopWindowDragDeltaResolver dragDeltaResolver;
+    private readonly DesktopWindowDragPositionResolver dragPositionResolver;
+    private readonly DesktopDragBoundaryCalculator dragBoundaryCalculator;
+    private readonly DesktopDragCursorConfinement cursorConfinement;
     private readonly nint windowHandle;
     private readonly double layoutScale;
     private readonly float shadowDepth;
@@ -31,7 +33,6 @@ internal sealed class DesktopWindowPreview :
     private Point dragStartPoint;
     private Point dragLastPoint;
     private UIElement? dragCoordinateRoot;
-    private double dragStartScrollOffset;
     private double dragHorizontalDelta;
     private double dragVerticalDelta;
     private double x;
@@ -47,7 +48,7 @@ internal sealed class DesktopWindowPreview :
     private bool disposed;
     private int zIndex;
 
-    public DesktopWindowPreview(nint windowHandle, Border host, Border focusHost, ThumbnailCompositionPreview? preview, Grid focusVisual, ITrackedWindowDragController dragController, IWindowNavigationCoordinator windowNavigationCoordinator, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragDeltaResolver dragDeltaResolver, double layoutScale)
+    public DesktopWindowPreview(nint windowHandle, Border host, Border focusHost, ThumbnailCompositionPreview? preview, Grid focusVisual, ITrackedWindowDragController dragController, IWindowNavigationCoordinator windowNavigationCoordinator, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, double layoutScale)
     {
         this.windowHandle = windowHandle;
         Host = host;
@@ -57,7 +58,9 @@ internal sealed class DesktopWindowPreview :
         this.dragController = dragController;
         this.windowNavigationCoordinator = windowNavigationCoordinator;
         this.overviewDragScroller = overviewDragScroller;
-        this.dragDeltaResolver = dragDeltaResolver;
+        this.dragPositionResolver = dragPositionResolver;
+        this.dragBoundaryCalculator = dragBoundaryCalculator;
+        this.cursorConfinement = cursorConfinement;
         this.layoutScale = double.IsFinite(layoutScale) && layoutScale > 0 ? layoutScale : 1;
         shadowDepth = ToFloat(ShadowDepth / this.layoutScale);
 
@@ -161,6 +164,8 @@ internal sealed class DesktopWindowPreview :
         {
             dragHorizontalDelta += this.x - x;
             dragVerticalDelta += this.y - y;
+
+            ReconcilePointerBoundary();
         }
 
         this.x = x;
@@ -258,7 +263,11 @@ internal sealed class DesktopWindowPreview :
             return;
         }
 
-        Point currentPoint = args.GetCurrentPoint(dragCoordinateRoot).Position;
+        Point rawPoint = args.GetCurrentPoint(dragCoordinateRoot).Position;
+        double viewportWidth = Host.XamlRoot?.Size.Width ?? 0;
+        double viewportHeight = Host.XamlRoot?.Size.Height ?? 0;
+        (double pointerX, double pointerY) = dragBoundaryCalculator.Constrain(rawPoint.X, rawPoint.Y, viewportWidth, viewportHeight, layoutScale);
+        Point currentPoint = new(pointerX, pointerY);
         double horizontalDelta = currentPoint.X - dragStartPoint.X;
         double verticalDelta = currentPoint.Y - dragStartPoint.Y;
 
@@ -280,11 +289,11 @@ internal sealed class DesktopWindowPreview :
 
             isDragging = true;
             suppressNextTap = true;
-            dragStartScrollOffset = dragDeltaResolver.CurrentScrollOffset;
             dragHorizontalDelta = horizontalDelta / layoutScale;
             dragVerticalDelta = verticalDelta / layoutScale;
             dragLastPoint = currentPoint;
             ClearTranslationTransition();
+            cursorConfinement.Begin(viewportWidth, viewportHeight, layoutScale, Host.XamlRoot?.RasterizationScale ?? 1, constrainVertical: true);
         }
         else
         {
@@ -293,8 +302,8 @@ internal sealed class DesktopWindowPreview :
             dragLastPoint = currentPoint;
         }
 
-        double viewportWidth = Host.XamlRoot?.Size.Width ?? 0;
         overviewDragScroller.Update(Host.DispatcherQueue, currentPoint.X, viewportWidth);
+        cursorConfinement.Update(viewportWidth, viewportHeight, layoutScale, Host.XamlRoot?.RasterizationScale ?? 1);
         ApplyTranslation();
         args.Handled = true;
     }
@@ -339,16 +348,15 @@ internal sealed class DesktopWindowPreview :
         bool wasDragging = isDragging;
         double horizontalDelta = dragHorizontalDelta;
         double verticalDelta = dragVerticalDelta;
-        double initialScrollOffset = dragStartScrollOffset;
 
         if (wasDragging)
         {
             overviewDragScroller.Stop();
+            cursorConfinement.Release();
         }
 
         dragPointerId = null;
         dragCoordinateRoot = null;
-        dragStartScrollOffset = 0;
         dragHorizontalDelta = 0;
         dragVerticalDelta = 0;
         isDragging = false;
@@ -357,8 +365,7 @@ internal sealed class DesktopWindowPreview :
 
         if (wasDragging)
         {
-            double resolvedHorizontalDelta = dragDeltaResolver.ResolveHorizontalDelta(windowHandle, horizontalDelta, initialScrollOffset);
-            bool moved = dragController.Move(windowHandle, resolvedHorizontalDelta, verticalDelta);
+            bool moved = dragPositionResolver.TryResolve(windowHandle, horizontalDelta, verticalDelta, out DesktopWindowDragPosition position) && dragController.MoveTo(windowHandle, position.CanvasX, position.CanvasY);
 
             dragController.End(windowHandle);
 
@@ -370,6 +377,17 @@ internal sealed class DesktopWindowPreview :
         }
 
         ApplyTranslation();
+    }
+
+    private void ReconcilePointerBoundary()
+    {
+        double viewportWidth = Host.XamlRoot?.Size.Width ?? 0;
+        double viewportHeight = Host.XamlRoot?.Size.Height ?? 0;
+        (double pointerX, double pointerY) = dragBoundaryCalculator.Constrain(dragLastPoint.X, dragLastPoint.Y, viewportWidth, viewportHeight, layoutScale);
+
+        dragHorizontalDelta += (pointerX - dragLastPoint.X) / layoutScale;
+        dragVerticalDelta += (pointerY - dragLastPoint.Y) / layoutScale;
+        dragLastPoint = new Point(pointerX, pointerY);
     }
 
     private void ApplyTranslation()

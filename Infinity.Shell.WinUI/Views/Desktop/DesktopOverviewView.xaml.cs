@@ -1,9 +1,11 @@
+using Elysium.Platform.Abstractions;
 using Elysium.UI.Controls.WinUI;
 using Infinity.Platform.Abstractions;
 using Infinity.Platform.Windows;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using System;
+using System.Threading;
 using WindowExtensions = Elysium.Platform.Windows.WindowExtensions;
 
 namespace Infinity.Shell.WinUI;
@@ -11,6 +13,8 @@ namespace Infinity.Shell.WinUI;
 public sealed partial class DesktopOverviewView :
     DesktopOverlay
 {
+    private const int EscapeVirtualKey = 0x1B;
+
     private static readonly TimeSpan PreviewCleanupDelay = TimeSpan.FromMilliseconds(220);
 
     private readonly DesktopScrollPreviewView desktopScrollPreview;
@@ -18,14 +22,17 @@ public sealed partial class DesktopOverviewView :
     private readonly DesktopOverviewWallpaperPresenter wallpaperPresenter;
     private readonly WindowInputTransparencyController inputController;
     private readonly IDesktopBackgroundSource backgroundSource;
+    private readonly IKeyboardInputSource keyboardInputSource;
     private readonly DispatcherQueue dispatcherQueue;
     private DesktopOverviewViewModel? subscribedViewModel;
     private DispatcherQueueTimer? previewCleanupTimer;
     private bool isCompletingDesktopPreview;
     private bool isDesktopPreviewAnimationStarted;
+    private volatile bool isOverlayOpen;
+    private int globalDismissQueued;
     private int openingGeneration;
 
-    public DesktopOverviewView(DesktopScrollPreviewView desktopScrollPreview, DesktopOverviewBackdropAnimator backdropAnimator, DesktopOverviewWallpaperPresenter wallpaperPresenter, WindowInputTransparencyController inputController, IDesktopBackgroundSource backgroundSource)
+    public DesktopOverviewView(DesktopScrollPreviewView desktopScrollPreview, DesktopOverviewBackdropAnimator backdropAnimator, DesktopOverviewWallpaperPresenter wallpaperPresenter, WindowInputTransparencyController inputController, IDesktopBackgroundSource backgroundSource, IKeyboardInputSource keyboardInputSource)
     {
         InitializeComponent();
 
@@ -35,11 +42,12 @@ public sealed partial class DesktopOverviewView :
         this.wallpaperPresenter = wallpaperPresenter;
         this.inputController = inputController;
         this.backgroundSource = backgroundSource;
+        this.keyboardInputSource = keyboardInputSource;
         dispatcherQueue = DispatcherQueue;
 
+        backdropAnimator.Reset(BackgroundTint);
         DesktopPreviewContent.Content = desktopScrollPreview;
-
-        desktopScrollPreview.BackgroundInvoked += HandleBackgroundInvoked;
+        desktopScrollPreview.BackgroundInvoked += HandleBackgroundInvoked;
         desktopScrollPreview.InputFocusRequested += HandleInputFocusRequested;
         desktopScrollPreview.PageInvoked += HandlePageInvoked;
         desktopScrollPreview.SettingsInvoked += HandleSettingsInvoked;
@@ -48,6 +56,7 @@ public sealed partial class DesktopOverviewView :
         DataContextChanged += HandleDataContextChanged;
         Loaded += HandleLoaded;
         backgroundSource.BackgroundChanged += HandleBackgroundChanged;
+        this.keyboardInputSource.KeyDown += HandleGlobalKeyDown;
     }
 
     public DesktopOverviewViewModel ViewModel => (DesktopOverviewViewModel)DataContext;
@@ -61,6 +70,7 @@ public sealed partial class DesktopOverviewView :
 
     protected override void OnOpened()
     {
+        isOverlayOpen = true;
         int generation = ++openingGeneration;
         CancelPreviewCleanup();
         UpdateBindings();
@@ -69,6 +79,8 @@ public sealed partial class DesktopOverviewView :
 
     protected override void OnClosed()
     {
+        isOverlayOpen = false;
+        Interlocked.Exchange(ref globalDismissQueued, 0);
         openingGeneration++;
         inputController.SetInputEnabled(Handle, false);
         SchedulePreviewCleanup();
@@ -78,6 +90,34 @@ public sealed partial class DesktopOverviewView :
     {
         EnsureSubscribed();
         UpdateBindings();
+    }
+
+    private void HandleGlobalKeyDown(object? sender, KeyEventArgs args)
+    {
+        if (args.VirtualKeyCode != EscapeVirtualKey || !isOverlayOpen)
+        {
+            return;
+        }
+
+        args.Handled = true;
+
+        if (Interlocked.Exchange(ref globalDismissQueued, 1) != 0)
+        {
+            return;
+        }
+
+        if (!dispatcherQueue.TryEnqueue(() =>
+        {
+            Interlocked.Exchange(ref globalDismissQueued, 0);
+
+            if (isOverlayOpen)
+            {
+                desktopScrollPreview.Dismiss();
+            }
+        }))
+        {
+            Interlocked.Exchange(ref globalDismissQueued, 0);
+        }
     }
 
     private void EnsureSubscribed()
@@ -203,7 +243,8 @@ public sealed partial class DesktopOverviewView :
 
         WindowExtensions.SetTopMost(Handle, true);
         inputController.SetInputEnabled(Handle, true);
-        backdropAnimator.AnimateIn(BackgroundLayer);
+        backdropAnimator.AnimateIn(BackgroundSurface);
+        backdropAnimator.AnimateIn(BackgroundTint);
 
         if (ViewModel.IsDesktopPreviewActive)
         {
@@ -312,7 +353,8 @@ public sealed partial class DesktopOverviewView :
         isCompletingDesktopPreview = false;
         isDesktopPreviewAnimationStarted = false;
         wallpaperPresenter.Detach();
-        backdropAnimator.Reset(BackgroundLayer);
+        backdropAnimator.Reset(BackgroundSurface);
+        backdropAnimator.Reset(BackgroundTint);
         desktopScrollPreview.Deactivate();
         WindowExtensions.SetTopMost(Handle, false);
     }

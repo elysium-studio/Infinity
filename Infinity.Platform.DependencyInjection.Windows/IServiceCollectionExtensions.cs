@@ -41,6 +41,7 @@ public static class IServiceCollectionExtensions
                     provider.GetRequiredService<IKeyboardInputKeysFactory>().Create()));
 
             services.AddSingleton<IPointerInputSource, PointerInputSource>();
+            services.AddSingleton<IPointerConfinement, PointerConfinement>();
             services.AddSingleton<IForegroundWindowSource, ForegroundWindowSource>();
 
             services.AddSingleton<IWindowActivator, WindowActivator>();

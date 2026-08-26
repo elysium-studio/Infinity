@@ -210,7 +210,7 @@ public sealed class WindowTrackerTests
 
         public bool Begin(IntPtr windowHandle) => true;
 
-        public bool Move(IntPtr windowHandle, double horizontalDelta, double verticalDelta) => true;
+        public bool MoveTo(IntPtr windowHandle, double canvasX, double canvasY) => true;
 
         public void End(IntPtr windowHandle)
         {

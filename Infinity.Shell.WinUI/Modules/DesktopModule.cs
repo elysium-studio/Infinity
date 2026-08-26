@@ -22,11 +22,13 @@ public sealed class DesktopModule :
             .AddSingleton<DesktopOverviewWallpaperPresenter>()
             .AddSingleton<DesktopScrollPreviewAnimator>()
             .AddSingleton<DesktopPageLayoutCalculator>()
+            .AddSingleton<DesktopDragBoundaryCalculator>()
             .AddSingleton<DesktopPageReorderController>()
             .AddSingleton<DesktopBackgroundBrushFactory>()
             .AddSingleton<DesktopPageStrip>()
             .AddSingleton<DesktopOverviewDragScroller>()
-            .AddSingleton<DesktopWindowDragDeltaResolver>()
+            .AddSingleton<DesktopDragCursorConfinement>()
+            .AddSingleton<DesktopWindowDragPositionResolver>()
             .AddSingleton<DesktopWindowPreviewFactory>()
             .AddSingleton<DesktopWindowPreviewCollection>()
             .AddSingleton<WindowInputTransparencyController>()
@@ -63,8 +65,9 @@ public sealed class DesktopModule :
         DesktopScrollPreviewAnimator animator = provider.GetRequiredService<DesktopScrollPreviewAnimator>();
         DesktopPageStrip pageStrip = provider.GetRequiredService<DesktopPageStrip>();
         DesktopWindowPreviewCollection previews = provider.GetRequiredService<DesktopWindowPreviewCollection>();
+        DesktopDragCursorConfinement cursorConfinement = provider.GetRequiredService<DesktopDragCursorConfinement>();
 
-        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, layoutCalculator, panState, scroller, pager, workspace, taskbarLocator, pageLayoutCalculator, animator, pageStrip, previews);
+        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, layoutCalculator, panState, scroller, pager, workspace, taskbarLocator, pageLayoutCalculator, animator, pageStrip, previews, cursorConfinement);
     }
 
     private static DesktopOverviewView CreateDesktopOverviewView(IServiceProvider provider)
@@ -74,8 +77,9 @@ public sealed class DesktopModule :
         DesktopOverviewWallpaperPresenter wallpaperPresenter = provider.GetRequiredService<DesktopOverviewWallpaperPresenter>();
         WindowInputTransparencyController inputController = provider.GetRequiredService<WindowInputTransparencyController>();
         IDesktopBackgroundSource backgroundSource = provider.GetRequiredService<IDesktopBackgroundSource>();
+        IKeyboardInputSource keyboardInputSource = provider.GetRequiredService<IKeyboardInputSource>();
 
-        return new DesktopOverviewView(desktopScrollPreview, backdropAnimator, wallpaperPresenter, inputController, backgroundSource);
+        return new DesktopOverviewView(desktopScrollPreview, backdropAnimator, wallpaperPresenter, inputController, backgroundSource, keyboardInputSource);
     }
 
     private static DesktopOverviewViewModel CreateDesktopOverviewViewModel(IServiceProvider provider)

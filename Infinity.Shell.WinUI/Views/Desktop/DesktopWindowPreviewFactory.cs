@@ -8,7 +8,7 @@ using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSurface, ITrackedWindowDragController dragController, IWindowNavigationCoordinator windowNavigationCoordinator, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragDeltaResolver dragDeltaResolver, ILogger<DesktopWindowPreviewFactory> logger)
+public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSurface, ITrackedWindowDragController dragController, IWindowNavigationCoordinator windowNavigationCoordinator, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, ILogger<DesktopWindowPreviewFactory> logger)
 {
     internal DesktopWindowPreview Create(Canvas canvas, Canvas focusCanvas, nint windowHandle, double layoutScale)
     {
@@ -68,6 +68,6 @@ public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSur
 
         ThumbnailCompositionPreview? preview = ThumbnailCompositionPreview.Create(previewSurface, windowHandle, previewHost, logger);
 
-        return new DesktopWindowPreview(windowHandle, host, focusHost, preview, focusVisual, dragController, windowNavigationCoordinator, overviewDragScroller, dragDeltaResolver, layoutScale);
+        return new DesktopWindowPreview(windowHandle, host, focusHost, preview, focusVisual, dragController, windowNavigationCoordinator, overviewDragScroller, dragPositionResolver, dragBoundaryCalculator, cursorConfinement, layoutScale);
     }
 }

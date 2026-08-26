@@ -7,7 +7,7 @@ namespace Infinity.Tests;
 public sealed class TrackedWindowDragControllerTests
 {
     [Fact]
-    public void MoveUsesWorkspaceDeltaAndRepositionsWindow()
+    public void MoveToUsesCanvasPositionAndRepositionsWindow()
     {
         WindowStore store = new();
         TrackedWindow window = CreateWindow(2250, 100);
@@ -20,7 +20,7 @@ public sealed class TrackedWindowDragControllerTests
         store.WindowChanged += (_, _) => changedCount++;
 
         bool began = controller.Begin(window.Handle);
-        bool moved = controller.Move(window.Handle, 500, 50);
+        bool moved = controller.MoveTo(window.Handle, 2750, 150);
 
         Assert.True(began);
         Assert.True(moved);
@@ -58,6 +58,22 @@ public sealed class TrackedWindowDragControllerTests
     }
 
     [Fact]
+    public void MoveToUsesExactCanvasPositionRegardlessOfScrollOffset()
+    {
+        WindowStore store = new();
+        TrackedWindow window = CreateWindow(2250, 100);
+        store.Add(window);
+        TestScroller scroller = new() { VisualOffset = 6000 };
+        TrackedWindowDragController controller = new(store, scroller, NullLogger<TrackedWindowDragController>.Instance);
+
+        Assert.True(controller.Begin(window.Handle));
+        Assert.True(controller.MoveTo(window.Handle, 250, 175));
+        Assert.Equal(250, window.CanvasX);
+        Assert.Equal(175, window.CanvasY);
+        Assert.Equal(1, scroller.RepositionCount);
+    }
+
+    [Fact]
     public void RemovedWindowEndsActiveDrag()
     {
         WindowStore store = new();
@@ -69,7 +85,7 @@ public sealed class TrackedWindowDragControllerTests
         Assert.True(controller.Begin(window.Handle));
         store.Remove(window.Handle);
 
-        Assert.False(controller.Move(window.Handle, 50, 0));
+        Assert.False(controller.MoveTo(window.Handle, 300, 100));
         Assert.Equal(IntPtr.Zero, controller.DraggingWindow);
     }
 
@@ -85,7 +101,7 @@ public sealed class TrackedWindowDragControllerTests
             NullLogger<TrackedWindowDragController>.Instance);
 
         Assert.True(controller.Begin(window.Handle));
-        Assert.False(controller.Move(window.Handle, double.NaN, 0));
+        Assert.False(controller.MoveTo(window.Handle, double.NaN, 0));
         Assert.Equal(250, window.CanvasX);
         Assert.Equal(100, window.CanvasY);
         Assert.Equal(0, scroller.RepositionCount);

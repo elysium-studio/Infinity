@@ -24,6 +24,7 @@ public sealed partial class DesktopScrollPreviewView :
     private readonly DesktopScrollPreviewAnimator animator;
     private readonly DesktopPageStrip pageStrip;
     private readonly DesktopWindowPreviewCollection previews;
+    private readonly DesktopDragCursorConfinement cursorConfinement;
     private bool eventsSubscribed;
     private bool filterActive;
     private bool shiftKeyDown;
@@ -34,7 +35,7 @@ public sealed partial class DesktopScrollPreviewView :
     private int monitorOriginX;
     private int monitorOriginY;
 
-    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IShellLayoutCalculator layoutCalculator, IPanState panState, IScroller scroller, IPager pager, IWorkspace workspace, ITaskbarLocator taskbarLocator, DesktopPageLayoutCalculator pageLayoutCalculator, DesktopScrollPreviewAnimator animator, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews)
+    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IShellLayoutCalculator layoutCalculator, IPanState panState, IScroller scroller, IPager pager, IWorkspace workspace, ITaskbarLocator taskbarLocator, DesktopPageLayoutCalculator pageLayoutCalculator, DesktopScrollPreviewAnimator animator, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement)
     {
         InitializeComponent();
 
@@ -50,6 +51,7 @@ public sealed partial class DesktopScrollPreviewView :
         this.animator = animator;
         this.pageStrip = pageStrip;
         this.previews = previews;
+        this.cursorConfinement = cursorConfinement;
 
         this.pageStrip.PageInvoked += HandlePageInvoked;
         this.pageStrip.ReorderPreviewChanged += HandlePageReorderPreviewChanged;
@@ -82,6 +84,7 @@ public sealed partial class DesktopScrollPreviewView :
             isRunning = true;
             spacingProgress = 1;
 
+            cursorConfinement.SetOwner(ownerWindowHandle);
             SubscribeEvents();
             windowPreviewSurface.Initialize(ownerWindowHandle);
             pageStrip.Start(PageCanvas, PageShadowCanvas, PageTitleCanvas, PreviewSurface, animator.Scale);
@@ -148,6 +151,7 @@ public sealed partial class DesktopScrollPreviewView :
         }
 
         isRunning = false;
+        cursorConfinement.Release();
         SetInteractionEnabled(false);
         WindowSearchBox.Text = string.Empty;
 
@@ -330,18 +334,6 @@ public sealed partial class DesktopScrollPreviewView :
         Dismiss();
     }
 
-    private void HandleEscapeInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        if (!isRunning)
-        {
-            return;
-        }
-
-        args.Handled = true;
-
-        Dismiss();
-    }
-
     private void HandleSettingsButtonClicked(object sender, Microsoft.UI.Xaml.RoutedEventArgs args)
     {
         ResetFilter();
@@ -475,7 +467,7 @@ public sealed partial class DesktopScrollPreviewView :
         }
     }
 
-    private void Dismiss()
+    public void Dismiss()
     {
         ResetFilter();
         SetInteractionEnabled(false);

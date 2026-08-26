@@ -42,6 +42,7 @@ IsHungAppWindow
 IsIconic
 IsWindowVisible
 GetCursorPos
+ClipCursor
 MonitorFromPoint
 GetMonitorInfo
 SetWinEventHook

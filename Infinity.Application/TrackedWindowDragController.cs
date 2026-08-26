@@ -24,15 +24,7 @@ public sealed class TrackedWindowDragController(IWindowStore store,
 
     public bool Begin(IntPtr windowHandle)
     {
-        if (!store.TryGet(windowHandle, out TrackedWindow? trackedWindow) ||
-            !TryRound(scroller.VisualOffset, out int visualOffset))
-        {
-            return false;
-        }
-
-        long viewportX = (long)trackedWindow.CanvasX - visualOffset;
-
-        if (viewportX is < int.MinValue or > int.MaxValue)
+        if (!store.TryGet(windowHandle, out _))
         {
             return false;
         }
@@ -44,7 +36,7 @@ public sealed class TrackedWindowDragController(IWindowStore store,
                 return false;
             }
 
-            session = new(windowHandle, (int)viewportX, trackedWindow.CanvasY);
+            session = new(windowHandle);
         }
 
         scroller.Reset();
@@ -52,18 +44,14 @@ public sealed class TrackedWindowDragController(IWindowStore store,
         return true;
     }
 
-    public bool Move(IntPtr windowHandle, double horizontalDelta, double verticalDelta)
+    public bool MoveTo(IntPtr windowHandle, double canvasX, double canvasY)
     {
-        DragSession dragSession;
-
         lock (syncRoot)
         {
             if (session is not DragSession currentSession || currentSession.WindowHandle != windowHandle)
             {
                 return false;
             }
-
-            dragSession = currentSession;
         }
 
         if (!store.TryGet(windowHandle, out TrackedWindow? trackedWindow))
@@ -72,26 +60,13 @@ public sealed class TrackedWindowDragController(IWindowStore store,
             return false;
         }
 
-        if (!TryRound(scroller.VisualOffset, out int visualOffset) ||
-            !TryRound(horizontalDelta, out int roundedHorizontalDelta) ||
-            !TryRound(verticalDelta, out int roundedVerticalDelta))
+        if (!TryRound(canvasX, out int roundedCanvasX) || !TryRound(canvasY, out int roundedCanvasY))
         {
             return false;
         }
 
-        long viewportX = (long)dragSession.ViewportX + roundedHorizontalDelta;
-        long canvasX = visualOffset + viewportX;
-        long canvasY = (long)dragSession.CanvasY + roundedVerticalDelta;
-
-        if (viewportX is < int.MinValue or > int.MaxValue ||
-            canvasX is < int.MinValue or > int.MaxValue ||
-            canvasY is < int.MinValue or > int.MaxValue)
-        {
-            return false;
-        }
-
-        trackedWindow.CanvasX = (int)canvasX;
-        trackedWindow.CanvasY = (int)canvasY;
+        trackedWindow.CanvasX = roundedCanvasX;
+        trackedWindow.CanvasY = roundedCanvasY;
 
         scroller.Reposition();
         return true;
@@ -134,7 +109,5 @@ public sealed class TrackedWindowDragController(IWindowStore store,
         return true;
     }
 
-    private readonly record struct DragSession(IntPtr WindowHandle,
-        int ViewportX,
-        int CanvasY);
+    private readonly record struct DragSession(IntPtr WindowHandle);
 }
