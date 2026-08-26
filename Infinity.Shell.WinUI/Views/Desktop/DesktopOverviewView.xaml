@@ -11,10 +11,13 @@
     IsOpen="{x:Bind ViewModel.IsOpen, Mode=TwoWay}"
     StaysOpen="{x:Bind ViewModel.StaysOpen, Mode=TwoWay}">
     <Grid>
-        <Border
-            x:Name="BackgroundSurface"
+        <Grid
+            x:Name="BackgroundLayer"
             IsHitTestVisible="False"
-            Opacity="0" />
+            Opacity="0">
+            <Border x:Name="BackgroundSurface" />
+            <Border Background="{ThemeResource SmokeFillColorDefaultBrush}" />
+        </Grid>
         <ContentControl
             x:Name="DesktopPreviewContent"
             HorizontalContentAlignment="Stretch"

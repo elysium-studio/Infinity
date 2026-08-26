@@ -203,7 +203,7 @@ public sealed partial class DesktopOverviewView :
 
         WindowExtensions.SetTopMost(Handle, true);
         inputController.SetInputEnabled(Handle, true);
-        backdropAnimator.AnimateIn(BackgroundSurface);
+        backdropAnimator.AnimateIn(BackgroundLayer);
 
         if (ViewModel.IsDesktopPreviewActive)
         {
@@ -312,7 +312,7 @@ public sealed partial class DesktopOverviewView :
         isCompletingDesktopPreview = false;
         isDesktopPreviewAnimationStarted = false;
         wallpaperPresenter.Detach();
-        backdropAnimator.Reset(BackgroundSurface);
+        backdropAnimator.Reset(BackgroundLayer);
         desktopScrollPreview.Deactivate();
         WindowExtensions.SetTopMost(Handle, false);
     }
