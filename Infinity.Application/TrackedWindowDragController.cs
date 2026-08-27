@@ -1,10 +1,12 @@
 using Infinity.Application.Abstractions;
+using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
 public sealed class TrackedWindowDragController(IWindowStore store,
     IScroller scroller,
+    IWindowResizeSynchronizer resizeSynchronizer,
     ILogger<TrackedWindowDragController> logger) :
     ITrackedWindowDragController
 {
@@ -64,6 +66,8 @@ public sealed class TrackedWindowDragController(IWindowStore store,
         {
             return false;
         }
+
+        resizeSynchronizer.TrySynchronize(windowHandle, roundedWidth, roundedHeight);
 
         trackedWindow.CanvasX = roundedCanvasX;
         trackedWindow.CanvasY = roundedCanvasY;

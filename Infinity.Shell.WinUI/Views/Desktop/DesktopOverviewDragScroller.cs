@@ -4,7 +4,7 @@ using System;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopOverviewDragScroller(IPanState panState, IScroller scroller, Func<WindowDragScrollerConfiguration> configurationFactory) :
+public sealed class DesktopOverviewDragScroller(IPanState panState, IScroller scroller, Func<WindowDragScrollerConfiguration> configurationFactory, DesktopOverviewConfiguration overviewConfiguration) :
     IDisposable
 {
     private const double EdgeThreshold = 160;
@@ -24,6 +24,12 @@ public sealed class DesktopOverviewDragScroller(IPanState panState, IScroller sc
     public void Update(DispatcherQueue dispatcherQueue, double pointerX, double viewportWidth)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
+
+        if (!overviewConfiguration.IsEdgeScrollingEnabled)
+        {
+            Stop();
+            return;
+        }
 
         if (!double.IsFinite(pointerX) || !double.IsFinite(viewportWidth) || viewportWidth <= 0)
         {

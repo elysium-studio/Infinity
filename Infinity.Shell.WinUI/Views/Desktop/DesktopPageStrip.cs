@@ -24,7 +24,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
     private readonly Dictionary<int, DesktopPagePreview> visiblePages = [];
     private readonly List<DesktopPagePreview> pagePool = [];
     private readonly Stack<DesktopPagePreview> availablePages = [];
-    private readonly DesktopPageEditorLabels editorLabels = new(localizer.GetText("PageTitleEditButton"), localizer.GetText("PageTitleSaveButton"), localizer.GetText("PageTitleCancelButton"), localizer.GetText("PageLayoutEditButton"));
+    private readonly DesktopPageEditorLabels editorLabels = new(localizer.GetText("PageTitleEditButton"), localizer.GetText("PageTitleSaveButton"), localizer.GetText("PageTitleCancelButton"), localizer.GetText("PageLayoutEditButton"), localizer.GetText("PageLayoutClearButton"));
     private Canvas? host;
     private Canvas? shadowHost;
     private Canvas? titleHost;

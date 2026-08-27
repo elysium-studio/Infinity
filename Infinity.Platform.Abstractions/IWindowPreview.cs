@@ -5,5 +5,7 @@ public interface IWindowPreview :
 {
     nint WindowHandle { get; }
 
+    void RefreshSource();
+
     void SetTarget(nint sharedTargetHandle, double width, double height, bool isVisible);
 }

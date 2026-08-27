@@ -1,4 +1,6 @@
 ﻿DwmFlush
+DCompositionWaitForCompositorClock
+RedrawWindow
 MSLLHOOKSTRUCT
 SetForegroundWindow
 ShowWindow

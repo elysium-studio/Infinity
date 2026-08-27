@@ -62,7 +62,15 @@ public sealed class ConfigurationModule :
             })
             .WithChangeHandler((provider, options, _) =>
                 provider.GetRequiredService<WindowDragScrollerConfiguration>()
-                    .SpeedLevel = options.DragScrollSpeed);
+                    .SpeedLevel = options.DragScrollSpeed)
+            .WithChangeHandler((provider, options, _) =>
+            {
+                DesktopOverviewConfiguration configuration = provider.GetRequiredService<DesktopOverviewConfiguration>();
+
+                configuration.IsEdgeScrollingEnabled = options.EnableOverviewEdgeScrolling;
+                configuration.IsMonitorSpanningEnabled = options.SpanCompatibleDisplays;
+                configuration.IsSnapAssistanceEnabled = options.EnableSnapAssistance;
+            });
 
         services
             .AddSingleton(provider =>
@@ -75,6 +83,17 @@ public sealed class ConfigurationModule :
                 {
                     SpeedLevel = provider.GetRequiredService<Settings>().DragScrollSpeed
                 })
+            .AddSingleton(provider =>
+            {
+                Settings settings = provider.GetRequiredService<Settings>();
+
+                return new DesktopOverviewConfiguration
+                {
+                    IsEdgeScrollingEnabled = settings.EnableOverviewEdgeScrolling,
+                    IsMonitorSpanningEnabled = settings.SpanCompatibleDisplays,
+                    IsSnapAssistanceEnabled = settings.EnableSnapAssistance
+                };
+            })
             .AddSingleton<Func<ScrollerConfiguration>>(provider =>
                 () => provider.GetRequiredService<ScrollerConfiguration>())
             .AddSingleton<Func<WindowDragScrollerConfiguration>>(provider =>

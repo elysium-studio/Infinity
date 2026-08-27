@@ -79,6 +79,24 @@
   <data name="BooleanToggle.OnContent" xml:space="preserve">
     <value>[!! Ÿëš ~~~ !!]</value>
   </data>
+  <data name="OnOffToggle.OffContent" xml:space="preserve">
+    <value>[!! Öƒƒ ~~~ !!]</value>
+  </data>
+  <data name="OnOffToggle.OnContent" xml:space="preserve">
+    <value>[!! Öñ ~~~ !!]</value>
+  </data>
+  <data name="PagesSettingsSectionTitle" xml:space="preserve">
+    <value>[Pågéš]</value>
+  </data>
+  <data name="ScrollingSettingsSectionTitle" xml:space="preserve">
+    <value>[Šçrøļļîñg]</value>
+  </data>
+  <data name="OverviewSettingsSectionTitle" xml:space="preserve">
+    <value>[Øvérvîéŵ]</value>
+  </data>
+  <data name="AdvancedSettingsSectionTitle" xml:space="preserve">
+    <value>[Åðvåñçéð]</value>
+  </data>
   <data name="DesktopSectionTitle.Text" xml:space="preserve">
     <value>[!! Ðëšķţôþ ~~~ !!]</value>
   </data>
@@ -95,6 +113,7 @@
   <data name="PageTitleEditButton" xml:space="preserve"><value>Edit page title</value></data>
   <data name="PageTitleSaveButton" xml:space="preserve"><value>Save page title</value></data>
   <data name="PageLayoutEditButton" xml:space="preserve"><value>Choose snap layout</value></data>
+  <data name="PageLayoutClearButton" xml:space="preserve"><value>[Çļéàŕ ļàýöüţ]</value></data>
   <data name="ScrollShortcutCancelButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>[!! Çàñçëļ ~~~ !!]</value>
   </data>
@@ -289,5 +308,47 @@
   </data>
   <data name="QuitDialogCloseButton" xml:space="preserve">
     <value>[Cåncél]</value>
+  </data>
+  <data name="SpanCompatibleDisplaysCard.Header" xml:space="preserve">
+    <value>[Špåñ çømpåtîbļé dîšpļåýš]</value>
+  </data>
+  <data name="SpanCompatibleDisplaysCard.Description" xml:space="preserve">
+    <value>[Éxtéñð thé øvérvîéŵ åçrøšš åðjåçéñt dîšpļåýš ŵhéñ théîr réšøļûtîøñ, šçåļé, åñð åļîgñméñt åré çømpåtîbļé]</value>
+  </data>
+  <data name="OverviewEdgeScrollingCard.Header" xml:space="preserve">
+    <value>[Éðgé šçrøļļîñg ŵhîļé dråggîñg]</value>
+  </data>
+  <data name="OverviewEdgeScrollingCard.Description" xml:space="preserve">
+    <value>[Šçrøļļ bétŵééñ pågéš ŵhéñ å ŵîñðøŵ ør pågé îš dråggéð ñéår thé ļéft ør rîght éðgé]</value>
+  </data>
+  <data name="SnapAssistanceCard.Header" xml:space="preserve">
+    <value>[Šñåp åššîštåñçé]</value>
+  </data>
+  <data name="SnapAssistanceCard.Description" xml:space="preserve">
+    <value>[Šhøŵ çøñfîgûréð šñåp zøñéš åñð réšîzé thé ŵîñðøŵ prévîéŵ ŵhéñ dråggîñg øvér å pågé]</value>
+  </data>
+  <data name="ResetPageCustomizationsCard.Header" xml:space="preserve">
+    <value>[Pågé çûštømîzåtîøñš]</value>
+  </data>
+  <data name="ResetPageCustomizationsCard.Description" xml:space="preserve">
+    <value>[Rémøvé évérý çûštøm pågé ñåmé åñð šåvéð šñåp ļåýøût]</value>
+  </data>
+  <data name="ResetPageCustomizationsButton.Content" xml:space="preserve">
+    <value>[Réšét]</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogTitle" xml:space="preserve">
+    <value>[Réšét pågé çûštømîzåtîøñš?]</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogMessage" xml:space="preserve">
+    <value>[Åļļ çûštøm pågé ñåméš åñð šåvéð šñåp ļåýøûtš ŵîļļ bé rémøvéð. Thîš çåñ't bé ûñðøñé.]</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogPrimaryButton" xml:space="preserve">
+    <value>[Réšét]</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogCloseButton" xml:space="preserve">
+    <value>[Çåñçéļ]</value>
+  </data>
+  <data name="ResetPageCustomizationsError" xml:space="preserve">
+    <value>[Infinity çøûļðñ't réšét ýøûr pågé çûštømîzåtîøñš. Trý ågåîñ.]</value>
   </data>
 </root>

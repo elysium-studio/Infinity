@@ -8,5 +8,7 @@ public interface IDwmWindowPreviewSurface
         double height,
         bool isVisible);
 
+    void RefreshSource(DwmWindowPreview preview);
+
     void Remove(DwmWindowPreview preview);
 }

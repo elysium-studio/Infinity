@@ -7,6 +7,10 @@ public sealed class Settings
 {
     public DragScrollSpeed DragScrollSpeed { get; set; } = DragScrollSpeed.Normal;
 
+    public bool EnableOverviewEdgeScrolling { get; set; } = true;
+
+    public bool EnableSnapAssistance { get; set; } = true;
+
     public Dictionary<int, DesktopSnapLayoutKind>? PageLayouts { get; set; } = [];
 
     public Dictionary<int, string>? PageTitles { get; set; } = [];
@@ -20,6 +24,8 @@ public sealed class Settings
     public ScrollSpeed ScrollSpeed { get; set; } = ScrollSpeed.Normal;
 
     public bool ShowHintOnStartup { get; set; } = true;
+
+    public bool SpanCompatibleDisplays { get; set; } = true;
 
     public bool StartWithWindows { get; set; } = true;
 

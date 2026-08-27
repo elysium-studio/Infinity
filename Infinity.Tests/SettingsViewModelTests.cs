@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.Messaging;
 using Infinity.Shell;
 using System.ComponentModel;
 
@@ -19,6 +20,19 @@ public sealed class SettingsViewModelTests
         Assert.Same(detail, viewModel.CurrentView);
     }
 
+    [Fact]
+    public void DesktopSectionOwnsInjectedItems()
+    {
+        TestDesktopItem first = new();
+        TestDesktopItem second = new();
+        using TestDesktopSection viewModel = new([first, second]);
+
+        Assert.Equal("Pages", viewModel.Title);
+        Assert.Collection(viewModel,
+            item => Assert.Same(first, item),
+            item => Assert.Same(second, item));
+    }
+
     private sealed class TestSettingViewModel :
         List<object>,
         ISettingViewModel
@@ -29,6 +43,17 @@ public sealed class SettingsViewModelTests
             remove { }
         }
 
+        public void Dispose()
+        {
+        }
+    }
+
+    public sealed class TestDesktopSection(IEnumerable<TestDesktopItem> items) :
+        DesktopSettingsSectionViewModel<TestDesktopItem>(null!, null!, WeakReferenceMessenger.Default, null!, "Pages", items);
+
+    public sealed class TestDesktopItem :
+        IDisposable
+    {
         public void Dispose()
         {
         }

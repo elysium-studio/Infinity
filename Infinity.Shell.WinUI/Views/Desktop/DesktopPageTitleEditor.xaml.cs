@@ -19,7 +19,7 @@ public sealed partial class DesktopPageTitleEditor :
 
     private bool disposed;
 
-    public DesktopPageTitleEditor() : this(new DesktopPageEditorLabels(string.Empty, string.Empty, string.Empty, string.Empty), new DesktopSnapLayoutCatalog())
+    public DesktopPageTitleEditor() : this(new DesktopPageEditorLabels(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty), new DesktopSnapLayoutCatalog())
     {
     }
 
@@ -108,6 +108,12 @@ public sealed partial class DesktopPageTitleEditor :
             ViewModel.SelectLayout(option.Kind);
             LayoutFlyout.Hide();
         }
+    }
+
+    private void HandleClearLayoutClicked(object sender, RoutedEventArgs args)
+    {
+        ViewModel.ClearLayout();
+        LayoutFlyout.Hide();
     }
 
     private void HandleLayoutPointerEntered(object sender, PointerRoutedEventArgs args)

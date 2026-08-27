@@ -79,6 +79,24 @@
   <data name="BooleanToggle.OnContent" xml:space="preserve">
     <value>Ja</value>
   </data>
+  <data name="OnOffToggle.OffContent" xml:space="preserve">
+    <value>Aus</value>
+  </data>
+  <data name="OnOffToggle.OnContent" xml:space="preserve">
+    <value>Ein</value>
+  </data>
+  <data name="PagesSettingsSectionTitle" xml:space="preserve">
+    <value>Seiten</value>
+  </data>
+  <data name="ScrollingSettingsSectionTitle" xml:space="preserve">
+    <value>Scrollen</value>
+  </data>
+  <data name="OverviewSettingsSectionTitle" xml:space="preserve">
+    <value>Übersicht</value>
+  </data>
+  <data name="AdvancedSettingsSectionTitle" xml:space="preserve">
+    <value>Erweitert</value>
+  </data>
   <data name="DesktopSectionTitle.Text" xml:space="preserve">
     <value>Desktop</value>
   </data>
@@ -95,6 +113,7 @@
   <data name="PageTitleEditButton" xml:space="preserve"><value>Edit page title</value></data>
   <data name="PageTitleSaveButton" xml:space="preserve"><value>Save page title</value></data>
   <data name="PageLayoutEditButton" xml:space="preserve"><value>Choose snap layout</value></data>
+  <data name="PageLayoutClearButton" xml:space="preserve"><value>Layout entfernen</value></data>
   <data name="ScrollShortcutCancelButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Abbrechen</value>
   </data>
@@ -289,5 +308,47 @@
   </data>
   <data name="QuitDialogCloseButton" xml:space="preserve">
     <value>Abbrechen</value>
+  </data>
+  <data name="SpanCompatibleDisplaysCard.Header" xml:space="preserve">
+    <value>Kompatible Bildschirme zusammenfassen</value>
+  </data>
+  <data name="SpanCompatibleDisplaysCard.Description" xml:space="preserve">
+    <value>Erweitert die Übersicht über benachbarte Bildschirme mit kompatibler Auflösung, Skalierung und Ausrichtung</value>
+  </data>
+  <data name="OverviewEdgeScrollingCard.Header" xml:space="preserve">
+    <value>Randscrollen beim Ziehen</value>
+  </data>
+  <data name="OverviewEdgeScrollingCard.Description" xml:space="preserve">
+    <value>Scrollt zwischen Seiten, wenn ein Fenster oder eine Seite an den linken oder rechten Rand gezogen wird</value>
+  </data>
+  <data name="SnapAssistanceCard.Header" xml:space="preserve">
+    <value>Andockhilfe</value>
+  </data>
+  <data name="SnapAssistanceCard.Description" xml:space="preserve">
+    <value>Zeigt konfigurierte Andockbereiche und passt die Fenstervorschau beim Ziehen über eine Seite an</value>
+  </data>
+  <data name="ResetPageCustomizationsCard.Header" xml:space="preserve">
+    <value>Seitenanpassungen</value>
+  </data>
+  <data name="ResetPageCustomizationsCard.Description" xml:space="preserve">
+    <value>Entfernt alle benutzerdefinierten Seitennamen und gespeicherten Andocklayouts</value>
+  </data>
+  <data name="ResetPageCustomizationsButton.Content" xml:space="preserve">
+    <value>Zurücksetzen</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogTitle" xml:space="preserve">
+    <value>Seitenanpassungen zurücksetzen?</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogMessage" xml:space="preserve">
+    <value>Alle benutzerdefinierten Seitennamen und gespeicherten Andocklayouts werden entfernt. Dies kann nicht rückgängig gemacht werden.</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogPrimaryButton" xml:space="preserve">
+    <value>Zurücksetzen</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogCloseButton" xml:space="preserve">
+    <value>Abbrechen</value>
+  </data>
+  <data name="ResetPageCustomizationsError" xml:space="preserve">
+    <value>Infinity konnte die Seitenanpassungen nicht zurücksetzen. Versuchen Sie es erneut.</value>
   </data>
 </root>

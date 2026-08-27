@@ -22,7 +22,7 @@ public sealed partial class ScrollModifierKeyViewModel(IServiceProvider provider
     IKeyLabelProvider labelProvider,
     ITextLocalizer localizer) :
     ObservableReadWriteViewModel<Settings, List<List<int>>>(provider, factory, messenger, disposer, dispatcher, settings, writer, read, write),
-    IDesktopViewModel
+    IScrollingViewModel
 {
     private List<List<int>> previousValue = [];
     private List<List<int>> pendingCombinations = [];

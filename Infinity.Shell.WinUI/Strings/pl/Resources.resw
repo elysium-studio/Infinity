@@ -79,6 +79,24 @@
   <data name="BooleanToggle.OnContent" xml:space="preserve">
     <value>Tak</value>
   </data>
+  <data name="OnOffToggle.OffContent" xml:space="preserve">
+    <value>Wył.</value>
+  </data>
+  <data name="OnOffToggle.OnContent" xml:space="preserve">
+    <value>Wł.</value>
+  </data>
+  <data name="PagesSettingsSectionTitle" xml:space="preserve">
+    <value>Strony</value>
+  </data>
+  <data name="ScrollingSettingsSectionTitle" xml:space="preserve">
+    <value>Przewijanie</value>
+  </data>
+  <data name="OverviewSettingsSectionTitle" xml:space="preserve">
+    <value>Przegląd</value>
+  </data>
+  <data name="AdvancedSettingsSectionTitle" xml:space="preserve">
+    <value>Zaawansowane</value>
+  </data>
   <data name="DesktopSectionTitle.Text" xml:space="preserve">
     <value>Pulpit</value>
   </data>
@@ -95,6 +113,7 @@
   <data name="PageTitleEditButton" xml:space="preserve"><value>Edit page title</value></data>
   <data name="PageTitleSaveButton" xml:space="preserve"><value>Save page title</value></data>
   <data name="PageLayoutEditButton" xml:space="preserve"><value>Choose snap layout</value></data>
+  <data name="PageLayoutClearButton" xml:space="preserve"><value>Wyczyść układ</value></data>
   <data name="ScrollShortcutCancelButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Anuluj</value>
   </data>
@@ -289,5 +308,47 @@
   </data>
   <data name="QuitDialogCloseButton" xml:space="preserve">
     <value>Anuluj</value>
+  </data>
+  <data name="SpanCompatibleDisplaysCard.Header" xml:space="preserve">
+    <value>Rozciągnij na zgodne ekrany</value>
+  </data>
+  <data name="SpanCompatibleDisplaysCard.Description" xml:space="preserve">
+    <value>Rozszerza przegląd na sąsiednie ekrany o zgodnej rozdzielczości, skali i wyrównaniu</value>
+  </data>
+  <data name="OverviewEdgeScrollingCard.Header" xml:space="preserve">
+    <value>Przewijanie przy krawędzi podczas przeciągania</value>
+  </data>
+  <data name="OverviewEdgeScrollingCard.Description" xml:space="preserve">
+    <value>Przewija między stronami, gdy okno lub strona jest przeciągana w pobliżu lewej albo prawej krawędzi</value>
+  </data>
+  <data name="SnapAssistanceCard.Header" xml:space="preserve">
+    <value>Asystent przyciągania</value>
+  </data>
+  <data name="SnapAssistanceCard.Description" xml:space="preserve">
+    <value>Pokazuje skonfigurowane strefy przyciągania i zmienia rozmiar podglądu okna podczas przeciągania nad stroną</value>
+  </data>
+  <data name="ResetPageCustomizationsCard.Header" xml:space="preserve">
+    <value>Dostosowania stron</value>
+  </data>
+  <data name="ResetPageCustomizationsCard.Description" xml:space="preserve">
+    <value>Usuwa wszystkie niestandardowe nazwy stron i zapisane układy przyciągania</value>
+  </data>
+  <data name="ResetPageCustomizationsButton.Content" xml:space="preserve">
+    <value>Resetuj</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogTitle" xml:space="preserve">
+    <value>Zresetować dostosowania stron?</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogMessage" xml:space="preserve">
+    <value>Wszystkie niestandardowe nazwy stron i zapisane układy przyciągania zostaną usunięte. Tej operacji nie można cofnąć.</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogPrimaryButton" xml:space="preserve">
+    <value>Resetuj</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogCloseButton" xml:space="preserve">
+    <value>Anuluj</value>
+  </data>
+  <data name="ResetPageCustomizationsError" xml:space="preserve">
+    <value>Infinity nie może zresetować dostosowań stron. Spróbuj ponownie.</value>
   </data>
 </root>

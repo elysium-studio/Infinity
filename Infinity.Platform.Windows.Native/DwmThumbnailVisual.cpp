@@ -74,6 +74,7 @@ namespace Infinity::Platform::Windows::Native
 		HANDLE SharedTargetHandle{};
 		HTHUMBNAIL ThumbnailHandle{};
 		SIZE SourceSize{};
+		RECT SourceMargins{};
 		int Width{};
 		int Height{};
 		bool IsVisible{};
@@ -103,6 +104,11 @@ namespace Infinity::Platform::Windows::Native
 	static LONG MaxLong(LONG left, LONG right)
 	{
 		return left > right ? left : right;
+	}
+
+	static LONG MinLong(LONG left, LONG right)
+	{
+		return left < right ? left : right;
 	}
 
 	static HRESULT SafeOpenSharedTarget(OpenSharedTargetFromHandle function, ICompositionPartner* partner, HANDLE handle, IVisualTargetPartner** target)
@@ -331,14 +337,47 @@ namespace Infinity::Platform::Windows::Native
 		return size;
 	}
 
-	static DWM_THUMBNAIL_PROPERTIES CreateThumbnailProperties(SIZE sourceSize, int width, int height, bool isVisible)
+	static RECT GetSourceMargins(HWND windowHandle)
 	{
+		RECT margins{};
+		RECT windowBounds{};
+		RECT visibleBounds{};
+
+		if (GetWindowRect(windowHandle, &windowBounds) &&
+			SUCCEEDED(DwmGetWindowAttribute(windowHandle, DWMWA_EXTENDED_FRAME_BOUNDS, &visibleBounds, sizeof(visibleBounds))))
+		{
+			margins.left = MaxLong(0, visibleBounds.left - windowBounds.left);
+			margins.top = MaxLong(0, visibleBounds.top - windowBounds.top);
+			margins.right = MaxLong(0, windowBounds.right - visibleBounds.right);
+			margins.bottom = MaxLong(0, windowBounds.bottom - visibleBounds.bottom);
+		}
+
+		UINT borderThickness{};
+
+		if (SUCCEEDED(DwmGetWindowAttribute(windowHandle, DWMWA_VISIBLE_FRAME_BORDER_THICKNESS, &borderThickness, sizeof(borderThickness))))
+		{
+			LONG border = static_cast<LONG>(borderThickness);
+			margins.left += border;
+			margins.top += border;
+			margins.right += border;
+			margins.bottom += border;
+		}
+
+		return margins;
+	}
+
+	static DWM_THUMBNAIL_PROPERTIES CreateThumbnailProperties(SIZE sourceSize, RECT requestedMargins, int width, int height, bool isVisible)
+	{
+		LONG left = MinLong(MaxLong(0, requestedMargins.left), MaxLong(0, sourceSize.cx - 1));
+		LONG top = MinLong(MaxLong(0, requestedMargins.top), MaxLong(0, sourceSize.cy - 1));
+		LONG right = MinLong(MaxLong(0, requestedMargins.right), MaxLong(0, sourceSize.cx - left - 1));
+		LONG bottom = MinLong(MaxLong(0, requestedMargins.bottom), MaxLong(0, sourceSize.cy - top - 1));
 		DWM_THUMBNAIL_PROPERTIES properties{};
 		properties.dwFlags = DWM_TNP_VISIBLE | DWM_TNP_OPACITY | DWM_TNP_RECTDESTINATION | DWM_TNP_RECTSOURCE | DWM_TNP_ENABLE3D;
 		properties.fVisible = isVisible ? TRUE : FALSE;
 		properties.opacity = 255;
 		properties.rcDestination = RECT{ 0, 0, width, height };
-		properties.rcSource = RECT{ 0, 0, sourceSize.cx, sourceSize.cy };
+		properties.rcSource = RECT{ left, top, sourceSize.cx - right, sourceSize.cy - bottom };
 		return properties;
 	}
 
@@ -367,6 +406,7 @@ namespace Infinity::Platform::Windows::Native
 		target.SourceWindowHandle = nullptr;
 		target.SharedTargetHandle = nullptr;
 		target.SourceSize = {};
+		target.SourceMargins = {};
 		target.IsActive = false;
 	}
 
@@ -399,6 +439,7 @@ namespace Infinity::Platform::Windows::Native
 		target.SourceWindowHandle = item.SourceWindowHandle;
 		target.SharedTargetHandle = item.SharedTargetHandle;
 		target.SourceSize = GetSourceSize(item.SourceWindowHandle);
+		target.SourceMargins = GetSourceMargins(item.SourceWindowHandle);
 		target.Width = item.Width;
 		target.Height = item.Height;
 		target.IsVisible = item.IsVisible != 0;
@@ -441,7 +482,7 @@ namespace Infinity::Platform::Windows::Native
 			return result;
 		}
 
-		DWM_THUMBNAIL_PROPERTIES properties = CreateThumbnailProperties(target.SourceSize, item.Width, item.Height, target.IsVisible);
+		DWM_THUMBNAIL_PROPERTIES properties = CreateThumbnailProperties(target.SourceSize, target.SourceMargins, item.Width, item.Height, target.IsVisible);
 		void* visual = nullptr;
 		result = SafeCreateSharedThumbnailVisual(createSharedThumbnailVisual, currentOwnerWindowHandle, item.SourceWindowHandle, 2, &properties, compositionDevice.Get(), &visual, &target.ThumbnailHandle);
 
@@ -467,12 +508,11 @@ namespace Infinity::Platform::Windows::Native
 
 		if (sizeChanged || visibilityChanged)
 		{
-			target.SourceSize = GetSourceSize(item.SourceWindowHandle);
 			target.Width = item.Width;
 			target.Height = item.Height;
 			target.IsVisible = item.IsVisible != 0;
 
-			DWM_THUMBNAIL_PROPERTIES properties = CreateThumbnailProperties(target.SourceSize, target.Width, target.Height, target.IsVisible);
+			DWM_THUMBNAIL_PROPERTIES properties = CreateThumbnailProperties(target.SourceSize, target.SourceMargins, target.Width, target.Height, target.IsVisible);
 			HRESULT result = DwmUpdateThumbnailProperties(target.ThumbnailHandle, &properties);
 
 			if (FAILED(result))
@@ -482,6 +522,21 @@ namespace Infinity::Platform::Windows::Native
 		}
 
 		return S_OK;
+	}
+
+	static HRESULT RefreshTargetSource(ThumbnailTarget& target)
+	{
+		HRESULT result = DwmFlush();
+
+		if (FAILED(result))
+		{
+			return result;
+		}
+
+		target.SourceSize = GetSourceSize(target.SourceWindowHandle);
+		target.SourceMargins = GetSourceMargins(target.SourceWindowHandle);
+		DWM_THUMBNAIL_PROPERTIES properties = CreateThumbnailProperties(target.SourceSize, target.SourceMargins, target.Width, target.Height, target.IsVisible);
+		return DwmUpdateThumbnailProperties(target.ThumbnailHandle, &properties);
 	}
 
 	static void RemoveInactiveTargets()
@@ -609,6 +664,30 @@ namespace Infinity::Platform::Windows::Native
 		return lastItemResult;
 	}
 
+	int DwmThumbnailVisual_RefreshSource(unsigned long long previewId)
+	{
+		if (!previewId)
+		{
+			return E_INVALIDARG;
+		}
+
+		ThumbnailTarget* target = FindTarget(previewId);
+
+		if (!target || !target->ThumbnailHandle)
+		{
+			return S_FALSE;
+		}
+
+		HRESULT result = RefreshTargetSource(*target);
+
+		if (FAILED(result))
+		{
+			return result;
+		}
+
+		return compositionDevice ? compositionDevice->Commit() : E_POINTER;
+	}
+
 	void DwmThumbnailVisual_Clear()
 	{
 		DestroyVisualTree();
@@ -620,5 +699,4 @@ namespace Infinity::Platform::Windows::Native
 			return;
 		}
 	}
-
 }

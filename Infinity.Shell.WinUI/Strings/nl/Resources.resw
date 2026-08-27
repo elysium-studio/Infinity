@@ -79,6 +79,24 @@
   <data name="BooleanToggle.OnContent" xml:space="preserve">
     <value>Ja</value>
   </data>
+  <data name="OnOffToggle.OffContent" xml:space="preserve">
+    <value>Uit</value>
+  </data>
+  <data name="OnOffToggle.OnContent" xml:space="preserve">
+    <value>Aan</value>
+  </data>
+  <data name="PagesSettingsSectionTitle" xml:space="preserve">
+    <value>Pagina's</value>
+  </data>
+  <data name="ScrollingSettingsSectionTitle" xml:space="preserve">
+    <value>Scrollen</value>
+  </data>
+  <data name="OverviewSettingsSectionTitle" xml:space="preserve">
+    <value>Overzicht</value>
+  </data>
+  <data name="AdvancedSettingsSectionTitle" xml:space="preserve">
+    <value>Geavanceerd</value>
+  </data>
   <data name="DesktopSectionTitle.Text" xml:space="preserve">
     <value>Bureaublad</value>
   </data>
@@ -95,6 +113,7 @@
   <data name="PageTitleEditButton" xml:space="preserve"><value>Edit page title</value></data>
   <data name="PageTitleSaveButton" xml:space="preserve"><value>Save page title</value></data>
   <data name="PageLayoutEditButton" xml:space="preserve"><value>Choose snap layout</value></data>
+  <data name="PageLayoutClearButton" xml:space="preserve"><value>Indeling wissen</value></data>
   <data name="ScrollShortcutCancelButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Annuleer</value>
   </data>
@@ -289,5 +308,47 @@
   </data>
   <data name="QuitDialogCloseButton" xml:space="preserve">
     <value>Annuleren</value>
+  </data>
+  <data name="SpanCompatibleDisplaysCard.Header" xml:space="preserve">
+    <value>Over compatibele beeldschermen spreiden</value>
+  </data>
+  <data name="SpanCompatibleDisplaysCard.Description" xml:space="preserve">
+    <value>Breidt het overzicht uit over aangrenzende beeldschermen met een compatibele resolutie, schaal en uitlijning</value>
+  </data>
+  <data name="OverviewEdgeScrollingCard.Header" xml:space="preserve">
+    <value>Randscrollen tijdens slepen</value>
+  </data>
+  <data name="OverviewEdgeScrollingCard.Description" xml:space="preserve">
+    <value>Scrollt tussen pagina's wanneer een venster of pagina naar de linker- of rechterrand wordt gesleept</value>
+  </data>
+  <data name="SnapAssistanceCard.Header" xml:space="preserve">
+    <value>Vastmaakhulp</value>
+  </data>
+  <data name="SnapAssistanceCard.Description" xml:space="preserve">
+    <value>Toont ingestelde vastmaakzones en past het venstervoorbeeld aan tijdens het slepen over een pagina</value>
+  </data>
+  <data name="ResetPageCustomizationsCard.Header" xml:space="preserve">
+    <value>Pagina-aanpassingen</value>
+  </data>
+  <data name="ResetPageCustomizationsCard.Description" xml:space="preserve">
+    <value>Verwijdert alle aangepaste paginanamen en opgeslagen vastmaakindelingen</value>
+  </data>
+  <data name="ResetPageCustomizationsButton.Content" xml:space="preserve">
+    <value>Opnieuw instellen</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogTitle" xml:space="preserve">
+    <value>Pagina-aanpassingen opnieuw instellen?</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogMessage" xml:space="preserve">
+    <value>Alle aangepaste paginanamen en opgeslagen vastmaakindelingen worden verwijderd. Dit kan niet ongedaan worden gemaakt.</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogPrimaryButton" xml:space="preserve">
+    <value>Opnieuw instellen</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogCloseButton" xml:space="preserve">
+    <value>Annuleren</value>
+  </data>
+  <data name="ResetPageCustomizationsError" xml:space="preserve">
+    <value>Infinity kan de pagina-aanpassingen niet opnieuw instellen. Probeer het opnieuw.</value>
   </data>
 </root>

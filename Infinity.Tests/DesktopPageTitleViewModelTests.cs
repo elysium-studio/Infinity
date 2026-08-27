@@ -4,7 +4,7 @@ namespace Infinity.Tests;
 
 public sealed class DesktopPageTitleViewModelTests
 {
-    private readonly DesktopPageTitleViewModel viewModel = new(new DesktopPageEditorLabels(string.Empty, string.Empty, string.Empty, string.Empty), new DesktopSnapLayoutCatalog());
+    private readonly DesktopPageTitleViewModel viewModel = new(new DesktopPageEditorLabels(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty), new DesktopSnapLayoutCatalog());
 
     [Theory]
     [InlineData(1920, 1080)]
@@ -32,5 +32,21 @@ public sealed class DesktopPageTitleViewModelTests
 
         Assert.Equal(DesktopSnapLayoutKind.Thirds, selected.Kind);
         Assert.All(selected.Slots, slot => Assert.True(slot.IsHighlighted));
+    }
+
+    [Fact]
+    public void ClearLayoutSubmitsNoneAndRemovesSelection()
+    {
+        viewModel.ConfigureDisplay(1920, 1080, 1);
+        viewModel.Bind(2, string.Empty, DesktopSnapLayoutKind.Thirds);
+        DesktopSnapLayoutKind? submittedLayout = null;
+        viewModel.LayoutSubmitted += (_, layout) => submittedLayout = layout;
+
+        viewModel.ClearLayout();
+
+        Assert.Equal(DesktopSnapLayoutKind.None, viewModel.Layout);
+        Assert.Equal(DesktopSnapLayoutKind.None, submittedLayout);
+        Assert.False(viewModel.HasLayout);
+        Assert.DoesNotContain(viewModel.AvailableLayouts, option => option.IsSelected);
     }
 }

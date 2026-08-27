@@ -23,6 +23,7 @@ public sealed partial class DesktopOverviewView :
     private readonly WindowInputTransparencyController inputController;
     private readonly IDesktopBackgroundSource backgroundSource;
     private readonly IKeyboardInputSource keyboardInputSource;
+    private readonly DesktopOverviewConfiguration overviewConfiguration;
     private readonly DispatcherQueue dispatcherQueue;
     private DesktopOverviewViewModel? subscribedViewModel;
     private DispatcherQueueTimer? previewCleanupTimer;
@@ -32,7 +33,7 @@ public sealed partial class DesktopOverviewView :
     private int globalDismissQueued;
     private int openingGeneration;
 
-    public DesktopOverviewView(DesktopScrollPreviewView desktopScrollPreview, DesktopOverviewBackdropAnimator backdropAnimator, DesktopOverviewWallpaperPresenter wallpaperPresenter, WindowInputTransparencyController inputController, IDesktopBackgroundSource backgroundSource, IKeyboardInputSource keyboardInputSource)
+    public DesktopOverviewView(DesktopScrollPreviewView desktopScrollPreview, DesktopOverviewBackdropAnimator backdropAnimator, DesktopOverviewWallpaperPresenter wallpaperPresenter, WindowInputTransparencyController inputController, IDesktopBackgroundSource backgroundSource, IKeyboardInputSource keyboardInputSource, DesktopOverviewConfiguration overviewConfiguration)
     {
         InitializeComponent();
 
@@ -43,6 +44,7 @@ public sealed partial class DesktopOverviewView :
         this.inputController = inputController;
         this.backgroundSource = backgroundSource;
         this.keyboardInputSource = keyboardInputSource;
+        this.overviewConfiguration = overviewConfiguration;
         dispatcherQueue = DispatcherQueue;
 
         backdropAnimator.Reset(BackgroundTint);
@@ -70,6 +72,7 @@ public sealed partial class DesktopOverviewView :
 
     protected override void OnOpened()
     {
+        IsMonitorSpanningEnabled = overviewConfiguration.IsMonitorSpanningEnabled;
         isOverlayOpen = true;
         int generation = ++openingGeneration;
         CancelPreviewCleanup();
@@ -83,6 +86,7 @@ public sealed partial class DesktopOverviewView :
         Interlocked.Exchange(ref globalDismissQueued, 0);
         openingGeneration++;
         inputController.SetInputEnabled(Handle, false);
+        WindowExtensions.SetTopMost(Handle, false);
         SchedulePreviewCleanup();
     }
 

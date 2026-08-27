@@ -19,6 +19,17 @@ public sealed class DwmWindowPreviewTests
     }
 
     [Fact]
+    public void SourceRefreshIsForwardedToTheOwningSurface()
+    {
+        TestSurface surface = new();
+        DwmWindowPreview preview = new(surface, new IntPtr(42), 7);
+
+        preview.RefreshSource();
+
+        Assert.Same(preview, surface.RefreshedPreview);
+    }
+
+    [Fact]
     public void DisposeRemovesPreviewOnceAndRejectsLaterUpdates()
     {
         TestSurface surface = new();
@@ -51,6 +62,8 @@ public sealed class DwmWindowPreviewTests
 
         public DwmWindowPreview? AppliedPreview { get; private set; }
 
+        public DwmWindowPreview? RefreshedPreview { get; private set; }
+
         public (nint SharedTargetHandle, double Width, double Height, bool IsVisible) Target { get; private set; }
 
         public int RemoveCount => Volatile.Read(ref removeCount);
@@ -64,6 +77,8 @@ public sealed class DwmWindowPreviewTests
             AppliedPreview = preview;
             Target = (sharedTargetHandle, width, height, isVisible);
         }
+
+        public void RefreshSource(DwmWindowPreview preview) => RefreshedPreview = preview;
 
         public void Remove(DwmWindowPreview preview) => Interlocked.Increment(ref removeCount);
     }

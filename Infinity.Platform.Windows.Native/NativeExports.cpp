@@ -11,6 +11,11 @@ extern "C" __declspec(dllexport) int __stdcall DwmThumbnailVisual_RenderBatch(HW
 	return Infinity::Platform::Windows::Native::DwmThumbnailVisual_RenderBatch(ownerWindowHandle, items, count);
 }
 
+extern "C" __declspec(dllexport) int __stdcall DwmThumbnailVisual_RefreshSource(unsigned long long previewId)
+{
+	return Infinity::Platform::Windows::Native::DwmThumbnailVisual_RefreshSource(previewId);
+}
+
 extern "C" __declspec(dllexport) void __stdcall DwmThumbnailVisual_Clear()
 {
 	Infinity::Platform::Windows::Native::DwmThumbnailVisual_Clear();

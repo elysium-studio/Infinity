@@ -40,6 +40,10 @@ public sealed partial class DesktopPageTitleViewModel(DesktopPageEditorLabels la
 
     public string EditLayoutLabel => labels.EditLayout;
 
+    public string ClearLayoutLabel => labels.ClearLayout;
+
+    public bool HasLayout => Layout != DesktopSnapLayoutKind.None;
+
     public bool IsDisplayMode => !IsEditing;
 
     public int Page { get; private set; }
@@ -122,6 +126,17 @@ public sealed partial class DesktopPageTitleViewModel(DesktopPageEditorLabels la
         LayoutSubmitted?.Invoke(this, selectedLayout);
     }
 
+    public void ClearLayout()
+    {
+        if (!HasLayout)
+        {
+            return;
+        }
+
+        Layout = DesktopSnapLayoutKind.None;
+        LayoutSubmitted?.Invoke(this, DesktopSnapLayoutKind.None);
+    }
+
     public void Reset()
     {
         Cancel();
@@ -142,6 +157,7 @@ public sealed partial class DesktopPageTitleViewModel(DesktopPageEditorLabels la
 
     partial void OnLayoutChanged(DesktopSnapLayoutKind value)
     {
+        OnPropertyChanged(nameof(HasLayout));
         RefreshLayoutSelectionProperties();
     }
 

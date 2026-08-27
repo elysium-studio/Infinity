@@ -97,15 +97,24 @@ internal sealed class DesktopWindowPreview :
 
     public void RefreshSourceSize(TrackedWindow trackedWindow, IWindowGeometryReader geometryReader)
     {
+        double previousWidth = SourceWidth;
+        double previousHeight = SourceHeight;
+
         if (geometryReader.TryReadVisibleGeometry(trackedWindow.Handle, out _, out _, out int visibleWidth, out int visibleHeight))
         {
             SourceWidth = visibleWidth;
             SourceHeight = visibleHeight;
-            return;
+        }
+        else
+        {
+            SourceWidth = trackedWindow.Width;
+            SourceHeight = trackedWindow.Height;
         }
 
-        SourceWidth = trackedWindow.Width;
-        SourceHeight = trackedWindow.Height;
+        if (previousWidth > 0 && previousHeight > 0 && (previousWidth != SourceWidth || previousHeight != SourceHeight))
+        {
+            preview?.RefreshSource();
+        }
     }
 
     public void SetZIndex(int value)
@@ -155,8 +164,6 @@ internal sealed class DesktopWindowPreview :
     }
 
     public void SetSelected(bool value) => focusVisual.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
-
-    public void SetThumbnailWorldScale(double value) => preview?.SetWorldScale(value);
 
     public void Activate()
     {
@@ -412,17 +419,7 @@ internal sealed class DesktopWindowPreview :
 
     private void ApplyTranslation()
     {
-        double horizontalDelta = dragHorizontalDelta;
-        double verticalDelta = dragVerticalDelta;
-
-        if (isDragging)
-        {
-            dragPositionResolver.TryConstrainVisualDelta(windowHandle, horizontalDelta, verticalDelta, out horizontalDelta, out verticalDelta);
-        }
-
-        double targetX = x + horizontalDelta;
-        double targetY = y + verticalDelta;
-        Vector3 translation = new(ToFloat(targetX), ToFloat(targetY), shadowDepth);
+        Vector3 translation = new(ToFloat(x + dragHorizontalDelta), ToFloat(y + dragVerticalDelta), shadowDepth);
 
         Host.Translation = translation;
         focusHost.Translation = translation;

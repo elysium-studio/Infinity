@@ -27,6 +27,7 @@ public sealed partial class DesktopScrollPreviewView :
     private readonly DesktopPageStrip pageStrip;
     private readonly DesktopWindowPreviewCollection previews;
     private readonly DesktopDragCursorConfinement cursorConfinement;
+    private readonly DesktopOverviewConfiguration overviewConfiguration;
     private bool eventsSubscribed;
     private bool filterActive;
     private bool shiftKeyDown;
@@ -42,7 +43,7 @@ public sealed partial class DesktopScrollPreviewView :
     private double activeSnapPointerX;
     private double activeSnapPointerY;
 
-    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IShellLayoutCalculator layoutCalculator, IPanState panState, IScroller scroller, IPager pager, IWorkspace workspace, DesktopPageLayoutCalculator pageLayoutCalculator, DesktopSnapPlacementResolver snapPlacementResolver, DesktopScrollPreviewAnimator animator, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement)
+    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IShellLayoutCalculator layoutCalculator, IPanState panState, IScroller scroller, IPager pager, IWorkspace workspace, DesktopPageLayoutCalculator pageLayoutCalculator, DesktopSnapPlacementResolver snapPlacementResolver, DesktopScrollPreviewAnimator animator, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopOverviewConfiguration overviewConfiguration)
     {
         InitializeComponent();
 
@@ -59,6 +60,7 @@ public sealed partial class DesktopScrollPreviewView :
         this.pageStrip = pageStrip;
         this.previews = previews;
         this.cursorConfinement = cursorConfinement;
+        this.overviewConfiguration = overviewConfiguration;
 
         this.pageStrip.PageInvoked += HandlePageInvoked;
         this.pageStrip.ReorderPreviewChanged += HandlePageReorderPreviewChanged;
@@ -102,7 +104,6 @@ public sealed partial class DesktopScrollPreviewView :
 
             SubscribeEvents();
             pageStrip.Start(PageCanvas, PageShadowCanvas, PageTitleCanvas, PreviewSurface, animator.Scale);
-            previews.SetThumbnailWorldScale(animator.Scale);
             Synchronise();
 
             SetInteractionEnabled(false);
@@ -602,6 +603,12 @@ public sealed partial class DesktopScrollPreviewView :
 
     private void RefreshActiveWindowSnapTarget()
     {
+        if (!overviewConfiguration.IsSnapAssistanceEnabled)
+        {
+            ClearWindowSnapTarget();
+            return;
+        }
+
         if (activeSnapWindow == 0 || !pageStrip.TryUpdateWindowSnapTarget(activeSnapPointerX, activeSnapPointerY, out DesktopSnapSlotTarget target) || !snapPlacementResolver.TryResolve(target.Page, target.Layout, target.Slot, monitorOriginX, monitorOriginY, out DesktopSnapPlacement placement))
         {
             if (activeSnapWindow != 0)

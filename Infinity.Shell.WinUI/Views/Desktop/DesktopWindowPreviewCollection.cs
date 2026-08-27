@@ -16,7 +16,6 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
     private nint pendingForegroundHandle;
     private nint selectedHandle;
     private string filterText = string.Empty;
-    private double thumbnailWorldScale = 1;
     private bool interactionEnabled;
     private bool disposed;
 
@@ -60,7 +59,6 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
             }
 
             preview.RefreshSourceSize(trackedWindow, geometryReader);
-            preview.SetThumbnailWorldScale(thumbnailWorldScale);
             preview.SetFilterMatch(WindowTitleFilter.Matches(trackedWindow.Title, filterText));
             preview.SetZIndex(zIndex);
         }
@@ -144,16 +142,6 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         }
     }
 
-    public void SetThumbnailWorldScale(double value)
-    {
-        thumbnailWorldScale = double.IsFinite(value) && value > 0 ? value : 1;
-
-        foreach (DesktopWindowPreview preview in previews.Values)
-        {
-            preview.SetThumbnailWorldScale(thumbnailWorldScale);
-        }
-    }
-
     internal void SetSnapTarget(nint handle, DesktopWindowSnapTarget? target)
     {
         if (previews.TryGetValue(handle, out DesktopWindowPreview? preview))
@@ -194,7 +182,6 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         filterText = string.Empty;
         selectedHandle = 0;
         pendingForegroundHandle = 0;
-        thumbnailWorldScale = 1;
         interactionEnabled = false;
     }
 

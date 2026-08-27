@@ -9,5 +9,7 @@ namespace Infinity::Platform::Windows::Native
 
 	int DwmThumbnailVisual_RenderBatch(HWND ownerWindowHandle, DwmThumbnailVisualItem* items, int count);
 
+	int DwmThumbnailVisual_RefreshSource(unsigned long long previewId);
+
 	void DwmThumbnailVisual_Clear();
 }

@@ -78,51 +78,62 @@
                                             <Setter Property="CornerRadius" Value="{StaticResource OverlayCornerRadius}" />
                                         </Style>
                                     </Flyout.FlyoutPresenterStyle>
-                                    <ItemsRepeater ItemsSource="{x:Bind ViewModel.AvailableLayouts}">
-                                        <ItemsRepeater.Layout>
-                                            <UniformGridLayout
-                                                MaximumRowsOrColumns="{x:Bind ViewModel.LayoutColumnCount, Mode=OneWay}"
-                                                MinColumnSpacing="12"
-                                                MinRowSpacing="12"
-                                                Orientation="Horizontal" />
-                                        </ItemsRepeater.Layout>
-                                        <ItemsRepeater.ItemTemplate>
-                                            <DataTemplate x:DataType="shell:DesktopSnapLayoutOptionViewModel">
-                                                <ToggleButton
-                                                    Width="{x:Bind PreviewWidth}"
-                                                    Height="{x:Bind PreviewHeight}"
-                                                    Style="{StaticResource SnapLayoutButtonStyle}"
-                                                    AutomationProperties.Name="{x:Bind Name}"
-                                                    Checked="HandleLayoutSelectionChanged"
-                                                    Click="HandleLayoutClicked"
-                                                    IsChecked="{x:Bind IsSelected, Mode=OneWay}"
-                                                    PointerEntered="HandleLayoutPointerEntered"
-                                                    PointerExited="HandleLayoutPointerExited"
-                                                    Tag="{x:Bind}"
-                                                    Unchecked="HandleLayoutSelectionChanged">
-                                                    <ItemsControl
+                                    <StackPanel Spacing="12">
+                                        <ItemsRepeater ItemsSource="{x:Bind ViewModel.AvailableLayouts}">
+                                            <ItemsRepeater.Layout>
+                                                <UniformGridLayout
+                                                    MaximumRowsOrColumns="{x:Bind ViewModel.LayoutColumnCount, Mode=OneWay}"
+                                                    MinColumnSpacing="12"
+                                                    MinRowSpacing="12"
+                                                    Orientation="Horizontal" />
+                                            </ItemsRepeater.Layout>
+                                            <ItemsRepeater.ItemTemplate>
+                                                <DataTemplate x:DataType="shell:DesktopSnapLayoutOptionViewModel">
+                                                    <ToggleButton
                                                         Width="{x:Bind PreviewWidth}"
                                                         Height="{x:Bind PreviewHeight}"
-                                                        IsHitTestVisible="False"
-                                                        ItemsSource="{x:Bind Slots}">
-                                                        <ItemsControl.ItemsPanel>
-                                                            <ItemsPanelTemplate>
-                                                                <local:DesktopSnapCanvas />
-                                                            </ItemsPanelTemplate>
-                                                        </ItemsControl.ItemsPanel>
-                                                        <ItemsControl.ItemTemplate>
-                                                            <DataTemplate x:DataType="shell:DesktopSnapLayoutSlotViewModel">
-                                                                <Grid Width="{x:Bind Width}" Height="{x:Bind Height}">
-                                                                    <Border Background="{ThemeResource ControlFillColorSecondaryBrush}" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="3" />
-                                                                    <Border Background="{ThemeResource AccentFillColorDefaultBrush}" BorderBrush="{ThemeResource AccentFillColorDefaultBrush}" BorderThickness="1" CornerRadius="3" Opacity="{x:Bind local:DesktopPageTitleEditor.ToOpacity(IsHighlighted), Mode=OneWay}" />
-                                                                </Grid>
-                                                            </DataTemplate>
-                                                        </ItemsControl.ItemTemplate>
-                                                    </ItemsControl>
-                                                </ToggleButton>
-                                            </DataTemplate>
-                                        </ItemsRepeater.ItemTemplate>
-                                    </ItemsRepeater>
+                                                        Style="{StaticResource SnapLayoutButtonStyle}"
+                                                        AutomationProperties.Name="{x:Bind Name}"
+                                                        Checked="HandleLayoutSelectionChanged"
+                                                        Click="HandleLayoutClicked"
+                                                        IsChecked="{x:Bind IsSelected, Mode=OneWay}"
+                                                        PointerEntered="HandleLayoutPointerEntered"
+                                                        PointerExited="HandleLayoutPointerExited"
+                                                        Tag="{x:Bind}"
+                                                        Unchecked="HandleLayoutSelectionChanged">
+                                                        <ItemsControl
+                                                            Width="{x:Bind PreviewWidth}"
+                                                            Height="{x:Bind PreviewHeight}"
+                                                            IsHitTestVisible="False"
+                                                            ItemsSource="{x:Bind Slots}">
+                                                            <ItemsControl.ItemsPanel>
+                                                                <ItemsPanelTemplate>
+                                                                    <local:DesktopSnapCanvas />
+                                                                </ItemsPanelTemplate>
+                                                            </ItemsControl.ItemsPanel>
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate x:DataType="shell:DesktopSnapLayoutSlotViewModel">
+                                                                    <Grid Width="{x:Bind Width}" Height="{x:Bind Height}">
+                                                                        <Border Background="{ThemeResource ControlFillColorSecondaryBrush}" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="3" />
+                                                                        <Border Background="{ThemeResource AccentFillColorDefaultBrush}" BorderBrush="{ThemeResource AccentFillColorDefaultBrush}" BorderThickness="1" CornerRadius="3" Opacity="{x:Bind local:DesktopPageTitleEditor.ToOpacity(IsHighlighted), Mode=OneWay}" />
+                                                                    </Grid>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </ToggleButton>
+                                                </DataTemplate>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+                                        <StackPanel Spacing="8" Visibility="{x:Bind ToVisibility(ViewModel.HasLayout), Mode=OneWay}">
+                                            <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                                            <Button
+                                                HorizontalAlignment="Stretch"
+                                                HorizontalContentAlignment="Center"
+                                                AutomationProperties.Name="{x:Bind ViewModel.ClearLayoutLabel}"
+                                                Click="HandleClearLayoutClicked"
+                                                Content="{x:Bind ViewModel.ClearLayoutLabel}" />
+                                        </StackPanel>
+                                    </StackPanel>
                                 </Flyout>
                             </Button.Flyout>
                             <Grid Width="18" Height="14" ColumnSpacing="2" RowSpacing="2">

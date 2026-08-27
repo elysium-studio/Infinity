@@ -20,23 +20,6 @@ public sealed class DesktopWindowDragPositionResolver(IWindowStore windowStore, 
         return true;
     }
 
-    public bool TryConstrainVisualDelta(nint windowHandle, double horizontalVisualDelta, double verticalVisualDelta, out double constrainedHorizontalDelta, out double constrainedVerticalDelta)
-    {
-        constrainedHorizontalDelta = horizontalVisualDelta;
-        constrainedVerticalDelta = verticalVisualDelta;
-
-        if (!TryGetConstrainedPosition(windowHandle, horizontalVisualDelta, verticalVisualDelta, out TrackedWindow? trackedWindow, out double targetCanvasX, out double targetCanvasY) || trackedWindow is null)
-        {
-            return false;
-        }
-
-        int sourcePage = GetPage(trackedWindow.CanvasX + (trackedWindow.Width / 2.0));
-        int targetPage = GetPage(targetCanvasX + (trackedWindow.Width / 2.0));
-        constrainedHorizontalDelta = targetCanvasX - trackedWindow.CanvasX + ((targetPage - sourcePage) * layoutCalculator.PageSpacing);
-        constrainedVerticalDelta = targetCanvasY - trackedWindow.CanvasY;
-        return double.IsFinite(constrainedHorizontalDelta) && double.IsFinite(constrainedVerticalDelta);
-    }
-
     private bool TryGetConstrainedPosition(nint windowHandle, double horizontalVisualDelta, double verticalVisualDelta, out TrackedWindow? trackedWindow, out double targetCanvasX, out double targetCanvasY)
     {
         trackedWindow = null;

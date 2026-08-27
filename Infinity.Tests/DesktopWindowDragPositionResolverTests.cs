@@ -37,22 +37,6 @@ public sealed class DesktopWindowDragPositionResolverTests
         Assert.Equal(48, position.CanvasX);
     }
 
-    [Fact]
-    public void ConstrainVisualDeltaMatchesCommittedPosition()
-    {
-        TrackedWindow window = CreateWindow(100, 100, 800, 500);
-        DesktopWindowDragPositionResolver resolver = CreateResolver(window);
-
-        bool constrained = resolver.TryConstrainVisualDelta(window.Handle, 0, 900, out double horizontalDelta, out double verticalDelta);
-        bool resolved = resolver.TryResolve(window.Handle, horizontalDelta, verticalDelta, out DesktopWindowDragPosition position);
-
-        Assert.True(constrained);
-        Assert.True(resolved);
-        Assert.Equal(0, horizontalDelta);
-        Assert.Equal(440, verticalDelta);
-        Assert.Equal(540, position.CanvasY);
-    }
-
     private DesktopWindowDragPositionResolver CreateResolver(TrackedWindow window)
     {
         store.Add(window);

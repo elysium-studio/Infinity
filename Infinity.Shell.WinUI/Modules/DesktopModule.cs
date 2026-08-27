@@ -69,8 +69,9 @@ public sealed class DesktopModule :
         DesktopPageStrip pageStrip = provider.GetRequiredService<DesktopPageStrip>();
         DesktopWindowPreviewCollection previews = provider.GetRequiredService<DesktopWindowPreviewCollection>();
         DesktopDragCursorConfinement cursorConfinement = provider.GetRequiredService<DesktopDragCursorConfinement>();
+        DesktopOverviewConfiguration overviewConfiguration = provider.GetRequiredService<DesktopOverviewConfiguration>();
 
-        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, layoutCalculator, panState, scroller, pager, workspace, pageLayoutCalculator, snapPlacementResolver, animator, pageStrip, previews, cursorConfinement);
+        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, layoutCalculator, panState, scroller, pager, workspace, pageLayoutCalculator, snapPlacementResolver, animator, pageStrip, previews, cursorConfinement, overviewConfiguration);
     }
 
     private static DesktopOverviewView CreateDesktopOverviewView(IServiceProvider provider)
@@ -81,8 +82,9 @@ public sealed class DesktopModule :
         WindowInputTransparencyController inputController = provider.GetRequiredService<WindowInputTransparencyController>();
         IDesktopBackgroundSource backgroundSource = provider.GetRequiredService<IDesktopBackgroundSource>();
         IKeyboardInputSource keyboardInputSource = provider.GetRequiredService<IKeyboardInputSource>();
+        DesktopOverviewConfiguration overviewConfiguration = provider.GetRequiredService<DesktopOverviewConfiguration>();
 
-        return new DesktopOverviewView(desktopScrollPreview, backdropAnimator, wallpaperPresenter, inputController, backgroundSource, keyboardInputSource);
+        return new DesktopOverviewView(desktopScrollPreview, backdropAnimator, wallpaperPresenter, inputController, backgroundSource, keyboardInputSource, overviewConfiguration);
     }
 
     private static DesktopOverviewViewModel CreateDesktopOverviewViewModel(IServiceProvider provider)

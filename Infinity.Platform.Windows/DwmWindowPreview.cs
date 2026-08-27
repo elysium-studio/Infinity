@@ -13,6 +13,14 @@ public sealed class DwmWindowPreview(IDwmWindowPreviewSurface surface,
 
     internal long Id { get; } = id;
 
+    public void RefreshSource()
+    {
+        if (Volatile.Read(ref isDisposed) == 0)
+        {
+            surface.RefreshSource(this);
+        }
+    }
+
     public void SetTarget(nint sharedTargetHandle, double width, double height, bool isVisible)
     {
         if (Volatile.Read(ref isDisposed) == 0)

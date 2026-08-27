@@ -22,7 +22,6 @@ public sealed class ThumbnailCompositionPreview :
     private readonly ILogger logger;
     private bool isDisposed;
     private bool isVisible;
-    private float worldScale = 1.0f;
     private float rasterScale = 1.0f;
     private float width;
     private float height;
@@ -113,24 +112,12 @@ public sealed class ThumbnailCompositionPreview :
         ApplyPresentation();
     }
 
-    public void SetWorldScale(double value)
+    public void RefreshSource()
     {
-        if (isDisposed)
+        if (!isDisposed)
         {
-            return;
+            preview.RefreshSource();
         }
-
-        float normalizedScale = NormalizeScale(value);
-        float normalizedRasterScale = NormalizeScale(host.XamlRoot?.RasterizationScale ?? 1.0);
-
-        if (worldScale == normalizedScale && rasterScale == normalizedRasterScale)
-        {
-            return;
-        }
-
-        worldScale = normalizedScale;
-        rasterScale = normalizedRasterScale;
-        ApplyPresentation();
     }
 
     public void Dispose()
@@ -162,9 +149,8 @@ public sealed class ThumbnailCompositionPreview :
             return;
         }
 
-        float samplingScale = MathF.Max(0.01f, worldScale * rasterScale);
-        float renderWidth = MathF.Max(1.0f, MathF.Round(width * samplingScale));
-        float renderHeight = MathF.Max(1.0f, MathF.Round(height * samplingScale));
+        float renderWidth = MathF.Max(1.0f, MathF.Round(width * rasterScale));
+        float renderHeight = MathF.Max(1.0f, MathF.Round(height * rasterScale));
         float horizontalScale = width / renderWidth;
         float verticalScale = height / renderHeight;
 

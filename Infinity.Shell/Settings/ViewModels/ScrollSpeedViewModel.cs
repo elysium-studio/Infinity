@@ -13,4 +13,4 @@ public sealed partial class ScrollSpeedViewModel(IServiceProvider provider,
     IWritableOptions<Settings> writer,
     Func<Settings, int> read,
     Action<Settings, int> write) : ObservableReadWriteViewModel<Settings, int>(provider, factory, messenger, disposer, dispatcher, settings, writer, read, write),
-    IDesktopViewModel;
+    IScrollingViewModel;

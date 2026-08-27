@@ -8,7 +8,6 @@
     HorizontalContentAlignment="Stretch"
     VerticalContentAlignment="Stretch"
     DataContext="{WinUI:ViewModel Key=DesktopOverviewView}"
-    IsMonitorSpanningEnabled="True"
     IsOpen="{x:Bind ViewModel.IsOpen, Mode=TwoWay}"
     StaysOpen="{x:Bind ViewModel.StaysOpen, Mode=TwoWay}">
     <Grid>
