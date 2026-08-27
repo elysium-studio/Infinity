@@ -1,5 +1,4 @@
 using Elysium.Application.Abstractions;
-using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Infinity.Shell;
 
@@ -8,16 +7,13 @@ namespace Infinity.Tests;
 public sealed class DesktopApplicationPickerViewModelTests
 {
     [Fact]
-    public async Task LoadBuildsPageAndLayoutSlotDestinations()
+    public async Task LoadTargetsTheRequestedPageWithoutItsLayout()
     {
         DesktopApplicationPickerViewModel viewModel = CreateViewModel();
 
         await viewModel.LoadAsync(new DesktopApplicationTarget(3, DesktopSnapLayoutKind.Halves));
 
-        Assert.Equal(3, viewModel.Destinations.Count);
-        Assert.Equal(new DesktopApplicationTarget(3), viewModel.Destinations[0].Target);
-        Assert.Equal(new DesktopApplicationTarget(3, DesktopSnapLayoutKind.Halves, 0), viewModel.Destinations[1].Target);
-        Assert.Equal(new DesktopApplicationTarget(3, DesktopSnapLayoutKind.Halves, 1), viewModel.Destinations[2].Target);
+        Assert.Equal(new DesktopApplicationTarget(3), viewModel.Target);
     }
 
     [Fact]
@@ -28,13 +24,34 @@ public sealed class DesktopApplicationPickerViewModelTests
 
         viewModel.SearchText = "calc";
 
-        LaunchableApplication application = Assert.Single(viewModel.Results);
+        DesktopApplicationPickerItemViewModel application = Assert.Single(viewModel.Results);
         Assert.Equal("Calculator", application.DisplayName);
         Assert.True(viewModel.HasResults);
         Assert.False(viewModel.ShowEmptyState);
     }
 
-    private static DesktopApplicationPickerViewModel CreateViewModel() => new(new TestApplicationCatalog(), new DesktopSnapLayoutCatalog(), new TestLocalizer(), new TestDispatcher());
+    [Fact]
+    public async Task LoadDoesNotRequestIconsUntilAnItemIsRealized()
+    {
+        TestApplicationCatalog catalog = new();
+        DesktopApplicationPickerViewModel viewModel = new(catalog, new TestDispatcher());
+
+        await viewModel.LoadAsync(new DesktopApplicationTarget(0));
+
+        Assert.Equal(0, catalog.IconRequestCount);
+
+        DesktopApplicationPickerItemViewModel item = Assert.Single(viewModel.Results, result => result.DisplayName == "Calculator");
+        await viewModel.LoadIconAsync(item);
+
+        Assert.Equal(1, catalog.IconRequestCount);
+        Assert.NotNull(item.Icon);
+
+        await viewModel.LoadIconAsync(item);
+
+        Assert.Equal(1, catalog.IconRequestCount);
+    }
+
+    private static DesktopApplicationPickerViewModel CreateViewModel() => new(new TestApplicationCatalog(), new TestDispatcher());
 
     private sealed class TestDispatcher : IDispatcher
     {
@@ -43,26 +60,20 @@ public sealed class DesktopApplicationPickerViewModelTests
 
     private sealed class TestApplicationCatalog : IApplicationCatalog
     {
+        public int IconRequestCount { get; private set; }
+
         public Task<IReadOnlyList<LaunchableApplication>> GetApplicationsAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<LaunchableApplication>>([
                 new("edge", "Microsoft Edge"),
                 new("calculator", "Calculator"),
                 new("paint", "Paint")
             ]);
-    }
 
-    private sealed class TestLocalizer : ITextLocalizer
-    {
-        public string GetText(string key, params object[] arguments)
+        public Task<ApplicationIcon?> GetIconAsync(LaunchableApplication application, CancellationToken cancellationToken = default)
         {
-            string value = key switch
-            {
-                "DesktopAppPickerPageDestination" => "On this page",
-                "DesktopAppPickerSlotDestination" => "Slot {0}",
-                _ => key
-            };
-
-            return arguments.Length > 0 ? string.Format(value, arguments) : value;
+            IconRequestCount++;
+            return Task.FromResult<ApplicationIcon?>(new ApplicationIcon(1, 1, [0, 0, 0, 255]));
         }
     }
+
 }

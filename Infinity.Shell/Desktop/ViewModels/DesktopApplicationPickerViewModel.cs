@@ -1,19 +1,14 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Elysium.Application.Abstractions;
-using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using System.Collections.ObjectModel;
 
 namespace Infinity.Shell;
 
-public sealed record DesktopApplicationDestination(string DisplayName, DesktopApplicationTarget Target);
-
 public sealed partial class DesktopApplicationPickerViewModel(IApplicationCatalog applicationCatalog,
-    DesktopSnapLayoutCatalog snapLayoutCatalog,
-    ITextLocalizer localizer,
     IDispatcher dispatcher) : ObservableObject
 {
-    private IReadOnlyList<LaunchableApplication> applications = [];
+    private IReadOnlyList<DesktopApplicationPickerItemViewModel> applications = [];
 
     [ObservableProperty]
     private string searchText = string.Empty;
@@ -21,22 +16,13 @@ public sealed partial class DesktopApplicationPickerViewModel(IApplicationCatalo
     [ObservableProperty]
     private bool isLoading;
 
-    [ObservableProperty]
-    private DesktopApplicationDestination? selectedDestination;
-
-    public ObservableCollection<LaunchableApplication> Results { get; } = [];
-
-    public ObservableCollection<DesktopApplicationDestination> Destinations { get; } = [];
-
-    public bool HasDestinations => Destinations.Count > 1;
+    public ObservableCollection<DesktopApplicationPickerItemViewModel> Results { get; } = [];
 
     public bool HasResults => Results.Count > 0;
 
     public bool ShowEmptyState => !IsLoading && !HasResults;
 
-    public string DestinationLabel => localizer.GetText("DesktopAppPickerDestinationHeader");
-
-    public DesktopApplicationTarget Target => SelectedDestination?.Target ?? default;
+    public DesktopApplicationTarget Target { get; private set; }
 
     public async Task LoadAsync(DesktopApplicationTarget requestedTarget, CancellationToken cancellationToken = default)
     {
@@ -44,7 +30,7 @@ public sealed partial class DesktopApplicationPickerViewModel(IApplicationCatalo
 
         await DispatchAsync(() =>
         {
-            ConfigureDestinations(requestedTarget);
+            Target = new DesktopApplicationTarget(requestedTarget.Page);
             SearchText = string.Empty;
             loadApplications = applications.Count == 0;
 
@@ -59,7 +45,7 @@ public sealed partial class DesktopApplicationPickerViewModel(IApplicationCatalo
             try
             {
                 IReadOnlyList<LaunchableApplication> loadedApplications = await applicationCatalog.GetApplicationsAsync(cancellationToken);
-                await DispatchAsync(() => applications = loadedApplications);
+                await DispatchAsync(() => applications = [.. loadedApplications.Select(application => new DesktopApplicationPickerItemViewModel(application))]);
             }
             finally
             {
@@ -74,32 +60,12 @@ public sealed partial class DesktopApplicationPickerViewModel(IApplicationCatalo
 
     partial void OnIsLoadingChanged(bool value) => RefreshStateProperties();
 
-    private void ConfigureDestinations(DesktopApplicationTarget requestedTarget)
-    {
-        Destinations.Clear();
-        Destinations.Add(new DesktopApplicationDestination(localizer.GetText("DesktopAppPickerPageDestination"), new DesktopApplicationTarget(requestedTarget.Page)));
-
-        DesktopSnapLayoutDefinition? layout = snapLayoutCatalog.Get(requestedTarget.Layout);
-
-        if (layout is not null)
-        {
-            for (int slot = 0; slot < layout.Slots.Count; slot++)
-            {
-                string name = localizer.GetText("DesktopAppPickerSlotDestination", slot + 1);
-                Destinations.Add(new DesktopApplicationDestination(name, new DesktopApplicationTarget(requestedTarget.Page, requestedTarget.Layout, slot)));
-            }
-        }
-
-        SelectedDestination = Destinations[0];
-        OnPropertyChanged(nameof(HasDestinations));
-    }
-
     private void RefreshResults()
     {
         string search = SearchText.Trim();
         Results.Clear();
 
-        foreach (LaunchableApplication application in applications)
+        foreach (DesktopApplicationPickerItemViewModel application in applications)
         {
             if (search.Length == 0 || application.DisplayName.Contains(search, StringComparison.CurrentCultureIgnoreCase))
             {
@@ -108,6 +74,26 @@ public sealed partial class DesktopApplicationPickerViewModel(IApplicationCatalo
         }
 
         RefreshStateProperties();
+    }
+
+    public async Task LoadIconAsync(DesktopApplicationPickerItemViewModel item, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+
+        if (!item.TryBeginIconLoad())
+        {
+            return;
+        }
+
+        try
+        {
+            ApplicationIcon? icon = await applicationCatalog.GetIconAsync(item.Application, cancellationToken);
+            await DispatchAsync(() => item.CompleteIconLoad(icon));
+        }
+        catch (OperationCanceledException)
+        {
+            item.CancelIconLoad();
+        }
     }
 
     private void RefreshStateProperties()

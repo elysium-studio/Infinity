@@ -126,6 +126,9 @@ public sealed partial class DesktopPageTitleEditor :
         }
     }
 
+    private void HandleTitleEditButtonInteractionChanged(object sender, RoutedEventArgs args) =>
+        TitleEditIcon.Opacity = TitleEditButton.IsPointerOver || TitleEditButton.FocusState != FocusState.Unfocused ? 1 : 0;
+
     private void HandleLayoutPointerEntered(object sender, PointerRoutedEventArgs args)
     {
         if (sender is FrameworkElement { Tag: DesktopSnapLayoutOptionViewModel option })

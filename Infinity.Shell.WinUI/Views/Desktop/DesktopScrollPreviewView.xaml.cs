@@ -5,9 +5,13 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Numerics;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using Windows.System;
 
@@ -97,6 +101,26 @@ public sealed partial class DesktopScrollPreviewView :
     public DesktopApplicationPickerViewModel ApplicationPicker { get; }
 
     public Visibility ToVisibility(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
+
+    public static Visibility ToStaticVisibility(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
+
+    public static Visibility ToApplicationIconVisibility(ApplicationIcon? icon) => icon is null ? Visibility.Collapsed : Visibility.Visible;
+
+    public static Visibility ToFallbackIconVisibility(ApplicationIcon? icon) => icon is null ? Visibility.Visible : Visibility.Collapsed;
+
+    public static ImageSource? CreateApplicationIconSource(ApplicationIcon? icon)
+    {
+        if (icon is null || icon.Width <= 0 || icon.Height <= 0 || icon.Pixels.Length != icon.Width * icon.Height * 4)
+        {
+            return null;
+        }
+
+        WriteableBitmap bitmap = new(icon.Width, icon.Height);
+
+        using Stream stream = bitmap.PixelBuffer.AsStream();
+        stream.Write(icon.Pixels);
+        return bitmap;
+    }
 
 #if DEBUG
     internal void OpenApplicationPickerForDebug() => pageStrip.RequestApplicationPickerForDebug();
@@ -382,7 +406,22 @@ public sealed partial class DesktopScrollPreviewView :
 
     private void HandleLayoutRefreshRequested(object? sender, EventArgs args) => QueueLayoutRefresh();
 
-    private void HandleOffsetChanged() => QueueLayoutRefresh();
+    private void HandleOffsetChanged()
+    {
+        if (DispatcherQueue.HasThreadAccess)
+        {
+            ApplicationPickerFlyout.Hide();
+            RefreshLayout();
+        }
+        else
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                ApplicationPickerFlyout.Hide();
+                RefreshLayout();
+            });
+        }
+    }
 
     private void HandleDismissSurfaceTapped(object sender, TappedRoutedEventArgs args)
     {
@@ -473,11 +512,12 @@ public sealed partial class DesktopScrollPreviewView :
 
     private async void HandleApplicationClicked(object sender, ItemClickEventArgs args)
     {
-        if (args.ClickedItem is not LaunchableApplication application || !isRunning)
+        if (args.ClickedItem is not DesktopApplicationPickerItemViewModel item || !isRunning)
         {
             return;
         }
 
+        LaunchableApplication application = item.Application;
         DesktopApplicationTarget target = ApplicationPicker.Target;
         ApplicationPickerFlyout.Hide();
         applicationLaunchCancellation?.Cancel();
@@ -487,14 +527,10 @@ public sealed partial class DesktopScrollPreviewView :
 
         try
         {
-            nint handle = await applicationLaunchCoordinator.LaunchAsync(application, target, monitorOriginX, monitorOriginY, applicationLaunchCancellation.Token);
+            await applicationLaunchCoordinator.LaunchAsync(application, target, monitorOriginX, monitorOriginY, applicationLaunchCancellation.Token);
             DispatcherQueue.TryEnqueue(() =>
             {
-                if (handle != 0 && isRunning)
-                {
-                    HandleWindowInvoked(handle);
-                }
-                else if (isRunning)
+                if (isRunning)
                 {
                     SetInteractionEnabled(true);
                 }
@@ -509,6 +545,14 @@ public sealed partial class DesktopScrollPreviewView :
                     SetInteractionEnabled(true);
                 }
             });
+        }
+    }
+
+    private async void HandleApplicationContainerContentChanging(ListViewBase sender, ContainerContentChangingEventArgs args)
+    {
+        if (!args.InRecycleQueue && args.Item is DesktopApplicationPickerItemViewModel item)
+        {
+            await ApplicationPicker.LoadIconAsync(item);
         }
     }
 

@@ -4,6 +4,7 @@
 #include <shlobj.h>
 #include <shobjidl.h>
 #include <algorithm>
+#include <cstdlib>
 #include <cwctype>
 #include <string>
 #include <vector>
@@ -151,6 +152,120 @@ extern "C" __declspec(dllexport) int __stdcall ApplicationCatalog_Enumerate(wcha
 }
 
 extern "C" __declspec(dllexport) void __stdcall ApplicationCatalog_Free(wchar_t* buffer)
+{
+    CoTaskMemFree(buffer);
+}
+
+extern "C" __declspec(dllexport) int __stdcall ApplicationCatalog_GetIcon(const wchar_t* parsingName, int requestedSize, unsigned char** buffer, int* width, int* height)
+{
+    if (parsingName == nullptr || *parsingName == L'\0' || requestedSize <= 0 || buffer == nullptr || width == nullptr || height == nullptr)
+    {
+        return E_INVALIDARG;
+    }
+
+    *buffer = nullptr;
+    *width = 0;
+    *height = 0;
+    ComInitialiser com;
+    PIDLIST_ABSOLUTE itemId = nullptr;
+    HRESULT result = SHParseDisplayName(parsingName, nullptr, &itemId, 0, nullptr);
+
+    if (FAILED(result))
+    {
+        return result;
+    }
+
+    IShellItemImageFactory* imageFactory = nullptr;
+    result = SHCreateItemFromIDList(itemId, IID_PPV_ARGS(&imageFactory));
+    CoTaskMemFree(itemId);
+
+    if (FAILED(result))
+    {
+        return result;
+    }
+
+    HBITMAP bitmap = nullptr;
+    SIZE requested = { requestedSize, requestedSize };
+    result = imageFactory->GetImage(requested, SIIGBF_ICONONLY, &bitmap);
+    imageFactory->Release();
+
+    if (FAILED(result))
+    {
+        return result;
+    }
+
+    BITMAP bitmapDetails = {};
+
+    if (GetObjectW(bitmap, sizeof(bitmapDetails), &bitmapDetails) == 0)
+    {
+        result = HRESULT_FROM_WIN32(GetLastError());
+        DeleteObject(bitmap);
+        return result;
+    }
+
+    int bitmapWidth = bitmapDetails.bmWidth;
+    int bitmapHeight = std::abs(bitmapDetails.bmHeight);
+
+    if (bitmapWidth <= 0 || bitmapHeight <= 0 || bitmapWidth > INT_MAX / 4 || bitmapHeight > INT_MAX / (bitmapWidth * 4))
+    {
+        DeleteObject(bitmap);
+        return E_UNEXPECTED;
+    }
+
+    int byteCount = bitmapWidth * bitmapHeight * 4;
+    unsigned char* pixels = static_cast<unsigned char*>(CoTaskMemAlloc(byteCount));
+
+    if (pixels == nullptr)
+    {
+        DeleteObject(bitmap);
+        return E_OUTOFMEMORY;
+    }
+
+    BITMAPINFO bitmapInfo = {};
+    bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bitmapInfo.bmiHeader.biWidth = bitmapWidth;
+    bitmapInfo.bmiHeader.biHeight = -bitmapHeight;
+    bitmapInfo.bmiHeader.biPlanes = 1;
+    bitmapInfo.bmiHeader.biBitCount = 32;
+    bitmapInfo.bmiHeader.biCompression = BI_RGB;
+    HDC deviceContext = GetDC(nullptr);
+    int copiedRows = GetDIBits(deviceContext, bitmap, 0, bitmapHeight, pixels, &bitmapInfo, DIB_RGB_COLORS);
+    ReleaseDC(nullptr, deviceContext);
+    DeleteObject(bitmap);
+
+    if (copiedRows != bitmapHeight)
+    {
+        DWORD error = GetLastError();
+        CoTaskMemFree(pixels);
+        return error == ERROR_SUCCESS ? E_FAIL : HRESULT_FROM_WIN32(error);
+    }
+
+    bool hasAlpha = false;
+
+    for (int index = 3; index < byteCount; index += 4)
+    {
+        if (pixels[index] != 0)
+        {
+            hasAlpha = true;
+            break;
+        }
+    }
+
+    if (!hasAlpha)
+    {
+        for (int index = 3; index < byteCount; index += 4)
+        {
+            pixels[index] = 255;
+        }
+    }
+
+    *buffer = pixels;
+    *width = bitmapWidth;
+    *height = bitmapHeight;
+    return S_OK;
+}
+
+extern "C" __declspec(dllexport) void __stdcall ApplicationCatalog_FreeIcon(unsigned char* buffer)
 {
     CoTaskMemFree(buffer);
 }

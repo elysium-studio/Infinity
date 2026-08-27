@@ -4,7 +4,6 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Infinity.Shell.WinUI"
-    xmlns:platform="using:Infinity.Platform.Abstractions"
     xmlns:shell="using:Infinity.Shell"
     Background="Transparent"
     Opacity="0">
@@ -13,6 +12,7 @@
             <Flyout.FlyoutPresenterStyle>
                 <Style TargetType="FlyoutPresenter">
                     <Setter Property="Padding" Value="0" />
+                    <Setter Property="Background" Value="{ThemeResource SolidBackgroundFillColorSecondaryBrush}" />
                     <Setter Property="CornerRadius" Value="12" />
                     <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
                     <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
@@ -24,52 +24,73 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <StackPanel Padding="20,16,20,12" Spacing="12">
-                    <TextBlock x:Uid="DesktopAppPickerTitle" Style="{StaticResource SubtitleTextBlockStyle}" />
-                    <TextBox
-                        x:Name="ApplicationSearchBox"
-                        x:Uid="DesktopAppPickerSearchBox"
-                        Text="{x:Bind ApplicationPicker.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                        <TextBox.Header>
-                            <TextBlock x:Uid="DesktopAppPickerSearchHeader" />
-                        </TextBox.Header>
-                    </TextBox>
-                    <ComboBox
-                        x:Name="ApplicationDestinationBox"
-                        HorizontalAlignment="Stretch"
-                        Header="{x:Bind ApplicationPicker.DestinationLabel, Mode=OneTime}"
-                        ItemsSource="{x:Bind ApplicationPicker.Destinations}"
-                        SelectedItem="{x:Bind ApplicationPicker.SelectedDestination, Mode=TwoWay}"
-                        Visibility="{x:Bind ToVisibility(ApplicationPicker.HasDestinations), Mode=OneWay}">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate x:DataType="shell:DesktopApplicationDestination">
-                                <TextBlock Text="{x:Bind DisplayName}" />
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                </StackPanel>
+                <Border
+                    Padding="24,16"
+                    Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+                    <Grid>
+                        <TextBox
+                            x:Name="ApplicationSearchBox"
+                            x:Uid="DesktopAppPickerSearchBox"
+                            Height="40"
+                            Padding="38,0,12,0"
+                            CornerRadius="20"
+                            Text="{x:Bind ApplicationPicker.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                            <TextBox.Resources>
+                                <StaticResource x:Key="TextControlBackground" ResourceKey="ControlFillColorDefaultBrush" />
+                                <StaticResource x:Key="TextControlBackgroundPointerOver" ResourceKey="ControlFillColorSecondaryBrush" />
+                                <StaticResource x:Key="TextControlBackgroundFocused" ResourceKey="ControlFillColorInputActiveBrush" />
+                                <StaticResource x:Key="TextControlBorderBrush" ResourceKey="ControlElevationBorderBrush" />
+                                <StaticResource x:Key="TextControlBorderBrushPointerOver" ResourceKey="ControlElevationBorderBrush" />
+                                <StaticResource x:Key="TextControlBorderBrushFocused" ResourceKey="ControlElevationBorderBrush" />
+                            </TextBox.Resources>
+                        </TextBox>
+                        <FontIcon
+                            Margin="14,0,0,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            FontSize="16"
+                            Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                            Glyph="&#xE721;"
+                            IsHitTestVisible="False" />
+                    </Grid>
+                </Border>
                 <Rectangle Grid.Row="1" Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
-                <Grid Grid.Row="2">
+                <Grid
+                    Grid.Row="2"
+                    Background="{ThemeResource SolidBackgroundFillColorSecondaryBrush}">
                     <ListView
                         x:Name="ApplicationResultsList"
-                        Margin="4,8"
+                        Margin="28,12,20,12"
+                        Background="Transparent"
+                        ContainerContentChanging="HandleApplicationContainerContentChanging"
                         IsItemClickEnabled="True"
                         ItemClick="HandleApplicationClicked"
                         ItemsSource="{x:Bind ApplicationPicker.Results}">
                         <ListView.ItemTemplate>
-                            <DataTemplate x:DataType="platform:LaunchableApplication">
-                                <Grid MinHeight="48" Padding="8,4" ColumnSpacing="12">
+                            <DataTemplate x:DataType="shell:DesktopApplicationPickerItemViewModel">
+                                <Grid
+                                    MinHeight="40"
+                                    Padding="8,2"
+                                    ColumnSpacing="12">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="36" />
+                                        <ColumnDefinition Width="28" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <Border
-                                        Width="32"
-                                        Height="32"
+                                        Width="24"
+                                        Height="24"
                                         Background="{ThemeResource ControlFillColorSecondaryBrush}"
-                                        CornerRadius="6">
-                                        <FontIcon FontSize="16" Glyph="&#xE71D;" />
+                                        CornerRadius="4"
+                                        Visibility="{x:Bind local:DesktopScrollPreviewView.ToStaticVisibility(ShowFallbackIcon), Mode=OneWay}">
+                                        <FontIcon FontSize="14" Glyph="&#xE71D;" />
                                     </Border>
+                                    <Image
+                                        Width="24"
+                                        Height="24"
+                                        Source="{x:Bind local:DesktopScrollPreviewView.CreateApplicationIconSource(Icon), Mode=OneWay}"
+                                        Stretch="Uniform"
+                                        UseLayoutRounding="True"
+                                        Visibility="{x:Bind local:DesktopScrollPreviewView.ToApplicationIconVisibility(Icon), Mode=OneWay}" />
                                     <TextBlock
                                         Grid.Column="1"
                                         VerticalAlignment="Center"
