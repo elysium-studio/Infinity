@@ -16,7 +16,7 @@ public static class IServiceCollectionExtensions
         public IServiceCollection AddInfinityPlatform()
         {
             services.AddSingleton<IMessageWindow, MessageWindow>();
-            services.AddSingleton<IWorkspace, Workspace>();
+            services.AddSingleton<IWorkspace, DesktopWorkspace>();
             services.AddSingleton<IDesktopBackgroundSource, DesktopBackgroundSource>();
             services.AddSingleton<InfinityGlanceBridge>();
             services.AddSingleton<IInfinityGlanceBridge>(provider => provider.GetRequiredService<InfinityGlanceBridge>());

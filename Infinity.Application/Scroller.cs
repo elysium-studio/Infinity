@@ -233,10 +233,7 @@ public sealed class Scroller(IPanState state,
 
     public void Reposition()
     {
-        if (!presentationSession.IsActive)
-        {
-            RepositionWindows((int)Math.Round(VisualOffset));
-        }
+        RepositionWindows((int)Math.Round(VisualOffset));
     }
 
     public void Start()

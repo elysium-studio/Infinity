@@ -3,73 +3,183 @@
     x:Class="Infinity.Shell.WinUI.DesktopPageTitleEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Width="276"
+    xmlns:local="using:Infinity.Shell.WinUI"
+    xmlns:shell="using:Infinity.Shell"
+    Width="320"
     Height="80">
+    <UserControl.Resources>
+        <Style x:Key="SnapLayoutButtonStyle" TargetType="ToggleButton">
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border Background="{TemplateBinding Background}">
+                            <ContentPresenter
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
     <Grid>
         <Border
             x:Name="HeaderSurface"
-            Width="240"
+            Width="284"
             Margin="18"
             Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
             BorderBrush="{ThemeResource SurfaceStrokeColorDefaultBrush}"
             BorderThickness="1"
             CornerRadius="{StaticResource OverlayCornerRadius}">
             <Grid>
-                <TextBlock
-                    Margin="-24,0,0,0"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Style="{StaticResource BodyStrongTextBlockStyle}"
-                    Text="{x:Bind ViewModel.Title, Mode=OneWay}"
-                    TextTrimming="CharacterEllipsis"
-                    Visibility="{x:Bind ToDisplayVisibility(ViewModel.IsEditing), Mode=OneWay}" />
-                <TextBox
-                    x:Name="TitleTextBox"
-                    Margin="8,0,52,0"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Center"
-                    KeyDown="HandleEditorKeyDown"
-                    MaxLength="80"
-                    Text="{x:Bind ViewModel.EditingTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                    Visibility="{x:Bind ToEditVisibility(ViewModel.IsEditing), Mode=OneWay}" />
-                <StackPanel
-                    Margin="4"
-                    HorizontalAlignment="Right"
-                    Orientation="Horizontal">
-                    <Rectangle
-                        Width="1"
+                <Grid Visibility="{x:Bind ToVisibility(ViewModel.IsDisplayMode), Mode=OneWay}">
+                    <TextBlock
+                        Margin="-68,0,0,0"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource BodyStrongTextBlockStyle}"
+                        Text="{x:Bind ViewModel.Title, Mode=OneWay}"
+                        TextTrimming="CharacterEllipsis" />
+                    <StackPanel
                         Margin="4"
-                        VerticalAlignment="Stretch"
-                        Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                        HorizontalAlignment="Right"
+                        Orientation="Horizontal">
+                        <Rectangle
+                            Width="1"
+                            Margin="4"
+                            VerticalAlignment="Stretch"
+                            Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                        <Button
+                            Width="36"
+                            Height="36"
+                            Padding="0"
+                            AutomationProperties.Name="{x:Bind ViewModel.EditLayoutLabel}"
+                            ToolTipService.ToolTip="{x:Bind ViewModel.EditLayoutLabel}">
+                            <Button.Resources>
+                                <SolidColorBrush x:Key="ButtonBackground" Color="Transparent" />
+                                <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
+                            </Button.Resources>
+                            <Button.Flyout>
+                                <Flyout x:Name="LayoutFlyout" Placement="Bottom">
+                                    <Flyout.FlyoutPresenterStyle>
+                                        <Style TargetType="FlyoutPresenter">
+                                            <Setter Property="Padding" Value="12" />
+                                            <Setter Property="CornerRadius" Value="{StaticResource OverlayCornerRadius}" />
+                                        </Style>
+                                    </Flyout.FlyoutPresenterStyle>
+                                    <ItemsRepeater ItemsSource="{x:Bind ViewModel.AvailableLayouts}">
+                                        <ItemsRepeater.Layout>
+                                            <UniformGridLayout
+                                                MaximumRowsOrColumns="{x:Bind ViewModel.LayoutColumnCount, Mode=OneWay}"
+                                                MinColumnSpacing="12"
+                                                MinRowSpacing="12"
+                                                Orientation="Horizontal" />
+                                        </ItemsRepeater.Layout>
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate x:DataType="shell:DesktopSnapLayoutOptionViewModel">
+                                                <ToggleButton
+                                                    Width="{x:Bind PreviewWidth}"
+                                                    Height="{x:Bind PreviewHeight}"
+                                                    Style="{StaticResource SnapLayoutButtonStyle}"
+                                                    AutomationProperties.Name="{x:Bind Name}"
+                                                    Checked="HandleLayoutSelectionChanged"
+                                                    Click="HandleLayoutClicked"
+                                                    IsChecked="{x:Bind IsSelected, Mode=OneWay}"
+                                                    PointerEntered="HandleLayoutPointerEntered"
+                                                    PointerExited="HandleLayoutPointerExited"
+                                                    Tag="{x:Bind}"
+                                                    Unchecked="HandleLayoutSelectionChanged">
+                                                    <ItemsControl
+                                                        Width="{x:Bind PreviewWidth}"
+                                                        Height="{x:Bind PreviewHeight}"
+                                                        IsHitTestVisible="False"
+                                                        ItemsSource="{x:Bind Slots}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <local:DesktopSnapCanvas />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="shell:DesktopSnapLayoutSlotViewModel">
+                                                                <Grid Width="{x:Bind Width}" Height="{x:Bind Height}">
+                                                                    <Border Background="{ThemeResource ControlFillColorSecondaryBrush}" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="3" />
+                                                                    <Border Background="{ThemeResource AccentFillColorDefaultBrush}" BorderBrush="{ThemeResource AccentFillColorDefaultBrush}" BorderThickness="1" CornerRadius="3" Opacity="{x:Bind local:DesktopPageTitleEditor.ToOpacity(IsHighlighted), Mode=OneWay}" />
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </ToggleButton>
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+                                    </ItemsRepeater>
+                                </Flyout>
+                            </Button.Flyout>
+                            <Grid Width="18" Height="14" ColumnSpacing="2" RowSpacing="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                </Grid.RowDefinitions>
+                                <Border BorderBrush="{ThemeResource TextFillColorPrimaryBrush}" BorderThickness="1" CornerRadius="1" />
+                                <Border Grid.Column="1" BorderBrush="{ThemeResource TextFillColorPrimaryBrush}" BorderThickness="1" CornerRadius="1" />
+                                <Border Grid.Row="1" BorderBrush="{ThemeResource TextFillColorPrimaryBrush}" BorderThickness="1" CornerRadius="1" />
+                                <Border Grid.Row="1" Grid.Column="1" BorderBrush="{ThemeResource TextFillColorPrimaryBrush}" BorderThickness="1" CornerRadius="1" />
+                            </Grid>
+                        </Button>
+                        <Button
+                            Width="36"
+                            Height="36"
+                            Padding="0"
+                            AutomationProperties.Name="{x:Bind ViewModel.EditLabel}"
+                            Click="{x:Bind ViewModel.BeginEditing}"
+                            ToolTipService.ToolTip="{x:Bind ViewModel.EditLabel}">
+                            <Button.Resources>
+                                <SolidColorBrush x:Key="ButtonBackground" Color="Transparent" />
+                                <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
+                            </Button.Resources>
+                            <FontIcon FontSize="16" Glyph="&#xE70F;" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+                <Grid Visibility="{x:Bind ToVisibility(ViewModel.IsEditing), Mode=OneWay}">
+                    <TextBox
+                        x:Name="TitleTextBox"
+                        Margin="8,0,52,0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Center"
+                        KeyDown="HandleEditorKeyDown"
+                        MaxLength="80"
+                        Text="{x:Bind ViewModel.EditingTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                     <Button
                         Width="36"
                         Height="36"
+                        Margin="4"
                         Padding="0"
-                        AutomationProperties.Name="{x:Bind ViewModel.EditLabel}"
-                        Click="{x:Bind ViewModel.BeginEditing}"
-                        ToolTipService.ToolTip="{x:Bind ViewModel.EditLabel}"
-                        Visibility="{x:Bind ToDisplayVisibility(ViewModel.IsEditing), Mode=OneWay}">
-                        <Button.Resources>
-                            <SolidColorBrush x:Key="ButtonBackground" Color="Transparent" />
-                            <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
-                        </Button.Resources>
-                        <FontIcon FontSize="16" Glyph="&#xE70F;" />
-                    </Button>
-                    <Button
-                        Width="36"
-                        Height="36"
-                        Padding="0"
+                        HorizontalAlignment="Right"
                         AutomationProperties.Name="{x:Bind ViewModel.SaveLabel}"
                         Click="{x:Bind ViewModel.Submit}"
-                        ToolTipService.ToolTip="{x:Bind ViewModel.SaveLabel}"
-                        Visibility="{x:Bind ToEditVisibility(ViewModel.IsEditing), Mode=OneWay}">
+                        ToolTipService.ToolTip="{x:Bind ViewModel.SaveLabel}">
                         <Button.Resources>
                             <SolidColorBrush x:Key="ButtonBackground" Color="Transparent" />
                             <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
                         </Button.Resources>
                         <FontIcon FontSize="16" Glyph="&#xE74E;" />
                     </Button>
-                </StackPanel>
+                </Grid>
             </Grid>
         </Border>
     </Grid>

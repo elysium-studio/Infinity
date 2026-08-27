@@ -129,7 +129,7 @@ public sealed class WindowDragScroller(IPointerInputSource pointer,
         StartDragging();
         DragMoved?.Invoke();
 
-        int distanceFromRight = Math.Max(0, workspace.Width - x - SnapEdgePadding);
+        int distanceFromRight = Math.Max(0, workspace.WorkAreaX + workspace.Width - x - SnapEdgePadding);
         int distanceFromLeft = Math.Max(0, x - workspace.WorkAreaX - SnapEdgePadding);
 
         if (distanceFromRight <= EdgeThreshold)

@@ -100,6 +100,7 @@
   <data name="PageTitleSaveButton" xml:space="preserve">
     <value>Save page title</value>
   </data>
+  <data name="PageLayoutEditButton" xml:space="preserve"><value>Choose snap layout</value></data>
   <data name="ScrollShortcutCancelButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Cancel</value>
   </data>

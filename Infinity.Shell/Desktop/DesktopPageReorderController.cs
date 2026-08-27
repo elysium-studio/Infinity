@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopPageReorderController(IWindowStore windowStore, IScroller scroller, IWorkspace workspace, PageTitleStore pageTitleStore, ILogger<DesktopPageReorderController> logger)
+public sealed class DesktopPageReorderController(IWindowStore windowStore, IScroller scroller, IWorkspace workspace, PageTitleStore pageTitleStore, PageLayoutStore pageLayoutStore, ILogger<DesktopPageReorderController> logger)
 {
     public async Task<IReadOnlyDictionary<int, string>> ReorderAsync(int sourcePage, int targetPage)
     {
@@ -14,6 +14,7 @@ public sealed class DesktopPageReorderController(IWindowStore windowStore, IScro
         }
 
         IReadOnlyDictionary<int, string> reorderedTitles = await pageTitleStore.ReorderAsync(sourcePage, targetPage);
+        await pageLayoutStore.ReorderAsync(sourcePage, targetPage);
 
         int workspaceWidth = workspace.Width;
         List<TrackedWindow> changedWindows = [];

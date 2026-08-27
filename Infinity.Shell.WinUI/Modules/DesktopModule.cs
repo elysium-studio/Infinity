@@ -22,6 +22,8 @@ public sealed class DesktopModule :
             .AddSingleton<DesktopOverviewWallpaperPresenter>()
             .AddSingleton<DesktopScrollPreviewAnimator>()
             .AddSingleton<DesktopPageLayoutCalculator>()
+            .AddSingleton<DesktopSnapLayoutCatalog>()
+            .AddSingleton<DesktopSnapPlacementResolver>()
             .AddSingleton<DesktopDragBoundaryCalculator>()
             .AddSingleton<DesktopPageReorderController>()
             .AddSingleton<DesktopBackgroundBrushFactory>()
@@ -33,6 +35,7 @@ public sealed class DesktopModule :
             .AddSingleton<DesktopWindowPreviewCollection>()
             .AddSingleton<WindowInputTransparencyController>()
             .AddSingleton<PageTitleStore>()
+            .AddSingleton<PageLayoutStore>()
             .AddSingleton<PageNavigationPublisher>()
             .AddSingleton(provider => CreateDesktopScrollPreviewView(provider))
             .AddViewFor(ServiceLifetime.Singleton, provider => CreateDesktopOverviewView(provider), provider => CreateDesktopOverviewViewModel(provider))
@@ -60,14 +63,14 @@ public sealed class DesktopModule :
         IScroller scroller = provider.GetRequiredService<IScroller>();
         IPager pager = provider.GetRequiredService<IPager>();
         IWorkspace workspace = provider.GetRequiredService<IWorkspace>();
-        ITaskbarLocator taskbarLocator = provider.GetRequiredService<ITaskbarLocator>();
         DesktopPageLayoutCalculator pageLayoutCalculator = provider.GetRequiredService<DesktopPageLayoutCalculator>();
+        DesktopSnapPlacementResolver snapPlacementResolver = provider.GetRequiredService<DesktopSnapPlacementResolver>();
         DesktopScrollPreviewAnimator animator = provider.GetRequiredService<DesktopScrollPreviewAnimator>();
         DesktopPageStrip pageStrip = provider.GetRequiredService<DesktopPageStrip>();
         DesktopWindowPreviewCollection previews = provider.GetRequiredService<DesktopWindowPreviewCollection>();
         DesktopDragCursorConfinement cursorConfinement = provider.GetRequiredService<DesktopDragCursorConfinement>();
 
-        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, layoutCalculator, panState, scroller, pager, workspace, taskbarLocator, pageLayoutCalculator, animator, pageStrip, previews, cursorConfinement);
+        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, layoutCalculator, panState, scroller, pager, workspace, pageLayoutCalculator, snapPlacementResolver, animator, pageStrip, previews, cursorConfinement);
     }
 
     private static DesktopOverviewView CreateDesktopOverviewView(IServiceProvider provider)

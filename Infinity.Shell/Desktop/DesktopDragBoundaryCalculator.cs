@@ -10,6 +10,10 @@ public readonly record struct DesktopDragBounds(double MinimumX, double MinimumY
 
 public sealed class DesktopDragBoundaryCalculator(IPager pager, IScroller scroller, IWorkspace workspace, DesktopPageLayoutCalculator pageLayoutCalculator)
 {
+    private double workAreaOffsetY;
+
+    public void SetWorkAreaOffsetY(double value) => workAreaOffsetY = double.IsFinite(value) ? value : 0;
+
     public (double X, double Y) Constrain(double pointerX, double pointerY, double viewportWidth, double viewportHeight, double overviewScale)
     {
         DesktopDragBounds bounds = GetBounds(viewportWidth, viewportHeight, overviewScale);
@@ -42,7 +46,7 @@ public sealed class DesktopDragBoundaryCalculator(IPager pager, IScroller scroll
 
         (double minimumX, double maximumX) = GetHorizontalBounds(viewportWidth, overviewScale);
         double pageHeight = workspace.Height * overviewScale;
-        double minimumY = Math.Max(0, (viewportHeight - pageHeight) / 2);
+        double minimumY = Math.Max(0, workAreaOffsetY + ((workspace.Height / 2.0) * (1 - overviewScale)));
         double maximumY = Math.Min(viewportHeight, minimumY + pageHeight);
         return new DesktopDragBounds(minimumX, minimumY, maximumX, maximumY);
     }

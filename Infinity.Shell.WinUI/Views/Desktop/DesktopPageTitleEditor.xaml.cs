@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
@@ -18,13 +19,13 @@ public sealed partial class DesktopPageTitleEditor :
 
     private bool disposed;
 
-    public DesktopPageTitleEditor() : this(string.Empty, string.Empty, string.Empty)
+    public DesktopPageTitleEditor() : this(new DesktopPageEditorLabels(string.Empty, string.Empty, string.Empty, string.Empty), new DesktopSnapLayoutCatalog())
     {
     }
 
-    public DesktopPageTitleEditor(string editLabel, string saveLabel, string cancelLabel)
+    public DesktopPageTitleEditor(DesktopPageEditorLabels labels, DesktopSnapLayoutCatalog layoutCatalog)
     {
-        ViewModel = new DesktopPageTitleViewModel(editLabel, saveLabel, cancelLabel);
+        ViewModel = new DesktopPageTitleViewModel(labels, layoutCatalog);
 
         InitializeComponent();
 
@@ -39,9 +40,9 @@ public sealed partial class DesktopPageTitleEditor :
 
     public DesktopPageTitleViewModel ViewModel { get; }
 
-    public Visibility ToDisplayVisibility(bool isEditing) => isEditing ? Visibility.Collapsed : Visibility.Visible;
+    public Visibility ToVisibility(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
 
-    public Visibility ToEditVisibility(bool isEditing) => isEditing ? Visibility.Visible : Visibility.Collapsed;
+    public static double ToOpacity(bool value) => value ? 1 : 0;
 
     public void Show()
     {
@@ -51,9 +52,12 @@ public sealed partial class DesktopPageTitleEditor :
 
     public void Hide()
     {
+        CloseLayoutFlyout();
         IsHitTestVisible = false;
         Opacity = 0;
     }
+
+    public void CloseLayoutFlyout() => LayoutFlyout.Hide();
 
     public void Dispose()
     {
@@ -94,6 +98,39 @@ public sealed partial class DesktopPageTitleEditor :
         {
             args.Handled = true;
             ViewModel.Cancel();
+        }
+    }
+
+    private void HandleLayoutClicked(object sender, RoutedEventArgs args)
+    {
+        if (sender is FrameworkElement { Tag: DesktopSnapLayoutOptionViewModel option })
+        {
+            ViewModel.SelectLayout(option.Kind);
+            LayoutFlyout.Hide();
+        }
+    }
+
+    private void HandleLayoutPointerEntered(object sender, PointerRoutedEventArgs args)
+    {
+        if (sender is FrameworkElement { Tag: DesktopSnapLayoutOptionViewModel option })
+        {
+            option.SetHighlighted(true);
+        }
+    }
+
+    private void HandleLayoutPointerExited(object sender, PointerRoutedEventArgs args)
+    {
+        if (sender is FrameworkElement { Tag: DesktopSnapLayoutOptionViewModel option })
+        {
+            option.SetHighlighted(option.IsSelected);
+        }
+    }
+
+    private void HandleLayoutSelectionChanged(object sender, RoutedEventArgs args)
+    {
+        if (sender is ToggleButton { Tag: DesktopSnapLayoutOptionViewModel option } layout)
+        {
+            option.SetHighlighted(layout.IsPointerOver || option.IsSelected);
         }
     }
 }

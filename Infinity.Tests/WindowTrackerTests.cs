@@ -212,6 +212,8 @@ public sealed class WindowTrackerTests
 
         public bool MoveTo(IntPtr windowHandle, double canvasX, double canvasY) => true;
 
+        public bool MoveAndResize(IntPtr windowHandle, double canvasX, double canvasY, double width, double height) => true;
+
         public void End(IntPtr windowHandle)
         {
         }

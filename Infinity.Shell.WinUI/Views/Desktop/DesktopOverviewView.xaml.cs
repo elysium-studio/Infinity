@@ -1,7 +1,7 @@
 using Elysium.Platform.Abstractions;
-using Elysium.UI.Controls.WinUI;
 using Infinity.Platform.Abstractions;
 using Infinity.Platform.Windows;
+using Infinity.UI.WinUI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using System;
@@ -100,6 +100,11 @@ public sealed partial class DesktopOverviewView :
         }
 
         args.Handled = true;
+
+        if (desktopScrollPreview.TryCancelEditor())
+        {
+            return;
+        }
 
         if (Interlocked.Exchange(ref globalDismissQueued, 1) != 0)
         {
@@ -260,7 +265,7 @@ public sealed partial class DesktopOverviewView :
             return;
         }
 
-        desktopScrollPreview.Prepare(Handle);
+        desktopScrollPreview.Prepare(Handle, ScreenBounds.Y);
         isCompletingDesktopPreview = false;
 
         if (!IsOpen || isDesktopPreviewAnimationStarted)

@@ -16,12 +16,17 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
     private nint pendingForegroundHandle;
     private nint selectedHandle;
     private string filterText = string.Empty;
+    private double thumbnailWorldScale = 1;
     private bool interactionEnabled;
     private bool disposed;
 
     public event Action<nint>? WindowInvoked;
 
     public event Action<nint>? WindowPositionChanged;
+
+    public event Action<nint, double, double>? WindowDragMoved;
+
+    public event Action<nint>? WindowDragCompleted;
 
     public IReadOnlyList<TrackedWindow> Synchronise(Canvas canvas, Canvas focusCanvas, IEnumerable<TrackedWindow> trackedWindows, double layoutScale)
     {
@@ -48,11 +53,14 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
                 preview.Invoked += HandleWindowInvoked;
                 preview.PositionChanged += HandleWindowPositionChanged;
                 preview.Foregrounded += HandleWindowForegrounded;
+                preview.DragMoved += HandleWindowDragMoved;
+                preview.DragCompleted += HandleWindowDragCompleted;
                 preview.SetInteractionEnabled(interactionEnabled);
                 previews.Add(trackedWindow.Handle, preview);
             }
 
             preview.RefreshSourceSize(trackedWindow, geometryReader);
+            preview.SetThumbnailWorldScale(thumbnailWorldScale);
             preview.SetFilterMatch(WindowTitleFilter.Matches(trackedWindow.Title, filterText));
             preview.SetZIndex(zIndex);
         }
@@ -136,6 +144,24 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         }
     }
 
+    public void SetThumbnailWorldScale(double value)
+    {
+        thumbnailWorldScale = double.IsFinite(value) && value > 0 ? value : 1;
+
+        foreach (DesktopWindowPreview preview in previews.Values)
+        {
+            preview.SetThumbnailWorldScale(thumbnailWorldScale);
+        }
+    }
+
+    internal void SetSnapTarget(nint handle, DesktopWindowSnapTarget? target)
+    {
+        if (previews.TryGetValue(handle, out DesktopWindowPreview? preview))
+        {
+            preview.SetSnapTarget(target);
+        }
+    }
+
     public void SetInteractionEnabled(bool value)
     {
         interactionEnabled = value;
@@ -153,6 +179,8 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
             preview.Invoked -= HandleWindowInvoked;
             preview.PositionChanged -= HandleWindowPositionChanged;
             preview.Foregrounded -= HandleWindowForegrounded;
+            preview.DragMoved -= HandleWindowDragMoved;
+            preview.DragCompleted -= HandleWindowDragCompleted;
             preview.Dispose();
         }
 
@@ -166,6 +194,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         filterText = string.Empty;
         selectedHandle = 0;
         pendingForegroundHandle = 0;
+        thumbnailWorldScale = 1;
         interactionEnabled = false;
     }
 
@@ -192,6 +221,8 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         preview.Invoked -= HandleWindowInvoked;
         preview.PositionChanged -= HandleWindowPositionChanged;
         preview.Foregrounded -= HandleWindowForegrounded;
+        preview.DragMoved -= HandleWindowDragMoved;
+        preview.DragCompleted -= HandleWindowDragCompleted;
         preview.Dispose();
         host?.Children.Remove(preview.Host);
         focusHost?.Children.Remove(preview.FocusHost);
@@ -223,6 +254,10 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
     private void HandleWindowInvoked(nint handle) => WindowInvoked?.Invoke(handle);
 
     private void HandleWindowPositionChanged(nint handle) => WindowPositionChanged?.Invoke(handle);
+
+    private void HandleWindowDragMoved(nint handle, double pointerX, double pointerY) => WindowDragMoved?.Invoke(handle, pointerX, pointerY);
+
+    private void HandleWindowDragCompleted(nint handle) => WindowDragCompleted?.Invoke(handle);
 
     private void HandleWindowForegrounded(nint handle)
     {

@@ -9,6 +9,8 @@ using Windows.Foundation;
 
 namespace Infinity.Shell.WinUI;
 
+internal readonly record struct DesktopWindowSnapTarget(DesktopSnapPlacement Placement);
+
 internal sealed class DesktopWindowPreview :
     IDisposable
 {
@@ -39,6 +41,7 @@ internal sealed class DesktopWindowPreview :
     private double y;
     private double width;
     private double height;
+    private DesktopWindowSnapTarget? snapTarget;
     private bool interactionEnabled;
     private bool isFilterMatch = true;
     private bool isDragging;
@@ -77,6 +80,10 @@ internal sealed class DesktopWindowPreview :
     public event Action<nint>? PositionChanged;
 
     public event Action<nint>? Foregrounded;
+
+    public event Action<nint, double, double>? DragMoved;
+
+    public event Action<nint>? DragCompleted;
 
     public Border Host { get; }
 
@@ -149,6 +156,8 @@ internal sealed class DesktopWindowPreview :
 
     public void SetSelected(bool value) => focusVisual.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
 
+    public void SetThumbnailWorldScale(double value) => preview?.SetWorldScale(value);
+
     public void Activate()
     {
         windowNavigationCoordinator.Activate(windowHandle);
@@ -176,12 +185,14 @@ internal sealed class DesktopWindowPreview :
         {
             this.width = width;
             this.height = height;
-            Host.Width = width;
-            Host.Height = height;
-            focusHost.Width = width;
-            focusHost.Height = height;
-            preview?.Update(width, height, true);
+
+            ApplySize(width, height);
         }
+    }
+
+    public void SetSnapTarget(DesktopWindowSnapTarget? target)
+    {
+        snapTarget = target;
     }
 
     public void ClearTranslationTransition()
@@ -304,6 +315,7 @@ internal sealed class DesktopWindowPreview :
 
         overviewDragScroller.Update(Host.DispatcherQueue, currentPoint.X, viewportWidth);
         cursorConfinement.Update(viewportWidth, viewportHeight, layoutScale, Host.XamlRoot?.RasterizationScale ?? 1);
+        DragMoved?.Invoke(windowHandle, currentPoint.X, currentPoint.Y);
         ApplyTranslation();
         args.Handled = true;
     }
@@ -348,6 +360,7 @@ internal sealed class DesktopWindowPreview :
         bool wasDragging = isDragging;
         double horizontalDelta = dragHorizontalDelta;
         double verticalDelta = dragVerticalDelta;
+        DesktopWindowSnapTarget? completedSnapTarget = snapTarget;
 
         if (wasDragging)
         {
@@ -360,22 +373,29 @@ internal sealed class DesktopWindowPreview :
         dragHorizontalDelta = 0;
         dragVerticalDelta = 0;
         isDragging = false;
+        snapTarget = null;
 
         SetPromoted(false);
 
         if (wasDragging)
         {
-            bool moved = dragPositionResolver.TryResolve(windowHandle, horizontalDelta, verticalDelta, out DesktopWindowDragPosition position) && dragController.MoveTo(windowHandle, position.CanvasX, position.CanvasY);
+            bool moved = completedSnapTarget.HasValue
+                ? dragController.MoveAndResize(windowHandle, completedSnapTarget.Value.Placement.CanvasX, completedSnapTarget.Value.Placement.CanvasY, completedSnapTarget.Value.Placement.Width, completedSnapTarget.Value.Placement.Height)
+                : dragPositionResolver.TryResolve(windowHandle, horizontalDelta, verticalDelta, out DesktopWindowDragPosition position) && dragController.MoveTo(windowHandle, position.CanvasX, position.CanvasY);
 
             dragController.End(windowHandle);
 
             if (moved)
             {
                 PositionChanged?.Invoke(windowHandle);
+                DragCompleted?.Invoke(windowHandle);
                 return;
             }
+
+            DragCompleted?.Invoke(windowHandle);
         }
 
+        ApplySize(width, height);
         ApplyTranslation();
     }
 
@@ -392,10 +412,29 @@ internal sealed class DesktopWindowPreview :
 
     private void ApplyTranslation()
     {
-        Vector3 translation = new(ToFloat(x + dragHorizontalDelta), ToFloat(y + dragVerticalDelta), shadowDepth);
+        double horizontalDelta = dragHorizontalDelta;
+        double verticalDelta = dragVerticalDelta;
+
+        if (isDragging)
+        {
+            dragPositionResolver.TryConstrainVisualDelta(windowHandle, horizontalDelta, verticalDelta, out horizontalDelta, out verticalDelta);
+        }
+
+        double targetX = x + horizontalDelta;
+        double targetY = y + verticalDelta;
+        Vector3 translation = new(ToFloat(targetX), ToFloat(targetY), shadowDepth);
 
         Host.Translation = translation;
         focusHost.Translation = translation;
+    }
+
+    private void ApplySize(double targetWidth, double targetHeight)
+    {
+        Host.Width = targetWidth;
+        Host.Height = targetHeight;
+        focusHost.Width = targetWidth;
+        focusHost.Height = targetHeight;
+        preview?.Update(targetWidth, targetHeight, true);
     }
 
     private void SetPromoted(bool value)

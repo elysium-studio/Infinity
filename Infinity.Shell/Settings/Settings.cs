@@ -7,6 +7,8 @@ public sealed class Settings
 {
     public DragScrollSpeed DragScrollSpeed { get; set; } = DragScrollSpeed.Normal;
 
+    public Dictionary<int, DesktopSnapLayoutKind>? PageLayouts { get; set; } = [];
+
     public Dictionary<int, string>? PageTitles { get; set; } = [];
 
     public List<List<int>> ScrollModifierKeys { get; set; } =

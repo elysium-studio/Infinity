@@ -46,21 +46,7 @@ public sealed class TrackedWindowDragController(IWindowStore store,
 
     public bool MoveTo(IntPtr windowHandle, double canvasX, double canvasY)
     {
-        lock (syncRoot)
-        {
-            if (session is not DragSession currentSession || currentSession.WindowHandle != windowHandle)
-            {
-                return false;
-            }
-        }
-
-        if (!store.TryGet(windowHandle, out TrackedWindow? trackedWindow))
-        {
-            End(windowHandle);
-            return false;
-        }
-
-        if (!TryRound(canvasX, out int roundedCanvasX) || !TryRound(canvasY, out int roundedCanvasY))
+        if (!TryGetDragWindow(windowHandle, out TrackedWindow? trackedWindow) || trackedWindow is null || !TryRound(canvasX, out int roundedCanvasX) || !TryRound(canvasY, out int roundedCanvasY))
         {
             return false;
         }
@@ -69,6 +55,43 @@ public sealed class TrackedWindowDragController(IWindowStore store,
         trackedWindow.CanvasY = roundedCanvasY;
 
         scroller.Reposition();
+        return true;
+    }
+
+    public bool MoveAndResize(IntPtr windowHandle, double canvasX, double canvasY, double width, double height)
+    {
+        if (!TryGetDragWindow(windowHandle, out TrackedWindow? trackedWindow) || trackedWindow is null || !TryRound(canvasX, out int roundedCanvasX) || !TryRound(canvasY, out int roundedCanvasY) || !TryRound(width, out int roundedWidth) || !TryRound(height, out int roundedHeight) || roundedWidth <= 0 || roundedHeight <= 0)
+        {
+            return false;
+        }
+
+        trackedWindow.CanvasX = roundedCanvasX;
+        trackedWindow.CanvasY = roundedCanvasY;
+        trackedWindow.Width = roundedWidth;
+        trackedWindow.Height = roundedHeight;
+        trackedWindow.InvalidatePlacement();
+
+        scroller.Reposition();
+        return true;
+    }
+
+    private bool TryGetDragWindow(IntPtr windowHandle, out TrackedWindow? trackedWindow)
+    {
+        lock (syncRoot)
+        {
+            if (session is not DragSession currentSession || currentSession.WindowHandle != windowHandle)
+            {
+                trackedWindow = null;
+                return false;
+            }
+        }
+
+        if (!store.TryGet(windowHandle, out trackedWindow))
+        {
+            End(windowHandle);
+            return false;
+        }
+
         return true;
     }
 

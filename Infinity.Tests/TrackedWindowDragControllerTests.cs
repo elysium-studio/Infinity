@@ -107,6 +107,23 @@ public sealed class TrackedWindowDragControllerTests
         Assert.Equal(0, scroller.RepositionCount);
     }
 
+    [Fact]
+    public void MoveAndResizeCommitsNewTrackedGeometry()
+    {
+        WindowStore store = new();
+        TrackedWindow window = CreateWindow(250, 100);
+        store.Add(window);
+        TestScroller scroller = new();
+        TrackedWindowDragController controller = new(store, scroller, NullLogger<TrackedWindowDragController>.Instance);
+
+        Assert.True(controller.Begin(window.Handle));
+        Assert.True(controller.MoveAndResize(window.Handle, 1920, 0, 960, 1080));
+        Assert.Equal((1920, 0, 960, 1080), (window.CanvasX, window.CanvasY, window.Width, window.Height));
+        Assert.Equal(int.MinValue, window.LastPlacedX);
+        Assert.Equal(int.MinValue, window.LastPlacedY);
+        Assert.Equal(1, scroller.RepositionCount);
+    }
+
     private static TrackedWindow CreateWindow(int canvasX, int canvasY) => new()
     {
         Handle = new IntPtr(1),

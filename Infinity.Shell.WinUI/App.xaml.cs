@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,7 +28,14 @@ public sealed partial class App
     private Task? shutdownTask;
     private Task? startupNavigationTask;
 
-    public App() => InitializeComponent();
+    public App()
+    {
+#if DEBUG
+        UnhandledException += (_, args) => Debug.WriteLine($"Unhandled WinUI exception:{Environment.NewLine}{args.Exception}");
+#endif
+
+        InitializeComponent();
+    }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {

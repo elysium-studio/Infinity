@@ -22,16 +22,12 @@ public sealed class ThumbnailCompositionPreview :
     private readonly ILogger logger;
     private bool isDisposed;
     private bool isVisible;
+    private float worldScale = 1.0f;
+    private float rasterScale = 1.0f;
     private float width;
     private float height;
 
-    private ThumbnailCompositionPreview(FrameworkElement host,
-        IWindowPreview preview,
-        SystemVisualProxyVisualPrivate proxy,
-        ContainerVisual hostContainer,
-        CompositionRoundedRectangleGeometry roundedGeometry,
-        CompositionGeometricClip roundedClip,
-        ILogger logger)
+    private ThumbnailCompositionPreview(FrameworkElement host, IWindowPreview preview, SystemVisualProxyVisualPrivate proxy, ContainerVisual hostContainer, CompositionRoundedRectangleGeometry roundedGeometry, CompositionGeometricClip roundedClip, ILogger logger)
     {
         this.host = host;
         this.preview = preview;
@@ -42,10 +38,7 @@ public sealed class ThumbnailCompositionPreview :
         this.logger = logger;
     }
 
-    public static ThumbnailCompositionPreview? Create(IWindowPreviewSurface previewSurface,
-        nint windowHandle,
-        FrameworkElement host,
-        ILogger logger)
+    public static ThumbnailCompositionPreview? Create(IWindowPreviewSurface previewSurface, nint windowHandle, FrameworkElement host, ILogger logger)
     {
         if (!previewSurface.IsAvailable)
         {
@@ -77,13 +70,7 @@ public sealed class ThumbnailCompositionPreview :
             hostContainer.Children.InsertAtTop(proxy.Visual);
             ElementCompositionPreview.SetElementChildVisual(host, hostContainer);
 
-            return new ThumbnailCompositionPreview(host,
-                preview,
-                proxy,
-                hostContainer,
-                roundedGeometry,
-                roundedClip,
-                logger);
+            return new ThumbnailCompositionPreview(host, preview, proxy, hostContainer, roundedGeometry, roundedClip, logger);
         }
         catch (Exception exception)
         {
@@ -108,10 +95,12 @@ public sealed class ThumbnailCompositionPreview :
 
         float normalizedWidth = NormalizeLength(width);
         float normalizedHeight = NormalizeLength(height);
+        float normalizedRasterScale = NormalizeScale(host.XamlRoot?.RasterizationScale ?? 1.0);
         bool normalizedVisibility = isVisible && normalizedWidth > 0.0f && normalizedHeight > 0.0f;
 
         if (this.width == normalizedWidth &&
             this.height == normalizedHeight &&
+            rasterScale == normalizedRasterScale &&
             this.isVisible == normalizedVisibility)
         {
             return;
@@ -119,11 +108,29 @@ public sealed class ThumbnailCompositionPreview :
 
         this.width = normalizedWidth;
         this.height = normalizedHeight;
+        rasterScale = normalizedRasterScale;
         this.isVisible = normalizedVisibility;
-        proxy.Visual.Size = new Vector2(normalizedWidth, normalizedHeight);
-        UpdateClip(normalizedWidth, normalizedHeight);
-        proxy.Visual.IsVisible = normalizedVisibility;
-        preview.SetTarget(proxy.Handle, normalizedWidth, normalizedHeight, normalizedVisibility);
+        ApplyPresentation();
+    }
+
+    public void SetWorldScale(double value)
+    {
+        if (isDisposed)
+        {
+            return;
+        }
+
+        float normalizedScale = NormalizeScale(value);
+        float normalizedRasterScale = NormalizeScale(host.XamlRoot?.RasterizationScale ?? 1.0);
+
+        if (worldScale == normalizedScale && rasterScale == normalizedRasterScale)
+        {
+            return;
+        }
+
+        worldScale = normalizedScale;
+        rasterScale = normalizedRasterScale;
+        ApplyPresentation();
     }
 
     public void Dispose()
@@ -146,11 +153,35 @@ public sealed class ThumbnailCompositionPreview :
         GC.SuppressFinalize(this);
     }
 
-    private void UpdateClip(float width, float height)
+    private void ApplyPresentation()
     {
-        float radius = MathF.Min(CornerRadius, MathF.Min(width, height) / 2.0f);
+        if (width <= 0.0f || height <= 0.0f)
+        {
+            proxy.Visual.IsVisible = false;
+            preview.SetTarget(0, 0.0, 0.0, false);
+            return;
+        }
+
+        float samplingScale = MathF.Max(0.01f, worldScale * rasterScale);
+        float renderWidth = MathF.Max(1.0f, MathF.Round(width * samplingScale));
+        float renderHeight = MathF.Max(1.0f, MathF.Round(height * samplingScale));
+        float horizontalScale = width / renderWidth;
+        float verticalScale = height / renderHeight;
+
+        preview.SetTarget(proxy.Handle, renderWidth, renderHeight, isVisible);
+        proxy.Visual.Size = new Vector2(renderWidth, renderHeight);
+        proxy.Visual.Scale = new Vector3(horizontalScale, verticalScale, 1.0f);
+        proxy.Visual.IsVisible = isVisible;
+        UpdateClip(renderWidth, renderHeight, horizontalScale, verticalScale);
+    }
+
+    private void UpdateClip(float width, float height, float horizontalScale, float verticalScale)
+    {
+        float horizontalRadius = MathF.Min(CornerRadius / horizontalScale, width / 2.0f);
+        float verticalRadius = MathF.Min(CornerRadius / verticalScale, height / 2.0f);
+
         roundedGeometry.Size = new Vector2(width, height);
-        roundedGeometry.CornerRadius = new Vector2(radius, radius);
+        roundedGeometry.CornerRadius = new Vector2(horizontalRadius, verticalRadius);
     }
 
     private static void TryDetach(FrameworkElement host, Visual? visual, ILogger logger)
@@ -202,4 +233,6 @@ public sealed class ThumbnailCompositionPreview :
 
         return (float)Math.Min(value, float.MaxValue);
     }
+
+    private static float NormalizeScale(double value) => double.IsFinite(value) && value > 0.0 ? (float)Math.Min(value, float.MaxValue) : 1.0f;
 }

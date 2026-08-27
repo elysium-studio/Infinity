@@ -9,28 +9,25 @@ public sealed class DesktopPageLayoutCalculatorTests
     [Fact]
     public void VisiblePageCapacityIncludesViewportAndOverscan()
     {
-        Assert.Equal(7, calculator.CalculateVisiblePageCapacity(0.38));
+        Assert.Equal(7, calculator.CalculateVisiblePageCapacity(1920, 1920, 0.38));
     }
 
     [Fact]
     public void VisiblePageRangeIncludesViewportAndOverscan()
     {
-        Assert.Equal((0, 2), calculator.CalculateVisiblePageRange(null, 0, 1920, 0.38));
+        Assert.Equal((0, 2), calculator.CalculateVisiblePageRange(null, 0, 1920, 1920, 0.38));
     }
 
     [Fact]
     public void FixedPageRangeUsesConfiguredLimit()
     {
-        Assert.Equal((8, 9), calculator.CalculateVisiblePageRange(10, 19200, 1920, 0.38));
+        Assert.Equal((8, 9), calculator.CalculateVisiblePageRange(10, 19200, 1920, 1920, 0.38));
     }
 
     [Fact]
     public void VisiblePageRangeFollowsLivePresentationOffsetWithoutGrowing()
     {
-        (int firstPage, int lastPage) = calculator.CalculateVisiblePageRange(null,
-            19200,
-            1920,
-            0.38);
+        (int firstPage, int lastPage) = calculator.CalculateVisiblePageRange(null, 19200, 1920, 1920, 0.38);
 
         Assert.Equal((8, 12), (firstPage, lastPage));
         Assert.Equal(5, lastPage - firstPage + 1);
@@ -39,13 +36,19 @@ public sealed class DesktopPageLayoutCalculatorTests
     [Fact]
     public void VisiblePageRangeRemainsBoundedAtLargeOffsets()
     {
-        (int firstPage, int lastPage) = calculator.CalculateVisiblePageRange(null,
-            19_200_000,
-            1920,
-            0.38);
+        (int firstPage, int lastPage) = calculator.CalculateVisiblePageRange(null, 19_200_000, 1920, 1920, 0.38);
 
         Assert.True(firstPage > 9000);
         Assert.InRange(lastPage - firstPage + 1, 5, 6);
+    }
+
+    [Fact]
+    public void VisiblePageRangeUsesSpanningViewportWidth()
+    {
+        (int firstPage, int lastPage) = calculator.CalculateVisiblePageRange(null, 0, 1920, 3840, 0.38);
+
+        Assert.Equal(0, firstPage);
+        Assert.True(lastPage >= 4);
     }
 
     [Fact]

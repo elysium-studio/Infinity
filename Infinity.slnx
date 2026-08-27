@@ -32,4 +32,7 @@
   <Project Path="Infinity.Tests/Infinity.Tests.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
+  <Project Path="Infinity.UI.WinUI/Infinity.UI.WinUI.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
 </Solution>

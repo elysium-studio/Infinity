@@ -14,7 +14,9 @@ using System.Linq;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, IPager pager, IScroller scroller, IWorkspace workspace, PageTitleStore pageTitleStore, DesktopPageReorderController reorderController, DesktopOverviewDragScroller overviewDragScroller, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, ITextLocalizer localizer, DesktopPageLayoutCalculator layoutCalculator, DesktopBackgroundBrushFactory backgroundBrushFactory, ILogger<DesktopPageStrip> logger) :
+internal readonly record struct DesktopSnapSlotTarget(int Page, DesktopSnapLayoutKind Layout, int Slot);
+
+public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, IPager pager, IScroller scroller, IWorkspace workspace, PageTitleStore pageTitleStore, PageLayoutStore pageLayoutStore, DesktopPageReorderController reorderController, DesktopOverviewDragScroller overviewDragScroller, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, ITextLocalizer localizer, DesktopPageLayoutCalculator layoutCalculator, DesktopSnapLayoutCatalog snapLayoutCatalog, DesktopBackgroundBrushFactory backgroundBrushFactory, ILogger<DesktopPageStrip> logger) :
     IDisposable
 {
     private static readonly TimeSpan ReorderAnimationDuration = TimeSpan.FromMilliseconds(180);
@@ -22,6 +24,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
     private readonly Dictionary<int, DesktopPagePreview> visiblePages = [];
     private readonly List<DesktopPagePreview> pagePool = [];
     private readonly Stack<DesktopPagePreview> availablePages = [];
+    private readonly DesktopPageEditorLabels editorLabels = new(localizer.GetText("PageTitleEditButton"), localizer.GetText("PageTitleSaveButton"), localizer.GetText("PageTitleCancelButton"), localizer.GetText("PageLayoutEditButton"));
     private Canvas? host;
     private Canvas? shadowHost;
     private Canvas? titleHost;
@@ -34,8 +37,10 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
     private double leadingSpace;
     private double reorderPointerDelta;
     private double reorderStartContentOffset;
+    private double workAreaOffsetY;
     private DesktopPageReorderPreviewState? reorderState;
     private bool interactionEnabled;
+    private int activeSnapPage = -1;
     private bool started;
     private bool disposed;
 
@@ -60,11 +65,13 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         overviewScale = scale;
         interactionEnabled = false;
 
+        scaleHost.SizeChanged += HandleScaleHostSizeChanged;
         ConfigureHost();
-        CreatePagePool(scaleElement);
+        EnsurePagePoolCapacity();
 
         backgroundSource.BackgroundChanged += HandleBackgroundChanged;
         pageTitleStore.TitleChanged += HandlePageTitleChanged;
+        pageLayoutStore.LayoutChanged += HandlePageLayoutChanged;
         overviewDragScroller.ScrollLimitReached += HandleScrollLimitReached;
 
         RefreshBackground();
@@ -84,7 +91,13 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
 
         backgroundSource.BackgroundChanged -= HandleBackgroundChanged;
         pageTitleStore.TitleChanged -= HandlePageTitleChanged;
+        pageLayoutStore.LayoutChanged -= HandlePageLayoutChanged;
         overviewDragScroller.ScrollLimitReached -= HandleScrollLimitReached;
+
+        if (scaleHost is not null)
+        {
+            scaleHost.SizeChanged -= HandleScaleHostSizeChanged;
+        }
 
         foreach (DesktopPagePreview page in pagePool)
         {
@@ -94,6 +107,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             page.DragCompleted -= HandlePageDragCompleted;
             page.DragCanceled -= HandlePageDragCanceled;
             page.TitleEditor.ViewModel.TitleSubmitted -= HandleTitleSubmitted;
+            page.TitleEditor.ViewModel.LayoutSubmitted -= HandleLayoutSubmitted;
             page.Reset();
             page.Dispose();
         }
@@ -114,6 +128,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         reorderPointerDelta = 0;
         reorderStartContentOffset = 0;
         interactionEnabled = false;
+        activeSnapPage = -1;
     }
 
     public void Synchronise(double offset)
@@ -135,6 +150,14 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         if (!started)
         {
             return;
+        }
+
+        if (Math.Abs(offset - currentOffset) > 0.01)
+        {
+            foreach (DesktopPagePreview page in visiblePages.Values)
+            {
+                page.TitleEditor.CloseLayoutFlyout();
+            }
         }
 
         currentOffset = offset;
@@ -165,10 +188,17 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         }
     }
 
+    public void SetWorkAreaOffsetY(double value) => workAreaOffsetY = double.IsFinite(value) ? value : 0;
+
     public void SetInteractionEnabled(bool value)
     {
         interactionEnabled = value;
         bool canceledReorder = !value && reorderState is not null;
+
+        if (!value)
+        {
+            ClearWindowSnapTarget();
+        }
 
         if (canceledReorder)
         {
@@ -191,6 +221,70 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         }
     }
 
+    internal bool TryUpdateWindowSnapTarget(double pointerX, double pointerY, out DesktopSnapSlotTarget target)
+    {
+        target = default;
+        DesktopPagePreview? targetPage = visiblePages.Values.FirstOrDefault(page => pointerX >= page.ScreenX && pointerX <= page.ScreenX + page.ScreenWidth && pointerY >= page.ScreenY && pointerY <= page.ScreenY + page.ScreenHeight);
+
+        if (targetPage is null)
+        {
+            ClearWindowSnapTarget();
+            return false;
+        }
+
+        DesktopSnapLayoutKind layout = targetPage.TitleEditor.ViewModel.Layout;
+
+        if (layout == DesktopSnapLayoutKind.None || targetPage.ScreenWidth <= 0 || targetPage.ScreenHeight <= 0)
+        {
+            ClearWindowSnapTarget();
+            return false;
+        }
+
+        double normalizedX = (pointerX - targetPage.ScreenX) / targetPage.ScreenWidth;
+        double normalizedY = (pointerY - targetPage.ScreenY) / targetPage.ScreenHeight;
+        int slot = snapLayoutCatalog.HitTest(layout, normalizedX, normalizedY);
+
+        if (slot < 0)
+        {
+            ClearWindowSnapTarget();
+            return false;
+        }
+
+        if (activeSnapPage != targetPage.Page)
+        {
+            ClearWindowSnapTarget();
+            activeSnapPage = targetPage.Page;
+        }
+
+        targetPage.ShowSnapZones(layout, slot);
+        target = new DesktopSnapSlotTarget(targetPage.Page, layout, slot);
+        return true;
+    }
+
+    internal void ClearWindowSnapTarget()
+    {
+        if (activeSnapPage >= 0 && visiblePages.TryGetValue(activeSnapPage, out DesktopPagePreview? page))
+        {
+            page.HideSnapZones();
+        }
+
+        activeSnapPage = -1;
+    }
+
+    internal bool TryCancelEditor()
+    {
+        DesktopPagePreview? page = visiblePages.Values.FirstOrDefault(page => page.TitleEditor.ViewModel.IsEditing);
+
+        if (page is null)
+        {
+            return false;
+        }
+
+        page.TitleEditor.ViewModel.Cancel();
+
+        return true;
+    }
+
     public void Dispose()
     {
         if (disposed)
@@ -211,7 +305,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             return;
         }
 
-        (int firstPage, int lastPage) = layoutCalculator.CalculateVisiblePageRange(pager.MaxPages, currentOffset, workspace.Width, overviewScale, currentSpacingProgress);
+        (int firstPage, int lastPage) = layoutCalculator.CalculateVisiblePageRange(pager.MaxPages, currentOffset, workspace.Width, GetViewportWidth(), overviewScale, currentSpacingProgress);
 
         foreach ((int page, DesktopPagePreview preview) in visiblePages.ToArray())
         {
@@ -235,12 +329,12 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
                     continue;
                 }
 
-                preview.Bind(page, workspace.Width, workspace.Height, background, pageTitleStore.GetTitle(page));
+                preview.Bind(page, workspace.Width, workspace.Height, background, pageTitleStore.GetTitle(page), pageLayoutStore.GetLayout(page), GetRasterizationScale());
                 visiblePages.Add(page, preview);
             }
             else
             {
-                preview.Bind(page, workspace.Width, workspace.Height, background, pageTitleStore.GetTitle(page));
+                preview.Bind(page, workspace.Width, workspace.Height, background, pageTitleStore.GetTitle(page), pageLayoutStore.GetLayout(page), GetRasterizationScale());
             }
 
             preview.SetInteractionEnabled(interactionEnabled);
@@ -269,7 +363,8 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         double viewportWidth = GetViewportWidth();
         double viewportHeight = GetViewportHeight();
         double pageScreenX = (viewportWidth / 2) + ((baseX - (viewportWidth / 2)) * overviewScale);
-        double pageScreenY = (viewportHeight / 2) * (1 - overviewScale);
+        double animationHeight = workspace.Height > 0 ? workspace.Height : viewportHeight;
+        double pageScreenY = workAreaOffsetY + ((animationHeight / 2) * (1 - overviewScale));
         double titleX = pageScreenX + ((workspace.Width * overviewScale) - preview.TitleEditor.Width) / 2;
         double translationX = targetX - baseX;
 
@@ -279,6 +374,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         Canvas.SetTop(preview.ShadowHost, pageScreenY);
         Canvas.SetLeft(preview.TitleEditor, titleX);
         Canvas.SetTop(preview.TitleEditor, pageScreenY - preview.TitleEditor.Height);
+        preview.SetScreenBounds(pageScreenX, pageScreenY, workspace.Width * overviewScale, workspace.Height * overviewScale);
 
         TimeSpan? effectiveTransition = reorderState?.SourcePage == page ? null : transitionDuration;
         preview.Update(translationX, translationX * overviewScale, effectiveTransition);
@@ -291,10 +387,10 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             return;
         }
 
-        double viewportWidth = workspace.Width / overviewScale;
-        leadingSpace = Math.Max(0, (viewportWidth - workspace.Width) / 2);
+        double unscaledViewportWidth = GetViewportWidth() / overviewScale;
+        leadingSpace = Math.Max(0, (unscaledViewportWidth - workspace.Width) / 2);
 
-        host.Width = viewportWidth;
+        host.Width = unscaledViewportWidth;
         host.Height = workspace.Height;
         Canvas.SetLeft(host, -leadingSpace);
 
@@ -304,19 +400,19 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         titleHost.Height = GetViewportHeight();
     }
 
-    private void CreatePagePool(FrameworkElement scaleHost)
+    private void EnsurePagePoolCapacity()
     {
-        if (host is null || shadowHost is null || titleHost is null)
+        if (host is null || shadowHost is null || titleHost is null || scaleHost is null)
         {
             return;
         }
 
-        int capacity = layoutCalculator.CalculateVisiblePageCapacity(overviewScale);
+        int capacity = layoutCalculator.CalculateVisiblePageCapacity(GetViewportWidth(), workspace.Width, overviewScale);
         Visual scaleVisual = ElementCompositionPreview.GetElementVisual(scaleHost);
 
-        for (int index = 0; index < capacity; index++)
+        for (int index = pagePool.Count; index < capacity; index++)
         {
-            DesktopPagePreview page = new(scaleVisual, overviewScale, localizer.GetText("PageTitleEditButton"), localizer.GetText("PageTitleSaveButton"), localizer.GetText("PageTitleCancelButton"));
+            DesktopPagePreview page = new(scaleVisual, overviewScale, snapLayoutCatalog, editorLabels);
 
             page.Click += HandlePageClicked;
             page.DragStarted += HandlePageDragStarted;
@@ -324,6 +420,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             page.DragCompleted += HandlePageDragCompleted;
             page.DragCanceled += HandlePageDragCanceled;
             page.TitleEditor.ViewModel.TitleSubmitted += HandleTitleSubmitted;
+            page.TitleEditor.ViewModel.LayoutSubmitted += HandleLayoutSubmitted;
 
             page.Hide();
             pagePool.Add(page);
@@ -338,6 +435,20 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
     private double GetViewportWidth() => scaleHost?.ActualWidth > 0 ? scaleHost.ActualWidth : workspace.Width;
 
     private double GetViewportHeight() => scaleHost?.ActualHeight > 0 ? scaleHost.ActualHeight : workspace.Height;
+
+    private double GetRasterizationScale() => scaleHost?.XamlRoot?.RasterizationScale ?? 1;
+
+    private void HandleScaleHostSizeChanged(object sender, SizeChangedEventArgs args)
+    {
+        if (!started)
+        {
+            return;
+        }
+
+        ConfigureHost();
+        EnsurePagePoolCapacity();
+        RefreshVisiblePages(null);
+    }
 
     private void HandlePageClicked(object sender, RoutedEventArgs args)
     {
@@ -536,7 +647,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             int reorderedPage = PageReorderMapping.Map(page, sourcePage, targetPage);
             string title = reorderedTitles.TryGetValue(reorderedPage, out string? reorderedTitle) ? reorderedTitle : pageTitleStore.GetTitle(reorderedPage);
 
-            preview.Bind(reorderedPage, workspace.Width, workspace.Height, background!, title);
+            preview.Bind(reorderedPage, workspace.Width, workspace.Height, background!, title, pageLayoutStore.GetLayout(reorderedPage), GetRasterizationScale());
             visiblePages[reorderedPage] = preview;
         }
     }
@@ -550,7 +661,28 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         catch (Exception exception)
         {
             logger.LogError(exception, "Failed to update the title for desktop page {Page}", viewModel.Page);
-            viewModel.Bind(viewModel.Page, pageTitleStore.GetTitle(viewModel.Page));
+            viewModel.Bind(viewModel.Page, pageTitleStore.GetTitle(viewModel.Page), pageLayoutStore.GetLayout(viewModel.Page));
+        }
+    }
+
+    private async void HandleLayoutSubmitted(DesktopPageTitleViewModel viewModel, DesktopSnapLayoutKind layout)
+    {
+        try
+        {
+            await pageLayoutStore.UpdateAsync(viewModel.Page, layout);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Failed to update the snap layout for desktop page {Page}", viewModel.Page);
+            DesktopSnapLayoutKind configuredLayout = pageLayoutStore.GetLayout(viewModel.Page);
+            viewModel.Bind(viewModel.Page, pageTitleStore.GetTitle(viewModel.Page), configuredLayout);
+        }
+        finally
+        {
+            if (visiblePages.TryGetValue(viewModel.Page, out DesktopPagePreview? preview))
+            {
+                preview.HideSnapZones();
+            }
         }
     }
 
@@ -560,7 +692,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         {
             if (started && reorderState is null && visiblePages.TryGetValue(page, out DesktopPagePreview? preview))
             {
-                preview.TitleEditor.ViewModel.Bind(page, title);
+                preview.TitleEditor.ViewModel.Bind(page, title, pageLayoutStore.GetLayout(page));
             }
         }
 
@@ -571,6 +703,26 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         else
         {
             host?.DispatcherQueue.TryEnqueue(RefreshTitle);
+        }
+    }
+
+    private void HandlePageLayoutChanged(int page, DesktopSnapLayoutKind layout)
+    {
+        void RefreshLayout()
+        {
+            if (started && reorderState is null && visiblePages.TryGetValue(page, out DesktopPagePreview? preview))
+            {
+                preview.TitleEditor.ViewModel.Bind(page, pageTitleStore.GetTitle(page), layout);
+            }
+        }
+
+        if (host?.DispatcherQueue.HasThreadAccess == true)
+        {
+            RefreshLayout();
+        }
+        else
+        {
+            host?.DispatcherQueue.TryEnqueue(RefreshLayout);
         }
     }
 
@@ -616,7 +768,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             {
                 foreach (DesktopPagePreview page in visiblePages.Values)
                 {
-                    page.Bind(page.Page, workspace.Width, workspace.Height, background, pageTitleStore.GetTitle(page.Page));
+                    page.Bind(page.Page, workspace.Width, workspace.Height, background, pageTitleStore.GetTitle(page.Page), pageLayoutStore.GetLayout(page.Page), GetRasterizationScale());
                     page.SetInteractionEnabled(interactionEnabled);
                 }
             }

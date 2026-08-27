@@ -2,9 +2,11 @@ using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Windows.System;
 
 namespace Infinity.Shell.WinUI;
@@ -19,8 +21,8 @@ public sealed partial class DesktopScrollPreviewView :
     private readonly IScroller scroller;
     private readonly IPager pager;
     private readonly IWorkspace workspace;
-    private readonly ITaskbarLocator taskbarLocator;
     private readonly DesktopPageLayoutCalculator pageLayoutCalculator;
+    private readonly DesktopSnapPlacementResolver snapPlacementResolver;
     private readonly DesktopScrollPreviewAnimator animator;
     private readonly DesktopPageStrip pageStrip;
     private readonly DesktopWindowPreviewCollection previews;
@@ -34,8 +36,13 @@ public sealed partial class DesktopScrollPreviewView :
     private double spacingProgress = 1;
     private int monitorOriginX;
     private int monitorOriginY;
+    private int overlayScreenOriginY;
+    private int workAreaOffsetY;
+    private nint activeSnapWindow;
+    private double activeSnapPointerX;
+    private double activeSnapPointerY;
 
-    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IShellLayoutCalculator layoutCalculator, IPanState panState, IScroller scroller, IPager pager, IWorkspace workspace, ITaskbarLocator taskbarLocator, DesktopPageLayoutCalculator pageLayoutCalculator, DesktopScrollPreviewAnimator animator, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement)
+    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IShellLayoutCalculator layoutCalculator, IPanState panState, IScroller scroller, IPager pager, IWorkspace workspace, DesktopPageLayoutCalculator pageLayoutCalculator, DesktopSnapPlacementResolver snapPlacementResolver, DesktopScrollPreviewAnimator animator, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement)
     {
         InitializeComponent();
 
@@ -46,8 +53,8 @@ public sealed partial class DesktopScrollPreviewView :
         this.scroller = scroller;
         this.pager = pager;
         this.workspace = workspace;
-        this.taskbarLocator = taskbarLocator;
         this.pageLayoutCalculator = pageLayoutCalculator;
+        this.snapPlacementResolver = snapPlacementResolver;
         this.animator = animator;
         this.pageStrip = pageStrip;
         this.previews = previews;
@@ -57,6 +64,10 @@ public sealed partial class DesktopScrollPreviewView :
         this.pageStrip.ReorderPreviewChanged += HandlePageReorderPreviewChanged;
         this.previews.WindowInvoked += HandleWindowInvoked;
         this.previews.WindowPositionChanged += HandleWindowPositionChanged;
+        this.previews.WindowDragMoved += HandleWindowDragMoved;
+        this.previews.WindowDragCompleted += HandleWindowDragCompleted;
+
+        ElementCompositionPreview.SetIsTranslationEnabled(PreviewSurface, true);
     }
 
     public event EventHandler? BackgroundInvoked;
@@ -71,27 +82,35 @@ public sealed partial class DesktopScrollPreviewView :
 
     public bool IsRunning => isRunning;
 
-    public void Prepare(nint ownerWindowHandle)
+    public void Prepare(nint ownerWindowHandle, int screenOriginY)
     {
         if (!DispatcherQueue.HasThreadAccess)
         {
-            DispatcherQueue.TryEnqueue(() => Prepare(ownerWindowHandle));
+            DispatcherQueue.TryEnqueue(() => Prepare(ownerWindowHandle, screenOriginY));
             return;
         }
+
+        overlayScreenOriginY = screenOriginY;
+        bool originChanged = RefreshMonitorOrigin();
+        cursorConfinement.SetOwner(ownerWindowHandle);
+        windowPreviewSurface.Initialize(ownerWindowHandle);
 
         if (!isRunning)
         {
             isRunning = true;
             spacingProgress = 1;
 
-            cursorConfinement.SetOwner(ownerWindowHandle);
             SubscribeEvents();
-            windowPreviewSurface.Initialize(ownerWindowHandle);
             pageStrip.Start(PageCanvas, PageShadowCanvas, PageTitleCanvas, PreviewSurface, animator.Scale);
+            previews.SetThumbnailWorldScale(animator.Scale);
             Synchronise();
 
             SetInteractionEnabled(false);
             Opacity = 1;
+        }
+        else if (originChanged)
+        {
+            Synchronise();
         }
     }
 
@@ -154,6 +173,7 @@ public sealed partial class DesktopScrollPreviewView :
         cursorConfinement.Release();
         SetInteractionEnabled(false);
         WindowSearchBox.Text = string.Empty;
+        ClearWindowSnapTarget();
 
         animator.Reset(PreviewSurface, GetAnimationWidth(), GetAnimationHeight());
 
@@ -170,9 +190,9 @@ public sealed partial class DesktopScrollPreviewView :
             return;
         }
 
+        RefreshMonitorOrigin();
         IReadOnlyList<TrackedWindow> windows = previews.Synchronise(PreviewCanvas, FocusCanvas, windowCollection.AllTrackedWindows, animator.Scale);
 
-        RefreshMonitorOrigin();
         pageStrip.Synchronise(scroller.VisualOffset);
 
         foreach (TrackedWindow trackedWindow in windows)
@@ -191,6 +211,7 @@ public sealed partial class DesktopScrollPreviewView :
             return;
         }
 
+        RefreshMonitorOrigin();
         pageStrip.RefreshLayout(scroller.VisualOffset, spacingProgress, transitionDuration);
 
         foreach (TrackedWindow trackedWindow in windowCollection.AllTrackedWindows)
@@ -202,6 +223,8 @@ public sealed partial class DesktopScrollPreviewView :
 
             UpdateWindowLayout(trackedWindow, preview, transitionDuration);
         }
+
+        RefreshActiveWindowSnapTarget();
     }
 
     private void UpdateWindowLayout(TrackedWindow trackedWindow, DesktopWindowPreview preview, TimeSpan? transitionDuration)
@@ -269,17 +292,24 @@ public sealed partial class DesktopScrollPreviewView :
         });
     }
 
-    private void RefreshMonitorOrigin()
-    {
-        MonitorHandle monitor = new(workspace.GetCurrentWorkspace());
-        TaskbarInfo? taskbar = taskbarLocator.GetTaskbarForMonitor(monitor);
-        monitorOriginX = taskbar?.MonitorBounds.Left ?? workspace.WorkAreaX;
-        monitorOriginY = taskbar?.MonitorBounds.Top ?? workspace.WorkAreaY;
-    }
-
     private double GetAnimationWidth() => ActualWidth > 0 ? ActualWidth : XamlRoot?.Size.Width ?? workspace.Width;
 
-    private double GetAnimationHeight() => ActualHeight > 0 ? ActualHeight : XamlRoot?.Size.Height ?? workspace.Height;
+    private double GetAnimationHeight() => workspace.Height > 0 ? workspace.Height : ActualHeight > 0 ? ActualHeight : XamlRoot?.Size.Height ?? 0;
+
+    private bool RefreshMonitorOrigin()
+    {
+        int x = workspace.WorkAreaX;
+        int y = workspace.WorkAreaY;
+        int offsetY = Math.Max(0, y - overlayScreenOriginY);
+        bool changed = monitorOriginX != x || monitorOriginY != y || workAreaOffsetY != offsetY;
+        monitorOriginX = x;
+        monitorOriginY = y;
+        workAreaOffsetY = offsetY;
+        PreviewSurface.Translation = new Vector3(0, workAreaOffsetY, 0);
+        pageStrip.SetWorkAreaOffsetY(workAreaOffsetY);
+        cursorConfinement.SetWorkAreaOffsetY(workAreaOffsetY);
+        return changed;
+    }
 
     private void SubscribeEvents()
     {
@@ -383,6 +413,7 @@ public sealed partial class DesktopScrollPreviewView :
     {
         if (isRunning && windowCollection.TryGetTrackedWindow(handle, out TrackedWindow? trackedWindow) && trackedWindow is not null && previews.TryGet(handle, out DesktopWindowPreview? preview) && preview is not null)
         {
+            previews.Refresh(trackedWindow);
             UpdateWindowLayout(trackedWindow, preview, null);
         }
     }
@@ -475,6 +506,8 @@ public sealed partial class DesktopScrollPreviewView :
         BackgroundInvoked?.Invoke(this, EventArgs.Empty);
     }
 
+    public bool TryCancelEditor() => pageStrip.TryCancelEditor();
+
     private void ResetFilter()
     {
         filterActive = false;
@@ -549,5 +582,49 @@ public sealed partial class DesktopScrollPreviewView :
         {
             DispatcherQueue.TryEnqueue(RefreshWindow);
         }
+    }
+
+    private void HandleWindowDragMoved(nint handle, double pointerX, double pointerY)
+    {
+        activeSnapWindow = handle;
+        activeSnapPointerX = pointerX;
+        activeSnapPointerY = pointerY;
+        RefreshActiveWindowSnapTarget();
+    }
+
+    private void HandleWindowDragCompleted(nint handle)
+    {
+        if (activeSnapWindow == handle)
+        {
+            ClearWindowSnapTarget();
+        }
+    }
+
+    private void RefreshActiveWindowSnapTarget()
+    {
+        if (activeSnapWindow == 0 || !pageStrip.TryUpdateWindowSnapTarget(activeSnapPointerX, activeSnapPointerY, out DesktopSnapSlotTarget target) || !snapPlacementResolver.TryResolve(target.Page, target.Layout, target.Slot, monitorOriginX, monitorOriginY, out DesktopSnapPlacement placement))
+        {
+            if (activeSnapWindow != 0)
+            {
+                previews.SetSnapTarget(activeSnapWindow, null);
+            }
+
+            return;
+        }
+
+        previews.SetSnapTarget(activeSnapWindow, new DesktopWindowSnapTarget(placement));
+    }
+
+    private void ClearWindowSnapTarget()
+    {
+        if (activeSnapWindow != 0)
+        {
+            previews.SetSnapTarget(activeSnapWindow, null);
+        }
+
+        activeSnapWindow = 0;
+        activeSnapPointerX = 0;
+        activeSnapPointerY = 0;
+        pageStrip.ClearWindowSnapTarget();
     }
 }

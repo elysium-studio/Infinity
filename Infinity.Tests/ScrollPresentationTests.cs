@@ -71,6 +71,24 @@ public sealed class ScrollPresentationTests
     }
 
     [Fact]
+    public void ExplicitRepositionCommitsWindowDuringPresentation()
+    {
+        WindowStore store = new();
+        TrackedWindow window = CreateWindow(500);
+        store.Add(window);
+        PanState state = new();
+        state.SetOffset(200);
+        TestWindowMover mover = new();
+        ScrollPresentationSession presentationSession = new();
+        presentationSession.Begin();
+        using Scroller scroller = CreateScroller(state, store, mover, presentationSession);
+
+        scroller.Reposition();
+
+        Assert.Collection(mover.Moves, move => Assert.Equal((window.Handle, 300), (move.Handle, move.X)));
+    }
+
+    [Fact]
     public void WheelInputTakesControlFromProgrammaticNavigation()
     {
         WindowStore store = new();

@@ -1,6 +1,7 @@
 using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
@@ -27,6 +28,7 @@ public sealed partial class DesktopPagePreview :
     private readonly ThemeShadow pageShadow;
     private readonly Border wallpaperHost;
     private readonly Border interactionLayer;
+    private readonly DesktopSnapZonePresenter snapZones;
     private readonly double visualScale;
     private readonly CompositionRoundedRectangleGeometry clipGeometry;
     private readonly CompositionGeometricClip clip;
@@ -49,7 +51,7 @@ public sealed partial class DesktopPagePreview :
     private bool interactionEnabled;
     private bool disposed;
 
-    public DesktopPagePreview(Visual scaleVisual, double overviewScale, string editLabel, string saveLabel, string cancelLabel)
+    public DesktopPagePreview(Visual scaleVisual, double overviewScale, DesktopSnapLayoutCatalog snapLayoutCatalog, DesktopPageEditorLabels labels)
     {
         visualScale = double.IsFinite(overviewScale) && overviewScale > 0 ? overviewScale : 1;
         SolidColorBrush transparentBrush = new(Color.FromArgb(0, 0, 0, 0));
@@ -80,10 +82,12 @@ public sealed partial class DesktopPagePreview :
             IsHitTestVisible = false,
             Opacity = 0
         };
-        TitleEditor = new DesktopPageTitleEditor(editLabel, saveLabel, cancelLabel);
+        snapZones = new DesktopSnapZonePresenter(snapLayoutCatalog, visualScale);
+        TitleEditor = new DesktopPageTitleEditor(labels, snapLayoutCatalog);
 
         Grid content = new();
         content.Children.Add(wallpaperHost);
+        content.Children.Add(snapZones.Host);
         content.Children.Add(interactionLayer);
         Content = content;
 
@@ -141,6 +145,14 @@ public sealed partial class DesktopPagePreview :
 
     public int Page { get; private set; }
 
+    public double ScreenX { get; private set; }
+
+    public double ScreenY { get; private set; }
+
+    public double ScreenWidth { get; private set; }
+
+    public double ScreenHeight { get; private set; }
+
     public bool IsDragging => isDragging;
 
     public event Action<DesktopPagePreview>? DragStarted;
@@ -151,7 +163,7 @@ public sealed partial class DesktopPagePreview :
 
     public event Action<DesktopPagePreview>? DragCanceled;
 
-    public void Bind(int page, double width, double height, Brush background, string title)
+    public void Bind(int page, double width, double height, Brush background, string title, DesktopSnapLayoutKind layout, double rasterizationScale)
     {
         Page = page;
         PageHost.Width = width;
@@ -163,7 +175,9 @@ public sealed partial class DesktopPagePreview :
         shadowHost.Height = height * visualScale;
 
         wallpaperHost.Background = background;
-        TitleEditor.ViewModel.Bind(page, title);
+        snapZones.Bind(width, height);
+        TitleEditor.ViewModel.ConfigureDisplay(width, height, rasterizationScale);
+        TitleEditor.ViewModel.Bind(page, title, layout);
         clipGeometry.Size = new Vector2(ToFloat(width), ToFloat(height));
 
         PageHost.Opacity = 1;
@@ -173,8 +187,21 @@ public sealed partial class DesktopPagePreview :
         Opacity = 1;
     }
 
+    public void SetScreenBounds(double x, double y, double width, double height)
+    {
+        ScreenX = x;
+        ScreenY = y;
+        ScreenWidth = width;
+        ScreenHeight = height;
+    }
+
+    public void ShowSnapZones(DesktopSnapLayoutKind layout, int highlightedSlot = -1, bool animate = true) => snapZones.Show(layout, highlightedSlot, animate);
+
+    public void HideSnapZones(bool animate = true) => snapZones.Hide(animate);
+
     public void Hide()
     {
+        snapZones.Hide(false);
         PageHost.Opacity = 0;
         shadowHost.Opacity = 0;
         shadowHost.Shadow = null;
@@ -252,6 +279,10 @@ public sealed partial class DesktopPagePreview :
         pageTranslation = Vector3.Zero;
         shadowTranslation = new Vector3(0, 0, ShadowDepth);
         titleTranslation = Vector3.Zero;
+        ScreenX = 0;
+        ScreenY = 0;
+        ScreenWidth = 0;
+        ScreenHeight = 0;
 
         TitleEditor.ViewModel.Reset();
         ClearTranslationTransition();
@@ -271,6 +302,7 @@ public sealed partial class DesktopPagePreview :
         shadowVisual.Properties.StopAnimation("Translation");
         titleVisual.Properties.StopAnimation("Translation");
         interactionVisual.StopAnimation(nameof(Visual.Opacity));
+        snapZones.Dispose();
 
         CancelPointerOperation(false);
 
@@ -502,7 +534,7 @@ public sealed partial class DesktopPagePreview :
     {
         for (DependencyObject? element = source; element is not null && !ReferenceEquals(element, TitleEditor); element = VisualTreeHelper.GetParent(element))
         {
-            if (element is Button or TextBox)
+            if (element is ButtonBase or TextBox)
             {
                 return true;
             }

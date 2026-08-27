@@ -1,11 +1,19 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
+using System.Collections.ObjectModel;
 
 namespace Infinity.Shell;
 
-public sealed partial class DesktopPageTitleViewModel(string editLabel, string saveLabel, string cancelLabel) :
+public sealed partial class DesktopPageTitleViewModel(DesktopPageEditorLabels labels, DesktopSnapLayoutCatalog layoutCatalog) :
     ObservableObject
 {
+    private const double MaximumPreviewWidth = 96;
+    private const double MaximumPreviewHeight = 96;
+
+    private double configuredWidth;
+    private double configuredHeight;
+    private double configuredRasterizationScale;
+
     [ObservableProperty]
     private string title = string.Empty;
 
@@ -15,20 +23,62 @@ public sealed partial class DesktopPageTitleViewModel(string editLabel, string s
     [ObservableProperty]
     private bool isEditing;
 
+    [ObservableProperty]
+    private DesktopSnapLayoutKind layout;
+
     public event Action<DesktopPageTitleViewModel, string>? TitleSubmitted;
 
-    public string EditLabel { get; } = editLabel;
+    public event Action<DesktopPageTitleViewModel, DesktopSnapLayoutKind>? LayoutSubmitted;
 
-    public string SaveLabel { get; } = saveLabel;
+    public ObservableCollection<DesktopSnapLayoutOptionViewModel> AvailableLayouts { get; } = [];
 
-    public string CancelLabel { get; } = cancelLabel;
+    public string EditLabel => labels.EditTitle;
+
+    public string SaveLabel => labels.SaveTitle;
+
+    public string CancelLabel => labels.CancelTitle;
+
+    public string EditLayoutLabel => labels.EditLayout;
+
+    public bool IsDisplayMode => !IsEditing;
 
     public int Page { get; private set; }
 
-    public void Bind(int page, string value)
+    public int LayoutColumnCount { get; private set; } = 2;
+
+    public void ConfigureDisplay(double width, double height, double rasterizationScale)
+    {
+        if (width == configuredWidth && height == configuredHeight && rasterizationScale == configuredRasterizationScale)
+        {
+            return;
+        }
+
+        configuredWidth = width;
+        configuredHeight = height;
+        configuredRasterizationScale = rasterizationScale;
+
+        double aspectRatio = double.IsFinite(width) && double.IsFinite(height) && width > 0 && height > 0 ? width / height : 1;
+        double previewWidth = aspectRatio >= 1 ? MaximumPreviewWidth : MaximumPreviewHeight * aspectRatio;
+        double previewHeight = aspectRatio >= 1 ? MaximumPreviewWidth / aspectRatio : MaximumPreviewHeight;
+        IReadOnlyList<DesktopSnapLayoutDefinition> definitions = layoutCatalog.GetAvailable(width, height, rasterizationScale);
+
+        AvailableLayouts.Clear();
+
+        foreach (DesktopSnapLayoutDefinition definition in definitions)
+        {
+            AvailableLayouts.Add(new DesktopSnapLayoutOptionViewModel(definition, previewWidth, previewHeight));
+        }
+
+        LayoutColumnCount = AvailableLayouts.Count <= 4 ? 2 : 3;
+        OnPropertyChanged(nameof(LayoutColumnCount));
+        RefreshLayoutSelectionProperties();
+    }
+
+    public void Bind(int page, string value, DesktopSnapLayoutKind configuredLayout)
     {
         Page = page;
         Title = value;
+        Layout = configuredLayout;
 
         if (!IsEditing)
         {
@@ -55,11 +105,52 @@ public sealed partial class DesktopPageTitleViewModel(string editLabel, string s
         EditingTitle = Title;
     }
 
+    public void SelectLayout(DesktopSnapLayoutKind selectedLayout)
+    {
+        if (selectedLayout == DesktopSnapLayoutKind.None)
+        {
+            return;
+        }
+
+        if (Layout == selectedLayout)
+        {
+            RefreshLayoutSelectionProperties();
+            return;
+        }
+
+        Layout = selectedLayout;
+        LayoutSubmitted?.Invoke(this, selectedLayout);
+    }
+
     public void Reset()
     {
         Cancel();
         Page = 0;
         Title = string.Empty;
         EditingTitle = string.Empty;
+        Layout = DesktopSnapLayoutKind.None;
+        AvailableLayouts.Clear();
+        configuredWidth = 0;
+        configuredHeight = 0;
+        configuredRasterizationScale = 0;
+    }
+
+    partial void OnIsEditingChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsDisplayMode));
+    }
+
+    partial void OnLayoutChanged(DesktopSnapLayoutKind value)
+    {
+        RefreshLayoutSelectionProperties();
+    }
+
+    private void RefreshLayoutSelectionProperties()
+    {
+        foreach (DesktopSnapLayoutOptionViewModel option in AvailableLayouts)
+        {
+            option.IsSelected = option.Kind == Layout;
+            option.SetHighlighted(option.IsSelected);
+        }
     }
 }

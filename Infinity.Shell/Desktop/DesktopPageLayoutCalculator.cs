@@ -4,22 +4,18 @@ public sealed class DesktopPageLayoutCalculator
 {
     public double PageSpacing => 64;
 
-    public int CalculateVisiblePageCapacity(double overviewScale) =>
-        overviewScale > 0 ? (int)Math.Ceiling(1 / overviewScale) + 4 : 0;
+    public int CalculateVisiblePageCapacity(double viewportWidth, double desktopWidth, double overviewScale) =>
+        viewportWidth > 0 && desktopWidth > 0 && overviewScale > 0 ? (int)Math.Ceiling(viewportWidth / (desktopWidth * overviewScale)) + 4 : 0;
 
-    public (int FirstPage, int LastPage) CalculateVisiblePageRange(int? maximumPageCount,
-        double visualOffset,
-        double desktopWidth,
-        double overviewScale,
-        double spacingProgress = 1)
+    public (int FirstPage, int LastPage) CalculateVisiblePageRange(int? maximumPageCount, double visualOffset, double desktopWidth, double viewportWidth, double overviewScale, double spacingProgress = 1)
     {
-        if (desktopWidth <= 0 || overviewScale <= 0 || maximumPageCount == 0)
+        if (desktopWidth <= 0 || viewportWidth <= 0 || overviewScale <= 0 || maximumPageCount == 0)
         {
             return (0, -1);
         }
 
-        double viewportWidth = desktopWidth / overviewScale;
-        double leadingSpace = Math.Max(0, (viewportWidth - desktopWidth) / 2);
+        double unscaledViewportWidth = viewportWidth / overviewScale;
+        double leadingSpace = Math.Max(0, (unscaledViewportWidth - desktopWidth) / 2);
         double contentOffset = CalculateContentOffset(visualOffset, desktopWidth, spacingProgress);
         double pageStride = desktopWidth + (PageSpacing * spacingProgress);
         double viewportLeft = -leadingSpace;

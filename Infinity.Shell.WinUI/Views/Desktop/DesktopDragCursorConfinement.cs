@@ -30,6 +30,16 @@ public sealed class DesktopDragCursorConfinement :
 
     public void SetOwner(nint windowHandle) => ownerWindowHandle = windowHandle;
 
+    public void SetWorkAreaOffsetY(double value)
+    {
+        boundaryCalculator.SetWorkAreaOffsetY(value);
+
+        if (active)
+        {
+            Apply();
+        }
+    }
+
     public void Begin(double width, double height, double scale, double rasterScale, bool constrainVertical)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
