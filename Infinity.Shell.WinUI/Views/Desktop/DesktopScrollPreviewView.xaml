@@ -12,7 +12,6 @@
             <Flyout.FlyoutPresenterStyle>
                 <Style TargetType="FlyoutPresenter">
                     <Setter Property="Padding" Value="0" />
-                    <Setter Property="Background" Value="{ThemeResource SolidBackgroundFillColorSecondaryBrush}" />
                     <Setter Property="CornerRadius" Value="12" />
                     <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
                     <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
@@ -24,44 +23,16 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <Border
-                    Padding="24,16"
-                    Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
-                    <Grid>
-                        <TextBox
-                            x:Name="ApplicationSearchBox"
-                            x:Uid="DesktopAppPickerSearchBox"
-                            Height="40"
-                            Padding="38,0,12,0"
-                            CornerRadius="20"
-                            Text="{x:Bind ApplicationPicker.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                            <TextBox.Resources>
-                                <StaticResource x:Key="TextControlBackground" ResourceKey="ControlFillColorDefaultBrush" />
-                                <StaticResource x:Key="TextControlBackgroundPointerOver" ResourceKey="ControlFillColorSecondaryBrush" />
-                                <StaticResource x:Key="TextControlBackgroundFocused" ResourceKey="ControlFillColorInputActiveBrush" />
-                                <StaticResource x:Key="TextControlBorderBrush" ResourceKey="ControlElevationBorderBrush" />
-                                <StaticResource x:Key="TextControlBorderBrushPointerOver" ResourceKey="ControlElevationBorderBrush" />
-                                <StaticResource x:Key="TextControlBorderBrushFocused" ResourceKey="ControlElevationBorderBrush" />
-                            </TextBox.Resources>
-                        </TextBox>
-                        <FontIcon
-                            Margin="14,0,0,0"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Center"
-                            FontSize="16"
-                            Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
-                            Glyph="&#xE721;"
-                            IsHitTestVisible="False" />
-                    </Grid>
-                </Border>
+                <TextBox
+                    x:Name="ApplicationSearchBox"
+                    x:Uid="DesktopAppPickerSearchBox"
+                    Margin="12"
+                    Text="{x:Bind ApplicationPicker.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <Rectangle Grid.Row="1" Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
-                <Grid
-                    Grid.Row="2"
-                    Background="{ThemeResource SolidBackgroundFillColorSecondaryBrush}">
+                <Grid Grid.Row="2">
                     <ListView
                         x:Name="ApplicationResultsList"
-                        Margin="28,12,20,12"
-                        Background="Transparent"
+                        Margin="4,8"
                         ContainerContentChanging="HandleApplicationContainerContentChanging"
                         IsItemClickEnabled="True"
                         ItemClick="HandleApplicationClicked"
