@@ -414,4 +414,31 @@
   <data name="DesktopAppPickerDestinationHeader" xml:space="preserve">
     <value>Open in</value>
   </data>
+  <data name="PageLayoutArrangeButton" xml:space="preserve">
+    <value>Arrange this page</value>
+  </data>
+  <data name="DesktopWindowBringToCurrentPage" xml:space="preserve">
+    <value>Bring to current page</value>
+  </data>
+  <data name="DesktopWindowSendToPage" xml:space="preserve">
+    <value>Send to page</value>
+  </data>
+  <data name="DesktopWindowMoveToSlot" xml:space="preserve">
+    <value>Move to slot</value>
+  </data>
+  <data name="DesktopWindowSlot" xml:space="preserve">
+    <value>Slot {0}</value>
+  </data>
+  <data name="DesktopWindowSwapWith" xml:space="preserve">
+    <value>Swap with</value>
+  </data>
+  <data name="DesktopWindowUntitled" xml:space="preserve">
+    <value>Untitled window</value>
+  </data>
+  <data name="DesktopWindowCenterOnPage" xml:space="preserve">
+    <value>Centre on page</value>
+  </data>
+  <data name="DesktopWindowClose" xml:space="preserve">
+    <value>Close window</value>
+  </data>
 +</root>

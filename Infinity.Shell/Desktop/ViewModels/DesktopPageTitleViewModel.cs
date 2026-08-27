@@ -30,6 +30,8 @@ public sealed partial class DesktopPageTitleViewModel(DesktopPageEditorLabels la
 
     public event Action<DesktopPageTitleViewModel, DesktopSnapLayoutKind>? LayoutSubmitted;
 
+    public event Action<DesktopPageTitleViewModel>? ArrangeRequested;
+
     public ObservableCollection<DesktopSnapLayoutOptionViewModel> AvailableLayouts { get; } = [];
 
     public string EditLabel => labels.EditTitle;
@@ -41,6 +43,8 @@ public sealed partial class DesktopPageTitleViewModel(DesktopPageEditorLabels la
     public string EditLayoutLabel => labels.EditLayout;
 
     public string ClearLayoutLabel => labels.ClearLayout;
+
+    public string ArrangeLayoutLabel => labels.ArrangeLayout;
 
     public string OpenApplicationLabel => labels.OpenApplication;
 
@@ -137,6 +141,14 @@ public sealed partial class DesktopPageTitleViewModel(DesktopPageEditorLabels la
 
         Layout = DesktopSnapLayoutKind.None;
         LayoutSubmitted?.Invoke(this, DesktopSnapLayoutKind.None);
+    }
+
+    public void Arrange()
+    {
+        if (HasLayout)
+        {
+            ArrangeRequested?.Invoke(this);
+        }
     }
 
     public void Reset()

@@ -186,6 +186,12 @@
                                             <Button
                                                 HorizontalAlignment="Stretch"
                                                 HorizontalContentAlignment="Center"
+                                                AutomationProperties.Name="{x:Bind ViewModel.ArrangeLayoutLabel}"
+                                                Click="{x:Bind ViewModel.Arrange}"
+                                                Content="{x:Bind ViewModel.ArrangeLayoutLabel}" />
+                                            <Button
+                                                HorizontalAlignment="Stretch"
+                                                HorizontalContentAlignment="Center"
                                                 AutomationProperties.Name="{x:Bind ViewModel.ClearLayoutLabel}"
                                                 Click="HandleClearLayoutClicked"
                                                 Content="{x:Bind ViewModel.ClearLayoutLabel}" />

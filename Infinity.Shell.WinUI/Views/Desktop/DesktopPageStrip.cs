@@ -14,7 +14,7 @@ using System.Linq;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, IPager pager, IScroller scroller, IWorkspace workspace, PageTitleStore pageTitleStore, PageLayoutStore pageLayoutStore, DesktopPageReorderController reorderController, DesktopOverviewDragScroller overviewDragScroller, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, ITextLocalizer localizer, DesktopPageLayoutCalculator layoutCalculator, DesktopSnapLayoutCatalog snapLayoutCatalog, DesktopBackgroundBrushFactory backgroundBrushFactory, ILogger<DesktopPageStrip> logger) :
+public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, IPager pager, IScroller scroller, IWorkspace workspace, PageTitleStore pageTitleStore, PageLayoutStore pageLayoutStore, DesktopPageReorderController reorderController, DesktopPageArrangementCoordinator arrangementCoordinator, DesktopOverviewDragScroller overviewDragScroller, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, ITextLocalizer localizer, DesktopPageLayoutCalculator layoutCalculator, DesktopSnapLayoutCatalog snapLayoutCatalog, DesktopBackgroundBrushFactory backgroundBrushFactory, ILogger<DesktopPageStrip> logger) :
     IDisposable
 {
     private static readonly TimeSpan ReorderAnimationDuration = TimeSpan.FromMilliseconds(180);
@@ -22,7 +22,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
     private readonly Dictionary<int, DesktopPagePreview> visiblePages = [];
     private readonly List<DesktopPagePreview> pagePool = [];
     private readonly Stack<DesktopPagePreview> availablePages = [];
-    private readonly DesktopPageEditorLabels editorLabels = new(localizer.GetText("PageTitleEditButton"), localizer.GetText("PageTitleSaveButton"), localizer.GetText("PageTitleCancelButton"), localizer.GetText("PageLayoutEditButton"), localizer.GetText("PageLayoutClearButton"), localizer.GetText("PageOpenApplicationButton"));
+    private readonly DesktopPageEditorLabels editorLabels = new(localizer.GetText("PageTitleEditButton"), localizer.GetText("PageTitleSaveButton"), localizer.GetText("PageTitleCancelButton"), localizer.GetText("PageLayoutEditButton"), localizer.GetText("PageLayoutArrangeButton"), localizer.GetText("PageLayoutClearButton"), localizer.GetText("PageOpenApplicationButton"));
     private Canvas? host;
     private Canvas? shadowHost;
     private Canvas? titleHost;
@@ -123,6 +123,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             page.DragCanceled -= HandlePageDragCanceled;
             page.TitleEditor.ViewModel.TitleSubmitted -= HandleTitleSubmitted;
             page.TitleEditor.ViewModel.LayoutSubmitted -= HandleLayoutSubmitted;
+            page.TitleEditor.ViewModel.ArrangeRequested -= HandleArrangeRequested;
             page.OpenApplicationRequested -= HandleOpenApplicationRequested;
             page.Reset();
             page.Dispose();
@@ -437,6 +438,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             page.DragCanceled += HandlePageDragCanceled;
             page.TitleEditor.ViewModel.TitleSubmitted += HandleTitleSubmitted;
             page.TitleEditor.ViewModel.LayoutSubmitted += HandleLayoutSubmitted;
+            page.TitleEditor.ViewModel.ArrangeRequested += HandleArrangeRequested;
             page.OpenApplicationRequested += HandleOpenApplicationRequested;
 
             page.Hide();
@@ -711,6 +713,17 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
                 preview.HideSnapZones();
             }
         }
+    }
+
+    private void HandleArrangeRequested(DesktopPageTitleViewModel viewModel)
+    {
+        if (!started || reorderState is not null || !viewModel.HasLayout)
+        {
+            return;
+        }
+
+        arrangementCoordinator.Arrange(viewModel.Page, viewModel.Layout, workspace.WorkAreaX, workspace.WorkAreaY);
+        visiblePages.GetValueOrDefault(viewModel.Page)?.TitleEditor.CloseLayoutFlyout();
     }
 
     private void HandlePageTitleChanged(int page, string title)

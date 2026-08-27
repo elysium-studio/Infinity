@@ -408,4 +408,13 @@
   <data name="DesktopAppPickerDestinationHeader" xml:space="preserve">
     <value>Otwórz w</value>
   </data>
+  <data name="PageLayoutArrangeButton" xml:space="preserve"><value>Rozmieść tę stronę</value></data>
+  <data name="DesktopWindowBringToCurrentPage" xml:space="preserve"><value>Przenieś na bieżącą stronę</value></data>
+  <data name="DesktopWindowSendToPage" xml:space="preserve"><value>Wyślij na stronę</value></data>
+  <data name="DesktopWindowMoveToSlot" xml:space="preserve"><value>Przenieś do pola</value></data>
+  <data name="DesktopWindowSlot" xml:space="preserve"><value>Pole {0}</value></data>
+  <data name="DesktopWindowSwapWith" xml:space="preserve"><value>Zamień z</value></data>
+  <data name="DesktopWindowUntitled" xml:space="preserve"><value>Okno bez nazwy</value></data>
+  <data name="DesktopWindowCenterOnPage" xml:space="preserve"><value>Wyśrodkuj na stronie</value></data>
+  <data name="DesktopWindowClose" xml:space="preserve"><value>Zamknij okno</value></data>
 +</root>

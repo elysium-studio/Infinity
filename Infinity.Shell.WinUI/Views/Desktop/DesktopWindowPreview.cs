@@ -26,6 +26,7 @@ internal sealed class DesktopWindowPreview :
     private readonly DesktopWindowDragPositionResolver dragPositionResolver;
     private readonly DesktopDragBoundaryCalculator dragBoundaryCalculator;
     private readonly DesktopDragCursorConfinement cursorConfinement;
+    private readonly DesktopWindowPlacementCoordinator windowPlacementCoordinator;
     private readonly nint windowHandle;
     private readonly double layoutScale;
     private readonly float shadowDepth;
@@ -49,7 +50,7 @@ internal sealed class DesktopWindowPreview :
     private bool disposed;
     private int zIndex;
 
-    public DesktopWindowPreview(nint windowHandle, Border host, Border focusHost, ThumbnailCompositionPreview? preview, Grid focusVisual, ITrackedWindowDragController dragController, IWindowNavigationCoordinator windowNavigationCoordinator, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, double layoutScale)
+    public DesktopWindowPreview(nint windowHandle, Border host, Border focusHost, ThumbnailCompositionPreview? preview, Grid focusVisual, ITrackedWindowDragController dragController, IWindowNavigationCoordinator windowNavigationCoordinator, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, double layoutScale)
     {
         this.windowHandle = windowHandle;
         Host = host;
@@ -62,6 +63,7 @@ internal sealed class DesktopWindowPreview :
         this.dragPositionResolver = dragPositionResolver;
         this.dragBoundaryCalculator = dragBoundaryCalculator;
         this.cursorConfinement = cursorConfinement;
+        this.windowPlacementCoordinator = windowPlacementCoordinator;
         this.layoutScale = double.IsFinite(layoutScale) && layoutScale > 0 ? layoutScale : 1;
         shadowDepth = ToFloat(ShadowDepth / this.layoutScale);
 
@@ -71,6 +73,7 @@ internal sealed class DesktopWindowPreview :
         Host.PointerCanceled += HandlePointerCanceled;
         Host.PointerCaptureLost += HandlePointerCaptureLost;
         Host.Tapped += HandleTapped;
+        Host.ContextFlyout = contextMenuBuilder.Create(windowHandle);
     }
 
     public event Action<nint>? Invoked;
@@ -384,7 +387,9 @@ internal sealed class DesktopWindowPreview :
 
         if (wasDragging)
         {
-            bool moved = completedSnapTarget.HasValue
+            bool moved = completedSnapTarget is { OccupantHandle: not 0 } swapTarget
+                ? windowPlacementCoordinator.TrySwapIntoSlot(windowHandle, swapTarget.OccupantHandle, swapTarget.Placement)
+                : completedSnapTarget.HasValue
                 ? dragController.MoveAndResize(windowHandle, completedSnapTarget.Value.Placement.CanvasX, completedSnapTarget.Value.Placement.CanvasY, completedSnapTarget.Value.Placement.Width, completedSnapTarget.Value.Placement.Height)
                 : dragPositionResolver.TryResolve(windowHandle, horizontalDelta, verticalDelta, out DesktopWindowDragPosition position) && dragController.MoveTo(windowHandle, position.CanvasX, position.CanvasY);
 

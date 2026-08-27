@@ -408,4 +408,13 @@
   <data name="DesktopAppPickerDestinationHeader" xml:space="preserve">
     <value>Abrir em</value>
   </data>
+  <data name="PageLayoutArrangeButton" xml:space="preserve"><value>Organizar esta página</value></data>
+  <data name="DesktopWindowBringToCurrentPage" xml:space="preserve"><value>Trazer para a página atual</value></data>
+  <data name="DesktopWindowSendToPage" xml:space="preserve"><value>Enviar para a página</value></data>
+  <data name="DesktopWindowMoveToSlot" xml:space="preserve"><value>Mover para o espaço</value></data>
+  <data name="DesktopWindowSlot" xml:space="preserve"><value>Espaço {0}</value></data>
+  <data name="DesktopWindowSwapWith" xml:space="preserve"><value>Trocar com</value></data>
+  <data name="DesktopWindowUntitled" xml:space="preserve"><value>Janela sem título</value></data>
+  <data name="DesktopWindowCenterOnPage" xml:space="preserve"><value>Centralizar na página</value></data>
+  <data name="DesktopWindowClose" xml:space="preserve"><value>Fechar janela</value></data>
 +</root>

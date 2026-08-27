@@ -408,4 +408,13 @@
   <data name="DesktopAppPickerDestinationHeader" xml:space="preserve">
     <value>開く場所</value>
   </data>
+  <data name="PageLayoutArrangeButton" xml:space="preserve"><value>このページを整列</value></data>
+  <data name="DesktopWindowBringToCurrentPage" xml:space="preserve"><value>現在のページに移動</value></data>
+  <data name="DesktopWindowSendToPage" xml:space="preserve"><value>ページに送る</value></data>
+  <data name="DesktopWindowMoveToSlot" xml:space="preserve"><value>スロットに移動</value></data>
+  <data name="DesktopWindowSlot" xml:space="preserve"><value>スロット {0}</value></data>
+  <data name="DesktopWindowSwapWith" xml:space="preserve"><value>入れ替え</value></data>
+  <data name="DesktopWindowUntitled" xml:space="preserve"><value>無題のウィンドウ</value></data>
+  <data name="DesktopWindowCenterOnPage" xml:space="preserve"><value>ページの中央に配置</value></data>
+  <data name="DesktopWindowClose" xml:space="preserve"><value>ウィンドウを閉じる</value></data>
 +</root>

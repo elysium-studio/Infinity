@@ -408,4 +408,13 @@
   <data name="DesktopAppPickerDestinationHeader" xml:space="preserve">
     <value>[Öþéñ îñ]</value>
   </data>
+  <data name="PageLayoutArrangeButton" xml:space="preserve"><value>[Årråñgé ţhîš pågé]</value></data>
+  <data name="DesktopWindowBringToCurrentPage" xml:space="preserve"><value>[Brîñg ţö çürréñţ pågé]</value></data>
+  <data name="DesktopWindowSendToPage" xml:space="preserve"><value>[Šéñð ţö pågé]</value></data>
+  <data name="DesktopWindowMoveToSlot" xml:space="preserve"><value>[Mövé ţö šlöţ]</value></data>
+  <data name="DesktopWindowSlot" xml:space="preserve"><value>[Šlöţ {0}]</value></data>
+  <data name="DesktopWindowSwapWith" xml:space="preserve"><value>[Šwåp wîţh]</value></data>
+  <data name="DesktopWindowUntitled" xml:space="preserve"><value>[Üñţîţléð wîñðöw]</value></data>
+  <data name="DesktopWindowCenterOnPage" xml:space="preserve"><value>[Çéñţré öñ pågé]</value></data>
+  <data name="DesktopWindowClose" xml:space="preserve"><value>[Çlöšé wîñðöw]</value></data>
 +</root>

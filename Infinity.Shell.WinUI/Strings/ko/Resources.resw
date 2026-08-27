@@ -408,4 +408,13 @@
   <data name="DesktopAppPickerDestinationHeader" xml:space="preserve">
     <value>열 위치</value>
   </data>
+  <data name="PageLayoutArrangeButton" xml:space="preserve"><value>이 페이지 정렬</value></data>
+  <data name="DesktopWindowBringToCurrentPage" xml:space="preserve"><value>현재 페이지로 가져오기</value></data>
+  <data name="DesktopWindowSendToPage" xml:space="preserve"><value>페이지로 보내기</value></data>
+  <data name="DesktopWindowMoveToSlot" xml:space="preserve"><value>슬롯으로 이동</value></data>
+  <data name="DesktopWindowSlot" xml:space="preserve"><value>슬롯 {0}</value></data>
+  <data name="DesktopWindowSwapWith" xml:space="preserve"><value>다음과 바꾸기</value></data>
+  <data name="DesktopWindowUntitled" xml:space="preserve"><value>제목 없는 창</value></data>
+  <data name="DesktopWindowCenterOnPage" xml:space="preserve"><value>페이지 가운데에 배치</value></data>
+  <data name="DesktopWindowClose" xml:space="preserve"><value>창 닫기</value></data>
 +</root>

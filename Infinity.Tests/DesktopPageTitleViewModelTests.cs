@@ -4,7 +4,30 @@ namespace Infinity.Tests;
 
 public sealed class DesktopPageTitleViewModelTests
 {
-    private readonly DesktopPageTitleViewModel viewModel = new(new DesktopPageEditorLabels(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty), new DesktopSnapLayoutCatalog());
+    private readonly DesktopPageTitleViewModel viewModel = new(new DesktopPageEditorLabels(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty), new DesktopSnapLayoutCatalog());
+
+    [Fact]
+    public void ArrangeRequestsCurrentConfiguredLayout()
+    {
+        DesktopPageTitleViewModel? requested = null;
+        viewModel.Bind(2, "Work", DesktopSnapLayoutKind.Halves);
+        viewModel.ArrangeRequested += source => requested = source;
+
+        viewModel.Arrange();
+
+        Assert.Same(viewModel, requested);
+    }
+
+    [Fact]
+    public void ArrangeWithoutLayoutDoesNothing()
+    {
+        bool requested = false;
+        viewModel.ArrangeRequested += _ => requested = true;
+
+        viewModel.Arrange();
+
+        Assert.False(requested);
+    }
 
     [Theory]
     [InlineData(1920, 1080)]

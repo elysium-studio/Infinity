@@ -761,8 +761,7 @@ public sealed partial class DesktopScrollPreviewView :
 
         if (activeSnapWindow == 0 ||
             !pageStrip.TryUpdateWindowSnapTarget(activeSnapPointerX, activeSnapPointerY, out DesktopSnapSlotTarget target) ||
-            !snapPlacementResolver.TryResolve(target.Page, target.Layout, target.Slot, monitorOriginX, monitorOriginY, out DesktopSnapPlacement placement) ||
-            snapSlotOccupancyResolver.IsOccupied(placement, activeSnapWindow, windowCollection.AllTrackedWindows))
+            !snapPlacementResolver.TryResolve(target.Page, target.Layout, target.Slot, monitorOriginX, monitorOriginY, out DesktopSnapPlacement placement))
         {
             if (activeSnapWindow != 0)
             {
@@ -773,7 +772,8 @@ public sealed partial class DesktopScrollPreviewView :
             return;
         }
 
-        previews.SetSnapTarget(activeSnapWindow, new DesktopWindowSnapTarget(placement));
+        snapSlotOccupancyResolver.TryGetOccupant(placement, activeSnapWindow, windowCollection.AllTrackedWindows, out TrackedWindow? occupant);
+        previews.SetSnapTarget(activeSnapWindow, new DesktopWindowSnapTarget(placement, occupant?.Handle ?? 0));
     }
 
     private void ClearWindowSnapTarget()
