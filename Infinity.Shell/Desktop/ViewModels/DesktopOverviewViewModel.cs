@@ -135,6 +135,17 @@ public sealed partial class DesktopOverviewViewModel :
         IsDesktopPreviewCompletionRequested = true;
     }
 
+#if DEBUG
+    public async Task OpenDesktopPreviewForDebugAsync()
+    {
+        StaysOpen = true;
+        IsOpen = true;
+
+        await Task.Delay(500);
+        dispatcher.Dispatch(BeginDesktopPreview);
+    }
+#endif
+
     public void ActivateWindow(nint handle)
     {
         if (handle == 0 || !IsDesktopPreviewActive || IsDesktopPreviewCompletionRequested)

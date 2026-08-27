@@ -52,6 +52,21 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
 
     public event Action<DesktopPageReorderPreviewState?, TimeSpan?>? ReorderPreviewChanged;
 
+#if DEBUG
+    internal bool RequestApplicationPickerForDebug()
+    {
+        DesktopPagePreview? page = visiblePages.OrderBy(pair => pair.Key).Select(pair => pair.Value).FirstOrDefault();
+
+        if (!started || page is null)
+        {
+            return false;
+        }
+
+        HandleOpenApplicationRequested(page, page.TitleEditor);
+        return true;
+    }
+#endif
+
     public void Start(Canvas canvas, Canvas shadowCanvas, Canvas titleCanvas, FrameworkElement scaleElement, double scale)
     {
         ObjectDisposedException.ThrowIf(disposed, this);

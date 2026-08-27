@@ -98,6 +98,10 @@ public sealed partial class DesktopScrollPreviewView :
 
     public Visibility ToVisibility(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
 
+#if DEBUG
+    internal void OpenApplicationPickerForDebug() => pageStrip.RequestApplicationPickerForDebug();
+#endif
+
     public void Prepare(nint ownerWindowHandle, int screenOriginY)
     {
         if (!DispatcherQueue.HasThreadAccess)
@@ -451,14 +455,16 @@ public sealed partial class DesktopScrollPreviewView :
         try
         {
             await ApplicationPicker.LoadAsync(request.Target);
-
-            if (!isRunning)
+            DispatcherQueue.TryEnqueue(() =>
             {
-                return;
-            }
+                if (!isRunning)
+                {
+                    return;
+                }
 
-            ApplicationPickerFlyout.ShowAt(request.Anchor);
-            DispatcherQueue.TryEnqueue(() => _ = ApplicationSearchBox.Focus(FocusState.Programmatic));
+                ApplicationPickerFlyout.ShowAt(request.Anchor);
+                _ = ApplicationSearchBox.Focus(FocusState.Programmatic);
+            });
         }
         catch (OperationCanceledException)
         {
@@ -482,22 +488,27 @@ public sealed partial class DesktopScrollPreviewView :
         try
         {
             nint handle = await applicationLaunchCoordinator.LaunchAsync(application, target, monitorOriginX, monitorOriginY, applicationLaunchCancellation.Token);
-
-            if (handle != 0 && isRunning)
+            DispatcherQueue.TryEnqueue(() =>
             {
-                HandleWindowInvoked(handle);
-            }
-            else if (isRunning)
-            {
-                SetInteractionEnabled(true);
-            }
+                if (handle != 0 && isRunning)
+                {
+                    HandleWindowInvoked(handle);
+                }
+                else if (isRunning)
+                {
+                    SetInteractionEnabled(true);
+                }
+            });
         }
         catch (OperationCanceledException)
         {
-            if (isRunning)
+            DispatcherQueue.TryEnqueue(() =>
             {
-                SetInteractionEnabled(true);
-            }
+                if (isRunning)
+                {
+                    SetInteractionEnabled(true);
+                }
+            });
         }
     }
 

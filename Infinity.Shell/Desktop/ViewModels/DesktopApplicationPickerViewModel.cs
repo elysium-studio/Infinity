@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using Elysium.Application.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using System.Collections.ObjectModel;
@@ -9,7 +10,8 @@ public sealed record DesktopApplicationDestination(string DisplayName, DesktopAp
 
 public sealed partial class DesktopApplicationPickerViewModel(IApplicationCatalog applicationCatalog,
     DesktopSnapLayoutCatalog snapLayoutCatalog,
-    ITextLocalizer localizer) : ObservableObject
+    ITextLocalizer localizer,
+    IDispatcher dispatcher) : ObservableObject
 {
     private IReadOnlyList<LaunchableApplication> applications = [];
 
@@ -38,24 +40,34 @@ public sealed partial class DesktopApplicationPickerViewModel(IApplicationCatalo
 
     public async Task LoadAsync(DesktopApplicationTarget requestedTarget, CancellationToken cancellationToken = default)
     {
-        ConfigureDestinations(requestedTarget);
-        SearchText = string.Empty;
+        bool loadApplications = false;
 
-        if (applications.Count == 0)
+        await DispatchAsync(() =>
         {
-            IsLoading = true;
+            ConfigureDestinations(requestedTarget);
+            SearchText = string.Empty;
+            loadApplications = applications.Count == 0;
 
+            if (loadApplications)
+            {
+                IsLoading = true;
+            }
+        });
+
+        if (loadApplications)
+        {
             try
             {
-                applications = await applicationCatalog.GetApplicationsAsync(cancellationToken);
+                IReadOnlyList<LaunchableApplication> loadedApplications = await applicationCatalog.GetApplicationsAsync(cancellationToken);
+                await DispatchAsync(() => applications = loadedApplications);
             }
             finally
             {
-                IsLoading = false;
+                await DispatchAsync(() => IsLoading = false);
             }
         }
 
-        RefreshResults();
+        await DispatchAsync(RefreshResults);
     }
 
     partial void OnSearchTextChanged(string value) => RefreshResults();
@@ -102,5 +114,25 @@ public sealed partial class DesktopApplicationPickerViewModel(IApplicationCatalo
     {
         OnPropertyChanged(nameof(HasResults));
         OnPropertyChanged(nameof(ShowEmptyState));
+    }
+
+    private Task DispatchAsync(Action action)
+    {
+        TaskCompletionSource completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        dispatcher.Dispatch(() =>
+        {
+            try
+            {
+                action();
+                completion.SetResult();
+            }
+            catch (Exception exception)
+            {
+                completion.SetException(exception);
+            }
+        });
+
+        return completion.Task;
     }
 }

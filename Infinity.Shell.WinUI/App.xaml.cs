@@ -75,9 +75,24 @@ public sealed partial class App
             ViewExtension.DefaultProvider = startingHost.Services;
             ViewModelExtension.DefaultProvider = startingHost.Services;
 
-            _ = startingHost.Services.GetRequiredKeyedService<DesktopOverviewView>("DesktopOverviewView");
+            DesktopOverviewView desktopOverview = startingHost.Services.GetRequiredKeyedService<DesktopOverviewView>("DesktopOverviewView");
 
             startingHost.Start();
+
+#if DEBUG
+            if (Enum.TryParse(Environment.GetEnvironmentVariable("INFINITY_DEBUG_LEVEL"), true, out DebugLaunchLevel debugLevel))
+            {
+                dispatcherQueue.TryEnqueue(() =>
+                {
+                    _ = debugLevel switch
+                    {
+                        DebugLaunchLevel.DesktopOverview => desktopOverview.ViewModel.OpenDesktopPreviewForDebugAsync(),
+                        DebugLaunchLevel.DesktopApplicationPicker => OpenDesktopApplicationPickerForDebugAsync(desktopOverview),
+                        _ => Task.CompletedTask
+                    };
+                });
+            }
+#endif
 
             if (startingHost.Services.GetRequiredService<Settings>() is { ShowHintOnStartup: true })
             {
@@ -102,6 +117,21 @@ public sealed partial class App
             throw;
         }
     }
+
+#if DEBUG
+    private static async Task OpenDesktopApplicationPickerForDebugAsync(DesktopOverviewView desktopOverview)
+    {
+        await desktopOverview.ViewModel.OpenDesktopPreviewForDebugAsync();
+        await desktopOverview.OpenApplicationPickerForDebugAsync();
+    }
+
+    private enum DebugLaunchLevel
+    {
+        None,
+        DesktopOverview,
+        DesktopApplicationPicker
+    }
+#endif
 
     private Task ShutdownAsync()
     {

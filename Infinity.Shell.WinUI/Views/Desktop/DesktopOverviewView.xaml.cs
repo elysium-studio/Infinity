@@ -63,6 +63,14 @@ public sealed partial class DesktopOverviewView :
 
     public DesktopOverviewViewModel ViewModel => (DesktopOverviewViewModel)DataContext;
 
+#if DEBUG
+    internal async System.Threading.Tasks.Task OpenApplicationPickerForDebugAsync()
+    {
+        await System.Threading.Tasks.Task.Delay(750);
+        dispatcherQueue.TryEnqueue(desktopScrollPreview.OpenApplicationPickerForDebug);
+    }
+#endif
+
     private void HandleLoaded(object sender, RoutedEventArgs args)
     {
         EnsureSubscribed();

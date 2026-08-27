@@ -1,3 +1,4 @@
+using Elysium.Application.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Infinity.Shell;
@@ -33,7 +34,12 @@ public sealed class DesktopApplicationPickerViewModelTests
         Assert.False(viewModel.ShowEmptyState);
     }
 
-    private static DesktopApplicationPickerViewModel CreateViewModel() => new(new TestApplicationCatalog(), new DesktopSnapLayoutCatalog(), new TestLocalizer());
+    private static DesktopApplicationPickerViewModel CreateViewModel() => new(new TestApplicationCatalog(), new DesktopSnapLayoutCatalog(), new TestLocalizer(), new TestDispatcher());
+
+    private sealed class TestDispatcher : IDispatcher
+    {
+        public void Dispatch(Action action) => action();
+    }
 
     private sealed class TestApplicationCatalog : IApplicationCatalog
     {
