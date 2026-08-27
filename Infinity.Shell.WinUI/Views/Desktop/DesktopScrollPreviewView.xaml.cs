@@ -29,6 +29,7 @@ public sealed partial class DesktopScrollPreviewView :
     private readonly IWorkspace workspace;
     private readonly DesktopPageLayoutCalculator pageLayoutCalculator;
     private readonly DesktopSnapPlacementResolver snapPlacementResolver;
+    private readonly DesktopSnapSlotOccupancyResolver snapSlotOccupancyResolver;
     private readonly DesktopScrollPreviewAnimator animator;
     private readonly DesktopPageStrip pageStrip;
     private readonly DesktopWindowPreviewCollection previews;
@@ -51,7 +52,7 @@ public sealed partial class DesktopScrollPreviewView :
     private double activeSnapPointerX;
     private double activeSnapPointerY;
 
-    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IShellLayoutCalculator layoutCalculator, IPanState panState, IScroller scroller, IPager pager, IWorkspace workspace, DesktopPageLayoutCalculator pageLayoutCalculator, DesktopSnapPlacementResolver snapPlacementResolver, DesktopScrollPreviewAnimator animator, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopOverviewConfiguration overviewConfiguration, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator)
+    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IShellLayoutCalculator layoutCalculator, IPanState panState, IScroller scroller, IPager pager, IWorkspace workspace, DesktopPageLayoutCalculator pageLayoutCalculator, DesktopSnapPlacementResolver snapPlacementResolver, DesktopSnapSlotOccupancyResolver snapSlotOccupancyResolver, DesktopScrollPreviewAnimator animator, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopOverviewConfiguration overviewConfiguration, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator)
     {
         InitializeComponent();
 
@@ -64,6 +65,7 @@ public sealed partial class DesktopScrollPreviewView :
         this.workspace = workspace;
         this.pageLayoutCalculator = pageLayoutCalculator;
         this.snapPlacementResolver = snapPlacementResolver;
+        this.snapSlotOccupancyResolver = snapSlotOccupancyResolver;
         this.animator = animator;
         this.pageStrip = pageStrip;
         this.previews = previews;
@@ -757,13 +759,17 @@ public sealed partial class DesktopScrollPreviewView :
             return;
         }
 
-        if (activeSnapWindow == 0 || !pageStrip.TryUpdateWindowSnapTarget(activeSnapPointerX, activeSnapPointerY, out DesktopSnapSlotTarget target) || !snapPlacementResolver.TryResolve(target.Page, target.Layout, target.Slot, monitorOriginX, monitorOriginY, out DesktopSnapPlacement placement))
+        if (activeSnapWindow == 0 ||
+            !pageStrip.TryUpdateWindowSnapTarget(activeSnapPointerX, activeSnapPointerY, out DesktopSnapSlotTarget target) ||
+            !snapPlacementResolver.TryResolve(target.Page, target.Layout, target.Slot, monitorOriginX, monitorOriginY, out DesktopSnapPlacement placement) ||
+            snapSlotOccupancyResolver.IsOccupied(placement, activeSnapWindow, windowCollection.AllTrackedWindows))
         {
             if (activeSnapWindow != 0)
             {
                 previews.SetSnapTarget(activeSnapWindow, null);
             }
 
+            pageStrip.ClearWindowSnapTarget();
             return;
         }
 

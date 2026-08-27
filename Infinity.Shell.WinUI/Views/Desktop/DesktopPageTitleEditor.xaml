@@ -3,8 +3,8 @@
     x:Class="Infinity.Shell.WinUI.DesktopPageTitleEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:Infinity.Shell.WinUI"
-    xmlns:shell="using:Infinity.Shell"
+    xmlns:Local="using:Infinity.Shell.WinUI"
+    xmlns:Shell="using:Infinity.Shell"
     Width="360"
     Height="80">
     <UserControl.Resources>
@@ -145,7 +145,7 @@
                                                     Orientation="Horizontal" />
                                             </ItemsRepeater.Layout>
                                             <ItemsRepeater.ItemTemplate>
-                                                <DataTemplate x:DataType="shell:DesktopSnapLayoutOptionViewModel">
+                                                <DataTemplate x:DataType="Shell:DesktopSnapLayoutOptionViewModel">
                                                     <ToggleButton
                                                         Width="{x:Bind PreviewWidth}"
                                                         Height="{x:Bind PreviewHeight}"
@@ -165,14 +165,14 @@
                                                             ItemsSource="{x:Bind Slots}">
                                                             <ItemsControl.ItemsPanel>
                                                                 <ItemsPanelTemplate>
-                                                                    <local:DesktopSnapCanvas />
+                                                                    <Local:DesktopSnapCanvas />
                                                                 </ItemsPanelTemplate>
                                                             </ItemsControl.ItemsPanel>
                                                             <ItemsControl.ItemTemplate>
-                                                                <DataTemplate x:DataType="shell:DesktopSnapLayoutSlotViewModel">
+                                                                <DataTemplate x:DataType="Shell:DesktopSnapLayoutSlotViewModel">
                                                                     <Grid Width="{x:Bind Width}" Height="{x:Bind Height}">
                                                                         <Border Background="{ThemeResource ControlFillColorSecondaryBrush}" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="3" />
-                                                                        <Border Background="{ThemeResource AccentFillColorDefaultBrush}" BorderBrush="{ThemeResource AccentFillColorDefaultBrush}" BorderThickness="1" CornerRadius="3" Opacity="{x:Bind local:DesktopPageTitleEditor.ToOpacity(IsHighlighted), Mode=OneWay}" />
+                                                                        <Border Background="{ThemeResource AccentFillColorDefaultBrush}" BorderBrush="{ThemeResource AccentFillColorDefaultBrush}" BorderThickness="1" CornerRadius="3" Opacity="{x:Bind Local:DesktopPageTitleEditor.ToOpacity(IsHighlighted), Mode=OneWay}" />
                                                                     </Grid>
                                                                 </DataTemplate>
                                                             </ItemsControl.ItemTemplate>

@@ -24,6 +24,7 @@ public sealed class DesktopModule :
             .AddSingleton<DesktopPageLayoutCalculator>()
             .AddSingleton<DesktopSnapLayoutCatalog>()
             .AddSingleton<DesktopSnapPlacementResolver>()
+            .AddSingleton<DesktopSnapSlotOccupancyResolver>()
             .AddSingleton<DesktopApplicationPlacementResolver>()
             .AddSingleton<DesktopApplicationLaunchCoordinator>()
             .AddSingleton<DesktopDragBoundaryCalculator>()
@@ -73,6 +74,7 @@ public sealed class DesktopModule :
         IWorkspace workspace = provider.GetRequiredService<IWorkspace>();
         DesktopPageLayoutCalculator pageLayoutCalculator = provider.GetRequiredService<DesktopPageLayoutCalculator>();
         DesktopSnapPlacementResolver snapPlacementResolver = provider.GetRequiredService<DesktopSnapPlacementResolver>();
+        DesktopSnapSlotOccupancyResolver snapSlotOccupancyResolver = provider.GetRequiredService<DesktopSnapSlotOccupancyResolver>();
         DesktopScrollPreviewAnimator animator = provider.GetRequiredService<DesktopScrollPreviewAnimator>();
         DesktopPageStrip pageStrip = provider.GetRequiredService<DesktopPageStrip>();
         DesktopWindowPreviewCollection previews = provider.GetRequiredService<DesktopWindowPreviewCollection>();
@@ -82,7 +84,7 @@ public sealed class DesktopModule :
         DesktopApplicationPickerViewModel applicationPicker = provider.GetRequiredService<DesktopApplicationPickerViewModel>();
         DesktopApplicationLaunchCoordinator applicationLaunchCoordinator = provider.GetRequiredService<DesktopApplicationLaunchCoordinator>();
 
-        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, layoutCalculator, panState, scroller, pager, workspace, pageLayoutCalculator, snapPlacementResolver, animator, pageStrip, previews, cursorConfinement, overviewConfiguration, shortcutHints, applicationPicker, applicationLaunchCoordinator);
+        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, layoutCalculator, panState, scroller, pager, workspace, pageLayoutCalculator, snapPlacementResolver, snapSlotOccupancyResolver, animator, pageStrip, previews, cursorConfinement, overviewConfiguration, shortcutHints, applicationPicker, applicationLaunchCoordinator);
     }
 
     private static DesktopOverviewView CreateDesktopOverviewView(IServiceProvider provider)

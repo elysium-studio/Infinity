@@ -3,8 +3,8 @@
     x:Class="Infinity.Shell.WinUI.DesktopScrollPreviewView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:Infinity.Shell.WinUI"
-    xmlns:shell="using:Infinity.Shell"
+    xmlns:Local="using:Infinity.Shell.WinUI"
+    xmlns:Shell="using:Infinity.Shell"
     Background="Transparent"
     Opacity="0">
     <UserControl.Resources>
@@ -38,7 +38,7 @@
                         ItemClick="HandleApplicationClicked"
                         ItemsSource="{x:Bind ApplicationPicker.Results}">
                         <ListView.ItemTemplate>
-                            <DataTemplate x:DataType="shell:DesktopApplicationPickerItemViewModel">
+                            <DataTemplate x:DataType="Shell:DesktopApplicationPickerItemViewModel">
                                 <Grid
                                     MinHeight="40"
                                     Padding="8,2"
@@ -52,16 +52,16 @@
                                         Height="20"
                                         Background="{ThemeResource ControlFillColorSecondaryBrush}"
                                         CornerRadius="4"
-                                        Visibility="{x:Bind local:DesktopScrollPreviewView.ToStaticVisibility(ShowFallbackIcon), Mode=OneWay}">
+                                        Visibility="{x:Bind Local:DesktopScrollPreviewView.ToStaticVisibility(ShowFallbackIcon), Mode=OneWay}">
                                         <FontIcon FontSize="12" Glyph="&#xE71D;" />
                                     </Border>
                                     <Image
                                         Width="20"
                                         Height="20"
-                                        Source="{x:Bind local:DesktopScrollPreviewView.CreateApplicationIconSource(Icon), Mode=OneWay}"
+                                        Source="{x:Bind Local:DesktopScrollPreviewView.CreateApplicationIconSource(Icon), Mode=OneWay}"
                                         Stretch="Uniform"
                                         UseLayoutRounding="True"
-                                        Visibility="{x:Bind local:DesktopScrollPreviewView.ToApplicationIconVisibility(Icon), Mode=OneWay}" />
+                                        Visibility="{x:Bind Local:DesktopScrollPreviewView.ToApplicationIconVisibility(Icon), Mode=OneWay}" />
                                     <TextBlock
                                         Grid.Column="1"
                                         VerticalAlignment="Center"
@@ -168,7 +168,7 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <TextBlock x:Uid="DesktopShortcutSwitchPage" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                    <local:DesktopShortcutChord
+                                    <Local:DesktopShortcutChord
                                         Grid.Column="1"
                                         ActionLabel="←  →"
                                         FirstModifier="{x:Bind ShortcutHints.FirstModifier, Mode=OneWay}"
@@ -180,7 +180,7 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <TextBlock x:Uid="DesktopShortcutGoToPage" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                    <local:DesktopShortcutChord
+                                    <Local:DesktopShortcutChord
                                         Grid.Column="1"
                                         ActionLabel="1–0"
                                         FirstModifier="{x:Bind ShortcutHints.FirstModifier, Mode=OneWay}"
@@ -202,7 +202,7 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <TextBlock x:Uid="DesktopShortcutMoveWindow" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                    <local:DesktopShortcutChord
+                                    <Local:DesktopShortcutChord
                                         Grid.Column="1"
                                         ActionLabel="←  →"
                                         FirstModifier="{x:Bind ShortcutHints.FirstModifier, Mode=OneWay}"
@@ -215,7 +215,7 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <TextBlock x:Uid="DesktopShortcutSendWindow" VerticalAlignment="Center" TextWrapping="Wrap" />
-                                    <local:DesktopShortcutChord
+                                    <Local:DesktopShortcutChord
                                         Grid.Column="1"
                                         ActionLabel="1–0"
                                         FirstModifier="{x:Bind ShortcutHints.FirstModifier, Mode=OneWay}"
