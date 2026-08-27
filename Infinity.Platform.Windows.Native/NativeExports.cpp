@@ -258,6 +258,19 @@ extern "C" __declspec(dllexport) int __stdcall ApplicationCatalog_GetIcon(const 
             pixels[index] = 255;
         }
     }
+    else
+    {
+        // GetDIBits preserves the Shell bitmap's straight-alpha BGRA pixels,
+        // while WinUI WriteableBitmap consumes premultiplied BGRA. Convert at
+        // the platform boundary to avoid bright, jagged fringes around icons.
+        for (int index = 0; index < byteCount; index += 4)
+        {
+            unsigned int alpha = pixels[index + 3];
+            pixels[index] = static_cast<unsigned char>((pixels[index] * alpha + 127u) / 255u);
+            pixels[index + 1] = static_cast<unsigned char>((pixels[index + 1] * alpha + 127u) / 255u);
+            pixels[index + 2] = static_cast<unsigned char>((pixels[index + 2] * alpha + 127u) / 255u);
+        }
+    }
 
     *buffer = pixels;
     *width = bitmapWidth;

@@ -44,20 +44,20 @@
                                     Padding="8,2"
                                     ColumnSpacing="12">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="28" />
+                                        <ColumnDefinition Width="24" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <Border
-                                        Width="24"
-                                        Height="24"
+                                        Width="20"
+                                        Height="20"
                                         Background="{ThemeResource ControlFillColorSecondaryBrush}"
                                         CornerRadius="4"
                                         Visibility="{x:Bind local:DesktopScrollPreviewView.ToStaticVisibility(ShowFallbackIcon), Mode=OneWay}">
-                                        <FontIcon FontSize="14" Glyph="&#xE71D;" />
+                                        <FontIcon FontSize="12" Glyph="&#xE71D;" />
                                     </Border>
                                     <Image
-                                        Width="24"
-                                        Height="24"
+                                        Width="20"
+                                        Height="20"
                                         Source="{x:Bind local:DesktopScrollPreviewView.CreateApplicationIconSource(Icon), Mode=OneWay}"
                                         Stretch="Uniform"
                                         UseLayoutRounding="True"
