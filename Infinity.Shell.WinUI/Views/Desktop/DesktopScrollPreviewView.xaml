@@ -3,6 +3,7 @@
     x:Class="Infinity.Shell.WinUI.DesktopScrollPreviewView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Infinity.Shell.WinUI"
     Background="Transparent"
     Opacity="0">
     <Grid>
@@ -19,6 +20,145 @@
             <Canvas x:Name="FocusCanvas" IsHitTestVisible="False" />
         </Grid>
         <Canvas x:Name="PageTitleCanvas" />
+        <Button
+            x:Name="ShortcutHintSurface"
+            x:Uid="DesktopShortcutHintsButton"
+            Height="36"
+            Padding="16,0,12,0"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Top"
+            IsHitTestVisible="False"
+            IsTabStop="False">
+            <Button.Resources>
+                <StaticResource x:Key="ButtonBackground" ResourceKey="CardBackgroundFillColorDefaultBrush" />
+                <StaticResource x:Key="ButtonBackgroundPointerOver" ResourceKey="ControlFillColorSecondaryBrush" />
+                <StaticResource x:Key="ButtonBackgroundPressed" ResourceKey="ControlFillColorTertiaryBrush" />
+                <StaticResource x:Key="ButtonBorderBrush" ResourceKey="ControlElevationBorderBrush" />
+                <StaticResource x:Key="ButtonBorderBrushPointerOver" ResourceKey="ControlElevationBorderBrush" />
+                <StaticResource x:Key="ButtonBorderBrushPressed" ResourceKey="ControlElevationBorderBrush" />
+            </Button.Resources>
+            <Button.KeyboardAccelerators>
+                <KeyboardAccelerator Key="F1" Invoked="HandleShortcutHintsInvoked" />
+            </Button.KeyboardAccelerators>
+            <Button.Flyout>
+                <Flyout x:Name="ShortcutHintsFlyout" Placement="Top">
+                    <Flyout.FlyoutPresenterStyle>
+                        <Style TargetType="FlyoutPresenter">
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="CornerRadius" Value="12" />
+                            <Setter Property="MaxWidth" Value="520" />
+                            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+                            <Setter Property="ScrollViewer.HorizontalScrollMode" Value="Disabled" />
+                        </Style>
+                    </Flyout.FlyoutPresenterStyle>
+                    <Grid Width="472">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid Padding="24,20,24,16">
+                            <StackPanel Spacing="4">
+                                <TextBlock x:Uid="DesktopShortcutHintsTitle" Style="{StaticResource SubtitleTextBlockStyle}" />
+                                <TextBlock
+                                    x:Uid="DesktopShortcutHintsDescription"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                        <Border Grid.Row="1" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
+                            <StackPanel Padding="24,12" Spacing="8">
+                                <TextBlock
+                                    x:Uid="DesktopShortcutNavigationGroup"
+                                    FontSize="11"
+                                    FontWeight="SemiBold"
+                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                    CharacterSpacing="80" />
+                                <Grid MinHeight="40" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Uid="DesktopShortcutSwitchPage" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                    <local:DesktopShortcutChord
+                                        Grid.Column="1"
+                                        ActionLabel="←  →"
+                                        FirstModifier="{x:Bind ShortcutHints.FirstModifier, Mode=OneWay}"
+                                        SecondModifier="{x:Bind ShortcutHints.SecondModifier, Mode=OneWay}" />
+                                </Grid>
+                                <Grid MinHeight="40" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Uid="DesktopShortcutGoToPage" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                    <local:DesktopShortcutChord
+                                        Grid.Column="1"
+                                        ActionLabel="1–0"
+                                        FirstModifier="{x:Bind ShortcutHints.FirstModifier, Mode=OneWay}"
+                                        SecondModifier="{x:Bind ShortcutHints.SecondModifier, Mode=OneWay}" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Row="2" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
+                            <StackPanel Padding="24,12,24,16" Spacing="8">
+                                <TextBlock
+                                    x:Uid="DesktopShortcutWindowGroup"
+                                    FontSize="11"
+                                    FontWeight="SemiBold"
+                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                    CharacterSpacing="80" />
+                                <Grid MinHeight="40" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Uid="DesktopShortcutMoveWindow" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                    <local:DesktopShortcutChord
+                                        Grid.Column="1"
+                                        ActionLabel="←  →"
+                                        FirstModifier="{x:Bind ShortcutHints.FirstModifier, Mode=OneWay}"
+                                        SecondModifier="{x:Bind ShortcutHints.SecondModifier, Mode=OneWay}"
+                                        ShowShift="True" />
+                                </Grid>
+                                <Grid MinHeight="40" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Uid="DesktopShortcutSendWindow" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                    <local:DesktopShortcutChord
+                                        Grid.Column="1"
+                                        ActionLabel="1–0"
+                                        FirstModifier="{x:Bind ShortcutHints.FirstModifier, Mode=OneWay}"
+                                        SecondModifier="{x:Bind ShortcutHints.SecondModifier, Mode=OneWay}"
+                                        ShowShift="True" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Flyout>
+            </Button.Flyout>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <FontIcon VerticalAlignment="Center" FontSize="14" Glyph="&#xE765;" />
+                <TextBlock x:Uid="DesktopShortcutHintsButtonLabel" VerticalAlignment="Center" FontWeight="SemiBold" />
+                <Border
+                    MinWidth="28"
+                    Height="24"
+                    Padding="8,0"
+                    Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                    BorderBrush="{ThemeResource ControlStrokeColorSecondaryBrush}"
+                    BorderThickness="1"
+                    CornerRadius="5">
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontSize="11"
+                        FontWeight="SemiBold"
+                        Text="F1" />
+                </Border>
+            </StackPanel>
+        </Button>
         <Grid
             Width="664"
             Height="44"

@@ -34,6 +34,11 @@ public sealed class DesktopModule :
             .AddSingleton<DesktopWindowPreviewFactory>()
             .AddSingleton<DesktopWindowPreviewCollection>()
             .AddSingleton<WindowInputTransparencyController>()
+            .AddSingleton(provider => new DesktopShortcutHintsViewModel(
+                provider.GetRequiredService<IMessenger>(),
+                provider.GetRequiredService<IDispatcher>(),
+                provider.GetRequiredService<Settings>(),
+                provider.GetRequiredService<IKeyLabelProvider>()))
             .AddSingleton<PageTitleStore>()
             .AddSingleton<PageLayoutStore>()
             .AddSingleton<PageNavigationPublisher>()
@@ -70,8 +75,9 @@ public sealed class DesktopModule :
         DesktopWindowPreviewCollection previews = provider.GetRequiredService<DesktopWindowPreviewCollection>();
         DesktopDragCursorConfinement cursorConfinement = provider.GetRequiredService<DesktopDragCursorConfinement>();
         DesktopOverviewConfiguration overviewConfiguration = provider.GetRequiredService<DesktopOverviewConfiguration>();
+        DesktopShortcutHintsViewModel shortcutHints = provider.GetRequiredService<DesktopShortcutHintsViewModel>();
 
-        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, layoutCalculator, panState, scroller, pager, workspace, pageLayoutCalculator, snapPlacementResolver, animator, pageStrip, previews, cursorConfinement, overviewConfiguration);
+        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, layoutCalculator, panState, scroller, pager, workspace, pageLayoutCalculator, snapPlacementResolver, animator, pageStrip, previews, cursorConfinement, overviewConfiguration, shortcutHints);
     }
 
     private static DesktopOverviewView CreateDesktopOverviewView(IServiceProvider provider)

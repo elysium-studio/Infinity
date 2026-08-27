@@ -351,4 +351,37 @@
   <data name="ResetPageCustomizationsError" xml:space="preserve">
     <value>Infinity non ha potuto reimpostare le personalizzazioni delle pagine. Riprova.</value>
   </data>
+  <data name="DesktopShortcutHintsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Scelte rapide da tastiera</value>
+  </data>
+  <data name="DesktopShortcutHintsButtonLabel.Text" xml:space="preserve">
+    <value>Scelte rapide da tastiera</value>
+  </data>
+  <data name="DesktopShortcutHintsTitle.Text" xml:space="preserve">
+    <value>Scelte rapide da tastiera</value>
+  </data>
+  <data name="DesktopShortcutHintsDescription.Text" xml:space="preserve">
+    <value>Spostati tra le pagine e organizza le finestre senza lasciare la tastiera.</value>
+  </data>
+  <data name="DesktopShortcutNavigationGroup.Text" xml:space="preserve">
+    <value>Navigazione</value>
+  </data>
+  <data name="DesktopShortcutSwitchPage.Text" xml:space="preserve">
+    <value>Cambia pagina</value>
+  </data>
+  <data name="DesktopShortcutGoToPage.Text" xml:space="preserve">
+    <value>Vai a una pagina numerata</value>
+  </data>
+  <data name="DesktopShortcutWindowGroup.Text" xml:space="preserve">
+    <value>Finestra attiva</value>
+  </data>
+  <data name="DesktopShortcutMoveWindow.Text" xml:space="preserve">
+    <value>Sposta in una pagina adiacente</value>
+  </data>
+  <data name="DesktopShortcutSendWindow.Text" xml:space="preserve">
+    <value>Invia a una pagina numerata</value>
+  </data>
+  <data name="DesktopShortcutShiftKey.Text" xml:space="preserve">
+    <value>Maiusc</value>
+  </data>
 </root>

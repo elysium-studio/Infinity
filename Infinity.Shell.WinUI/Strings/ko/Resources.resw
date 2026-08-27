@@ -351,4 +351,37 @@
   <data name="ResetPageCustomizationsError" xml:space="preserve">
     <value>Infinity에서 페이지 사용자 지정을 초기화하지 못했습니다. 다시 시도하세요.</value>
   </data>
+  <data name="DesktopShortcutHintsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>키보드 바로 가기</value>
+  </data>
+  <data name="DesktopShortcutHintsButtonLabel.Text" xml:space="preserve">
+    <value>키보드 바로 가기</value>
+  </data>
+  <data name="DesktopShortcutHintsTitle.Text" xml:space="preserve">
+    <value>키보드 바로 가기</value>
+  </data>
+  <data name="DesktopShortcutHintsDescription.Text" xml:space="preserve">
+    <value>키보드에서 손을 떼지 않고 페이지를 이동하고 창을 정리하세요.</value>
+  </data>
+  <data name="DesktopShortcutNavigationGroup.Text" xml:space="preserve">
+    <value>탐색</value>
+  </data>
+  <data name="DesktopShortcutSwitchPage.Text" xml:space="preserve">
+    <value>페이지 전환</value>
+  </data>
+  <data name="DesktopShortcutGoToPage.Text" xml:space="preserve">
+    <value>번호가 지정된 페이지로 이동</value>
+  </data>
+  <data name="DesktopShortcutWindowGroup.Text" xml:space="preserve">
+    <value>활성 창</value>
+  </data>
+  <data name="DesktopShortcutMoveWindow.Text" xml:space="preserve">
+    <value>인접한 페이지로 이동</value>
+  </data>
+  <data name="DesktopShortcutSendWindow.Text" xml:space="preserve">
+    <value>번호가 지정된 페이지로 보내기</value>
+  </data>
+  <data name="DesktopShortcutShiftKey.Text" xml:space="preserve">
+    <value>Shift</value>
+  </data>
 </root>

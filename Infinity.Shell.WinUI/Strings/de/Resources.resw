@@ -351,4 +351,37 @@
   <data name="ResetPageCustomizationsError" xml:space="preserve">
     <value>Infinity konnte die Seitenanpassungen nicht zurücksetzen. Versuchen Sie es erneut.</value>
   </data>
+  <data name="DesktopShortcutHintsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Tastenkombinationen</value>
+  </data>
+  <data name="DesktopShortcutHintsButtonLabel.Text" xml:space="preserve">
+    <value>Tastenkombinationen</value>
+  </data>
+  <data name="DesktopShortcutHintsTitle.Text" xml:space="preserve">
+    <value>Tastenkombinationen</value>
+  </data>
+  <data name="DesktopShortcutHintsDescription.Text" xml:space="preserve">
+    <value>Wechseln Sie zwischen Seiten und organisieren Sie Fenster, ohne die Tastatur zu verlassen.</value>
+  </data>
+  <data name="DesktopShortcutNavigationGroup.Text" xml:space="preserve">
+    <value>Navigation</value>
+  </data>
+  <data name="DesktopShortcutSwitchPage.Text" xml:space="preserve">
+    <value>Seiten wechseln</value>
+  </data>
+  <data name="DesktopShortcutGoToPage.Text" xml:space="preserve">
+    <value>Zu einer nummerierten Seite wechseln</value>
+  </data>
+  <data name="DesktopShortcutWindowGroup.Text" xml:space="preserve">
+    <value>Aktives Fenster</value>
+  </data>
+  <data name="DesktopShortcutMoveWindow.Text" xml:space="preserve">
+    <value>Auf eine benachbarte Seite verschieben</value>
+  </data>
+  <data name="DesktopShortcutSendWindow.Text" xml:space="preserve">
+    <value>An eine nummerierte Seite senden</value>
+  </data>
+  <data name="DesktopShortcutShiftKey.Text" xml:space="preserve">
+    <value>Umschalt</value>
+  </data>
 </root>

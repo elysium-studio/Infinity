@@ -357,4 +357,37 @@
   <data name="ResetPageCustomizationsError" xml:space="preserve">
     <value>Infinity couldn't reset your page customizations. Try again.</value>
   </data>
+  <data name="DesktopShortcutHintsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Keyboard shortcuts</value>
+  </data>
+  <data name="DesktopShortcutHintsButtonLabel.Text" xml:space="preserve">
+    <value>Keyboard shortcuts</value>
+  </data>
+  <data name="DesktopShortcutHintsTitle.Text" xml:space="preserve">
+    <value>Keyboard shortcuts</value>
+  </data>
+  <data name="DesktopShortcutHintsDescription.Text" xml:space="preserve">
+    <value>Move between pages and organise windows without leaving the keyboard.</value>
+  </data>
+  <data name="DesktopShortcutNavigationGroup.Text" xml:space="preserve">
+    <value>Navigation</value>
+  </data>
+  <data name="DesktopShortcutSwitchPage.Text" xml:space="preserve">
+    <value>Switch pages</value>
+  </data>
+  <data name="DesktopShortcutGoToPage.Text" xml:space="preserve">
+    <value>Go to a numbered page</value>
+  </data>
+  <data name="DesktopShortcutWindowGroup.Text" xml:space="preserve">
+    <value>Focused window</value>
+  </data>
+  <data name="DesktopShortcutMoveWindow.Text" xml:space="preserve">
+    <value>Move to an adjacent page</value>
+  </data>
+  <data name="DesktopShortcutSendWindow.Text" xml:space="preserve">
+    <value>Send to a numbered page</value>
+  </data>
+  <data name="DesktopShortcutShiftKey.Text" xml:space="preserve">
+    <value>Shift</value>
+  </data>
 </root>

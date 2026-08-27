@@ -1,6 +1,7 @@
 using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
@@ -43,7 +44,7 @@ public sealed partial class DesktopScrollPreviewView :
     private double activeSnapPointerX;
     private double activeSnapPointerY;
 
-    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IShellLayoutCalculator layoutCalculator, IPanState panState, IScroller scroller, IPager pager, IWorkspace workspace, DesktopPageLayoutCalculator pageLayoutCalculator, DesktopSnapPlacementResolver snapPlacementResolver, DesktopScrollPreviewAnimator animator, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopOverviewConfiguration overviewConfiguration)
+    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IShellLayoutCalculator layoutCalculator, IPanState panState, IScroller scroller, IPager pager, IWorkspace workspace, DesktopPageLayoutCalculator pageLayoutCalculator, DesktopSnapPlacementResolver snapPlacementResolver, DesktopScrollPreviewAnimator animator, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopOverviewConfiguration overviewConfiguration, DesktopShortcutHintsViewModel shortcutHints)
     {
         InitializeComponent();
 
@@ -61,6 +62,7 @@ public sealed partial class DesktopScrollPreviewView :
         this.previews = previews;
         this.cursorConfinement = cursorConfinement;
         this.overviewConfiguration = overviewConfiguration;
+        ShortcutHints = shortcutHints;
 
         this.pageStrip.PageInvoked += HandlePageInvoked;
         this.pageStrip.ReorderPreviewChanged += HandlePageReorderPreviewChanged;
@@ -83,6 +85,8 @@ public sealed partial class DesktopScrollPreviewView :
     public event Action<nint>? WindowInvoked;
 
     public bool IsRunning => isRunning;
+
+    public DesktopShortcutHintsViewModel ShortcutHints { get; }
 
     public void Prepare(nint ownerWindowHandle, int screenOriginY)
     {
@@ -172,6 +176,7 @@ public sealed partial class DesktopScrollPreviewView :
 
         isRunning = false;
         cursorConfinement.Release();
+        ShortcutHintsFlyout.Hide();
         SetInteractionEnabled(false);
         WindowSearchBox.Text = string.Empty;
         ClearWindowSnapTarget();
@@ -265,6 +270,8 @@ public sealed partial class DesktopScrollPreviewView :
         DismissSurface.IsHitTestVisible = value;
         WindowSearchBox.IsHitTestVisible = value;
         WindowSearchBox.IsTabStop = value;
+        ShortcutHintSurface.IsHitTestVisible = value;
+        ShortcutHintSurface.IsTabStop = value;
         SettingsButton.IsHitTestVisible = value;
         SettingsButton.IsTabStop = value;
         pageStrip.SetInteractionEnabled(value);
@@ -307,6 +314,7 @@ public sealed partial class DesktopScrollPreviewView :
         monitorOriginY = y;
         workAreaOffsetY = offsetY;
         PreviewSurface.Translation = new Vector3(0, workAreaOffsetY, 0);
+        ShortcutHintSurface.Margin = new Thickness(0, Math.Max(0, workAreaOffsetY + workspace.Height - 60), 0, 0);
         pageStrip.SetWorkAreaOffsetY(workAreaOffsetY);
         cursorConfinement.SetWorkAreaOffsetY(workAreaOffsetY);
         return changed;
@@ -505,6 +513,17 @@ public sealed partial class DesktopScrollPreviewView :
         SetInteractionEnabled(false);
 
         BackgroundInvoked?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void HandleShortcutHintsInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        if (!isRunning || !ShortcutHintSurface.IsHitTestVisible)
+        {
+            return;
+        }
+
+        ShortcutHintsFlyout.ShowAt(ShortcutHintSurface);
+        args.Handled = true;
     }
 
     public bool TryCancelEditor() => pageStrip.TryCancelEditor();
