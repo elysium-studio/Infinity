@@ -2,8 +2,6 @@ using Elysium.Platform.Abstractions;
 
 namespace Infinity.Shell;
 
-public readonly record struct DesktopSnapPlacement(double CanvasX, double CanvasY, double Width, double Height);
-
 public sealed class DesktopSnapPlacementResolver(IWorkspace workspace, DesktopSnapLayoutCatalog catalog)
 {
     private const double SlotGap = 12;

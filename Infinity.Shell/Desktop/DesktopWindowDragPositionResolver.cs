@@ -3,8 +3,6 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Shell;
 
-public readonly record struct DesktopWindowDragPosition(double CanvasX, double CanvasY);
-
 public sealed class DesktopWindowDragPositionResolver(IWindowStore windowStore, IWorkspace workspace, DesktopPageLayoutCalculator layoutCalculator)
 {
     public bool TryResolve(nint windowHandle, double horizontalVisualDelta, double verticalVisualDelta, out DesktopWindowDragPosition position)

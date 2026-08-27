@@ -9,17 +9,6 @@ using Windows.Win32.UI.HiDpi;
 
 namespace Infinity.UI.WinUI;
 
-internal readonly record struct DesktopOverlayMonitor(HMONITOR Handle, RectInt32 Bounds, uint DpiX, uint DpiY);
-
-internal sealed class DesktopOverlayMonitorSpan(RectInt32 bounds, IReadOnlySet<nint> monitorHandles)
-{
-    public RectInt32 Bounds { get; } = bounds;
-
-    public bool IsSpanning => monitorHandles.Count > 1;
-
-    public bool Contains(HMONITOR monitor) => monitorHandles.Contains((nint)monitor);
-}
-
 internal sealed class DesktopOverlayMonitorTopology
 {
     private readonly List<DesktopOverlayMonitor> monitors = EnumerateMonitors();

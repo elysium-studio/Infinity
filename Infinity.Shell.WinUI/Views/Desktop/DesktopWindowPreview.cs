@@ -9,8 +9,6 @@ using Windows.Foundation;
 
 namespace Infinity.Shell.WinUI;
 
-internal readonly record struct DesktopWindowSnapTarget(DesktopSnapPlacement Placement);
-
 internal sealed class DesktopWindowPreview :
     IDisposable
 {

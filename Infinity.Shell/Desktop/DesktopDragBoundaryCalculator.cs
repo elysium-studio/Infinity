@@ -3,11 +3,6 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Shell;
 
-public readonly record struct DesktopDragBounds(double MinimumX, double MinimumY, double MaximumX, double MaximumY)
-{
-    public bool IsValid => double.IsFinite(MinimumX) && double.IsFinite(MinimumY) && double.IsFinite(MaximumX) && double.IsFinite(MaximumY) && MaximumX > MinimumX && MaximumY > MinimumY;
-}
-
 public sealed class DesktopDragBoundaryCalculator(IPager pager, IScroller scroller, IWorkspace workspace, DesktopPageLayoutCalculator pageLayoutCalculator)
 {
     private double workAreaOffsetY;

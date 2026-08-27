@@ -1,7 +1,4 @@
 using Infinity.Application.Abstractions;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-
 namespace Infinity.Platform.Windows;
 
 internal static class GlanceBridgeProtocol
@@ -13,34 +10,4 @@ internal static class GlanceBridgeProtocol
     public const string PageNavigationTopic = "page-navigation";
     public const string PageNavigationVisibilityTopic = "page-navigation-visibility";
     public const string PageTitleUpdateTopic = InfinityGlanceTopics.PageTitleUpdate;
-}
-
-internal sealed class GlanceBridgeWireMessage
-{
-    public string Kind { get; set; } = string.Empty;
-
-    public int ProtocolVersion { get; set; }
-
-    public string? ApplicationId { get; set; }
-
-    public string? ApplicationVersion { get; set; }
-
-    public string[]? Capabilities { get; set; }
-
-    public string? Capability { get; set; }
-
-    public string? Topic { get; set; }
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public JsonElement Payload { get; set; }
-}
-
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-[JsonSerializable(typeof(GlanceBridgeWireMessage))]
-[JsonSerializable(typeof(InfinityPageNavigationState))]
-[JsonSerializable(typeof(InfinityPageNavigationVisibility))]
-[JsonSerializable(typeof(InfinityPageTitleUpdate))]
-internal sealed partial class GlanceBridgeJsonContext :
-    JsonSerializerContext
-{
 }

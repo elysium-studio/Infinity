@@ -14,10 +14,6 @@ using System.Linq;
 
 namespace Infinity.Shell.WinUI;
 
-internal readonly record struct DesktopSnapSlotTarget(int Page, DesktopSnapLayoutKind Layout, int Slot);
-
-internal readonly record struct DesktopApplicationPickerRequest(FrameworkElement Anchor, DesktopApplicationTarget Target);
-
 public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, IPager pager, IScroller scroller, IWorkspace workspace, PageTitleStore pageTitleStore, PageLayoutStore pageLayoutStore, DesktopPageReorderController reorderController, DesktopOverviewDragScroller overviewDragScroller, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, ITextLocalizer localizer, DesktopPageLayoutCalculator layoutCalculator, DesktopSnapLayoutCatalog snapLayoutCatalog, DesktopBackgroundBrushFactory backgroundBrushFactory, ILogger<DesktopPageStrip> logger) :
     IDisposable
 {
