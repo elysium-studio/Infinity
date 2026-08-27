@@ -18,6 +18,9 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<IMessageWindow, MessageWindow>();
             services.AddSingleton<IWorkspace, DesktopWorkspace>();
             services.AddSingleton<IDesktopBackgroundSource, DesktopBackgroundSource>();
+            services.AddSingleton<ApplicationCatalog>();
+            services.AddSingleton<IApplicationCatalog>(provider => provider.GetRequiredService<ApplicationCatalog>());
+            services.AddSingleton<IApplicationLauncher>(provider => provider.GetRequiredService<ApplicationCatalog>());
             services.AddSingleton<InfinityGlanceBridge>();
             services.AddSingleton<IInfinityGlanceBridge>(provider => provider.GetRequiredService<InfinityGlanceBridge>());
             services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<InfinityGlanceBridge>());

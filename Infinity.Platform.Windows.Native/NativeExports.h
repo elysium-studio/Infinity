@@ -19,3 +19,9 @@ extern "C" __declspec(dllexport) int __stdcall DwmThumbnailVisual_RenderBatch(HW
 extern "C" __declspec(dllexport) int __stdcall DwmThumbnailVisual_RefreshSource(unsigned long long previewId);
 
 extern "C" __declspec(dllexport) void __stdcall DwmThumbnailVisual_Clear();
+
+extern "C" __declspec(dllexport) int __stdcall ApplicationCatalog_Enumerate(wchar_t** buffer, int* characterCount);
+
+extern "C" __declspec(dllexport) void __stdcall ApplicationCatalog_Free(wchar_t* buffer);
+
+extern "C" __declspec(dllexport) int __stdcall ApplicationLauncher_Launch(const wchar_t* parsingName);

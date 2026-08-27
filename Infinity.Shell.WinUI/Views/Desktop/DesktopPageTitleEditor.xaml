@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Infinity.Shell.WinUI"
     xmlns:shell="using:Infinity.Shell"
-    Width="320"
+    Width="360"
     Height="80">
     <UserControl.Resources>
         <Style x:Key="SnapLayoutButtonStyle" TargetType="ToggleButton">
@@ -36,7 +36,7 @@
     <Grid>
         <Border
             x:Name="HeaderSurface"
-            Width="284"
+            Width="324"
             Margin="18"
             Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
             BorderBrush="{ThemeResource SurfaceStrokeColorDefaultBrush}"
@@ -45,7 +45,7 @@
             <Grid>
                 <Grid Visibility="{x:Bind ToVisibility(ViewModel.IsDisplayMode), Mode=OneWay}">
                     <TextBlock
-                        Margin="-68,0,0,0"
+                        Margin="-108,0,0,0"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         Style="{StaticResource BodyStrongTextBlockStyle}"
@@ -60,6 +60,19 @@
                             Margin="4"
                             VerticalAlignment="Stretch"
                             Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                        <Button
+                            Width="36"
+                            Height="36"
+                            Padding="0"
+                            AutomationProperties.Name="{x:Bind ViewModel.OpenApplicationLabel}"
+                            Click="HandleOpenApplicationClicked"
+                            ToolTipService.ToolTip="{x:Bind ViewModel.OpenApplicationLabel}">
+                            <Button.Resources>
+                                <SolidColorBrush x:Key="ButtonBackground" Color="Transparent" />
+                                <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
+                            </Button.Resources>
+                            <FontIcon FontSize="16" Glyph="&#xE710;" />
+                        </Button>
                         <Button
                             Width="36"
                             Height="36"

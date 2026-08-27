@@ -384,4 +384,28 @@
   <data name="DesktopShortcutShiftKey.Text" xml:space="preserve">
     <value>Shift</value>
   </data>
-</root>
+  <data name="PageOpenApplicationButton" xml:space="preserve">
+    <value>앱 열기</value>
+  </data>
+  <data name="DesktopAppPickerTitle.Text" xml:space="preserve">
+    <value>앱 열기</value>
+  </data>
+  <data name="DesktopAppPickerSearchBox.PlaceholderText" xml:space="preserve">
+    <value>앱 검색</value>
+  </data>
+  <data name="DesktopAppPickerSearchHeader.Text" xml:space="preserve">
+    <value>검색</value>
+  </data>
+  <data name="DesktopAppPickerEmpty.Text" xml:space="preserve">
+    <value>앱을 찾을 수 없음</value>
+  </data>
+  <data name="DesktopAppPickerPageDestination" xml:space="preserve">
+    <value>이 페이지</value>
+  </data>
+  <data name="DesktopAppPickerSlotDestination" xml:space="preserve">
+    <value>슬롯 {0}</value>
+  </data>
+  <data name="DesktopAppPickerDestinationHeader" xml:space="preserve">
+    <value>열 위치</value>
+  </data>
++</root>

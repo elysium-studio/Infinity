@@ -42,6 +42,8 @@ public sealed partial class DesktopPageTitleViewModel(DesktopPageEditorLabels la
 
     public string ClearLayoutLabel => labels.ClearLayout;
 
+    public string OpenApplicationLabel => labels.OpenApplication;
+
     public bool HasLayout => Layout != DesktopSnapLayoutKind.None;
 
     public bool IsDisplayMode => !IsEditing;

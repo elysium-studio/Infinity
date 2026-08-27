@@ -107,6 +107,7 @@ public sealed partial class DesktopPagePreview :
         TitleEditor.PointerReleased += HandlePointerReleased;
         TitleEditor.PointerCanceled += HandlePointerCanceled;
         TitleEditor.PointerCaptureLost += HandlePointerCaptureLost;
+        TitleEditor.OpenApplicationRequested += HandleOpenApplicationRequested;
 
         ElementCompositionPreview.SetIsTranslationEnabled(PageHost, true);
         pageHostVisual = ElementCompositionPreview.GetElementVisual(PageHost);
@@ -162,6 +163,8 @@ public sealed partial class DesktopPagePreview :
     public event Action<DesktopPagePreview>? DragCompleted;
 
     public event Action<DesktopPagePreview>? DragCanceled;
+
+    public event Action<DesktopPagePreview, FrameworkElement>? OpenApplicationRequested;
 
     public void Bind(int page, double width, double height, Brush background, string title, DesktopSnapLayoutKind layout, double rasterizationScale)
     {
@@ -317,6 +320,7 @@ public sealed partial class DesktopPagePreview :
         TitleEditor.PointerReleased -= HandlePointerReleased;
         TitleEditor.PointerCanceled -= HandlePointerCanceled;
         TitleEditor.PointerCaptureLost -= HandlePointerCaptureLost;
+        TitleEditor.OpenApplicationRequested -= HandleOpenApplicationRequested;
 
         clipGeometry.StopAnimation(nameof(CompositionRoundedRectangleGeometry.CornerRadius));
         pageVisual.Clip = null;
@@ -544,6 +548,8 @@ public sealed partial class DesktopPagePreview :
     }
 
     private void HandleActualThemeChanged(FrameworkElement sender, object args) => ApplyInteractionState(isHovered, isPressed);
+
+    private void HandleOpenApplicationRequested(FrameworkElement anchor) => OpenApplicationRequested?.Invoke(this, anchor);
 
     private static float ToFloat(double value) => (float)Math.Clamp(value, -float.MaxValue, float.MaxValue);
 }

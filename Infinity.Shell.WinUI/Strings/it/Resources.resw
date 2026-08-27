@@ -384,4 +384,28 @@
   <data name="DesktopShortcutShiftKey.Text" xml:space="preserve">
     <value>Maiusc</value>
   </data>
-</root>
+  <data name="PageOpenApplicationButton" xml:space="preserve">
+    <value>Apri app</value>
+  </data>
+  <data name="DesktopAppPickerTitle.Text" xml:space="preserve">
+    <value>Apri un’app</value>
+  </data>
+  <data name="DesktopAppPickerSearchBox.PlaceholderText" xml:space="preserve">
+    <value>Cerca app</value>
+  </data>
+  <data name="DesktopAppPickerSearchHeader.Text" xml:space="preserve">
+    <value>Cerca</value>
+  </data>
+  <data name="DesktopAppPickerEmpty.Text" xml:space="preserve">
+    <value>Nessuna app trovata</value>
+  </data>
+  <data name="DesktopAppPickerPageDestination" xml:space="preserve">
+    <value>In questa pagina</value>
+  </data>
+  <data name="DesktopAppPickerSlotDestination" xml:space="preserve">
+    <value>Area {0}</value>
+  </data>
+  <data name="DesktopAppPickerDestinationHeader" xml:space="preserve">
+    <value>Apri in</value>
+  </data>
++</root>

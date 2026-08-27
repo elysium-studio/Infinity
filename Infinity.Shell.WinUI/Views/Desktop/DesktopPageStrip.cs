@@ -16,6 +16,8 @@ namespace Infinity.Shell.WinUI;
 
 internal readonly record struct DesktopSnapSlotTarget(int Page, DesktopSnapLayoutKind Layout, int Slot);
 
+internal readonly record struct DesktopApplicationPickerRequest(FrameworkElement Anchor, DesktopApplicationTarget Target);
+
 public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, IPager pager, IScroller scroller, IWorkspace workspace, PageTitleStore pageTitleStore, PageLayoutStore pageLayoutStore, DesktopPageReorderController reorderController, DesktopOverviewDragScroller overviewDragScroller, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, ITextLocalizer localizer, DesktopPageLayoutCalculator layoutCalculator, DesktopSnapLayoutCatalog snapLayoutCatalog, DesktopBackgroundBrushFactory backgroundBrushFactory, ILogger<DesktopPageStrip> logger) :
     IDisposable
 {
@@ -24,7 +26,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
     private readonly Dictionary<int, DesktopPagePreview> visiblePages = [];
     private readonly List<DesktopPagePreview> pagePool = [];
     private readonly Stack<DesktopPagePreview> availablePages = [];
-    private readonly DesktopPageEditorLabels editorLabels = new(localizer.GetText("PageTitleEditButton"), localizer.GetText("PageTitleSaveButton"), localizer.GetText("PageTitleCancelButton"), localizer.GetText("PageLayoutEditButton"), localizer.GetText("PageLayoutClearButton"));
+    private readonly DesktopPageEditorLabels editorLabels = new(localizer.GetText("PageTitleEditButton"), localizer.GetText("PageTitleSaveButton"), localizer.GetText("PageTitleCancelButton"), localizer.GetText("PageLayoutEditButton"), localizer.GetText("PageLayoutClearButton"), localizer.GetText("PageOpenApplicationButton"));
     private Canvas? host;
     private Canvas? shadowHost;
     private Canvas? titleHost;
@@ -45,6 +47,8 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
     private bool disposed;
 
     public event Action<int>? PageInvoked;
+
+    internal event Action<DesktopApplicationPickerRequest>? ApplicationPickerRequested;
 
     public event Action<DesktopPageReorderPreviewState?, TimeSpan?>? ReorderPreviewChanged;
 
@@ -108,6 +112,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             page.DragCanceled -= HandlePageDragCanceled;
             page.TitleEditor.ViewModel.TitleSubmitted -= HandleTitleSubmitted;
             page.TitleEditor.ViewModel.LayoutSubmitted -= HandleLayoutSubmitted;
+            page.OpenApplicationRequested -= HandleOpenApplicationRequested;
             page.Reset();
             page.Dispose();
         }
@@ -421,6 +426,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             page.DragCanceled += HandlePageDragCanceled;
             page.TitleEditor.ViewModel.TitleSubmitted += HandleTitleSubmitted;
             page.TitleEditor.ViewModel.LayoutSubmitted += HandleLayoutSubmitted;
+            page.OpenApplicationRequested += HandleOpenApplicationRequested;
 
             page.Hide();
             pagePool.Add(page);
@@ -456,6 +462,16 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         {
             PageInvoked?.Invoke(page.Page);
         }
+    }
+
+    private void HandleOpenApplicationRequested(DesktopPagePreview page, FrameworkElement anchor)
+    {
+        if (!started || reorderState is not null)
+        {
+            return;
+        }
+
+        ApplicationPickerRequested?.Invoke(new DesktopApplicationPickerRequest(anchor, new DesktopApplicationTarget(page.Page, page.TitleEditor.ViewModel.Layout)));
     }
 
     private void HandlePageDragStarted(DesktopPagePreview page)

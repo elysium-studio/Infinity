@@ -19,7 +19,7 @@ public sealed partial class DesktopPageTitleEditor :
 
     private bool disposed;
 
-    public DesktopPageTitleEditor() : this(new DesktopPageEditorLabels(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty), new DesktopSnapLayoutCatalog())
+    public DesktopPageTitleEditor() : this(new DesktopPageEditorLabels(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty), new DesktopSnapLayoutCatalog())
     {
     }
 
@@ -39,6 +39,8 @@ public sealed partial class DesktopPageTitleEditor :
     }
 
     public DesktopPageTitleViewModel ViewModel { get; }
+
+    public event Action<FrameworkElement>? OpenApplicationRequested;
 
     public Visibility ToVisibility(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
 
@@ -114,6 +116,14 @@ public sealed partial class DesktopPageTitleEditor :
     {
         ViewModel.ClearLayout();
         LayoutFlyout.Hide();
+    }
+
+    private void HandleOpenApplicationClicked(object sender, RoutedEventArgs args)
+    {
+        if (sender is FrameworkElement anchor)
+        {
+            OpenApplicationRequested?.Invoke(anchor);
+        }
     }
 
     private void HandleLayoutPointerEntered(object sender, PointerRoutedEventArgs args)

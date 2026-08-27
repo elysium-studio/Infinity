@@ -384,4 +384,28 @@
   <data name="DesktopShortcutShiftKey.Text" xml:space="preserve">
     <value>Shift</value>
   </data>
-</root>
+  <data name="PageOpenApplicationButton" xml:space="preserve">
+    <value>打开应用</value>
+  </data>
+  <data name="DesktopAppPickerTitle.Text" xml:space="preserve">
+    <value>打开应用</value>
+  </data>
+  <data name="DesktopAppPickerSearchBox.PlaceholderText" xml:space="preserve">
+    <value>搜索应用</value>
+  </data>
+  <data name="DesktopAppPickerSearchHeader.Text" xml:space="preserve">
+    <value>搜索</value>
+  </data>
+  <data name="DesktopAppPickerEmpty.Text" xml:space="preserve">
+    <value>未找到应用</value>
+  </data>
+  <data name="DesktopAppPickerPageDestination" xml:space="preserve">
+    <value>在此页面</value>
+  </data>
+  <data name="DesktopAppPickerSlotDestination" xml:space="preserve">
+    <value>区域 {0}</value>
+  </data>
+  <data name="DesktopAppPickerDestinationHeader" xml:space="preserve">
+    <value>打开位置</value>
+  </data>
++</root>

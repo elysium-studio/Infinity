@@ -384,4 +384,28 @@
   <data name="DesktopShortcutShiftKey.Text" xml:space="preserve">
     <value>Shift</value>
   </data>
-</root>
+  <data name="PageOpenApplicationButton" xml:space="preserve">
+    <value>Abrir aplicativo</value>
+  </data>
+  <data name="DesktopAppPickerTitle.Text" xml:space="preserve">
+    <value>Abrir um aplicativo</value>
+  </data>
+  <data name="DesktopAppPickerSearchBox.PlaceholderText" xml:space="preserve">
+    <value>Pesquisar aplicativos</value>
+  </data>
+  <data name="DesktopAppPickerSearchHeader.Text" xml:space="preserve">
+    <value>Pesquisar</value>
+  </data>
+  <data name="DesktopAppPickerEmpty.Text" xml:space="preserve">
+    <value>Nenhum aplicativo encontrado</value>
+  </data>
+  <data name="DesktopAppPickerPageDestination" xml:space="preserve">
+    <value>Nesta página</value>
+  </data>
+  <data name="DesktopAppPickerSlotDestination" xml:space="preserve">
+    <value>Área {0}</value>
+  </data>
+  <data name="DesktopAppPickerDestinationHeader" xml:space="preserve">
+    <value>Abrir em</value>
+  </data>
++</root>
