@@ -31,6 +31,7 @@ public sealed class DesktopModule :
             .AddSingleton<DesktopPageArrangementCoordinator>()
             .AddSingleton<DesktopApplicationPlacementResolver>()
             .AddSingleton<DesktopApplicationLaunchCoordinator>()
+            .AddSingleton<IDesktopApplicationPickerCatalog, DesktopApplicationPickerCatalog>()
             .AddSingleton<DesktopDragBoundaryCalculator>()
             .AddSingleton<DesktopPageReorderController>()
             .AddSingleton<DesktopBackgroundBrushFactory>()
@@ -41,6 +42,12 @@ public sealed class DesktopModule :
             .AddSingleton<DesktopWindowContextMenuBuilder>()
             .AddSingleton<DesktopWindowPreviewFactory>()
             .AddSingleton<DesktopWindowPreviewCollection>()
+            .AddSingleton<DesktopWindowGroupStackAnimator>()
+            .AddSingleton<DesktopOverviewInputController>()
+            .AddSingleton<DesktopWindowSnapInteractionCoordinator>()
+            .AddSingleton<DesktopOverviewLayoutPresenter>()
+            .AddSingleton<IDesktopOverviewSettingsNavigator, DesktopOverviewSettingsNavigator>()
+            .AddSingleton<DesktopOverviewSessionController>()
             .AddSingleton<WindowInputTransparencyController>()
             .AddSingleton(provider => new DesktopShortcutHintsViewModel(
                 provider.GetRequiredService<IMessenger>(),
@@ -72,26 +79,21 @@ public sealed class DesktopModule :
     {
         IWindowPreviewSurface windowPreviewSurface = provider.GetRequiredService<IWindowPreviewSurface>();
         IWindowCollection windowCollection = provider.GetRequiredService<IWindowCollection>();
-        IShellLayoutCalculator layoutCalculator = provider.GetRequiredService<IShellLayoutCalculator>();
         IPanState panState = provider.GetRequiredService<IPanState>();
         IScroller scroller = provider.GetRequiredService<IScroller>();
-        IPager pager = provider.GetRequiredService<IPager>();
         IWorkspace workspace = provider.GetRequiredService<IWorkspace>();
-        DesktopPageLayoutCalculator pageLayoutCalculator = provider.GetRequiredService<DesktopPageLayoutCalculator>();
-        DesktopSnapPlacementResolver snapPlacementResolver = provider.GetRequiredService<DesktopSnapPlacementResolver>();
-        DesktopSnapSlotOccupancyResolver snapSlotOccupancyResolver = provider.GetRequiredService<DesktopSnapSlotOccupancyResolver>();
-        DesktopWindowPlacementCoordinator windowPlacementCoordinator = provider.GetRequiredService<DesktopWindowPlacementCoordinator>();
         DesktopScrollPreviewAnimator animator = provider.GetRequiredService<DesktopScrollPreviewAnimator>();
+        DesktopOverviewLayoutPresenter layoutPresenter = provider.GetRequiredService<DesktopOverviewLayoutPresenter>();
         DesktopPageStrip pageStrip = provider.GetRequiredService<DesktopPageStrip>();
         DesktopWindowPreviewCollection previews = provider.GetRequiredService<DesktopWindowPreviewCollection>();
         DesktopDragCursorConfinement cursorConfinement = provider.GetRequiredService<DesktopDragCursorConfinement>();
-        DesktopOverviewConfiguration overviewConfiguration = provider.GetRequiredService<DesktopOverviewConfiguration>();
         DesktopShortcutHintsViewModel shortcutHints = provider.GetRequiredService<DesktopShortcutHintsViewModel>();
         DesktopApplicationPickerViewModel applicationPicker = provider.GetRequiredService<DesktopApplicationPickerViewModel>();
         DesktopApplicationLaunchCoordinator applicationLaunchCoordinator = provider.GetRequiredService<DesktopApplicationLaunchCoordinator>();
-        IKeyboardTextTranslator keyboardTextTranslator = provider.GetRequiredService<IKeyboardTextTranslator>();
+        DesktopOverviewInputController inputController = provider.GetRequiredService<DesktopOverviewInputController>();
+        DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator = provider.GetRequiredService<DesktopWindowSnapInteractionCoordinator>();
 
-        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, layoutCalculator, panState, scroller, pager, workspace, pageLayoutCalculator, snapPlacementResolver, snapSlotOccupancyResolver, windowPlacementCoordinator, animator, pageStrip, previews, cursorConfinement, overviewConfiguration, shortcutHints, applicationPicker, applicationLaunchCoordinator, keyboardTextTranslator);
+        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, panState, scroller, workspace, animator, layoutPresenter, pageStrip, previews, cursorConfinement, shortcutHints, applicationPicker, applicationLaunchCoordinator, inputController, snapInteractionCoordinator);
     }
 
     private static DesktopOverviewView CreateDesktopOverviewView(IServiceProvider provider)
@@ -112,20 +114,8 @@ public sealed class DesktopModule :
         IServiceFactory serviceFactory = provider.GetRequiredService<IServiceFactory>();
         IMessenger messenger = provider.GetRequiredService<IMessenger>();
         IDisposer disposer = provider.GetRequiredService<IDisposer>();
-        IDispatcher dispatcher = provider.GetRequiredService<IDispatcher>();
-        IPointerInputSource pointerInputSource = provider.GetRequiredService<IPointerInputSource>();
-        IModifierKeyState modifierKeyState = provider.GetRequiredService<IModifierKeyState>();
-        IWindowDragScroller windowDragScroller = provider.GetRequiredService<IWindowDragScroller>();
-        IPageGestureSource pageGestureSource = provider.GetRequiredService<IPageGestureSource>();
-        IPager pager = provider.GetRequiredService<IPager>();
-        IScroller scroller = provider.GetRequiredService<IScroller>();
-        IScrollPresentationSession scrollPresentationSession = provider.GetRequiredService<IScrollPresentationSession>();
-        IWindowPreviewSurface windowPreviewSurface = provider.GetRequiredService<IWindowPreviewSurface>();
-        IWindowNavigationCoordinator windowNavigationCoordinator = provider.GetRequiredService<IWindowNavigationCoordinator>();
-        IInfinityGlanceBridge infinityGlanceBridge = provider.GetRequiredService<IInfinityGlanceBridge>();
-        INavigator navigator = provider.GetRequiredService<INavigator>();
-        ILogger<DesktopOverviewViewModel> logger = provider.GetRequiredService<ILogger<DesktopOverviewViewModel>>();
+        DesktopOverviewSessionController sessionController = provider.GetRequiredService<DesktopOverviewSessionController>();
 
-        return new DesktopOverviewViewModel(provider, serviceFactory, messenger, disposer, dispatcher, pointerInputSource, modifierKeyState, windowDragScroller, pageGestureSource, pager, scroller, scrollPresentationSession, windowPreviewSurface, windowNavigationCoordinator, infinityGlanceBridge, navigator, logger);
+        return new DesktopOverviewViewModel(provider, serviceFactory, messenger, disposer, sessionController);
     }
 }

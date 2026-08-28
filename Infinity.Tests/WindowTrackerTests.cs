@@ -100,22 +100,27 @@ public sealed class WindowTrackerTests
         IWindowEventListener listener,
         IWindowGeometryReader geometry,
         IPanState? state = null,
-        ITrackedWindowDragController? trackedWindowDragController = null) =>
-        new(store,
+        ITrackedWindowDragController? trackedWindowDragController = null)
+    {
+        TestWindowFilter filter = new();
+        TestWindowEnumerator enumerator = new();
+
+        return new WindowTracker(store,
             geometry,
-            new TestWindowFilter(),
+            filter,
             new TestAncestorResolver(),
             new TestRestoreGuard(),
             new TestMoveGuard(),
             new TestConcealer(),
             new TestDragGuard(),
             trackedWindowDragController ?? new TestTrackedWindowDragController(),
-            new TestWindowEnumerator(),
+            new WindowTrackingReconciler(store, filter, enumerator, new IntPtr(99)),
             listener,
             state ?? new TestPanState(),
             new TestDispatcher(),
             NullLogger<WindowTracker>.Instance,
             new IntPtr(99));
+    }
 
     private sealed class TestGeometryReader :
         IWindowGeometryReader

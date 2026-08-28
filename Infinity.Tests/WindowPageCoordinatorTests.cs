@@ -246,7 +246,8 @@ public class WindowPageCoordinatorTests
             scroller,
             new TestWorkspace(),
             activator,
-            new TestDispatcher());
+            new TestDispatcher(),
+            new WindowPageGeometry());
 
     private static TrackedWindow CreateWindow(IntPtr handle, int canvasX) =>
         new()

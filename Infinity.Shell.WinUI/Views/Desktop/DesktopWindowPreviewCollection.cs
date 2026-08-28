@@ -7,19 +7,15 @@ using System.Linq;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory factory, IWindowGeometryReader geometryReader, DesktopWindowSelectionModel selection, DesktopWindowGroupDragCoordinator groupDragCoordinator) :
+public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory factory, IWindowGeometryReader geometryReader, DesktopWindowSelectionModel selection, DesktopWindowGroupDragCoordinator groupDragCoordinator, DesktopWindowGroupStackAnimator groupStackAnimator) :
     IDisposable
 {
     private readonly Dictionary<nint, DesktopWindowPreview> previews = [];
-    private readonly HashSet<nint> groupDragHandles = [];
     private Canvas? host;
     private Canvas? focusHost;
     private string filterText = string.Empty;
     private bool interactionEnabled;
     private bool disposed;
-    private nint groupDragLeader;
-
-    private static readonly TimeSpan GroupStackTransitionDuration = TimeSpan.FromMilliseconds(160);
 
     public event Action<nint>? WindowInvoked;
 
@@ -181,8 +177,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         focusHost = null;
         filterText = string.Empty;
         groupDragCoordinator.Cancel();
-        groupDragHandles.Clear();
-        groupDragLeader = 0;
+        groupStackAnimator.Reset();
         selection.Clear();
         interactionEnabled = false;
     }
@@ -227,12 +222,14 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
             selection.RemoveSelected(handle);
         }
 
-        groupDragHandles.Remove(handle);
-
-        if (groupDragLeader == handle)
+        if (groupStackAnimator.LeaderHandle == handle)
         {
             groupDragCoordinator.Cancel();
-            groupDragLeader = 0;
+            groupStackAnimator.End(previews);
+        }
+        else
+        {
+            groupStackAnimator.Remove(handle);
         }
 
     }
@@ -252,9 +249,9 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
     public void RefreshGroupStack()
     {
-        if (groupDragLeader != 0)
+        if (groupStackAnimator.IsActive)
         {
-            UpdateGroupStackTargets(transitionDuration: null);
+            groupStackAnimator.Update(previews);
         }
     }
 
@@ -323,9 +320,9 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
     private void HandleWindowDragMoved(nint handle, double pointerX, double pointerY)
     {
-        if (handle == groupDragLeader)
+        if (handle == groupStackAnimator.LeaderHandle)
         {
-            UpdateGroupStackTargets(transitionDuration: null);
+            groupStackAnimator.Update(previews);
         }
 
         WindowDragMoved?.Invoke(handle, pointerX, pointerY);
@@ -339,64 +336,20 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
             return;
         }
 
-        groupDragLeader = handle;
-        groupDragHandles.Clear();
-        groupDragHandles.UnionWith(selection.SelectedHandles);
-
-        if (previews.TryGetValue(handle, out DesktopWindowPreview? leader))
-        {
-            leader.SetGroupDragLeader(true);
-            UpdateGroupStackTargets(GroupStackTransitionDuration);
-        }
+        groupStackAnimator.Begin(handle, selection.SelectedHandles, previews);
     }
 
     private void HandleWindowDragCompleted(DesktopWindowDragCompletion completion)
     {
-        if (completion.IsGroupDrag && completion.Handle == groupDragLeader)
+        if (completion.IsGroupDrag && completion.Handle == groupStackAnimator.LeaderHandle)
         {
             DesktopSnapPlacement? snapPlacement = completion.SnapTarget?.Placement;
             _ = groupDragCoordinator.Complete(completion.Handle, completion.HorizontalDelta, completion.VerticalDelta, snapPlacement);
-            ClearGroupDragVisuals(GroupStackTransitionDuration);
+            groupStackAnimator.End(previews);
+            groupDragCoordinator.Cancel();
         }
 
         WindowDragCompleted?.Invoke(completion.Handle);
-    }
-
-    private void UpdateGroupStackTargets(TimeSpan? transitionDuration)
-    {
-        if (groupDragLeader == 0 || !previews.TryGetValue(groupDragLeader, out DesktopWindowPreview? leader))
-        {
-            return;
-        }
-
-        DesktopWindowPreview[] followers = [.. previews
-            .Where(item => item.Key != groupDragLeader && groupDragHandles.Contains(item.Key))
-            .OrderByDescending(item => item.Value.ZIndex)
-            .ThenBy(item => (long)item.Key)
-            .Select(item => item.Value)];
-
-        for (int index = 0; index < followers.Length; index++)
-        {
-            int depth = index + 1;
-            double offset = Math.Min(depth, 6) * (8 / leader.LayoutScale);
-            float scale = Math.Max(0.86f, 1 - (Math.Min(depth, 6) * 0.025f));
-            followers[index].SetGroupStackTarget(leader.VisualX + offset, leader.VisualY + offset, scale, depth, transitionDuration);
-        }
-    }
-
-    private void ClearGroupDragVisuals(TimeSpan? transitionDuration)
-    {
-        foreach (nint handle in groupDragHandles)
-        {
-            if (previews.TryGetValue(handle, out DesktopWindowPreview? preview))
-            {
-                preview.ClearGroupDragVisual(transitionDuration);
-            }
-        }
-
-        groupDragCoordinator.Cancel();
-        groupDragHandles.Clear();
-        groupDragLeader = 0;
     }
 
     private TrackedWindow[] OrderWindows(IEnumerable<TrackedWindow> trackedWindows)

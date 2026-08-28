@@ -21,6 +21,12 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<IWindowRestoreGuard, WindowRestoreGuard>();
             services.AddSingleton<StartupPageRestorer>();
 
+            services.AddSingleton(provider => new WindowTrackingReconciler(
+                provider.GetRequiredService<IWindowStore>(),
+                provider.GetRequiredService<IWindowFilter>(),
+                provider.GetRequiredService<IWindowEnumerator>(),
+                provider.GetRequiredService<IMessageWindow>().Handle));
+
             services.AddSingleton<IWindowTracker>(provider =>
                 new WindowTracker(provider.GetRequiredService<IWindowStore>(),
                     provider.GetRequiredService<IWindowGeometryReader>(),
@@ -31,7 +37,7 @@ public static class IServiceCollectionExtensions
                     provider.GetRequiredService<IWindowConcealer>(),
                     provider.GetRequiredService<IWindowDragGuard>(),
                     provider.GetRequiredService<ITrackedWindowDragController>(),
-                    provider.GetRequiredService<IWindowEnumerator>(),
+                    provider.GetRequiredService<WindowTrackingReconciler>(),
                     provider.GetRequiredService<IWindowEventListener>(),
                     provider.GetRequiredService<IPanState>(),
                     provider.GetRequiredService<IDispatcher>(),
@@ -64,6 +70,7 @@ public static class IServiceCollectionExtensions
                     provider.GetRequiredService<ILogger<Scroller>>());
             });
 
+            services.AddSingleton<WindowPageGeometry>();
             services.AddSingleton<WindowPageCoordinator>();
             services.AddSingleton<IWindowNavigationCoordinator>(provider => provider.GetRequiredService<WindowPageCoordinator>());
             services.AddSingleton<IForegroundWindowCoordinator>(provider => provider.GetRequiredService<WindowPageCoordinator>());

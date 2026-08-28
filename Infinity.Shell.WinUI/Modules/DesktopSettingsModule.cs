@@ -16,6 +16,7 @@ public sealed class DesktopSettingsModule :
     public void Register(IServiceCollection services)
     {
         services
+            .AddTransient<ScrollModifierKeyRecorder>()
             .AddViewFor<PagesView, IDesktopViewModel, PagesViewModel>(ServiceLifetime.Transient, _ => new PagesView(), CreatePagesViewModel)
             .AddViewFor<VirtualPagesView, IPagesViewModel, VirtualPagesViewModel>(ServiceLifetime.Transient,
                 provider => new VirtualPagesView(),
@@ -51,10 +52,7 @@ public sealed class DesktopSettingsModule :
                     provider.GetRequiredService<IWritableOptions<Settings>>(),
                     config => config.ScrollModifierKeys,
                     (config, scrollModifierKeys) => config.ScrollModifierKeys = scrollModifierKeys!,
-                    provider.GetRequiredService<IHotKeysBuilder>(),
-                    provider.GetRequiredService<HotKeysBuilderOptions>(),
-                    provider.GetRequiredService<IKeyLabelProvider>(),
-                    provider.GetRequiredService<ITextLocalizer>()))
+                    provider.GetRequiredService<ScrollModifierKeyRecorder>()))
             .AddViewFor<ScrollSpeedView, IScrollingViewModel, ScrollSpeedViewModel>(ServiceLifetime.Transient,
                 provider => new ScrollSpeedView(),
                 provider => new ScrollSpeedViewModel(provider,

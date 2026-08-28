@@ -16,7 +16,7 @@ public sealed class WindowTracker(IWindowStore repository,
     IWindowConcealer concealer,
     IWindowDragGuard dragGuard,
     ITrackedWindowDragController trackedWindowDragController,
-    IWindowEnumerator enumerator,
+    WindowTrackingReconciler reconciler,
     IWindowEventListener listener,
     IPanState state,
     IDispatcher dispatcher,
@@ -71,7 +71,7 @@ public sealed class WindowTracker(IWindowStore repository,
     public void TryRegisterExisting(IntPtr windowHandle) => TryRegister(windowHandle, null);
 
     private void TryRegister(IntPtr windowHandle,
-        Dictionary<IntPtr, int>? windowStackIndexMap)
+        IReadOnlyDictionary<IntPtr, int>? windowStackIndexMap)
     {
         if (repository.TryGet(windowHandle, out _))
         {
@@ -119,7 +119,7 @@ public sealed class WindowTracker(IWindowStore repository,
             ? suspendedState.CanvasX
             : x + currentOffset;
         int lastPlacedX = canvasX - currentOffset;
-        int zIndex = windowStackIndexMap is not null && windowStackIndexMap.TryGetValue(windowHandle, out int mappedZIndex) ? mappedZIndex : GetZIndex(windowHandle);
+        int zIndex = windowStackIndexMap is not null && windowStackIndexMap.TryGetValue(windowHandle, out int mappedZIndex) ? mappedZIndex : reconciler.GetZIndex(windowHandle);
 
         TrackedWindow trackedWindow = new()
         {
@@ -167,7 +167,7 @@ public sealed class WindowTracker(IWindowStore repository,
         HandleWindowMovedExternally(windowHandle);
     }
 
-    private void HandleWindowStackChanged() => RefreshWindowStackIndices();
+    private void HandleWindowStackChanged() => reconciler.RefreshStackIndices();
 
     private void HandleOffsetChanged()
     {
@@ -387,19 +387,6 @@ public sealed class WindowTracker(IWindowStore repository,
 
     private void Unregister(IntPtr windowHandle) => repository.Remove(windowHandle);
 
-    private void RefreshWindowStackIndices()
-    {
-        Dictionary<IntPtr, int> windowStackIndexMap = BuildWindowStackIndexMap();
-
-        foreach (TrackedWindow trackedWindow in repository)
-        {
-            if (windowStackIndexMap.TryGetValue(trackedWindow.Handle, out int zIndex))
-            {
-                trackedWindow.ZIndex = zIndex;
-            }
-        }
-    }
-
     private void HandleSelfHealTick(object? timerState)
     {
         if (Interlocked.CompareExchange(ref selfHealInProgress, 1, 0) != 0)
@@ -422,36 +409,7 @@ public sealed class WindowTracker(IWindowStore repository,
     {
         try
         {
-            List<IntPtr> liveWindows = EnumerateTopLevelWindows();
-            HashSet<IntPtr> liveWindowSet = [.. liveWindows];
-            List<IntPtr> staleHandles = [];
-
-            foreach (TrackedWindow trackedWindow in repository)
-            {
-                if (!liveWindowSet.Contains(trackedWindow.Handle) ||
-                    !filter.ShouldTrack(trackedWindow.Handle, handle))
-                {
-                    staleHandles.Add(trackedWindow.Handle);
-                }
-            }
-
-            foreach (IntPtr staleHandle in staleHandles)
-            {
-                suspendedWindowStates.Remove(staleHandle);
-                CancelPendingMinimizeSuspension(staleHandle);
-                Unregister(staleHandle);
-            }
-
-            int countBeforeRecovery = repository.Count;
-            Dictionary<IntPtr, int> windowStackIndexMap = BuildWindowStackIndexMap();
-
-            foreach (IntPtr liveWindow in liveWindows)
-            {
-                if (!repository.TryGet(liveWindow, out _))
-                {
-                    TryRegister(liveWindow, windowStackIndexMap);
-                }
-            }
+            reconciler.Reconcile(TryRegister, RemoveStaleWindow);
         }
         finally
         {
@@ -459,34 +417,11 @@ public sealed class WindowTracker(IWindowStore repository,
         }
     }
 
-    private List<IntPtr> EnumerateTopLevelWindows()
+    private void RemoveStaleWindow(IntPtr windowHandle)
     {
-        List<IntPtr> windows = [];
-
-        enumerator.EnumerateVisible(windowHandle => windows.Add(windowHandle));
-
-        return windows;
-    }
-
-    private Dictionary<IntPtr, int> BuildWindowStackIndexMap()
-    {
-        Dictionary<IntPtr, int> windowStackIndexMap = [];
-        int index = 0;
-
-        enumerator.EnumerateVisible(windowHandle =>
-        {
-            windowStackIndexMap[windowHandle] = index;
-            index++;
-        });
-
-        return windowStackIndexMap;
-    }
-
-    private int GetZIndex(IntPtr windowHandle)
-    {
-        Dictionary<IntPtr, int> windowStackIndexMap = BuildWindowStackIndexMap();
-
-        return windowStackIndexMap.TryGetValue(windowHandle, out int zIndex) ? zIndex : int.MaxValue;
+        suspendedWindowStates.Remove(windowHandle);
+        CancelPendingMinimizeSuspension(windowHandle);
+        Unregister(windowHandle);
     }
 
     private static void TryCancel(CancellationTokenSource cancellationTokenSource)

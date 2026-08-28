@@ -15,11 +15,13 @@ public sealed class SettingsModule :
     {
         services
             .AddTransient<AboutViewModel>()
+            .AddTransient<SettingsNavigationPathResolver>()
             .AddViewFor(ServiceLifetime.Transient,
                 provider => new SettingsWindow(provider.GetRequiredService<ITextLocalizer>(),
                     provider.GetRequiredService<IApplicationLifetime>(),
                     provider.GetRequiredService<INavigator>(),
-                    provider.GetRequiredService<AboutViewModel>()),
+                    provider.GetRequiredService<AboutViewModel>(),
+                    provider.GetRequiredService<SettingsNavigationPathResolver>()),
                 provider => new SettingsViewModel(provider,
                     provider.GetRequiredService<IServiceFactory>(),
                     provider.GetRequiredService<IMessenger>(),

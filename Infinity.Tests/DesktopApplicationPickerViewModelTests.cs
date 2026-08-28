@@ -34,7 +34,7 @@ public sealed class DesktopApplicationPickerViewModelTests
     public async Task LoadDoesNotRequestIconsUntilAnItemIsRealized()
     {
         TestApplicationCatalog catalog = new();
-        DesktopApplicationPickerViewModel viewModel = new(catalog, new TestDispatcher());
+        DesktopApplicationPickerViewModel viewModel = new(new DesktopApplicationPickerCatalog(catalog), new TestDispatcher());
 
         await viewModel.LoadAsync(new DesktopApplicationTarget(0));
 
@@ -51,7 +51,7 @@ public sealed class DesktopApplicationPickerViewModelTests
         Assert.Equal(1, catalog.IconRequestCount);
     }
 
-    private static DesktopApplicationPickerViewModel CreateViewModel() => new(new TestApplicationCatalog(), new TestDispatcher());
+    private static DesktopApplicationPickerViewModel CreateViewModel() => new(new DesktopApplicationPickerCatalog(new TestApplicationCatalog()), new TestDispatcher());
 
     private sealed class TestDispatcher : IDispatcher
     {

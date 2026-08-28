@@ -5,7 +5,7 @@ using System.Collections.ObjectModel;
 
 namespace Infinity.Shell;
 
-public sealed partial class DesktopApplicationPickerViewModel(IApplicationCatalog applicationCatalog,
+public sealed partial class DesktopApplicationPickerViewModel(IDesktopApplicationPickerCatalog applicationCatalog,
     IDispatcher dispatcher) : ObservableObject
 {
     private IReadOnlyList<DesktopApplicationPickerItemViewModel> applications = [];
