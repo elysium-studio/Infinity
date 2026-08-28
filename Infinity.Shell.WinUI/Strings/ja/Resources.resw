@@ -417,4 +417,11 @@
   <data name="DesktopWindowUntitled" xml:space="preserve"><value>無題のウィンドウ</value></data>
   <data name="DesktopWindowCenterOnPage" xml:space="preserve"><value>ページの中央に配置</value></data>
   <data name="DesktopWindowClose" xml:space="preserve"><value>ウィンドウを閉じる</value></data>
+  <data name="DesktopShortcutOverviewGroup.Text" xml:space="preserve"><value>概要内</value></data>
+  <data name="DesktopShortcutOverviewNavigatePages.Text" xml:space="preserve"><value>ページを移動</value></data>
+  <data name="DesktopShortcutOverviewSelectWindows.Text" xml:space="preserve"><value>ウィンドウを選択</value></data>
+  <data name="DesktopShortcutOverviewMoveSelected.Text" xml:space="preserve"><value>選択したウィンドウを移動</value></data>
+  <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>選択にウィンドウを追加または削除</value></data>
+  <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>選択したウィンドウを開く</value></data>
+  <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>ウィンドウを検索</value></data>
 +</root>

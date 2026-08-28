@@ -417,4 +417,11 @@
   <data name="DesktopWindowUntitled" xml:space="preserve"><value>제목 없는 창</value></data>
   <data name="DesktopWindowCenterOnPage" xml:space="preserve"><value>페이지 가운데에 배치</value></data>
   <data name="DesktopWindowClose" xml:space="preserve"><value>창 닫기</value></data>
+  <data name="DesktopShortcutOverviewGroup.Text" xml:space="preserve"><value>개요에서</value></data>
+  <data name="DesktopShortcutOverviewNavigatePages.Text" xml:space="preserve"><value>페이지 탐색</value></data>
+  <data name="DesktopShortcutOverviewSelectWindows.Text" xml:space="preserve"><value>창 선택</value></data>
+  <data name="DesktopShortcutOverviewMoveSelected.Text" xml:space="preserve"><value>선택한 창 이동</value></data>
+  <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>선택 항목에 창 추가 또는 제거</value></data>
+  <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>선택한 창 열기</value></data>
+  <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>창 검색</value></data>
 +</root>

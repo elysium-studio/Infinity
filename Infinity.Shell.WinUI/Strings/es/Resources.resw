@@ -417,4 +417,11 @@
   <data name="DesktopWindowUntitled" xml:space="preserve"><value>Ventana sin título</value></data>
   <data name="DesktopWindowCenterOnPage" xml:space="preserve"><value>Centrar en la página</value></data>
   <data name="DesktopWindowClose" xml:space="preserve"><value>Cerrar ventana</value></data>
+  <data name="DesktopShortcutOverviewGroup.Text" xml:space="preserve"><value>En la vista general</value></data>
+  <data name="DesktopShortcutOverviewNavigatePages.Text" xml:space="preserve"><value>Navegar por páginas</value></data>
+  <data name="DesktopShortcutOverviewSelectWindows.Text" xml:space="preserve"><value>Seleccionar ventanas</value></data>
+  <data name="DesktopShortcutOverviewMoveSelected.Text" xml:space="preserve"><value>Mover ventanas seleccionadas</value></data>
+  <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>Agregar o quitar una ventana de la selección</value></data>
+  <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>Abrir la ventana seleccionada</value></data>
+  <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>Buscar ventanas</value></data>
 +</root>

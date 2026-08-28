@@ -26,6 +26,8 @@ public sealed class DesktopModule :
             .AddSingleton<DesktopSnapPlacementResolver>()
             .AddSingleton<DesktopSnapSlotOccupancyResolver>()
             .AddSingleton<DesktopWindowPlacementCoordinator>()
+            .AddSingleton<DesktopWindowGroupDragCoordinator>()
+            .AddSingleton<DesktopWindowSelectionModel>()
             .AddSingleton<DesktopPageArrangementCoordinator>()
             .AddSingleton<DesktopApplicationPlacementResolver>()
             .AddSingleton<DesktopApplicationLaunchCoordinator>()
@@ -78,6 +80,7 @@ public sealed class DesktopModule :
         DesktopPageLayoutCalculator pageLayoutCalculator = provider.GetRequiredService<DesktopPageLayoutCalculator>();
         DesktopSnapPlacementResolver snapPlacementResolver = provider.GetRequiredService<DesktopSnapPlacementResolver>();
         DesktopSnapSlotOccupancyResolver snapSlotOccupancyResolver = provider.GetRequiredService<DesktopSnapSlotOccupancyResolver>();
+        DesktopWindowPlacementCoordinator windowPlacementCoordinator = provider.GetRequiredService<DesktopWindowPlacementCoordinator>();
         DesktopScrollPreviewAnimator animator = provider.GetRequiredService<DesktopScrollPreviewAnimator>();
         DesktopPageStrip pageStrip = provider.GetRequiredService<DesktopPageStrip>();
         DesktopWindowPreviewCollection previews = provider.GetRequiredService<DesktopWindowPreviewCollection>();
@@ -86,8 +89,9 @@ public sealed class DesktopModule :
         DesktopShortcutHintsViewModel shortcutHints = provider.GetRequiredService<DesktopShortcutHintsViewModel>();
         DesktopApplicationPickerViewModel applicationPicker = provider.GetRequiredService<DesktopApplicationPickerViewModel>();
         DesktopApplicationLaunchCoordinator applicationLaunchCoordinator = provider.GetRequiredService<DesktopApplicationLaunchCoordinator>();
+        IKeyboardTextTranslator keyboardTextTranslator = provider.GetRequiredService<IKeyboardTextTranslator>();
 
-        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, layoutCalculator, panState, scroller, pager, workspace, pageLayoutCalculator, snapPlacementResolver, snapSlotOccupancyResolver, animator, pageStrip, previews, cursorConfinement, overviewConfiguration, shortcutHints, applicationPicker, applicationLaunchCoordinator);
+        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, layoutCalculator, panState, scroller, pager, workspace, pageLayoutCalculator, snapPlacementResolver, snapSlotOccupancyResolver, windowPlacementCoordinator, animator, pageStrip, previews, cursorConfinement, overviewConfiguration, shortcutHints, applicationPicker, applicationLaunchCoordinator, keyboardTextTranslator);
     }
 
     private static DesktopOverviewView CreateDesktopOverviewView(IServiceProvider provider)

@@ -441,4 +441,11 @@
   <data name="DesktopWindowClose" xml:space="preserve">
     <value>Close window</value>
   </data>
+  <data name="DesktopShortcutOverviewGroup.Text" xml:space="preserve"><value>In overview</value></data>
+  <data name="DesktopShortcutOverviewNavigatePages.Text" xml:space="preserve"><value>Navigate pages</value></data>
+  <data name="DesktopShortcutOverviewSelectWindows.Text" xml:space="preserve"><value>Select windows</value></data>
+  <data name="DesktopShortcutOverviewMoveSelected.Text" xml:space="preserve"><value>Move selected windows</value></data>
+  <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>Add or remove a window from the selection</value></data>
+  <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>Open selected window</value></data>
+  <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>Search windows</value></data>
 +</root>

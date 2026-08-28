@@ -9,12 +9,30 @@ public sealed class DesktopSnapSlotOccupancyResolver
     public bool IsOccupied(DesktopSnapPlacement placement, nint excludedWindow, IEnumerable<TrackedWindow> windows)
         => TryGetOccupant(placement, excludedWindow, windows, out _);
 
+    public bool IsOccupied(DesktopSnapPlacement placement, IReadOnlySet<nint> excludedWindows, IEnumerable<TrackedWindow> windows)
+        => TryGetOccupant(placement, excludedWindows, windows, out _);
+
     public bool TryGetOccupant(DesktopSnapPlacement placement, nint excludedWindow, IEnumerable<TrackedWindow> windows, out TrackedWindow? occupant)
     {
         ArgumentNullException.ThrowIfNull(windows);
 
         occupant = windows.FirstOrDefault(window =>
             window.Handle != excludedWindow &&
+            IsClose(window.CanvasX, placement.CanvasX) &&
+            IsClose(window.CanvasY, placement.CanvasY) &&
+            IsClose(window.Width, placement.Width) &&
+            IsClose(window.Height, placement.Height));
+
+        return occupant is not null;
+    }
+
+    public bool TryGetOccupant(DesktopSnapPlacement placement, IReadOnlySet<nint> excludedWindows, IEnumerable<TrackedWindow> windows, out TrackedWindow? occupant)
+    {
+        ArgumentNullException.ThrowIfNull(excludedWindows);
+        ArgumentNullException.ThrowIfNull(windows);
+
+        occupant = windows.FirstOrDefault(window =>
+            !excludedWindows.Contains(window.Handle) &&
             IsClose(window.CanvasX, placement.CanvasX) &&
             IsClose(window.CanvasY, placement.CanvasY) &&
             IsClose(window.Width, placement.Width) &&

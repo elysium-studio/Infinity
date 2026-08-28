@@ -417,4 +417,11 @@
   <data name="DesktopWindowUntitled" xml:space="preserve"><value>Finestra senza titolo</value></data>
   <data name="DesktopWindowCenterOnPage" xml:space="preserve"><value>Centra nella pagina</value></data>
   <data name="DesktopWindowClose" xml:space="preserve"><value>Chiudi finestra</value></data>
+  <data name="DesktopShortcutOverviewGroup.Text" xml:space="preserve"><value>Nella panoramica</value></data>
+  <data name="DesktopShortcutOverviewNavigatePages.Text" xml:space="preserve"><value>Esplora le pagine</value></data>
+  <data name="DesktopShortcutOverviewSelectWindows.Text" xml:space="preserve"><value>Seleziona finestre</value></data>
+  <data name="DesktopShortcutOverviewMoveSelected.Text" xml:space="preserve"><value>Sposta le finestre selezionate</value></data>
+  <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>Aggiungi o rimuovi una finestra dalla selezione</value></data>
+  <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>Apri la finestra selezionata</value></data>
+  <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>Cerca finestre</value></data>
 +</root>

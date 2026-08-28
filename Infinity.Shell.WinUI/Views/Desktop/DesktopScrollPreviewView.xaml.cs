@@ -9,7 +9,9 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
@@ -30,16 +32,19 @@ public sealed partial class DesktopScrollPreviewView :
     private readonly DesktopPageLayoutCalculator pageLayoutCalculator;
     private readonly DesktopSnapPlacementResolver snapPlacementResolver;
     private readonly DesktopSnapSlotOccupancyResolver snapSlotOccupancyResolver;
+    private readonly DesktopWindowPlacementCoordinator windowPlacementCoordinator;
     private readonly DesktopScrollPreviewAnimator animator;
     private readonly DesktopPageStrip pageStrip;
     private readonly DesktopWindowPreviewCollection previews;
     private readonly DesktopDragCursorConfinement cursorConfinement;
     private readonly DesktopOverviewConfiguration overviewConfiguration;
     private readonly DesktopApplicationLaunchCoordinator applicationLaunchCoordinator;
+    private readonly IKeyboardTextTranslator keyboardTextTranslator;
     private CancellationTokenSource? applicationLaunchCancellation;
     private bool eventsSubscribed;
     private bool filterActive;
     private bool shiftKeyDown;
+    private bool controlKeyDown;
     private bool isRunning;
     private DesktopPageReorderPreviewState? pageReorderState;
     private int pageBeforeFilter = -1;
@@ -52,7 +57,7 @@ public sealed partial class DesktopScrollPreviewView :
     private double activeSnapPointerX;
     private double activeSnapPointerY;
 
-    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IShellLayoutCalculator layoutCalculator, IPanState panState, IScroller scroller, IPager pager, IWorkspace workspace, DesktopPageLayoutCalculator pageLayoutCalculator, DesktopSnapPlacementResolver snapPlacementResolver, DesktopSnapSlotOccupancyResolver snapSlotOccupancyResolver, DesktopScrollPreviewAnimator animator, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopOverviewConfiguration overviewConfiguration, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator)
+    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IShellLayoutCalculator layoutCalculator, IPanState panState, IScroller scroller, IPager pager, IWorkspace workspace, DesktopPageLayoutCalculator pageLayoutCalculator, DesktopSnapPlacementResolver snapPlacementResolver, DesktopSnapSlotOccupancyResolver snapSlotOccupancyResolver, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopScrollPreviewAnimator animator, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopOverviewConfiguration overviewConfiguration, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator, IKeyboardTextTranslator keyboardTextTranslator)
     {
         InitializeComponent();
 
@@ -66,12 +71,14 @@ public sealed partial class DesktopScrollPreviewView :
         this.pageLayoutCalculator = pageLayoutCalculator;
         this.snapPlacementResolver = snapPlacementResolver;
         this.snapSlotOccupancyResolver = snapSlotOccupancyResolver;
+        this.windowPlacementCoordinator = windowPlacementCoordinator;
         this.animator = animator;
         this.pageStrip = pageStrip;
         this.previews = previews;
         this.cursorConfinement = cursorConfinement;
         this.overviewConfiguration = overviewConfiguration;
         this.applicationLaunchCoordinator = applicationLaunchCoordinator;
+        this.keyboardTextTranslator = keyboardTextTranslator;
         ShortcutHints = shortcutHints;
         ApplicationPicker = applicationPicker;
 
@@ -223,6 +230,9 @@ public sealed partial class DesktopScrollPreviewView :
         applicationLaunchCancellation = null;
         SetInteractionEnabled(false);
         WindowSearchBox.Text = string.Empty;
+        previews.ClearSelection();
+        controlKeyDown = false;
+        shiftKeyDown = false;
         ClearWindowSnapTarget();
 
         animator.Reset(PreviewSurface, GetAnimationWidth(), GetAnimationHeight());
@@ -252,6 +262,8 @@ public sealed partial class DesktopScrollPreviewView :
                 UpdateWindowLayout(trackedWindow, preview, null);
             }
         }
+
+        previews.RefreshGroupStack();
     }
 
     private void RefreshLayout(TimeSpan? transitionDuration = null)
@@ -273,6 +285,8 @@ public sealed partial class DesktopScrollPreviewView :
 
             UpdateWindowLayout(trackedWindow, preview, transitionDuration);
         }
+
+        previews.RefreshGroupStack();
 
         RefreshActiveWindowSnapTarget();
     }
@@ -472,6 +486,7 @@ public sealed partial class DesktopScrollPreviewView :
     private void HandleWindowInvoked(nint handle)
     {
         ResetFilter();
+        previews.ClearSelection();
         SetInteractionEnabled(false);
 
         WindowInvoked?.Invoke(handle);
@@ -600,34 +615,13 @@ public sealed partial class DesktopScrollPreviewView :
             return;
         }
 
-        if (args.Key == VirtualKey.Tab)
+        if (args.Key == VirtualKey.Control)
         {
-            nint selectedHandle = previews.SelectNext(!shiftKeyDown, windowCollection.AllTrackedWindows);
-
-            if (previews.Activate(selectedHandle))
-            {
-                InputFocusRequested?.Invoke(this, EventArgs.Empty);
-
-                DispatcherQueue.TryEnqueue(() => _ = WindowSearchBox.Focus(Microsoft.UI.Xaml.FocusState.Programmatic));
-            }
-
-            NavigateToFilterMatch(selectedHandle);
-            args.Handled = true;
+            controlKeyDown = true;
             return;
         }
 
-        if (args.Key != VirtualKey.Enter)
-        {
-            return;
-        }
-
-        nint handle = previews.GetSelectedMatchingWindow(windowCollection.AllTrackedWindows);
-
-        if (handle != 0)
-        {
-            args.Handled = true;
-            HandleWindowInvoked(handle);
-        }
+        args.Handled = TryHandleOverviewCommand(args.Key, controlKeyDown, shiftKeyDown);
     }
 
     private void HandleWindowSearchBoxKeyUp(object sender, KeyRoutedEventArgs args)
@@ -636,6 +630,228 @@ public sealed partial class DesktopScrollPreviewView :
         {
             shiftKeyDown = false;
         }
+        else if (args.Key == VirtualKey.Control)
+        {
+            controlKeyDown = false;
+        }
+    }
+
+    private void HandleWindowSearchBoxLostFocus(object sender, RoutedEventArgs args)
+    {
+        shiftKeyDown = false;
+        controlKeyDown = false;
+    }
+
+    private void HandleCharacterReceived(UIElement sender, CharacterReceivedRoutedEventArgs args)
+    {
+        if (!isRunning || WindowSearchBox.FocusState != FocusState.Unfocused || ApplicationPickerFlyout.IsOpen || pageStrip.IsEditorActive || args.Character < 0x20 || args.Character == 0x7F)
+        {
+            return;
+        }
+
+        string character = char.ConvertFromUtf32((int)args.Character);
+        WindowSearchBox.Text += character;
+        WindowSearchBox.SelectionStart = WindowSearchBox.Text.Length;
+        _ = WindowSearchBox.Focus(FocusState.Programmatic);
+        args.Handled = true;
+    }
+
+    internal bool TryHandleGlobalKeyDown(int virtualKeyCode, bool controlDown, bool shiftDown, bool menuDown)
+    {
+        if (!isRunning ||
+            ApplicationPickerFlyout.IsOpen ||
+            pageStrip.IsEditorActive)
+        {
+            return false;
+        }
+
+        VirtualKey key = (VirtualKey)virtualKeyCode;
+
+        if (TryHandleOverviewCommand(key, controlDown && !menuDown, shiftDown))
+        {
+            return true;
+        }
+
+        if (controlDown != menuDown)
+        {
+            return false;
+        }
+
+        if (key == VirtualKey.Back)
+        {
+            RemoveLastFilterCharacter();
+            FocusWindowSearchBox();
+            return true;
+        }
+
+        string? text = keyboardTextTranslator.Translate(virtualKeyCode);
+
+        if (string.IsNullOrEmpty(text) || text.Any(char.IsControl))
+        {
+            return false;
+        }
+
+        WindowSearchBox.Text += text;
+        WindowSearchBox.SelectionStart = WindowSearchBox.Text.Length;
+        FocusWindowSearchBox();
+        return true;
+    }
+
+    private bool TryHandleOverviewCommand(VirtualKey key, bool controlDown, bool shiftDown)
+    {
+        if (filterActive && key is VirtualKey.Up or VirtualKey.Down)
+        {
+            nint selectedHandle = previews.SelectNext(key == VirtualKey.Down, windowCollection.AllTrackedWindows);
+            NavigateToFilterMatch(selectedHandle);
+            return true;
+        }
+
+        if (!filterActive && controlDown && key == VirtualKey.A)
+        {
+            return true;
+        }
+
+        if (!filterActive && shiftDown && key is VirtualKey.Left or VirtualKey.Right)
+        {
+            MoveSelectedWindows(key == VirtualKey.Right ? 1 : -1);
+            return true;
+        }
+
+        if (!filterActive && !controlDown && !shiftDown && key is VirtualKey.Left or VirtualKey.Right)
+        {
+            NavigateByPage(key == VirtualKey.Right ? 1 : -1);
+            return true;
+        }
+
+        if (!filterActive && !controlDown && !shiftDown && key is VirtualKey.Up or VirtualKey.Down)
+        {
+            previews.SelectWithin(GetWindowsOnPage(pager.CurrentPage), key == VirtualKey.Down);
+            return true;
+        }
+
+        if (!filterActive && !controlDown && !shiftDown && TryGetPageFromNumberKey(key, out int page))
+        {
+            NavigateToPage(page);
+            return true;
+        }
+
+        if (key == VirtualKey.Tab)
+        {
+            nint selectedHandle = previews.SelectNext(!shiftDown, windowCollection.AllTrackedWindows);
+            NavigateToFilterMatch(selectedHandle);
+            return true;
+        }
+
+        if (key != VirtualKey.Enter)
+        {
+            return false;
+        }
+
+        nint handle = filterActive ? previews.GetSelectedMatchingWindow(windowCollection.AllTrackedWindows) : previews.GetFocusedHandle();
+
+        if (handle == 0 && !filterActive)
+        {
+            handle = previews.SelectFirst(GetWindowsOnPage(pager.CurrentPage));
+        }
+
+        if (handle == 0)
+        {
+            return false;
+        }
+
+        HandleWindowInvoked(handle);
+        return true;
+    }
+
+    private void FocusWindowSearchBox()
+    {
+        InputFocusRequested?.Invoke(this, EventArgs.Empty);
+        _ = WindowSearchBox.Focus(FocusState.Programmatic);
+    }
+
+    private void RemoveLastFilterCharacter()
+    {
+        if (WindowSearchBox.Text.Length == 0)
+        {
+            return;
+        }
+
+        int[] textElementOffsets = StringInfo.ParseCombiningCharacters(WindowSearchBox.Text);
+        WindowSearchBox.Text = WindowSearchBox.Text[..textElementOffsets[^1]];
+        WindowSearchBox.SelectionStart = WindowSearchBox.Text.Length;
+    }
+
+    private void MoveSelectedWindows(int pageDelta)
+    {
+        IReadOnlyCollection<nint> selectedHandles = previews.GetSelectedHandles();
+
+        if (selectedHandles.Count == 0)
+        {
+            nint focusedHandle = previews.GetFocusedHandle();
+
+            if (focusedHandle == 0)
+            {
+                focusedHandle = previews.SelectFirst(GetWindowsOnPage(pager.CurrentPage));
+            }
+
+            if (focusedHandle != 0)
+            {
+                selectedHandles = [focusedHandle];
+            }
+        }
+
+        windowPlacementCoordinator.MoveByPages(selectedHandles, pageDelta, pager.MaxPages);
+    }
+
+    private void NavigateByPage(int pageDelta) => NavigateToPage(pager.CurrentPage + pageDelta);
+
+    private void NavigateToPage(int page)
+    {
+        if (page < 0 || pager.MaxPages.HasValue && page >= pager.MaxPages.Value)
+        {
+            return;
+        }
+
+        pager.NavigateToPage(page);
+        previews.SelectFirst(GetWindowsOnPage(page));
+    }
+
+    private TrackedWindow[] GetWindowsOnPage(int page) => [.. windowCollection.AllTrackedWindows
+        .Where(window => windowPlacementCoordinator.GetPage(window) == page)
+        .OrderBy(window => window.CanvasY)
+        .ThenBy(window => window.CanvasX)
+        .ThenBy(window => (long)window.Handle)];
+
+    private static bool TryGetPageFromNumberKey(VirtualKey key, out int page)
+    {
+        int virtualKey = (int)key;
+
+        if (virtualKey is >= 0x31 and <= 0x39)
+        {
+            page = virtualKey - 0x31;
+            return true;
+        }
+
+        if (virtualKey == 0x30)
+        {
+            page = 9;
+            return true;
+        }
+
+        if (virtualKey is >= 0x61 and <= 0x69)
+        {
+            page = virtualKey - 0x61;
+            return true;
+        }
+
+        if (virtualKey == 0x60)
+        {
+            page = 9;
+            return true;
+        }
+
+        page = -1;
+        return false;
     }
 
     public void Dismiss()
@@ -659,11 +875,14 @@ public sealed partial class DesktopScrollPreviewView :
 
     public bool TryCancelEditor() => pageStrip.TryCancelEditor();
 
+    public bool TryClearWindowSelection() => previews.TryClearMultiSelection();
+
     private void ResetFilter()
     {
         filterActive = false;
         pageBeforeFilter = -1;
         shiftKeyDown = false;
+        controlKeyDown = false;
 
         if (WindowSearchBox.Text.Length > 0)
         {

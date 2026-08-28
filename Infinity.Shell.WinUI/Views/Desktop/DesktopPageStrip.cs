@@ -48,6 +48,8 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
 
     public event Action<DesktopPageReorderPreviewState?, TimeSpan?>? ReorderPreviewChanged;
 
+    internal bool IsEditorActive => visiblePages.Values.Any(page => page.TitleEditor.ViewModel.IsEditing);
+
 #if DEBUG
     internal bool RequestApplicationPickerForDebug()
     {
@@ -368,6 +370,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
 
     private void UpdatePage(int page, DesktopPagePreview preview, TimeSpan? transitionDuration)
     {
+
         double fullContentOffset = layoutCalculator.CalculateContentOffset(currentOffset, workspace.Width);
         double baseX = page * (workspace.Width + layoutCalculator.PageSpacing) - fullContentOffset;
         double targetX = layoutCalculator.CalculatePageX(page, workspace.Width, currentOffset, currentSpacingProgress);

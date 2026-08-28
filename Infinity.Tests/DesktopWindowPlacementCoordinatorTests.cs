@@ -60,6 +60,33 @@ public sealed class DesktopWindowPlacementCoordinatorTests
         Assert.Equal((nint)42, windowCloser.ClosedHandle);
     }
 
+    [Fact]
+    public void MoveByPagesMovesSelectedWindowsAsOneBatch()
+    {
+        DesktopWindowPlacementCoordinator coordinator = CreateCoordinator();
+        TrackedWindow first = AddWindow(1, 120, 80, 700, 500);
+        TrackedWindow second = AddWindow(2, 900, 120, 600, 400);
+
+        int moved = coordinator.MoveByPages([first.Handle, second.Handle], 1, maximumPageCount: null);
+
+        Assert.Equal(2, moved);
+        Assert.Equal(2040, first.CanvasX);
+        Assert.Equal(2820, second.CanvasX);
+        Assert.Equal(1, scroller.RepositionCount);
+    }
+
+    [Fact]
+    public void MoveByPagesHonoursFixedPageBoundary()
+    {
+        DesktopWindowPlacementCoordinator coordinator = CreateCoordinator();
+        TrackedWindow window = AddWindow(1, 120, 80, 700, 500);
+
+        int moved = coordinator.MoveByPages([window.Handle], -1, maximumPageCount: 2);
+
+        Assert.Equal(0, moved);
+        Assert.Equal(120, window.CanvasX);
+    }
+
     private DesktopWindowPlacementCoordinator CreateCoordinator()
     {
         DesktopSnapSlotOccupancyResolver occupancyResolver = new();

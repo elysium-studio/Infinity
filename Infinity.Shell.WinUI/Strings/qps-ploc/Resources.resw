@@ -417,4 +417,11 @@
   <data name="DesktopWindowUntitled" xml:space="preserve"><value>[Üñţîţléð wîñðöw]</value></data>
   <data name="DesktopWindowCenterOnPage" xml:space="preserve"><value>[Çéñţré öñ pågé]</value></data>
   <data name="DesktopWindowClose" xml:space="preserve"><value>[Çlöšé wîñðöw]</value></data>
+  <data name="DesktopShortcutOverviewGroup.Text" xml:space="preserve"><value>[Îñ övérvîéw]</value></data>
+  <data name="DesktopShortcutOverviewNavigatePages.Text" xml:space="preserve"><value>[Ñåvîgåţé pågéš]</value></data>
+  <data name="DesktopShortcutOverviewSelectWindows.Text" xml:space="preserve"><value>[Šéléçţ wîñðöwš]</value></data>
+  <data name="DesktopShortcutOverviewMoveSelected.Text" xml:space="preserve"><value>[Mövé šéléçţéð wîñðöwš]</value></data>
+  <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>[Åðð ör rémövé å wîñðöw fröm ţhé šéléçţîöñ]</value></data>
+  <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>[Öpéñ šéléçţéð wîñðöw]</value></data>
+  <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>[Šéårçh wîñðöwš]</value></data>
 +</root>

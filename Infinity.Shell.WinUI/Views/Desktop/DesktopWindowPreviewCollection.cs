@@ -7,17 +7,19 @@ using System.Linq;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory factory, IWindowGeometryReader geometryReader) :
+public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory factory, IWindowGeometryReader geometryReader, DesktopWindowSelectionModel selection, DesktopWindowGroupDragCoordinator groupDragCoordinator) :
     IDisposable
 {
     private readonly Dictionary<nint, DesktopWindowPreview> previews = [];
+    private readonly HashSet<nint> groupDragHandles = [];
     private Canvas? host;
     private Canvas? focusHost;
-    private nint pendingForegroundHandle;
-    private nint selectedHandle;
     private string filterText = string.Empty;
     private bool interactionEnabled;
     private bool disposed;
+    private nint groupDragLeader;
+
+    private static readonly TimeSpan GroupStackTransitionDuration = TimeSpan.FromMilliseconds(160);
 
     public event Action<nint>? WindowInvoked;
 
@@ -50,9 +52,10 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
             {
                 preview = factory.Create(canvas, focusCanvas, trackedWindow.Handle, layoutScale);
                 preview.Invoked += HandleWindowInvoked;
+                preview.SelectionToggled += HandleWindowSelectionToggled;
                 preview.PositionChanged += HandleWindowPositionChanged;
-                preview.Foregrounded += HandleWindowForegrounded;
                 preview.DragMoved += HandleWindowDragMoved;
+                preview.DragStarted += HandleWindowDragStarted;
                 preview.DragCompleted += HandleWindowDragCompleted;
                 preview.SetInteractionEnabled(interactionEnabled);
                 previews.Add(trackedWindow.Handle, preview);
@@ -60,6 +63,8 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
             preview.RefreshSourceSize(trackedWindow, geometryReader);
             preview.SetFilterMatch(WindowTitleFilter.Matches(trackedWindow.Title, filterText));
+            preview.SetKeyboardFocused(trackedWindow.Handle == selection.FocusedHandle);
+            preview.SetSelected(selection.SelectedHandles.Contains(trackedWindow.Handle));
             preview.SetZIndex(zIndex);
         }
 
@@ -72,6 +77,11 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
     public nint SetFilter(string value, IEnumerable<TrackedWindow> trackedWindows)
     {
+        if (!string.IsNullOrWhiteSpace(value) && string.IsNullOrWhiteSpace(filterText))
+        {
+            ClearSelection();
+        }
+
         filterText = value;
         TrackedWindow[] windows = [.. trackedWindows];
 
@@ -90,12 +100,12 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
     {
         TrackedWindow[] matches = GetOrderedMatches(trackedWindows);
 
-        if (matches.Any(window => window.Handle == selectedHandle))
+        if (matches.Any(window => window.Handle == selection.FocusedHandle))
         {
-            return selectedHandle;
+            return selection.FocusedHandle;
         }
 
-        return SetSelected(matches.FirstOrDefault()?.Handle ?? 0);
+        return SetFocused(matches.FirstOrDefault()?.Handle ?? 0);
     }
 
     public nint SelectNext(bool forward, IEnumerable<TrackedWindow> trackedWindows)
@@ -104,25 +114,14 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
         if (matches.Length == 0)
         {
-            return SetSelected(0);
+            return SetFocused(0);
         }
 
-        int currentIndex = Array.FindIndex(matches, window => window.Handle == selectedHandle);
+        int currentIndex = Array.FindIndex(matches, window => window.Handle == selection.FocusedHandle);
         int nextIndex = forward
             ? currentIndex >= 0 && currentIndex < matches.Length - 1 ? currentIndex + 1 : 0
             : currentIndex > 0 ? currentIndex - 1 : matches.Length - 1;
-        return SetSelected(matches[nextIndex].Handle);
-    }
-
-    public bool Activate(nint handle)
-    {
-        if (!previews.TryGetValue(handle, out DesktopWindowPreview? preview))
-        {
-            return false;
-        }
-
-        preview.Activate();
-        return true;
+        return SetFocused(matches[nextIndex].Handle);
     }
 
     public void Refresh(TrackedWindow trackedWindow)
@@ -165,9 +164,10 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         foreach (DesktopWindowPreview preview in previews.Values)
         {
             preview.Invoked -= HandleWindowInvoked;
+            preview.SelectionToggled -= HandleWindowSelectionToggled;
             preview.PositionChanged -= HandleWindowPositionChanged;
-            preview.Foregrounded -= HandleWindowForegrounded;
             preview.DragMoved -= HandleWindowDragMoved;
+            preview.DragStarted -= HandleWindowDragStarted;
             preview.DragCompleted -= HandleWindowDragCompleted;
             preview.Dispose();
         }
@@ -180,8 +180,10 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         host = null;
         focusHost = null;
         filterText = string.Empty;
-        selectedHandle = 0;
-        pendingForegroundHandle = 0;
+        groupDragCoordinator.Cancel();
+        groupDragHandles.Clear();
+        groupDragLeader = 0;
+        selection.Clear();
         interactionEnabled = false;
     }
 
@@ -206,23 +208,33 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         }
 
         preview.Invoked -= HandleWindowInvoked;
+        preview.SelectionToggled -= HandleWindowSelectionToggled;
         preview.PositionChanged -= HandleWindowPositionChanged;
-        preview.Foregrounded -= HandleWindowForegrounded;
         preview.DragMoved -= HandleWindowDragMoved;
+        preview.DragStarted -= HandleWindowDragStarted;
         preview.DragCompleted -= HandleWindowDragCompleted;
         preview.Dispose();
         host?.Children.Remove(preview.Host);
         focusHost?.Children.Remove(preview.FocusHost);
 
-        if (selectedHandle == handle)
+        if (selection.FocusedHandle == handle)
         {
-            selectedHandle = 0;
+            selection.Focus(0);
         }
 
-        if (pendingForegroundHandle == handle)
+        if (selection.SelectedHandles.Contains(handle))
         {
-            pendingForegroundHandle = 0;
+            selection.RemoveSelected(handle);
         }
+
+        groupDragHandles.Remove(handle);
+
+        if (groupDragLeader == handle)
+        {
+            groupDragCoordinator.Cancel();
+            groupDragLeader = 0;
+        }
+
     }
 
     public void SetPageReorderState(DesktopPageReorderPreviewState? state, IEnumerable<TrackedWindow> trackedWindows, double workspaceWidth)
@@ -238,84 +250,172 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
     public void RefreshSelection(IEnumerable<TrackedWindow> trackedWindows) => EnsureSelection(trackedWindows);
 
+    public void RefreshGroupStack()
+    {
+        if (groupDragLeader != 0)
+        {
+            UpdateGroupStackTargets(transitionDuration: null);
+        }
+    }
+
+    public nint SelectFirst(IEnumerable<TrackedWindow> windows)
+    {
+        nint handle = windows.OrderBy(window => window.CanvasY).ThenBy(window => window.CanvasX).ThenBy(window => (long)window.Handle).FirstOrDefault()?.Handle ?? 0;
+        return SetFocused(handle);
+    }
+
+    public nint SelectWithin(IEnumerable<TrackedWindow> windows, bool forward)
+    {
+        TrackedWindow[] ordered = [.. windows.OrderBy(window => window.CanvasY).ThenBy(window => window.CanvasX).ThenBy(window => (long)window.Handle)];
+
+        if (ordered.Length == 0)
+        {
+            ClearSelection();
+            return 0;
+        }
+
+        int currentIndex = Array.FindIndex(ordered, window => window.Handle == selection.FocusedHandle);
+        int nextIndex = forward
+            ? currentIndex >= 0 && currentIndex < ordered.Length - 1 ? currentIndex + 1 : 0
+            : currentIndex > 0 ? currentIndex - 1 : ordered.Length - 1;
+        nint handle = ordered[nextIndex].Handle;
+        return SetFocused(handle);
+    }
+
+    public IReadOnlyCollection<nint> GetSelectedHandles() => selection.SelectedHandles;
+
+    public nint GetFocusedHandle() => selection.FocusedHandle;
+
+    public void ClearSelection()
+    {
+        ClearSelectionVisuals();
+        SetFocused(0);
+        selection.Clear();
+    }
+
+    public bool TryClearMultiSelection()
+    {
+        if (selection.SelectedHandles.Count == 0)
+        {
+            return false;
+        }
+
+        ClearSelectionVisuals();
+        selection.ClearSelectedHandles();
+        SetFocused(selection.FocusedHandle);
+        return true;
+    }
+
     private void HandleWindowInvoked(nint handle) => WindowInvoked?.Invoke(handle);
+
+    private void HandleWindowSelectionToggled(nint handle)
+    {
+        SetFocused(handle);
+        bool isSelected = selection.ToggleSelected(handle);
+
+        if (previews.TryGetValue(handle, out DesktopWindowPreview? preview))
+        {
+            preview.SetSelected(isSelected);
+        }
+    }
 
     private void HandleWindowPositionChanged(nint handle) => WindowPositionChanged?.Invoke(handle);
 
-    private void HandleWindowDragMoved(nint handle, double pointerX, double pointerY) => WindowDragMoved?.Invoke(handle, pointerX, pointerY);
-
-    private void HandleWindowDragCompleted(nint handle) => WindowDragCompleted?.Invoke(handle);
-
-    private void HandleWindowForegrounded(nint handle)
+    private void HandleWindowDragMoved(nint handle, double pointerX, double pointerY)
     {
-        if (!previews.ContainsKey(handle))
+        if (handle == groupDragLeader)
+        {
+            UpdateGroupStackTargets(transitionDuration: null);
+        }
+
+        WindowDragMoved?.Invoke(handle, pointerX, pointerY);
+    }
+
+    private void HandleWindowDragStarted(nint handle)
+    {
+        if (!selection.SelectedHandles.Contains(handle) || selection.SelectedHandles.Count < 2 || !groupDragCoordinator.Begin(handle, selection.SelectedHandles))
+        {
+            ClearSelection();
+            return;
+        }
+
+        groupDragLeader = handle;
+        groupDragHandles.Clear();
+        groupDragHandles.UnionWith(selection.SelectedHandles);
+
+        if (previews.TryGetValue(handle, out DesktopWindowPreview? leader))
+        {
+            leader.SetGroupDragLeader(true);
+            UpdateGroupStackTargets(GroupStackTransitionDuration);
+        }
+    }
+
+    private void HandleWindowDragCompleted(DesktopWindowDragCompletion completion)
+    {
+        if (completion.IsGroupDrag && completion.Handle == groupDragLeader)
+        {
+            DesktopSnapPlacement? snapPlacement = completion.SnapTarget?.Placement;
+            _ = groupDragCoordinator.Complete(completion.Handle, completion.HorizontalDelta, completion.VerticalDelta, snapPlacement);
+            ClearGroupDragVisuals(GroupStackTransitionDuration);
+        }
+
+        WindowDragCompleted?.Invoke(completion.Handle);
+    }
+
+    private void UpdateGroupStackTargets(TimeSpan? transitionDuration)
+    {
+        if (groupDragLeader == 0 || !previews.TryGetValue(groupDragLeader, out DesktopWindowPreview? leader))
         {
             return;
         }
 
-        pendingForegroundHandle = handle;
-
-        DesktopWindowPreview[] orderedPreviews = [.. previews
-            .Where(item => item.Key != handle)
-            .OrderBy(item => item.Value.ZIndex)
+        DesktopWindowPreview[] followers = [.. previews
+            .Where(item => item.Key != groupDragLeader && groupDragHandles.Contains(item.Key))
+            .OrderByDescending(item => item.Value.ZIndex)
             .ThenBy(item => (long)item.Key)
             .Select(item => item.Value)];
 
-        for (int zIndex = 0; zIndex < orderedPreviews.Length; zIndex++)
+        for (int index = 0; index < followers.Length; index++)
         {
-            orderedPreviews[zIndex].SetZIndex(zIndex);
+            int depth = index + 1;
+            double offset = Math.Min(depth, 6) * (8 / leader.LayoutScale);
+            float scale = Math.Max(0.86f, 1 - (Math.Min(depth, 6) * 0.025f));
+            followers[index].SetGroupStackTarget(leader.VisualX + offset, leader.VisualY + offset, scale, depth, transitionDuration);
+        }
+    }
+
+    private void ClearGroupDragVisuals(TimeSpan? transitionDuration)
+    {
+        foreach (nint handle in groupDragHandles)
+        {
+            if (previews.TryGetValue(handle, out DesktopWindowPreview? preview))
+            {
+                preview.ClearGroupDragVisual(transitionDuration);
+            }
         }
 
-        previews[handle].SetZIndex(orderedPreviews.Length);
+        groupDragCoordinator.Cancel();
+        groupDragHandles.Clear();
+        groupDragLeader = 0;
     }
 
     private TrackedWindow[] OrderWindows(IEnumerable<TrackedWindow> trackedWindows)
-    {
-        TrackedWindow[] orderedWindows = [.. trackedWindows
+        => [.. trackedWindows
             .OrderByDescending(window => window.ZIndex)
             .ThenBy(window => (long)window.Handle)];
-
-        if (pendingForegroundHandle == 0)
-        {
-            return orderedWindows;
-        }
-
-        int foregroundIndex = Array.FindIndex(orderedWindows, window => window.Handle == pendingForegroundHandle);
-
-        if (foregroundIndex < 0)
-        {
-            pendingForegroundHandle = 0;
-            return orderedWindows;
-        }
-
-        TrackedWindow foregroundWindow = orderedWindows[foregroundIndex];
-
-        for (int index = foregroundIndex; index < orderedWindows.Length - 1; index++)
-        {
-            orderedWindows[index] = orderedWindows[index + 1];
-        }
-
-        orderedWindows[^1] = foregroundWindow;
-
-        if (orderedWindows.All(window => window.Handle == pendingForegroundHandle || foregroundWindow.ZIndex <= window.ZIndex))
-        {
-            pendingForegroundHandle = 0;
-        }
-
-        return orderedWindows;
-    }
 
     private nint EnsureSelection(IEnumerable<TrackedWindow> trackedWindows)
     {
         if (string.IsNullOrWhiteSpace(filterText))
         {
-            return SetSelected(0);
+            bool focusStillExists = trackedWindows.Any(window => window.Handle == selection.FocusedHandle);
+            return SetFocused(focusStillExists ? selection.FocusedHandle : 0);
         }
 
         TrackedWindow[] matches = GetOrderedMatches(trackedWindows);
-        nint handle = matches.Any(window => window.Handle == selectedHandle) ? selectedHandle : matches.FirstOrDefault()?.Handle ?? 0;
+        nint handle = matches.Any(window => window.Handle == selection.FocusedHandle) ? selection.FocusedHandle : matches.FirstOrDefault()?.Handle ?? 0;
 
-        return SetSelected(handle);
+        return SetFocused(handle);
     }
 
     private TrackedWindow[] GetOrderedMatches(IEnumerable<TrackedWindow> trackedWindows) =>
@@ -325,30 +425,41 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
             .ThenBy(window => window.CanvasY)
             .ThenBy(window => (long)window.Handle)];
 
-    private nint SetSelected(nint handle)
+    private nint SetFocused(nint handle)
     {
-        if (selectedHandle == handle)
+        if (selection.FocusedHandle == handle)
         {
-            if (previews.TryGetValue(handle, out DesktopWindowPreview? selected))
+            if (previews.TryGetValue(handle, out DesktopWindowPreview? focused))
             {
-                selected.SetSelected(handle != 0);
+                focused.SetKeyboardFocused(handle != 0);
             }
 
             return handle;
         }
 
-        if (previews.TryGetValue(selectedHandle, out DesktopWindowPreview? previous))
+        if (previews.TryGetValue(selection.FocusedHandle, out DesktopWindowPreview? previous))
         {
-            previous.SetSelected(false);
+            previous.SetKeyboardFocused(false);
         }
 
-        selectedHandle = handle;
+        selection.Focus(handle);
 
-        if (previews.TryGetValue(selectedHandle, out DesktopWindowPreview? current))
+        if (previews.TryGetValue(selection.FocusedHandle, out DesktopWindowPreview? current))
         {
-            current.SetSelected(true);
+            current.SetKeyboardFocused(true);
         }
 
         return handle;
+    }
+
+    private void ClearSelectionVisuals()
+    {
+        foreach (nint handle in selection.SelectedHandles)
+        {
+            if (previews.TryGetValue(handle, out DesktopWindowPreview? preview))
+            {
+                preview.SetSelected(false);
+            }
+        }
     }
 }

@@ -5,6 +5,7 @@ using Infinity.UI.WinUI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using WindowExtensions = Elysium.Platform.Windows.WindowExtensions;
 
@@ -14,6 +15,15 @@ public sealed partial class DesktopOverviewView :
     DesktopOverlay
 {
     private const int EscapeVirtualKey = 0x1B;
+    private const int ControlVirtualKey = 0x11;
+    private const int LeftControlVirtualKey = 0xA2;
+    private const int RightControlVirtualKey = 0xA3;
+    private const int ShiftVirtualKey = 0x10;
+    private const int LeftShiftVirtualKey = 0xA0;
+    private const int RightShiftVirtualKey = 0xA1;
+    private const int MenuVirtualKey = 0x12;
+    private const int LeftMenuVirtualKey = 0xA4;
+    private const int RightMenuVirtualKey = 0xA5;
 
     private static readonly TimeSpan PreviewCleanupDelay = TimeSpan.FromMilliseconds(220);
 
@@ -25,6 +35,8 @@ public sealed partial class DesktopOverviewView :
     private readonly IKeyboardInputSource keyboardInputSource;
     private readonly DesktopOverviewConfiguration overviewConfiguration;
     private readonly DispatcherQueue dispatcherQueue;
+    private readonly HashSet<int> consumedKeyUps = [];
+    private readonly Lock consumedKeyUpsLock = new();
     private DesktopOverviewViewModel? subscribedViewModel;
     private DispatcherQueueTimer? previewCleanupTimer;
     private bool isCompletingDesktopPreview;
@@ -59,6 +71,7 @@ public sealed partial class DesktopOverviewView :
         Loaded += HandleLoaded;
         backgroundSource.BackgroundChanged += HandleBackgroundChanged;
         this.keyboardInputSource.KeyDown += HandleGlobalKeyDown;
+        this.keyboardInputSource.KeyUp += HandleGlobalKeyUp;
     }
 
     public DesktopOverviewViewModel ViewModel => (DesktopOverviewViewModel)DataContext;
@@ -106,14 +119,35 @@ public sealed partial class DesktopOverviewView :
 
     private void HandleGlobalKeyDown(object? sender, KeyEventArgs args)
     {
-        if (args.VirtualKeyCode != EscapeVirtualKey || !isOverlayOpen)
+        if (args.Handled || !isOverlayOpen)
         {
             return;
         }
 
+        if (args.VirtualKeyCode != EscapeVirtualKey)
+        {
+            bool controlDown = IsAnyKeyDown(ControlVirtualKey, LeftControlVirtualKey, RightControlVirtualKey);
+            bool shiftDown = IsAnyKeyDown(ShiftVirtualKey, LeftShiftVirtualKey, RightShiftVirtualKey);
+            bool menuDown = IsAnyKeyDown(MenuVirtualKey, LeftMenuVirtualKey, RightMenuVirtualKey);
+            args.Handled = desktopScrollPreview.TryHandleGlobalKeyDown(args.VirtualKeyCode, controlDown, shiftDown, menuDown);
+
+            if (args.Handled)
+            {
+                TrackConsumedKeyUp(args.VirtualKeyCode);
+            }
+
+            return;
+        }
+
         args.Handled = true;
+        TrackConsumedKeyUp(args.VirtualKeyCode);
 
         if (desktopScrollPreview.TryCancelEditor())
+        {
+            return;
+        }
+
+        if (desktopScrollPreview.TryClearWindowSelection())
         {
             return;
         }
@@ -136,6 +170,27 @@ public sealed partial class DesktopOverviewView :
             Interlocked.Exchange(ref globalDismissQueued, 0);
         }
     }
+
+    private void HandleGlobalKeyUp(object? sender, KeyEventArgs args)
+    {
+        lock (consumedKeyUpsLock)
+        {
+            args.Handled = consumedKeyUps.Remove(args.VirtualKeyCode);
+        }
+    }
+
+    private void TrackConsumedKeyUp(int virtualKeyCode)
+    {
+        lock (consumedKeyUpsLock)
+        {
+            consumedKeyUps.Add(virtualKeyCode);
+        }
+    }
+
+    private bool IsAnyKeyDown(int key, int leftKey, int rightKey) =>
+        keyboardInputSource.IsKeyDown(key) ||
+        keyboardInputSource.IsKeyDown(leftKey) ||
+        keyboardInputSource.IsKeyDown(rightKey);
 
     private void EnsureSubscribed()
     {

@@ -417,4 +417,11 @@
   <data name="DesktopWindowUntitled" xml:space="preserve"><value>Naamloos venster</value></data>
   <data name="DesktopWindowCenterOnPage" xml:space="preserve"><value>Centreren op pagina</value></data>
   <data name="DesktopWindowClose" xml:space="preserve"><value>Venster sluiten</value></data>
+  <data name="DesktopShortcutOverviewGroup.Text" xml:space="preserve"><value>In het overzicht</value></data>
+  <data name="DesktopShortcutOverviewNavigatePages.Text" xml:space="preserve"><value>Door pagina’s navigeren</value></data>
+  <data name="DesktopShortcutOverviewSelectWindows.Text" xml:space="preserve"><value>Vensters selecteren</value></data>
+  <data name="DesktopShortcutOverviewMoveSelected.Text" xml:space="preserve"><value>Geselecteerde vensters verplaatsen</value></data>
+  <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>Venster aan selectie toevoegen of eruit verwijderen</value></data>
+  <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>Geselecteerd venster openen</value></data>
+  <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>Vensters zoeken</value></data>
 +</root>

@@ -8,7 +8,7 @@ using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSurface, ITrackedWindowDragController dragController, IWindowNavigationCoordinator windowNavigationCoordinator, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, ILogger<DesktopWindowPreviewFactory> logger)
+public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSurface, ITrackedWindowDragController dragController, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, ILogger<DesktopWindowPreviewFactory> logger)
 {
     internal DesktopWindowPreview Create(Canvas canvas, Canvas focusCanvas, nint windowHandle, double layoutScale)
     {
@@ -18,6 +18,27 @@ public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSur
         double focusSecondaryMargin = 2 / visualScale;
         double focusSecondaryThickness = 1 / visualScale;
         CornerRadius cornerRadius = FluentVisualResources.GetOverlayCornerRadius();
+
+        Grid selectionVisual = new()
+        {
+            IsHitTestVisible = false,
+            Margin = new Thickness(-focusPrimaryThickness),
+            Visibility = Visibility.Collapsed
+        };
+
+        selectionVisual.Children.Add(new Border
+        {
+            Background = FluentVisualResources.GetBrush("AccentFillColorDefaultBrush", Color.FromArgb(255, 0, 120, 212)),
+            CornerRadius = new CornerRadius(cornerRadius.TopLeft + focusPrimaryThickness),
+            Opacity = 0.12
+        });
+
+        selectionVisual.Children.Add(new Border
+        {
+            BorderBrush = FluentVisualResources.GetBrush("AccentFillColorDefaultBrush", Color.FromArgb(255, 0, 120, 212)),
+            BorderThickness = new Thickness(focusPrimaryThickness),
+            CornerRadius = new CornerRadius(cornerRadius.TopLeft + focusPrimaryThickness)
+        });
 
         Grid focusVisual = new()
         {
@@ -57,9 +78,13 @@ public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSur
             Shadow = new ThemeShadow()
         };
 
+        Grid indicatorVisual = new();
+        indicatorVisual.Children.Add(selectionVisual);
+        indicatorVisual.Children.Add(focusVisual);
+
         Border focusHost = new()
         {
-            Child = focusVisual,
+            Child = indicatorVisual,
             IsHitTestVisible = false
         };
 
@@ -68,6 +93,6 @@ public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSur
 
         ThumbnailCompositionPreview? preview = ThumbnailCompositionPreview.Create(previewSurface, windowHandle, previewHost, logger);
 
-        return new DesktopWindowPreview(windowHandle, host, focusHost, preview, focusVisual, dragController, windowNavigationCoordinator, overviewDragScroller, dragPositionResolver, dragBoundaryCalculator, cursorConfinement, windowPlacementCoordinator, contextMenuBuilder, layoutScale);
+        return new DesktopWindowPreview(windowHandle, host, focusHost, preview, focusVisual, selectionVisual, dragController, overviewDragScroller, dragPositionResolver, dragBoundaryCalculator, cursorConfinement, windowPlacementCoordinator, contextMenuBuilder, layoutScale);
     }
 }

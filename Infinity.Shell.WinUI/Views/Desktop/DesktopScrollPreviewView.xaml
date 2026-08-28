@@ -6,8 +6,19 @@
     xmlns:Local="using:Infinity.Shell.WinUI"
     xmlns:Shell="using:Infinity.Shell"
     Background="Transparent"
+    CharacterReceived="HandleCharacterReceived"
     Opacity="0">
     <UserControl.Resources>
+        <Style x:Key="OverviewShortcutKeyStyle" TargetType="Border">
+            <Setter Property="MinWidth" Value="72" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="Background" Value="{ThemeResource ControlFillColorSecondaryBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource ControlStrokeColorSecondaryBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+        </Style>
         <Flyout x:Name="ApplicationPickerFlyout" Placement="Bottom">
             <Flyout.FlyoutPresenterStyle>
                 <Style TargetType="FlyoutPresenter">
@@ -144,6 +155,7 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                         <Grid Padding="24,20,24,16">
                             <StackPanel Spacing="4">
@@ -224,6 +236,46 @@
                                 </Grid>
                             </StackPanel>
                         </Border>
+                        <Border Grid.Row="3" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
+                            <StackPanel Padding="24,12,24,16" Spacing="8">
+                                <TextBlock
+                                    x:Uid="DesktopShortcutOverviewGroup"
+                                    FontSize="11"
+                                    FontWeight="SemiBold"
+                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                    CharacterSpacing="80" />
+                                <Grid MinHeight="36" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <TextBlock x:Uid="DesktopShortcutOverviewNavigatePages" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Style="{StaticResource OverviewShortcutKeyStyle}"><TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold" Text="←  →" /></Border>
+                                </Grid>
+                                <Grid MinHeight="36" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <TextBlock x:Uid="DesktopShortcutOverviewSelectWindows" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Style="{StaticResource OverviewShortcutKeyStyle}"><TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold" Text="↑  ↓" /></Border>
+                                </Grid>
+                                <Grid MinHeight="36" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <TextBlock x:Uid="DesktopShortcutOverviewMoveSelected" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Style="{StaticResource OverviewShortcutKeyStyle}"><TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold" Text="Shift + ← →" /></Border>
+                                </Grid>
+                                <Grid MinHeight="36" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <TextBlock x:Uid="DesktopShortcutOverviewMultiSelect" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Style="{StaticResource OverviewShortcutKeyStyle}"><TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold" Text="Ctrl + click" /></Border>
+                                </Grid>
+                                <Grid MinHeight="36" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <TextBlock x:Uid="DesktopShortcutOverviewOpenSelected" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Style="{StaticResource OverviewShortcutKeyStyle}"><TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold" Text="Enter" /></Border>
+                                </Grid>
+                                <Grid MinHeight="36" ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <TextBlock x:Uid="DesktopShortcutOverviewSearch" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Style="{StaticResource OverviewShortcutKeyStyle}"><TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold" Text="Type" /></Border>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
                     </Grid>
                 </Flyout>
             </Button.Flyout>
@@ -270,6 +322,7 @@
                     IsTabStop="False"
                     KeyDown="HandleWindowSearchBoxKeyDown"
                     KeyUp="HandleWindowSearchBoxKeyUp"
+                    LostFocus="HandleWindowSearchBoxLostFocus"
                     TextChanged="HandleWindowSearchBoxTextChanged"
                     VerticalContentAlignment="Center">
                     <TextBox.Resources>

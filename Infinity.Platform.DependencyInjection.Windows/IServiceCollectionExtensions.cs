@@ -32,6 +32,7 @@ public static class IServiceCollectionExtensions
 
             services.AddTransient<IHotKeysBuilder, HotKeysBuilder>();
             services.AddSingleton<IKeyLabelProvider, KeyLabelProvider>();
+            services.AddSingleton<IKeyboardTextTranslator, KeyboardTextTranslator>();
 
             services.AddSingleton<IKeyboardInputSource>(provider =>
                 new KeyboardInputSource(provider.GetRequiredService<ILogger<KeyboardInputSource>>()));

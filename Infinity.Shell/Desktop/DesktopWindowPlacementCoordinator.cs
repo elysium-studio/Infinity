@@ -87,6 +87,40 @@ public sealed class DesktopWindowPlacementCoordinator(IWindowStore windowStore,
         return true;
     }
 
+    public int MoveByPages(IEnumerable<nint> windowHandles, int pageDelta, int? maximumPageCount)
+    {
+        if (pageDelta == 0 || workspace.Width <= 0)
+        {
+            return 0;
+        }
+
+        List<(TrackedWindow Window, DesktopSnapPlacement Placement)> placements = [];
+
+        foreach (nint handle in windowHandles.Distinct())
+        {
+            if (!windowStore.TryGet(handle, out TrackedWindow? window))
+            {
+                continue;
+            }
+
+            int targetPage = GetPage(window) + pageDelta;
+
+            if (targetPage < 0 || maximumPageCount.HasValue && targetPage >= maximumPageCount.Value)
+            {
+                continue;
+            }
+
+            placements.Add((window, new DesktopSnapPlacement(
+                window.CanvasX + (pageDelta * (double)workspace.Width),
+                window.CanvasY,
+                window.Width,
+                window.Height)));
+        }
+
+        ApplyPlacements(placements);
+        return placements.Count;
+    }
+
     public bool TryClose(nint windowHandle) => windowCloser.TryClose(windowHandle);
 
     public int GetPage(TrackedWindow window)
