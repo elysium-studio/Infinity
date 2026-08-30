@@ -94,6 +94,24 @@
   <data name="OverviewSettingsSectionTitle" xml:space="preserve">
     <value>개요</value>
   </data>
+  <data name="OverviewBackdropCard.Header" xml:space="preserve">
+    <value>오버레이 배경</value>
+  </data>
+  <data name="OverviewBackdropCard.Description" xml:space="preserve">
+    <value>데스크톱 개요 뒤에 표시할 항목을 선택합니다</value>
+  </data>
+  <data name="OverviewBackdropWallpaperOption.Content" xml:space="preserve">
+    <value>배경 화면</value>
+  </data>
+  <data name="OverviewBackdropDarkOption.Content" xml:space="preserve">
+    <value>어둡게</value>
+  </data>
+  <data name="OverviewBackdropLightOption.Content" xml:space="preserve">
+    <value>밝게</value>
+  </data>
+  <data name="DesktopApplicationDockAllAppsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>모든 앱</value>
+  </data>
   <data name="AdvancedSettingsSectionTitle" xml:space="preserve">
     <value>고급</value>
   </data>

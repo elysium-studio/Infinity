@@ -87,7 +87,11 @@ public sealed partial class App
                     _ = debugLevel switch
                     {
                         DebugLaunchLevel.DesktopOverview => desktopOverview.ViewModel.OpenDesktopPreviewForDebugAsync(),
+                        DebugLaunchLevel.DesktopOverviewDark => OpenDesktopOverviewWithBackdropForDebugAsync(desktopOverview, startingHost.Services, DesktopOverviewBackdrop.Dark),
+                        DebugLaunchLevel.DesktopOverviewLight => OpenDesktopOverviewWithBackdropForDebugAsync(desktopOverview, startingHost.Services, DesktopOverviewBackdrop.Light),
                         DebugLaunchLevel.DesktopApplicationPicker => OpenDesktopApplicationPickerForDebugAsync(desktopOverview),
+                        DebugLaunchLevel.DesktopApplicationDock => OpenDesktopApplicationDockForDebugAsync(desktopOverview),
+                        DebugLaunchLevel.Settings => startingHost.Services.GetRequiredService<INavigator>().NavigateAsync("SettingsWindow"),
                         _ => Task.CompletedTask
                     };
                 });
@@ -125,11 +129,28 @@ public sealed partial class App
         await desktopOverview.OpenApplicationPickerForDebugAsync();
     }
 
+    private static Task OpenDesktopOverviewWithBackdropForDebugAsync(DesktopOverviewView desktopOverview,
+        IServiceProvider services,
+        DesktopOverviewBackdrop backdrop)
+    {
+        services.GetRequiredService<DesktopOverviewConfiguration>().Backdrop = backdrop;
+        return desktopOverview.ViewModel.OpenDesktopPreviewForDebugAsync();
+    }
+
+    private static async Task OpenDesktopApplicationDockForDebugAsync(DesktopOverviewView desktopOverview)
+    {
+        await desktopOverview.ViewModel.OpenDesktopPreviewForDebugAsync();
+    }
+
     private enum DebugLaunchLevel
     {
         None,
         DesktopOverview,
-        DesktopApplicationPicker
+        DesktopOverviewDark,
+        DesktopOverviewLight,
+        DesktopApplicationPicker,
+        DesktopApplicationDock,
+        Settings
     }
 #endif
 

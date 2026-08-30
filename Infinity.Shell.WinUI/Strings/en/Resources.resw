@@ -94,6 +94,24 @@
   <data name="OverviewSettingsSectionTitle" xml:space="preserve">
     <value>Overview</value>
   </data>
+  <data name="OverviewBackdropCard.Header" xml:space="preserve">
+    <value>Overlay backdrop</value>
+  </data>
+  <data name="OverviewBackdropCard.Description" xml:space="preserve">
+    <value>Choose what appears behind the desktop overview</value>
+  </data>
+  <data name="OverviewBackdropWallpaperOption.Content" xml:space="preserve">
+    <value>Wallpaper</value>
+  </data>
+  <data name="OverviewBackdropDarkOption.Content" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="OverviewBackdropLightOption.Content" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="DesktopApplicationDockAllAppsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>All apps</value>
+  </data>
   <data name="AdvancedSettingsSectionTitle" xml:space="preserve">
     <value>Advanced</value>
   </data>

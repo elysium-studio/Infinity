@@ -94,6 +94,24 @@
   <data name="OverviewSettingsSectionTitle" xml:space="preserve">
     <value>Przegląd</value>
   </data>
+  <data name="OverviewBackdropCard.Header" xml:space="preserve">
+    <value>Tło podglądu</value>
+  </data>
+  <data name="OverviewBackdropCard.Description" xml:space="preserve">
+    <value>Wybierz, co ma być wyświetlane za podglądem pulpitu</value>
+  </data>
+  <data name="OverviewBackdropWallpaperOption.Content" xml:space="preserve">
+    <value>Tapeta</value>
+  </data>
+  <data name="OverviewBackdropDarkOption.Content" xml:space="preserve">
+    <value>Ciemny</value>
+  </data>
+  <data name="OverviewBackdropLightOption.Content" xml:space="preserve">
+    <value>Jasny</value>
+  </data>
+  <data name="DesktopApplicationDockAllAppsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Wszystkie aplikacje</value>
+  </data>
   <data name="AdvancedSettingsSectionTitle" xml:space="preserve">
     <value>Zaawansowane</value>
   </data>

@@ -16,6 +16,11 @@
             IsHitTestVisible="False"
             Opacity="0" />
         <Border
+            x:Name="ThemeBackgroundSurface"
+            Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+            IsHitTestVisible="False"
+            Opacity="0" />
+        <Border
             x:Name="BackgroundTint"
             Background="{ThemeResource SmokeFillColorDefaultBrush}"
             IsHitTestVisible="False" />

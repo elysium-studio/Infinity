@@ -94,6 +94,24 @@
   <data name="OverviewSettingsSectionTitle" xml:space="preserve">
     <value>Vue d’ensemble</value>
   </data>
+  <data name="OverviewBackdropCard.Header" xml:space="preserve">
+    <value>Arrière-plan de la vue d’ensemble</value>
+  </data>
+  <data name="OverviewBackdropCard.Description" xml:space="preserve">
+    <value>Choisissez ce qui apparaît derrière la vue d’ensemble du bureau</value>
+  </data>
+  <data name="OverviewBackdropWallpaperOption.Content" xml:space="preserve">
+    <value>Papier peint</value>
+  </data>
+  <data name="OverviewBackdropDarkOption.Content" xml:space="preserve">
+    <value>Sombre</value>
+  </data>
+  <data name="OverviewBackdropLightOption.Content" xml:space="preserve">
+    <value>Clair</value>
+  </data>
+  <data name="DesktopApplicationDockAllAppsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Toutes les applications</value>
+  </data>
   <data name="AdvancedSettingsSectionTitle" xml:space="preserve">
     <value>Avancé</value>
   </data>

@@ -32,6 +32,8 @@ public sealed class DesktopModule :
             .AddSingleton<DesktopApplicationPlacementResolver>()
             .AddSingleton<DesktopApplicationLaunchCoordinator>()
             .AddSingleton<IDesktopApplicationPickerCatalog, DesktopApplicationPickerCatalog>()
+            .AddSingleton<IRecentApplicationStore, RecentApplicationStore>()
+            .AddSingleton<IDesktopApplicationDockCatalog, DesktopApplicationDockCatalog>()
             .AddSingleton<DesktopDragBoundaryCalculator>()
             .AddSingleton<DesktopPageReorderController>()
             .AddSingleton<DesktopBackgroundBrushFactory>()
@@ -55,6 +57,7 @@ public sealed class DesktopModule :
                 provider.GetRequiredService<Settings>(),
                 provider.GetRequiredService<IKeyLabelProvider>()))
             .AddSingleton<DesktopApplicationPickerViewModel>()
+            .AddSingleton<DesktopApplicationDockViewModel>()
             .AddSingleton<PageTitleStore>()
             .AddSingleton<PageLayoutStore>()
             .AddSingleton<PageNavigationPublisher>()
@@ -80,6 +83,7 @@ public sealed class DesktopModule :
         IWindowPreviewSurface windowPreviewSurface = provider.GetRequiredService<IWindowPreviewSurface>();
         IWindowCollection windowCollection = provider.GetRequiredService<IWindowCollection>();
         IPanState panState = provider.GetRequiredService<IPanState>();
+        IPager pager = provider.GetRequiredService<IPager>();
         IScroller scroller = provider.GetRequiredService<IScroller>();
         IWorkspace workspace = provider.GetRequiredService<IWorkspace>();
         DesktopScrollPreviewAnimator animator = provider.GetRequiredService<DesktopScrollPreviewAnimator>();
@@ -89,11 +93,12 @@ public sealed class DesktopModule :
         DesktopDragCursorConfinement cursorConfinement = provider.GetRequiredService<DesktopDragCursorConfinement>();
         DesktopShortcutHintsViewModel shortcutHints = provider.GetRequiredService<DesktopShortcutHintsViewModel>();
         DesktopApplicationPickerViewModel applicationPicker = provider.GetRequiredService<DesktopApplicationPickerViewModel>();
+        DesktopApplicationDockViewModel applicationDock = provider.GetRequiredService<DesktopApplicationDockViewModel>();
         DesktopApplicationLaunchCoordinator applicationLaunchCoordinator = provider.GetRequiredService<DesktopApplicationLaunchCoordinator>();
         DesktopOverviewInputController inputController = provider.GetRequiredService<DesktopOverviewInputController>();
         DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator = provider.GetRequiredService<DesktopWindowSnapInteractionCoordinator>();
 
-        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, panState, scroller, workspace, animator, layoutPresenter, pageStrip, previews, cursorConfinement, shortcutHints, applicationPicker, applicationLaunchCoordinator, inputController, snapInteractionCoordinator);
+        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, panState, pager, scroller, workspace, animator, layoutPresenter, pageStrip, previews, cursorConfinement, shortcutHints, applicationPicker, applicationDock, applicationLaunchCoordinator, inputController, snapInteractionCoordinator);
     }
 
     private static DesktopOverviewView CreateDesktopOverviewView(IServiceProvider provider)

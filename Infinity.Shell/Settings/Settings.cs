@@ -1,5 +1,6 @@
 using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
+using Infinity.Platform.Abstractions;
 
 namespace Infinity.Shell;
 
@@ -11,9 +12,13 @@ public sealed class Settings
 
     public bool EnableSnapAssistance { get; set; } = true;
 
+    public DesktopOverviewBackdrop OverviewBackdrop { get; set; } = DesktopOverviewBackdrop.Wallpaper;
+
     public Dictionary<int, DesktopSnapLayoutKind>? PageLayouts { get; set; } = [];
 
     public Dictionary<int, string>? PageTitles { get; set; } = [];
+
+    public List<LaunchableApplication>? RecentApplications { get; set; } = [];
 
     public List<List<int>> ScrollModifierKeys { get; set; } =
         [

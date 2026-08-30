@@ -94,6 +94,24 @@
   <data name="OverviewSettingsSectionTitle" xml:space="preserve">
     <value>Visão geral</value>
   </data>
+  <data name="OverviewBackdropCard.Header" xml:space="preserve">
+    <value>Tela de fundo da visão geral</value>
+  </data>
+  <data name="OverviewBackdropCard.Description" xml:space="preserve">
+    <value>Escolha o que aparece atrás da visão geral da área de trabalho</value>
+  </data>
+  <data name="OverviewBackdropWallpaperOption.Content" xml:space="preserve">
+    <value>Papel de parede</value>
+  </data>
+  <data name="OverviewBackdropDarkOption.Content" xml:space="preserve">
+    <value>Escuro</value>
+  </data>
+  <data name="OverviewBackdropLightOption.Content" xml:space="preserve">
+    <value>Claro</value>
+  </data>
+  <data name="DesktopApplicationDockAllAppsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Todos os aplicativos</value>
+  </data>
   <data name="AdvancedSettingsSectionTitle" xml:space="preserve">
     <value>Avançado</value>
   </data>

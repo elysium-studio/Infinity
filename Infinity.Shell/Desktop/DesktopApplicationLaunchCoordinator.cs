@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 namespace Infinity.Shell;
 
 public sealed class DesktopApplicationLaunchCoordinator(IApplicationLauncher launcher,
+    IRecentApplicationStore recentApplicationStore,
     IWindowCollection windowCollection,
     IWindowStore windowStore,
     IForegroundWindowTracker foregroundWindowTracker,
@@ -88,6 +89,8 @@ public sealed class DesktopApplicationLaunchCoordinator(IApplicationLauncher lau
             {
                 return null;
             }
+
+            await recentApplicationStore.RecordAsync(application, cancellationToken);
 
             using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeout.CancelAfter(LaunchTimeout);

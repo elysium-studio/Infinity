@@ -59,6 +59,8 @@ public sealed partial class DesktopOverviewView :
         this.overviewConfiguration = overviewConfiguration;
         dispatcherQueue = DispatcherQueue;
 
+        backdropAnimator.Reset(BackgroundSurface);
+        backdropAnimator.Reset(ThemeBackgroundSurface);
         backdropAnimator.Reset(BackgroundTint);
         DesktopPreviewContent.Content = desktopScrollPreview;
         desktopScrollPreview.BackgroundInvoked += HandleBackgroundInvoked;
@@ -266,6 +268,11 @@ public sealed partial class DesktopOverviewView :
 
     private void HandleBackgroundChanged(object? sender, EventArgs args)
     {
+        if (overviewConfiguration.Backdrop != DesktopOverviewBackdrop.Wallpaper)
+        {
+            return;
+        }
+
         if (dispatcherQueue.HasThreadAccess)
         {
             PrepareBackground();
@@ -278,6 +285,11 @@ public sealed partial class DesktopOverviewView :
 
     private async void PrepareBackground()
     {
+        if (overviewConfiguration.Backdrop != DesktopOverviewBackdrop.Wallpaper)
+        {
+            return;
+        }
+
         DesktopBackground background = backgroundSource.GetBackground();
         bool prepared = await wallpaperPresenter.PrepareAsync(BackgroundSurface, background);
 
@@ -295,28 +307,49 @@ public sealed partial class DesktopOverviewView :
 
     private async void OpenOverview(int generation)
     {
-        DesktopBackground background = backgroundSource.GetBackground();
-        bool prepared = await wallpaperPresenter.PrepareAsync(BackgroundSurface, background);
+        DesktopOverviewBackdrop backdrop = overviewConfiguration.Backdrop;
 
-        if (!prepared)
+        if (backdrop == DesktopOverviewBackdrop.Wallpaper)
+        {
+            DesktopBackground background = backgroundSource.GetBackground();
+            bool prepared = await wallpaperPresenter.PrepareAsync(BackgroundSurface, background);
+            backdrop = prepared ? DesktopOverviewBackdrop.Wallpaper : DesktopOverviewBackdrop.Dark;
+        }
+
+        dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () => PresentOverview(generation, backdrop));
+    }
+
+    private void PresentOverview(int generation, DesktopOverviewBackdrop backdrop)
+    {
+        if (generation != openingGeneration || !IsOpen)
         {
             return;
         }
 
-        dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () => PresentOverview(generation));
-    }
-
-    private void PresentOverview(int generation)
-    {
-        if (generation != openingGeneration || !IsOpen || !wallpaperPresenter.Attach(BackgroundSurface))
+        if (backdrop == DesktopOverviewBackdrop.Wallpaper && !wallpaperPresenter.Attach(BackgroundSurface))
         {
-            return;
+            backdrop = DesktopOverviewBackdrop.Dark;
+        }
+
+        if (backdrop == DesktopOverviewBackdrop.Wallpaper)
+        {
+            backdropAnimator.Reset(ThemeBackgroundSurface);
+            backdropAnimator.AnimateIn(BackgroundSurface);
+            backdropAnimator.AnimateIn(BackgroundTint);
+        }
+        else
+        {
+            wallpaperPresenter.Detach();
+            ThemeBackgroundSurface.RequestedTheme = backdrop == DesktopOverviewBackdrop.Light
+                ? ElementTheme.Light
+                : ElementTheme.Dark;
+            backdropAnimator.Reset(BackgroundSurface);
+            backdropAnimator.Reset(BackgroundTint);
+            backdropAnimator.AnimateIn(ThemeBackgroundSurface);
         }
 
         WindowExtensions.SetTopMost(Handle, true);
         inputController.SetInputEnabled(Handle, true);
-        backdropAnimator.AnimateIn(BackgroundSurface);
-        backdropAnimator.AnimateIn(BackgroundTint);
 
         if (ViewModel.IsDesktopPreviewActive)
         {
@@ -426,6 +459,7 @@ public sealed partial class DesktopOverviewView :
         isDesktopPreviewAnimationStarted = false;
         wallpaperPresenter.Detach();
         backdropAnimator.Reset(BackgroundSurface);
+        backdropAnimator.Reset(ThemeBackgroundSurface);
         backdropAnimator.Reset(BackgroundTint);
         desktopScrollPreview.Deactivate();
         WindowExtensions.SetTopMost(Handle, false);

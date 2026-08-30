@@ -14,6 +14,7 @@ using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Infinity.Shell.WinUI;
 
@@ -23,6 +24,7 @@ public sealed partial class DesktopScrollPreviewView :
     private readonly IWindowPreviewSurface windowPreviewSurface;
     private readonly IWindowCollection windowCollection;
     private readonly IPanState panState;
+    private readonly IPager pager;
     private readonly IScroller scroller;
     private readonly IWorkspace workspace;
     private readonly DesktopScrollPreviewAnimator animator;
@@ -42,13 +44,14 @@ public sealed partial class DesktopScrollPreviewView :
     private int overlayScreenOriginY;
     private int workAreaOffsetY;
 
-    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IPanState panState, IScroller scroller, IWorkspace workspace, DesktopScrollPreviewAnimator animator, DesktopOverviewLayoutPresenter layoutPresenter, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator, DesktopOverviewInputController inputController, DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator)
+    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IPanState panState, IPager pager, IScroller scroller, IWorkspace workspace, DesktopScrollPreviewAnimator animator, DesktopOverviewLayoutPresenter layoutPresenter, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationDockViewModel applicationDock, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator, DesktopOverviewInputController inputController, DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator)
     {
         InitializeComponent();
 
         this.windowPreviewSurface = windowPreviewSurface;
         this.windowCollection = windowCollection;
         this.panState = panState;
+        this.pager = pager;
         this.scroller = scroller;
         this.workspace = workspace;
         this.animator = animator;
@@ -61,15 +64,18 @@ public sealed partial class DesktopScrollPreviewView :
         this.snapInteractionCoordinator = snapInteractionCoordinator;
         ShortcutHints = shortcutHints;
         ApplicationPicker = applicationPicker;
+        ApplicationDock = applicationDock;
 
         this.pageStrip.PageInvoked += HandlePageInvoked;
-        this.pageStrip.ApplicationPickerRequested += HandleApplicationPickerRequested;
         this.pageStrip.ReorderPreviewChanged += HandlePageReorderPreviewChanged;
         this.previews.WindowInvoked += HandleWindowInvoked;
         this.previews.WindowPositionChanged += HandleWindowPositionChanged;
         this.inputController.WindowInvoked += HandleWindowInvoked;
 
         ElementCompositionPreview.SetIsTranslationEnabled(PreviewSurface, true);
+        ElementCompositionPreview.SetIsTranslationEnabled(ApplicationDockSurface, true);
+        ApplicationDockSurface.Shadow = new ThemeShadow();
+        ApplicationDockSurface.Translation = new Vector3(0, 0, 64);
     }
 
     public event EventHandler? BackgroundInvoked;
@@ -87,6 +93,8 @@ public sealed partial class DesktopScrollPreviewView :
     public DesktopShortcutHintsViewModel ShortcutHints { get; }
 
     public DesktopApplicationPickerViewModel ApplicationPicker { get; }
+
+    public DesktopApplicationDockViewModel ApplicationDock { get; }
 
     public Visibility ToVisibility(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
 
@@ -111,7 +119,7 @@ public sealed partial class DesktopScrollPreviewView :
     }
 
 #if DEBUG
-    internal void OpenApplicationPickerForDebug() => pageStrip.RequestApplicationPickerForDebug();
+    internal void OpenApplicationPickerForDebug() => _ = OpenApplicationPickerAsync(ApplicationDockSurface, new DesktopApplicationTarget(pager.CurrentPage));
 #endif
 
     public void Prepare(nint ownerWindowHandle, int screenOriginY)
@@ -259,6 +267,8 @@ public sealed partial class DesktopScrollPreviewView :
         WindowSearchBox.IsTabStop = value;
         ShortcutHintSurface.IsHitTestVisible = value;
         ShortcutHintSurface.IsTabStop = value;
+        ApplicationDockSurface.IsHitTestVisible = value;
+        AllApplicationsButton.IsTabStop = value;
         SettingsButton.IsHitTestVisible = value;
         SettingsButton.IsTabStop = value;
         pageStrip.SetInteractionEnabled(value);
@@ -301,7 +311,8 @@ public sealed partial class DesktopScrollPreviewView :
         monitorOriginY = y;
         workAreaOffsetY = offsetY;
         PreviewSurface.Translation = new Vector3(0, workAreaOffsetY, 0);
-        ShortcutHintSurface.Margin = new Thickness(0, Math.Max(0, workAreaOffsetY + workspace.Height - 60), 0, 0);
+        ShortcutHintSurface.Margin = new Thickness(0, Math.Max(0, workAreaOffsetY + workspace.Height - 60), 24, 0);
+        ApplicationDockSurface.Margin = new Thickness(0, Math.Max(0, workAreaOffsetY + workspace.Height - 88), 0, 0);
         pageStrip.SetWorkAreaOffsetY(workAreaOffsetY);
         cursorConfinement.SetWorkAreaOffsetY(workAreaOffsetY);
         snapInteractionCoordinator.UpdateMonitorOrigin(monitorOriginX, monitorOriginY);
@@ -414,7 +425,10 @@ public sealed partial class DesktopScrollPreviewView :
         }
     }
 
-    private async void HandleApplicationPickerRequested(DesktopApplicationPickerRequest request)
+    private async void HandleAllApplicationsClicked(object sender, RoutedEventArgs args)
+        => await OpenApplicationPickerAsync(ApplicationDockSurface, new DesktopApplicationTarget(pager.CurrentPage));
+
+    private async Task OpenApplicationPickerAsync(FrameworkElement anchor, DesktopApplicationTarget target)
     {
         if (!isRunning)
         {
@@ -423,7 +437,7 @@ public sealed partial class DesktopScrollPreviewView :
 
         try
         {
-            await ApplicationPicker.LoadAsync(request.Target);
+            await ApplicationPicker.LoadAsync(target);
             DispatcherQueue.TryEnqueue(() =>
             {
                 if (!isRunning)
@@ -431,12 +445,20 @@ public sealed partial class DesktopScrollPreviewView :
                     return;
                 }
 
-                ApplicationPickerFlyout.ShowAt(request.Anchor);
+                ApplicationPickerFlyout.ShowAt(anchor);
                 _ = ApplicationSearchBox.Focus(FocusState.Programmatic);
             });
         }
         catch (OperationCanceledException)
         {
+        }
+    }
+
+    private async void HandleDockApplicationClicked(object sender, RoutedEventArgs args)
+    {
+        if (sender is FrameworkElement { Tag: DesktopApplicationPickerItemViewModel item })
+        {
+            await LaunchApplicationAsync(item.Application, new DesktopApplicationTarget(pager.CurrentPage), hidePicker: false);
         }
     }
 
@@ -447,9 +469,21 @@ public sealed partial class DesktopScrollPreviewView :
             return;
         }
 
-        LaunchableApplication application = item.Application;
-        DesktopApplicationTarget target = ApplicationPicker.Target;
-        ApplicationPickerFlyout.Hide();
+        await LaunchApplicationAsync(item.Application, ApplicationPicker.Target, hidePicker: true);
+    }
+
+    private async Task LaunchApplicationAsync(LaunchableApplication application, DesktopApplicationTarget target, bool hidePicker)
+    {
+        if (!isRunning)
+        {
+            return;
+        }
+
+        if (hidePicker)
+        {
+            ApplicationPickerFlyout.Hide();
+        }
+
         applicationLaunchCancellation?.Cancel();
         applicationLaunchCancellation?.Dispose();
         applicationLaunchCancellation = new CancellationTokenSource();

@@ -4,7 +4,7 @@ namespace Infinity.Tests;
 
 public sealed class DesktopPageTitleViewModelTests
 {
-    private readonly DesktopPageTitleViewModel viewModel = new(new DesktopPageEditorLabels(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty), new DesktopSnapLayoutCatalog());
+    private readonly DesktopPageTitleViewModel viewModel = new(new DesktopPageEditorLabels(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty), new DesktopSnapLayoutCatalog());
 
     [Fact]
     public void ArrangeRequestsCurrentConfiguredLayout()

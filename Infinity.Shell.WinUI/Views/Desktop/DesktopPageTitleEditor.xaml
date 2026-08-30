@@ -94,7 +94,6 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="36" />
-                            <ColumnDefinition Width="36" />
                         </Grid.ColumnDefinitions>
                         <Rectangle
                             Grid.Column="0"
@@ -102,20 +101,6 @@
                             Margin="4"
                             VerticalAlignment="Stretch"
                             Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
-                        <Button
-                            Grid.Column="2"
-                            Width="36"
-                            Height="36"
-                            Padding="0"
-                            AutomationProperties.Name="{x:Bind ViewModel.OpenApplicationLabel}"
-                            Click="HandleOpenApplicationClicked"
-                            ToolTipService.ToolTip="{x:Bind ViewModel.OpenApplicationLabel}">
-                            <Button.Resources>
-                                <SolidColorBrush x:Key="ButtonBackground" Color="Transparent" />
-                                <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
-                            </Button.Resources>
-                            <FontIcon FontSize="16" Glyph="&#xE710;" />
-                        </Button>
                         <Button
                             Grid.Column="1"
                             Width="36"

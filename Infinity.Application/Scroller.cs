@@ -20,6 +20,7 @@ public sealed class Scroller(IPanState state,
     IDeltaScrollMotion easingMotion,
     IDeltaScrollMotion navigationMotion,
     IVelocityScrollMotion momentumMotion,
+    IScrollSnapTargetResolver snapTargetResolver,
     Action startTimer,
     Action stopTimer,
     ILogger<Scroller> logger) :
@@ -99,7 +100,7 @@ public sealed class Scroller(IPanState state,
             springVelocity = 0;
             isSpinging = false;
             haltRequested = false;
-            CompleteScroll();
+            CompleteScroll(allowSnap: false);
             return;
         }
 
@@ -165,7 +166,7 @@ public sealed class Scroller(IPanState state,
 
         if (!pixelMotion.IsActive && !easingMotion.IsActive && !navigationMotion.IsActive && !momentumMotion.IsActive && !isSpinging)
         {
-            CompleteScroll();
+            CompleteScroll(allowSnap: true);
         }
     }
 
@@ -332,10 +333,34 @@ public sealed class Scroller(IPanState state,
         ScheduleMoveGuardRelease();
     }
 
-    private void CompleteScroll()
+    private void CompleteScroll(bool allowSnap)
     {
+        if (allowSnap && TryStartSnapAnimation())
+        {
+            return;
+        }
+
         stopTimer();
         ScrollStopped?.Invoke(this, EventArgs.Empty);
+    }
+
+    private bool TryStartSnapAnimation()
+    {
+        if (!snapTargetResolver.TryResolve(state.Offset, state.MinOffset, state.MaxOffset, out double targetOffset))
+        {
+            return false;
+        }
+
+        navigationMotion.Reset();
+        navigationMotion.AddDelta(targetOffset - state.Offset);
+
+        if (!navigationMotion.IsActive)
+        {
+            return false;
+        }
+
+        dispatcher.Dispatch(startTimer);
+        return true;
     }
 
     private bool IsMotionActive() =>

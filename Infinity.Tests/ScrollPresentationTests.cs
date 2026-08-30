@@ -111,6 +111,38 @@ public sealed class ScrollPresentationTests
         Assert.Equal(60, state.Offset);
     }
 
+    [Fact]
+    public void ScrollCompletionAnimatesToTheSnapTargetBeforeStopping()
+    {
+        WindowStore store = new();
+        PanState state = new();
+        state.SetMaxOffset(2000);
+        TestWindowMover mover = new();
+        QueuedDeltaScrollMotion pixelMotion = new(600);
+        QueuedDeltaScrollMotion navigationMotion = new();
+        FixedScrollSnapTargetResolver snapTargetResolver = new(1000);
+        using Scroller scroller = CreateScroller(state,
+            store,
+            mover,
+            pixelMotion: pixelMotion,
+            navigationMotion: navigationMotion,
+            snapTargetResolver: snapTargetResolver);
+        int stoppedCount = 0;
+        scroller.ScrollStopped += (_, _) => stoppedCount++;
+
+        scroller.OnTick();
+
+        Assert.Equal(600, state.Offset);
+        Assert.True(navigationMotion.IsActive);
+        Assert.Equal(0, stoppedCount);
+
+        scroller.OnTick();
+
+        Assert.Equal(1000, state.Offset);
+        Assert.False(navigationMotion.IsActive);
+        Assert.Equal(1, stoppedCount);
+    }
+
     private static Scroller CreateScroller(PanState state,
         WindowStore store,
         TestWindowMover mover,
@@ -118,7 +150,8 @@ public sealed class ScrollPresentationTests
         IDeltaScrollMotion? pixelMotion = null,
         IScrollInputSource? source = null,
         IDeltaScrollMotion? easingMotion = null,
-        IDeltaScrollMotion? navigationMotion = null) =>
+        IDeltaScrollMotion? navigationMotion = null,
+        IScrollSnapTargetResolver? snapTargetResolver = null) =>
         new(state,
             presentationSession ?? new ScrollPresentationSession(),
             store,
@@ -133,6 +166,7 @@ public sealed class ScrollPresentationTests
             easingMotion ?? new TestDeltaScrollMotion(),
             navigationMotion ?? new TestDeltaScrollMotion(),
             new TestVelocityScrollMotion(),
+            snapTargetResolver ?? new TestScrollSnapTargetResolver(),
             () => { },
             () => { },
             NullLogger<Scroller>.Instance);
@@ -278,6 +312,26 @@ public sealed class ScrollPresentationTests
 
         public void Reset()
         {
+        }
+    }
+
+    private sealed class TestScrollSnapTargetResolver :
+        IScrollSnapTargetResolver
+    {
+        public bool TryResolve(double offset, double minimumOffset, double maximumOffset, out double targetOffset)
+        {
+            targetOffset = offset;
+            return false;
+        }
+    }
+
+    private sealed class FixedScrollSnapTargetResolver(double target) :
+        IScrollSnapTargetResolver
+    {
+        public bool TryResolve(double offset, double minimumOffset, double maximumOffset, out double targetOffset)
+        {
+            targetOffset = Math.Clamp(target, minimumOffset, maximumOffset);
+            return Math.Abs(targetOffset - offset) >= 0.5;
         }
     }
 }

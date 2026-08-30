@@ -77,6 +77,17 @@ public sealed class DesktopSettingsModule :
                     (config, dragScrollSpeed) => config.DragScrollSpeed = (DragScrollSpeed)dragScrollSpeed))
             .AddViewFor<OverviewEdgeScrollingView, IScrollingViewModel, OverviewEdgeScrollingViewModel>(ServiceLifetime.Transient, _ => new OverviewEdgeScrollingView(), CreateOverviewEdgeScrollingViewModel)
             .AddViewFor<OverviewView, IDesktopViewModel, OverviewViewModel>(ServiceLifetime.Transient, _ => new OverviewView(), CreateOverviewViewModel)
+            .AddViewFor<OverviewBackdropView, IOverviewViewModel, OverviewBackdropViewModel>(ServiceLifetime.Transient,
+                _ => new OverviewBackdropView(),
+                provider => new OverviewBackdropViewModel(provider,
+                    provider.GetRequiredService<IServiceFactory>(),
+                    provider.GetRequiredService<IMessenger>(),
+                    provider.GetRequiredService<IDisposer>(),
+                    provider.GetRequiredService<IDispatcher>(),
+                    provider.GetRequiredService<Settings>(),
+                    provider.GetRequiredService<IWritableOptions<Settings>>(),
+                    config => (int)config.OverviewBackdrop,
+                    (config, backdrop) => config.OverviewBackdrop = (DesktopOverviewBackdrop)backdrop))
             .AddViewFor<SnapAssistanceView, IOverviewViewModel, SnapAssistanceViewModel>(ServiceLifetime.Transient, _ => new SnapAssistanceView(), CreateSnapAssistanceViewModel)
             .AddViewFor<SpanCompatibleDisplaysView, IOverviewViewModel, SpanCompatibleDisplaysViewModel>(ServiceLifetime.Transient, _ => new SpanCompatibleDisplaysView(), CreateSpanCompatibleDisplaysViewModel)
             .AddViewFor<AdvancedView, IDesktopViewModel, AdvancedViewModel>(ServiceLifetime.Transient, _ => new AdvancedView(), CreateAdvancedViewModel)

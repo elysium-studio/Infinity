@@ -67,6 +67,7 @@ public sealed class ConfigurationModule :
             {
                 DesktopOverviewConfiguration configuration = provider.GetRequiredService<DesktopOverviewConfiguration>();
 
+                configuration.Backdrop = options.OverviewBackdrop;
                 configuration.IsEdgeScrollingEnabled = options.EnableOverviewEdgeScrolling;
                 configuration.IsMonitorSpanningEnabled = options.SpanCompatibleDisplays;
                 configuration.IsSnapAssistanceEnabled = options.EnableSnapAssistance;
@@ -89,6 +90,7 @@ public sealed class ConfigurationModule :
 
                 return new DesktopOverviewConfiguration
                 {
+                    Backdrop = settings.OverviewBackdrop,
                     IsEdgeScrollingEnabled = settings.EnableOverviewEdgeScrolling,
                     IsMonitorSpanningEnabled = settings.SpanCompatibleDisplays,
                     IsSnapAssistanceEnabled = settings.EnableSnapAssistance

@@ -22,7 +22,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
     private readonly Dictionary<int, DesktopPagePreview> visiblePages = [];
     private readonly List<DesktopPagePreview> pagePool = [];
     private readonly Stack<DesktopPagePreview> availablePages = [];
-    private readonly DesktopPageEditorLabels editorLabels = new(localizer.GetText("PageTitleEditButton"), localizer.GetText("PageTitleSaveButton"), localizer.GetText("PageTitleCancelButton"), localizer.GetText("PageLayoutEditButton"), localizer.GetText("PageLayoutArrangeButton"), localizer.GetText("PageLayoutClearButton"), localizer.GetText("PageOpenApplicationButton"));
+    private readonly DesktopPageEditorLabels editorLabels = new(localizer.GetText("PageTitleEditButton"), localizer.GetText("PageTitleSaveButton"), localizer.GetText("PageTitleCancelButton"), localizer.GetText("PageLayoutEditButton"), localizer.GetText("PageLayoutArrangeButton"), localizer.GetText("PageLayoutClearButton"));
     private Canvas? host;
     private Canvas? shadowHost;
     private Canvas? titleHost;
@@ -44,26 +44,9 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
 
     public event Action<int>? PageInvoked;
 
-    internal event Action<DesktopApplicationPickerRequest>? ApplicationPickerRequested;
-
     public event Action<DesktopPageReorderPreviewState?, TimeSpan?>? ReorderPreviewChanged;
 
     internal bool IsEditorActive => visiblePages.Values.Any(page => page.TitleEditor.ViewModel.IsEditing);
-
-#if DEBUG
-    internal bool RequestApplicationPickerForDebug()
-    {
-        DesktopPagePreview? page = visiblePages.OrderBy(pair => pair.Key).Select(pair => pair.Value).FirstOrDefault();
-
-        if (!started || page is null)
-        {
-            return false;
-        }
-
-        HandleOpenApplicationRequested(page, page.TitleEditor);
-        return true;
-    }
-#endif
 
     public void Start(Canvas canvas, Canvas shadowCanvas, Canvas titleCanvas, FrameworkElement scaleElement, double scale)
     {
@@ -126,7 +109,6 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             page.TitleEditor.ViewModel.TitleSubmitted -= HandleTitleSubmitted;
             page.TitleEditor.ViewModel.LayoutSubmitted -= HandleLayoutSubmitted;
             page.TitleEditor.ViewModel.ArrangeRequested -= HandleArrangeRequested;
-            page.OpenApplicationRequested -= HandleOpenApplicationRequested;
             page.Reset();
             page.Dispose();
         }
@@ -442,7 +424,6 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             page.TitleEditor.ViewModel.TitleSubmitted += HandleTitleSubmitted;
             page.TitleEditor.ViewModel.LayoutSubmitted += HandleLayoutSubmitted;
             page.TitleEditor.ViewModel.ArrangeRequested += HandleArrangeRequested;
-            page.OpenApplicationRequested += HandleOpenApplicationRequested;
 
             page.Hide();
             pagePool.Add(page);
@@ -478,16 +459,6 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         {
             PageInvoked?.Invoke(page.Page);
         }
-    }
-
-    private void HandleOpenApplicationRequested(DesktopPagePreview page, FrameworkElement anchor)
-    {
-        if (!started || reorderState is not null)
-        {
-            return;
-        }
-
-        ApplicationPickerRequested?.Invoke(new DesktopApplicationPickerRequest(anchor, new DesktopApplicationTarget(page.Page, page.TitleEditor.ViewModel.Layout)));
     }
 
     private void HandlePageDragStarted(DesktopPagePreview page)
