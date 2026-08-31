@@ -76,7 +76,6 @@ public sealed class DesktopOverviewSessionControllerTests
                 new TestDispatcher(),
                 Pointer,
                 ModifierKeyState,
-                new TestWindowDragScroller(),
                 new TestPageGestureSource(),
                 new TestPager(),
                 Scroller,
@@ -133,24 +132,6 @@ public sealed class DesktopOverviewSessionControllerTests
         }
 
         public void Dispose() => GC.SuppressFinalize(this);
-    }
-
-    private sealed class TestWindowDragScroller : IWindowDragScroller
-    {
-        event Action? IWindowDragScroller.DragStarted { add { } remove { } }
-        event Action? IWindowDragScroller.DragMoved { add { } remove { } }
-        event Action? IWindowDragScroller.DragScrolled { add { } remove { } }
-        event Action? IWindowDragScroller.DragStopped { add { } remove { } }
-
-        public bool IsAutoScrolling => false;
-
-        public void Start()
-        {
-        }
-
-        public void Stop()
-        {
-        }
     }
 
     private sealed class TestPageGestureSource : IPageGestureSource

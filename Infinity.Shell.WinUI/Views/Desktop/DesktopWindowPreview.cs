@@ -481,7 +481,7 @@ internal sealed class DesktopWindowPreview :
         {
             if (wasGroupDrag)
             {
-                DragCompleted?.Invoke(new DesktopWindowDragCompletion(windowHandle, horizontalDelta, verticalDelta, completedSnapTarget, true));
+                DragCompleted?.Invoke(new DesktopWindowDragCompletion(windowHandle, horizontalDelta, verticalDelta, completedSnapTarget, true, false));
                 dragController.End(windowHandle);
                 dragHorizontalDelta = 0;
                 dragVerticalDelta = 0;
@@ -508,11 +508,11 @@ internal sealed class DesktopWindowPreview :
             if (moved)
             {
                 PositionChanged?.Invoke(windowHandle);
-                DragCompleted?.Invoke(new DesktopWindowDragCompletion(windowHandle, horizontalDelta, verticalDelta, completedSnapTarget, false));
+                DragCompleted?.Invoke(new DesktopWindowDragCompletion(windowHandle, horizontalDelta, verticalDelta, completedSnapTarget, false, true));
                 return;
             }
 
-            DragCompleted?.Invoke(new DesktopWindowDragCompletion(windowHandle, horizontalDelta, verticalDelta, completedSnapTarget, false));
+            DragCompleted?.Invoke(new DesktopWindowDragCompletion(windowHandle, horizontalDelta, verticalDelta, completedSnapTarget, false, false));
         }
         else
         {

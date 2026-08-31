@@ -7,35 +7,24 @@ using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopBackgroundBrushFactory
+public sealed class DesktopPageBackgroundFactory
 {
     private DesktopBackground? background;
-    private Brush? brush;
+    private DesktopPageBackground? pageBackground;
 
-    public Brush Create(DesktopBackground background)
+    public DesktopPageBackground Create(DesktopBackground background)
     {
-        if (this.background == background && brush is not null)
+        if (this.background == background && pageBackground is not null)
         {
-            return brush;
+            return pageBackground;
         }
 
         this.background = background;
-        if (!string.IsNullOrWhiteSpace(background.Wallpaper))
-        {
-            brush = new ImageBrush
-            {
-                AlignmentX = AlignmentX.Center,
-                AlignmentY = AlignmentY.Center,
-                ImageSource = new BitmapImage(new Uri(background.Wallpaper, UriKind.Absolute)),
-                Stretch = Stretch.UniformToFill
-            };
-        }
-        else
-        {
-            brush = new SolidColorBrush(ParseColour(background.Colour));
-        }
+        pageBackground = !string.IsNullOrWhiteSpace(background.Wallpaper)
+            ? new DesktopPageBackground(new BitmapImage(new Uri(background.Wallpaper, UriKind.Absolute)), null)
+            : new DesktopPageBackground(null, new SolidColorBrush(ParseColour(background.Colour)));
 
-        return brush;
+        return pageBackground;
     }
 
     private static Color ParseColour(string? value)

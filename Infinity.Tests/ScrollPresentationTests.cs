@@ -49,12 +49,15 @@ public sealed class ScrollPresentationTests
         ScrollPresentationSession presentationSession = new();
         TestScrollInputSource source = new();
         QueuedDeltaScrollMotion easingMotion = new();
+        QueuedDeltaScrollMotion navigationMotion = new();
         using Scroller scroller = CreateScroller(state,
             store,
             mover,
             presentationSession,
             source: source,
-            easingMotion: easingMotion);
+            easingMotion: easingMotion,
+            navigationMotion: navigationMotion,
+            pageCenterTargetResolver: new TestPageCenterTargetResolver(pageWidth: 1000));
         scroller.ScrollStarted += (_, _) => presentationSession.Begin();
         scroller.Start();
 
@@ -67,7 +70,7 @@ public sealed class ScrollPresentationTests
         source.RaiseScroll(-120);
         scroller.OnTick();
 
-        Assert.Equal(60, state.Offset);
+        Assert.Equal(1000, state.Offset);
     }
 
     [Fact]
@@ -89,7 +92,7 @@ public sealed class ScrollPresentationTests
     }
 
     [Fact]
-    public void WheelInputTakesControlFromProgrammaticNavigation()
+    public void StandardWheelInputRetargetsProgrammaticNavigationToTheAdjacentPage()
     {
         WindowStore store = new();
         PanState state = new();
@@ -99,16 +102,137 @@ public sealed class ScrollPresentationTests
         TestScrollInputSource source = new();
         QueuedDeltaScrollMotion easingMotion = new();
         QueuedDeltaScrollMotion navigationMotion = new();
-        using Scroller scroller = CreateScroller(state, store, mover, presentationSession, source: source, easingMotion: easingMotion, navigationMotion: navigationMotion);
+        using Scroller scroller = CreateScroller(state,
+            store,
+            mover,
+            presentationSession,
+            source: source,
+            easingMotion: easingMotion,
+            navigationMotion: navigationMotion,
+            pageCenterTargetResolver: new TestPageCenterTargetResolver(pageWidth: 1000));
         presentationSession.Begin();
         scroller.Start();
-        scroller.ScrollTo(1000);
+        scroller.ScrollTo(500);
 
         source.RaiseScroll(-120);
         scroller.OnTick();
 
         Assert.False(navigationMotion.IsActive);
-        Assert.Equal(60, state.Offset);
+        Assert.Equal(1000, state.Offset);
+    }
+
+    [Fact]
+    public void StandardWheelDeltaNavigatesDirectlyToTheAdjacentPageCentre()
+    {
+        WindowStore store = new();
+        PanState state = new();
+        state.SetMaxOffset(2000);
+        TestWindowMover mover = new();
+        ScrollPresentationSession presentationSession = new();
+        presentationSession.Begin();
+        TestScrollInputSource source = new();
+        QueuedDeltaScrollMotion navigationMotion = new();
+        using Scroller scroller = CreateScroller(state,
+            store,
+            mover,
+            presentationSession,
+            source: source,
+            navigationMotion: navigationMotion,
+            pageCenterTargetResolver: new TestPageCenterTargetResolver(pageWidth: 1000));
+        int stoppedCount = 0;
+        scroller.ScrollStopped += (_, _) => stoppedCount++;
+        scroller.Start();
+
+        source.RaiseScroll(-120);
+        scroller.OnTick();
+
+        Assert.Equal(1000, state.Offset);
+        Assert.False(navigationMotion.IsActive);
+        Assert.Equal(1, stoppedCount);
+    }
+
+    [Fact]
+    public void ReversingWheelDirectionTargetsThePreviousItemDuringAnimation()
+    {
+        WindowStore store = new();
+        PanState state = new();
+        state.SetMaxOffset(3000);
+        TestWindowMover mover = new();
+        ScrollPresentationSession presentationSession = new();
+        presentationSession.Begin();
+        TestScrollInputSource source = new();
+        QueuedDeltaScrollMotion navigationMotion = new();
+        using Scroller scroller = CreateScroller(state,
+            store,
+            mover,
+            presentationSession,
+            source: source,
+            navigationMotion: navigationMotion,
+            pageCenterTargetResolver: new TestPageCenterTargetResolver(pageWidth: 1000));
+        scroller.Start();
+
+        source.RaiseScroll(-120);
+        source.RaiseScroll(120);
+        scroller.OnTick();
+
+        Assert.Equal(0, state.Offset);
+    }
+
+    [Fact]
+    public void PrecisionGestureCentersAfterItsPixelMotionCompletes()
+    {
+        WindowStore store = new();
+        PanState state = new();
+        state.SetMaxOffset(2000);
+        TestWindowMover mover = new();
+        ScrollPresentationSession presentationSession = new();
+        presentationSession.Begin();
+        TestScrollInputSource source = new();
+        QueuedDeltaScrollMotion easingMotion = new();
+        QueuedDeltaScrollMotion navigationMotion = new();
+        using Scroller scroller = CreateScroller(state,
+            store,
+            mover,
+            presentationSession,
+            source: source,
+            easingMotion: easingMotion,
+            navigationMotion: navigationMotion,
+            pageCenterTargetResolver: new FixedPageCenterTargetResolver(1000));
+        scroller.Start();
+
+        source.RaiseScroll(-60);
+        scroller.OnTick();
+
+        Assert.Equal(30, state.Offset);
+        Assert.True(navigationMotion.IsActive);
+
+        scroller.OnTick();
+
+        Assert.Equal(1000, state.Offset);
+    }
+
+    [Fact]
+    public void ProgrammaticNavigationDoesNotStartFollowUpCentering()
+    {
+        WindowStore store = new();
+        PanState state = new();
+        state.SetMaxOffset(2000);
+        TestWindowMover mover = new();
+        QueuedDeltaScrollMotion navigationMotion = new();
+        using Scroller scroller = CreateScroller(state,
+            store,
+            mover,
+            navigationMotion: navigationMotion,
+            pageCenterTargetResolver: new FixedPageCenterTargetResolver(1000));
+        int stoppedCount = 0;
+        scroller.ScrollStopped += (_, _) => stoppedCount++;
+
+        scroller.ScrollTo(600);
+        scroller.OnTick();
+
+        Assert.Equal(600, state.Offset);
+        Assert.False(navigationMotion.IsActive);
+        Assert.Equal(1, stoppedCount);
     }
 
     private static Scroller CreateScroller(PanState state,
@@ -118,7 +242,8 @@ public sealed class ScrollPresentationTests
         IDeltaScrollMotion? pixelMotion = null,
         IScrollInputSource? source = null,
         IDeltaScrollMotion? easingMotion = null,
-        IDeltaScrollMotion? navigationMotion = null) =>
+        IDeltaScrollMotion? navigationMotion = null,
+        IPageCenterTargetResolver? pageCenterTargetResolver = null) =>
         new(state,
             presentationSession ?? new ScrollPresentationSession(),
             store,
@@ -133,6 +258,7 @@ public sealed class ScrollPresentationTests
             easingMotion ?? new TestDeltaScrollMotion(),
             navigationMotion ?? new TestDeltaScrollMotion(),
             new TestVelocityScrollMotion(),
+            pageCenterTargetResolver ?? new TestPageCenterTargetResolver(),
             () => { },
             () => { },
             NullLogger<Scroller>.Instance);
@@ -278,6 +404,38 @@ public sealed class ScrollPresentationTests
 
         public void Reset()
         {
+        }
+    }
+
+    private sealed class TestPageCenterTargetResolver(double pageWidth = 0) :
+        IPageCenterTargetResolver
+    {
+        public bool TryResolve(double offset, double minimumOffset, double maximumOffset, out double targetOffset)
+        {
+            targetOffset = offset;
+            return false;
+        }
+
+        public bool TryResolveAdjacent(double offset, int pageDelta, double minimumOffset, double maximumOffset, out double targetOffset)
+        {
+            targetOffset = Math.Clamp(offset + (pageDelta * pageWidth), minimumOffset, maximumOffset);
+            return pageWidth > 0 && Math.Abs(targetOffset - offset) >= 0.5;
+        }
+    }
+
+    private sealed class FixedPageCenterTargetResolver(double target) :
+        IPageCenterTargetResolver
+    {
+        public bool TryResolve(double offset, double minimumOffset, double maximumOffset, out double targetOffset)
+        {
+            targetOffset = Math.Clamp(target, minimumOffset, maximumOffset);
+            return Math.Abs(targetOffset - offset) >= 0.5;
+        }
+
+        public bool TryResolveAdjacent(double offset, int pageDelta, double minimumOffset, double maximumOffset, out double targetOffset)
+        {
+            targetOffset = offset;
+            return false;
         }
     }
 }

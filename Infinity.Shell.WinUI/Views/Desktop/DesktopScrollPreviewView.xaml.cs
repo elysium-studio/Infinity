@@ -15,6 +15,7 @@ using System.Numerics;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Graphics;
 
 namespace Infinity.Shell.WinUI;
 
@@ -41,7 +42,9 @@ public sealed partial class DesktopScrollPreviewView :
     private double spacingProgress = 1;
     private int monitorOriginX;
     private int monitorOriginY;
+    private int overlayScreenOriginX;
     private int overlayScreenOriginY;
+    private int workAreaOffsetX;
     private int workAreaOffsetY;
 
     public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IPanState panState, IPager pager, IScroller scroller, IWorkspace workspace, DesktopScrollPreviewAnimator animator, DesktopOverviewLayoutPresenter layoutPresenter, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationDockViewModel applicationDock, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator, DesktopOverviewInputController inputController, DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator)
@@ -122,15 +125,17 @@ public sealed partial class DesktopScrollPreviewView :
     internal void OpenApplicationPickerForDebug() => _ = OpenApplicationPickerAsync(ApplicationDockSurface, new DesktopApplicationTarget(pager.CurrentPage));
 #endif
 
-    public void Prepare(nint ownerWindowHandle, int screenOriginY)
+    public void Prepare(nint ownerWindowHandle, RectInt32 overlayBounds, RectInt32 monitorBounds)
     {
         if (!DispatcherQueue.HasThreadAccess)
         {
-            DispatcherQueue.TryEnqueue(() => Prepare(ownerWindowHandle, screenOriginY));
+            DispatcherQueue.TryEnqueue(() => Prepare(ownerWindowHandle, overlayBounds, monitorBounds));
             return;
         }
 
-        overlayScreenOriginY = screenOriginY;
+        overlayScreenOriginX = overlayBounds.X;
+        overlayScreenOriginY = overlayBounds.Y;
+        pageStrip.SetMonitorBounds(monitorBounds.X, monitorBounds.Y, monitorBounds.Width, monitorBounds.Height);
         bool originChanged = RefreshMonitorOrigin();
         cursorConfinement.SetOwner(ownerWindowHandle);
         windowPreviewSurface.Initialize(ownerWindowHandle);
@@ -297,7 +302,7 @@ public sealed partial class DesktopScrollPreviewView :
         });
     }
 
-    private double GetAnimationWidth() => ActualWidth > 0 ? ActualWidth : XamlRoot?.Size.Width ?? workspace.Width;
+    private double GetAnimationWidth() => workspace.Width > 0 ? workspace.Width : ActualWidth > 0 ? ActualWidth : XamlRoot?.Size.Width ?? 0;
 
     private double GetAnimationHeight() => workspace.Height > 0 ? workspace.Height : ActualHeight > 0 ? ActualHeight : XamlRoot?.Size.Height ?? 0;
 
@@ -305,15 +310,17 @@ public sealed partial class DesktopScrollPreviewView :
     {
         int x = workspace.WorkAreaX;
         int y = workspace.WorkAreaY;
+        int offsetX = Math.Max(0, x - overlayScreenOriginX);
         int offsetY = Math.Max(0, y - overlayScreenOriginY);
-        bool changed = monitorOriginX != x || monitorOriginY != y || workAreaOffsetY != offsetY;
+        bool changed = monitorOriginX != x || monitorOriginY != y || workAreaOffsetX != offsetX || workAreaOffsetY != offsetY;
         monitorOriginX = x;
         monitorOriginY = y;
+        workAreaOffsetX = offsetX;
         workAreaOffsetY = offsetY;
-        PreviewSurface.Translation = new Vector3(0, workAreaOffsetY, 0);
+        PreviewSurface.Translation = new Vector3(workAreaOffsetX, workAreaOffsetY, 0);
         ShortcutHintSurface.Margin = new Thickness(0, Math.Max(0, workAreaOffsetY + workspace.Height - 60), 24, 0);
         ApplicationDockSurface.Margin = new Thickness(0, Math.Max(0, workAreaOffsetY + workspace.Height - 88), 0, 0);
-        pageStrip.SetWorkAreaOffsetY(workAreaOffsetY);
+        pageStrip.SetWorkAreaOffset(workAreaOffsetX, workAreaOffsetY);
         cursorConfinement.SetWorkAreaOffsetY(workAreaOffsetY);
         snapInteractionCoordinator.UpdateMonitorOrigin(monitorOriginX, monitorOriginY);
         return changed;

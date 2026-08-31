@@ -63,7 +63,6 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<IWindowTitleReader, WindowTitleReader>();
 
             services.AddSingleton<IWindowFocusGuard, WindowFocusGuard>();
-            services.AddSingleton<WindowArrangingController>();
             services.AddSingleton<IWindowDragGuard, WindowDragGuard>();
             services.AddSingleton<IWindowMoveGuard, WindowMoveGuard>();
 

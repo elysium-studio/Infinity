@@ -365,7 +365,7 @@ public sealed partial class DesktopOverviewView :
             return;
         }
 
-        desktopScrollPreview.Prepare(Handle, ScreenBounds.Y);
+        desktopScrollPreview.Prepare(Handle, ScreenBounds, MonitorBounds);
         isCompletingDesktopPreview = false;
 
         if (!IsOpen || isDesktopPreviewAnimationStarted)

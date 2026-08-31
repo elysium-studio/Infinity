@@ -7,14 +7,13 @@ using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
-using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, IPager pager, IScroller scroller, IWorkspace workspace, PageTitleStore pageTitleStore, PageLayoutStore pageLayoutStore, DesktopPageReorderController reorderController, DesktopPageArrangementCoordinator arrangementCoordinator, DesktopOverviewDragScroller overviewDragScroller, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, ITextLocalizer localizer, DesktopPageLayoutCalculator layoutCalculator, DesktopSnapLayoutCatalog snapLayoutCatalog, DesktopBackgroundBrushFactory backgroundBrushFactory, ILogger<DesktopPageStrip> logger) :
+public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, IPager pager, IScroller scroller, IWorkspace workspace, PageTitleStore pageTitleStore, PageLayoutStore pageLayoutStore, DesktopPageReorderController reorderController, DesktopPageArrangementCoordinator arrangementCoordinator, DesktopOverviewDragScroller overviewDragScroller, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, ITextLocalizer localizer, DesktopPageLayoutCalculator layoutCalculator, DesktopSnapLayoutCatalog snapLayoutCatalog, DesktopPageBackgroundFactory backgroundFactory, DesktopWallpaperPlacementCalculator wallpaperPlacementCalculator, ILogger<DesktopPageStrip> logger) :
     IDisposable
 {
     private static readonly TimeSpan ReorderAnimationDuration = TimeSpan.FromMilliseconds(180);
@@ -27,14 +26,16 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
     private Canvas? shadowHost;
     private Canvas? titleHost;
     private FrameworkElement? scaleHost;
-    private Brush? background;
+    private DesktopPageBackground? background;
     private DesktopBackground? backgroundSnapshot;
+    private DesktopWallpaperPlacement wallpaperPlacement;
     private double currentOffset;
     private double currentSpacingProgress = 1;
     private double overviewScale;
     private double leadingSpace;
     private double reorderPointerDelta;
     private double reorderStartContentOffset;
+    private double workAreaOffsetX;
     private double workAreaOffsetY;
     private DesktopPageReorderPreviewState? reorderState;
     private bool interactionEnabled;
@@ -189,7 +190,22 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         }
     }
 
-    public void SetWorkAreaOffsetY(double value) => workAreaOffsetY = double.IsFinite(value) ? value : 0;
+    public void SetMonitorBounds(int x, int y, int width, int height)
+    {
+        wallpaperPlacement = wallpaperPlacementCalculator.Calculate(
+            x,
+            y,
+            width,
+            height,
+            workspace.WorkAreaX,
+            workspace.WorkAreaY);
+    }
+
+    public void SetWorkAreaOffset(double x, double y)
+    {
+        workAreaOffsetX = double.IsFinite(x) ? x : 0;
+        workAreaOffsetY = double.IsFinite(y) ? y : 0;
+    }
 
     public void SetInteractionEnabled(bool value)
     {
@@ -330,12 +346,12 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
                     continue;
                 }
 
-                preview.Bind(page, workspace.Width, workspace.Height, background, pageTitleStore.GetTitle(page), pageLayoutStore.GetLayout(page), GetRasterizationScale());
+                preview.Bind(page, workspace.Width, workspace.Height, background, wallpaperPlacement, pageTitleStore.GetTitle(page), pageLayoutStore.GetLayout(page), GetRasterizationScale());
                 visiblePages.Add(page, preview);
             }
             else
             {
-                preview.Bind(page, workspace.Width, workspace.Height, background, pageTitleStore.GetTitle(page), pageLayoutStore.GetLayout(page), GetRasterizationScale());
+                preview.Bind(page, workspace.Width, workspace.Height, background, wallpaperPlacement, pageTitleStore.GetTitle(page), pageLayoutStore.GetLayout(page), GetRasterizationScale());
             }
 
             preview.SetInteractionEnabled(interactionEnabled);
@@ -362,9 +378,9 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             targetX = page == reorderState.SourcePage ? targetX + reorderState.HorizontalDelta : layoutCalculator.CalculatePageX(reorderState.MapPage(page), workspace.Width, currentOffset, currentSpacingProgress);
         }
 
-        double viewportWidth = GetViewportWidth();
+        double viewportWidth = GetWorkAreaViewportWidth();
         double viewportHeight = GetViewportHeight();
-        double pageScreenX = (viewportWidth / 2) + ((baseX - (viewportWidth / 2)) * overviewScale);
+        double pageScreenX = workAreaOffsetX + (viewportWidth / 2) + ((baseX - (viewportWidth / 2)) * overviewScale);
         double animationHeight = workspace.Height > 0 ? workspace.Height : viewportHeight;
         double pageScreenY = workAreaOffsetY + ((animationHeight / 2) * (1 - overviewScale));
         double titleX = pageScreenX + ((workspace.Width * overviewScale) - preview.TitleEditor.Width) / 2;
@@ -436,6 +452,8 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
     }
 
     private double GetViewportWidth() => scaleHost?.ActualWidth > 0 ? scaleHost.ActualWidth : workspace.Width;
+
+    private double GetWorkAreaViewportWidth() => workspace.Width > 0 ? workspace.Width : GetViewportWidth();
 
     private double GetViewportHeight() => scaleHost?.ActualHeight > 0 ? scaleHost.ActualHeight : workspace.Height;
 
@@ -650,7 +668,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             int reorderedPage = PageReorderMapping.Map(page, sourcePage, targetPage);
             string title = reorderedTitles.TryGetValue(reorderedPage, out string? reorderedTitle) ? reorderedTitle : pageTitleStore.GetTitle(reorderedPage);
 
-            preview.Bind(reorderedPage, workspace.Width, workspace.Height, background!, title, pageLayoutStore.GetLayout(reorderedPage), GetRasterizationScale());
+            preview.Bind(reorderedPage, workspace.Width, workspace.Height, background!, wallpaperPlacement, title, pageLayoutStore.GetLayout(reorderedPage), GetRasterizationScale());
             visiblePages[reorderedPage] = preview;
         }
     }
@@ -775,14 +793,14 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             if (background is null || current != backgroundSnapshot)
             {
                 backgroundSnapshot = current;
-                background = backgroundBrushFactory.Create(current);
+                background = backgroundFactory.Create(current);
             }
 
             if (background is not null)
             {
                 foreach (DesktopPagePreview page in visiblePages.Values)
                 {
-                    page.Bind(page.Page, workspace.Width, workspace.Height, background, pageTitleStore.GetTitle(page.Page), pageLayoutStore.GetLayout(page.Page), GetRasterizationScale());
+                    page.Bind(page.Page, workspace.Width, workspace.Height, background, wallpaperPlacement, pageTitleStore.GetTitle(page.Page), pageLayoutStore.GetLayout(page.Page), GetRasterizationScale());
                     page.SetInteractionEnabled(interactionEnabled);
                 }
             }

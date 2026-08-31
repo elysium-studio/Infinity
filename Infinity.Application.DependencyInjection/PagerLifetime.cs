@@ -10,7 +10,6 @@ public sealed class PagerLifetime(IWindowTracker tracker,
     IWindowEnumerator enumerator,
     IWindowEventListener listener,
     IWindowDragGuard dragGuard,
-    IWindowDragScroller dragScroller,
     IPageGestureSource gestureSource,
     IWindowPageJumper jumper,
     IWindowTitleSynchronizer titleSynchronizer,
@@ -56,7 +55,6 @@ public sealed class PagerLifetime(IWindowTracker tracker,
             listener.Start();
             tracker.Start();
             dragGuard.Start();
-            dragScroller.Start();
             stack.Start();
             foreground.Start();
             scrollInput.Start();
@@ -112,7 +110,6 @@ public sealed class PagerLifetime(IWindowTracker tracker,
         TryCleanup(windowCollection.Stop, "window collection");
         TryCleanup(tracker.Stop, "window tracker");
         TryCleanup(dragGuard.Stop, "window drag guard");
-        TryCleanup(dragScroller.Stop, "window drag scroller");
         TryCleanup(titleSynchronizer.Stop, "window title synchronizer");
         TryCleanup(stack.Stop, "window stack");
         TryCleanup(foreground.Stop, "foreground window tracker");

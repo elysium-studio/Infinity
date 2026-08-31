@@ -20,11 +20,13 @@ public sealed class Scroller(IPanState state,
     IDeltaScrollMotion easingMotion,
     IDeltaScrollMotion navigationMotion,
     IVelocityScrollMotion momentumMotion,
+    IPageCenterTargetResolver pageCenterTargetResolver,
     Action startTimer,
     Action stopTimer,
     ILogger<Scroller> logger) :
     IScroller
 {
+    private const int StandardWheelDelta = 120;
     private const double WheelScrollScale = 0.50;
 
     private const double SpringStiffness = 0.35;
@@ -40,6 +42,8 @@ public sealed class Scroller(IPanState state,
     private double springVelocity;
     private bool isSpinging;
     private bool isStarted;
+    private bool isInputCenteringPending;
+    private double? inputNavigationTarget;
 
     private WindowMoveScope? activeMoveScope;
     private Timer? moveGuardReleaseTimer;
@@ -50,7 +54,12 @@ public sealed class Scroller(IPanState state,
 
     public double VisualOffset => state.Offset + springPosition;
 
-    public void CancelNavigation() => navigationMotion.Reset();
+    public void CancelNavigation()
+    {
+        navigationMotion.Reset();
+        isInputCenteringPending = false;
+        inputNavigationTarget = null;
+    }
 
     public void Dispose()
     {
@@ -84,6 +93,8 @@ public sealed class Scroller(IPanState state,
         springPosition = 0;
         springVelocity = 0;
         isSpinging = false;
+        isInputCenteringPending = false;
+        inputNavigationTarget = null;
         haltRequested = false;
     }
 
@@ -98,6 +109,8 @@ public sealed class Scroller(IPanState state,
             springPosition = 0;
             springVelocity = 0;
             isSpinging = false;
+            isInputCenteringPending = false;
+            inputNavigationTarget = null;
             haltRequested = false;
             CompleteScroll();
             return;
@@ -165,6 +178,12 @@ public sealed class Scroller(IPanState state,
 
         if (!pixelMotion.IsActive && !easingMotion.IsActive && !navigationMotion.IsActive && !momentumMotion.IsActive && !isSpinging)
         {
+            if (TryStartInputCentering())
+            {
+                return;
+            }
+
+            inputNavigationTarget = null;
             CompleteScroll();
         }
     }
@@ -182,12 +201,16 @@ public sealed class Scroller(IPanState state,
         }
 
         haltRequested = false;
+        isInputCenteringPending = false;
+        inputNavigationTarget = null;
         pixelMotion.AddDelta(pixels);
         dispatcher.Dispatch(startTimer);
     }
 
     public void ScrollTo(double offset, bool animate = true)
     {
+        isInputCenteringPending = false;
+        inputNavigationTarget = null;
         double target = Math.Clamp(offset, state.MinOffset, state.MaxOffset);
 
         if (animate)
@@ -369,7 +392,6 @@ public sealed class Scroller(IPanState state,
             return;
         }
 
-        navigationMotion.Reset();
         bool wasPresentationActive = presentationSession.IsActive;
 
         if (!IsMotionActive())
@@ -382,6 +404,16 @@ public sealed class Scroller(IPanState state,
             DispatchInputCallback(startTimer, "scroll input");
             return;
         }
+
+        if (nativeScrollDelta % StandardWheelDelta == 0)
+        {
+            NavigateByWheelDelta(nativeScrollDelta);
+            return;
+        }
+
+        navigationMotion.Reset();
+        inputNavigationTarget = null;
+        isInputCenteringPending = true;
 
         double pixelsPerNotch = configurationFactory().PixelsPerScrollNotch;
         double pixels = (-nativeScrollDelta / 120.0) * pixelsPerNotch * WheelScrollScale;
@@ -402,6 +434,8 @@ public sealed class Scroller(IPanState state,
             ScrollStarted?.Invoke(this, EventArgs.Empty);
         }
 
+        isInputCenteringPending = true;
+        inputNavigationTarget = null;
         momentumMotion.AddVelocity(velocity);
         DispatchInputCallback(startTimer, "scroll momentum");
     }
@@ -420,6 +454,58 @@ public sealed class Scroller(IPanState state,
 
     private void HandleHoldStarted()
     {
+        isInputCenteringPending = false;
+        inputNavigationTarget = null;
         haltRequested = true;
+    }
+
+    private void NavigateByWheelDelta(int nativeScrollDelta)
+    {
+        int pageDelta = -Math.Sign(nativeScrollDelta) * Math.Max(1, Math.Abs(nativeScrollDelta) / StandardWheelDelta);
+        double origin = inputNavigationTarget ?? state.Offset;
+
+        if (!pageCenterTargetResolver.TryResolveAdjacent(origin, pageDelta, state.MinOffset, state.MaxOffset, out double targetOffset))
+        {
+            return;
+        }
+
+        pixelMotion.Reset();
+        easingMotion.Reset();
+        momentumMotion.Reset();
+        navigationMotion.Reset();
+        springPosition = 0;
+        springVelocity = 0;
+        isSpinging = false;
+        isInputCenteringPending = false;
+        inputNavigationTarget = targetOffset;
+        haltRequested = false;
+        navigationMotion.AddDelta(targetOffset - state.Offset);
+        DispatchInputCallback(startTimer, "wheel page navigation");
+    }
+
+    private bool TryStartInputCentering()
+    {
+        if (!isInputCenteringPending)
+        {
+            return false;
+        }
+
+        isInputCenteringPending = false;
+
+        if (!pageCenterTargetResolver.TryResolve(state.Offset, state.MinOffset, state.MaxOffset, out double targetOffset))
+        {
+            return false;
+        }
+
+        navigationMotion.Reset();
+        navigationMotion.AddDelta(targetOffset - state.Offset);
+
+        if (!navigationMotion.IsActive)
+        {
+            return false;
+        }
+
+        dispatcher.Dispatch(startTimer);
+        return true;
     }
 }

@@ -61,7 +61,7 @@ public sealed class ConfigurationModule :
                     .SetMaxOffset(maxPages.HasValue ? (maxPages.Value - 1) * (double)DisplayArea.Primary.WorkArea.Width : double.MaxValue);
             })
             .WithChangeHandler((provider, options, _) =>
-                provider.GetRequiredService<WindowDragScrollerConfiguration>()
+                provider.GetRequiredService<DesktopOverviewDragScrollerConfiguration>()
                     .SpeedLevel = options.DragScrollSpeed)
             .WithChangeHandler((provider, options, _) =>
             {
@@ -80,7 +80,7 @@ public sealed class ConfigurationModule :
                     PixelsPerScrollNotch = provider.GetRequiredService<Settings>().ScrollSpeed.ToPixelsPerNotch()
                 })
             .AddSingleton(provider =>
-                new WindowDragScrollerConfiguration
+                new DesktopOverviewDragScrollerConfiguration
                 {
                     SpeedLevel = provider.GetRequiredService<Settings>().DragScrollSpeed
                 })
@@ -98,8 +98,8 @@ public sealed class ConfigurationModule :
             })
             .AddSingleton<Func<ScrollerConfiguration>>(provider =>
                 () => provider.GetRequiredService<ScrollerConfiguration>())
-            .AddSingleton<Func<WindowDragScrollerConfiguration>>(provider =>
-                () => provider.GetRequiredService<WindowDragScrollerConfiguration>())
+            .AddSingleton<Func<DesktopOverviewDragScrollerConfiguration>>(provider =>
+                () => provider.GetRequiredService<DesktopOverviewDragScrollerConfiguration>())
             .AddSingleton<IConfiguration>(provider =>
             {
                 IConfigurationBuilder configBuilder = new ConfigurationBuilder()

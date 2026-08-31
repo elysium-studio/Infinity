@@ -98,6 +98,22 @@ internal class DesktopOverlayHost
 
     internal RectInt32 ScreenBounds => currentBounds;
 
+    internal RectInt32 CurrentMonitorBounds
+    {
+        get
+        {
+            foreach ((Window window, RectInt32 rect, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR monitor) in windows)
+            {
+                if (monitor == currentMonitor)
+                {
+                    return rect;
+                }
+            }
+
+            return currentBounds;
+        }
+    }
+
     internal nint Handle
     {
         get

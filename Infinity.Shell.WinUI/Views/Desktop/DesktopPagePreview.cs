@@ -26,7 +26,8 @@ public sealed partial class DesktopPagePreview :
 
     private readonly Border shadowHost;
     private readonly ThemeShadow pageShadow;
-    private readonly Border wallpaperHost;
+    private readonly Canvas wallpaperHost;
+    private readonly Image wallpaperImage;
     private readonly Border interactionLayer;
     private readonly DesktopSnapZonePresenter snapZones;
     private readonly double visualScale;
@@ -76,7 +77,16 @@ public sealed partial class DesktopPagePreview :
         Resources["ButtonBorderBrushPressed"] = transparentBrush;
         Resources["ButtonBorderBrushDisabled"] = transparentBrush;
 
-        wallpaperHost = new Border();
+        wallpaperImage = new Image
+        {
+            IsHitTestVisible = false,
+            Stretch = Stretch.UniformToFill
+        };
+        wallpaperHost = new Canvas
+        {
+            IsHitTestVisible = false
+        };
+        wallpaperHost.Children.Add(wallpaperImage);
         interactionLayer = new Border
         {
             IsHitTestVisible = false,
@@ -162,7 +172,7 @@ public sealed partial class DesktopPagePreview :
 
     public event Action<DesktopPagePreview>? DragCanceled;
 
-    public void Bind(int page, double width, double height, Brush background, string title, DesktopSnapLayoutKind layout, double rasterizationScale)
+    public void Bind(int page, double width, double height, DesktopPageBackground background, DesktopWallpaperPlacement wallpaperPlacement, string title, DesktopSnapLayoutKind layout, double rasterizationScale)
     {
         Page = page;
         PageHost.Width = width;
@@ -173,7 +183,23 @@ public sealed partial class DesktopPagePreview :
         shadowHost.Width = width * visualScale;
         shadowHost.Height = height * visualScale;
 
-        wallpaperHost.Background = background;
+        wallpaperHost.Width = width;
+        wallpaperHost.Height = height;
+        wallpaperHost.Background = background.Fill;
+        wallpaperImage.Source = background.Wallpaper;
+
+        if (background.Wallpaper is not null)
+        {
+            wallpaperImage.Width = wallpaperPlacement.IsValid ? wallpaperPlacement.Width : width;
+            wallpaperImage.Height = wallpaperPlacement.IsValid ? wallpaperPlacement.Height : height;
+            Canvas.SetLeft(wallpaperImage, wallpaperPlacement.IsValid ? wallpaperPlacement.X : 0);
+            Canvas.SetTop(wallpaperImage, wallpaperPlacement.IsValid ? wallpaperPlacement.Y : 0);
+            wallpaperImage.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            wallpaperImage.Visibility = Visibility.Collapsed;
+        }
         snapZones.Bind(width, height);
         TitleEditor.ViewModel.ConfigureDisplay(width, height, rasterizationScale);
         TitleEditor.ViewModel.Bind(page, title, layout);

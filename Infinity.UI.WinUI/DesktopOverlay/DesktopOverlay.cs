@@ -95,6 +95,8 @@ public partial class DesktopOverlay :
 
     public RectInt32 ScreenBounds => host.ScreenBounds;
 
+    public RectInt32 MonitorBounds => host.CurrentMonitorBounds;
+
     public void Dispose()
     {
         if (disposed)

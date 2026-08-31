@@ -31,7 +31,6 @@ public sealed class DesktopOverviewSessionController
         IDispatcher dispatcher,
         IPointerInputSource pointer,
         IModifierKeyState modifierKeyState,
-        IWindowDragScroller dragScroller,
         IPageGestureSource gestureSource,
         IPager pager,
         IScroller scroller,
@@ -55,8 +54,6 @@ public sealed class DesktopOverviewSessionController
         pointer.MiddleButtonClicked += HandleMiddleButtonClicked;
         scroller.ScrollStarted += HandleScrollerScrollStarted;
         scroller.ScrollStopped += HandleScrollerScrollStopped;
-        dragScroller.DragStarted += HandleDragStarted;
-        dragScroller.DragStopped += HandleDragStopped;
         gestureSource.SessionStarted += HandleGestureSessionStarted;
         gestureSource.SessionEnded += HandleGestureSessionEnded;
     }
@@ -255,10 +252,6 @@ public sealed class DesktopOverviewSessionController
         TryMarkReadyToClose();
         PublishState();
     }
-
-    private void HandleDragStarted() => dispatcher.Dispatch(OpenPendingSurface);
-
-    private void HandleDragStopped() => dispatcher.Dispatch(ClosePendingSurface);
 
     private void HandleGestureSessionStarted() => dispatcher.Dispatch(OpenPendingSurface);
 

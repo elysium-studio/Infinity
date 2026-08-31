@@ -5,4 +5,5 @@ internal readonly record struct DesktopWindowDragCompletion(
     double HorizontalDelta,
     double VerticalDelta,
     DesktopWindowSnapTarget? SnapTarget,
-    bool IsGroupDrag);
+    bool IsGroupDrag,
+    bool WasMoved);

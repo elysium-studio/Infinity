@@ -48,6 +48,8 @@ public static class IServiceCollectionExtensions
                 new ModifiedScrollInput(provider.GetRequiredService<IPointerInputSource>(),
                     provider.GetRequiredService<IModifierKeyState>()));
 
+            services.AddSingleton<IPageCenterTargetResolver, PageCenterTargetResolver>();
+
             services.AddSingleton<IScroller>(provider =>
             {
                 IScrollTimer scrollTimer = provider.GetRequiredService<IScrollTimer>();
@@ -65,6 +67,7 @@ public static class IServiceCollectionExtensions
                     new EasingScrollMotion(),
                     new FluentNavigationScrollMotion(TimeProvider.System),
                     new MomentumScrollMotion(),
+                    provider.GetRequiredService<IPageCenterTargetResolver>(),
                     scrollTimer.Start,
                     scrollTimer.Stop,
                     provider.GetRequiredService<ILogger<Scroller>>());
@@ -79,8 +82,6 @@ public static class IServiceCollectionExtensions
                 provider.GetRequiredService<IScroller>(),
                 provider.GetRequiredService<IWindowResizeSynchronizer>(),
                 provider.GetRequiredService<ILogger<TrackedWindowDragController>>()));
-            services.AddSingleton<IWindowDragScroller, WindowDragScroller>();
-
             services.AddSingleton<WindowArrowSwitchGesture>();
             services.AddSingleton<WindowArrowMoveGesture>();
             services.AddSingleton<WindowNumberSwitchGesture>();

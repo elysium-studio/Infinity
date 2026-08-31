@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory factory, IWindowGeometryReader geometryReader, DesktopWindowSelectionModel selection, DesktopWindowGroupDragCoordinator groupDragCoordinator, DesktopWindowGroupStackAnimator groupStackAnimator) :
+public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory factory, IWindowGeometryReader geometryReader, DesktopWindowSelectionModel selection, DesktopWindowGroupDragCoordinator groupDragCoordinator, DesktopWindowGroupStackAnimator groupStackAnimator, DesktopWindowDropNavigationCoordinator dropNavigationCoordinator) :
     IDisposable
 {
     private readonly Dictionary<nint, DesktopWindowPreview> previews = [];
@@ -341,15 +341,22 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
     private void HandleWindowDragCompleted(DesktopWindowDragCompletion completion)
     {
+        bool moved = completion.WasMoved;
+
         if (completion.IsGroupDrag && completion.Handle == groupStackAnimator.LeaderHandle)
         {
             DesktopSnapPlacement? snapPlacement = completion.SnapTarget?.Placement;
-            _ = groupDragCoordinator.Complete(completion.Handle, completion.HorizontalDelta, completion.VerticalDelta, snapPlacement);
+            moved = groupDragCoordinator.Complete(completion.Handle, completion.HorizontalDelta, completion.VerticalDelta, snapPlacement);
             groupStackAnimator.End(previews);
             groupDragCoordinator.Cancel();
         }
 
         WindowDragCompleted?.Invoke(completion.Handle);
+
+        if (moved)
+        {
+            dropNavigationCoordinator.NavigateToDroppedWindow(completion.Handle);
+        }
     }
 
     private TrackedWindow[] OrderWindows(IEnumerable<TrackedWindow> trackedWindows)

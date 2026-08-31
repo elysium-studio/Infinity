@@ -4,7 +4,7 @@ using System;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopOverviewDragScroller(IPanState panState, IScroller scroller, Func<WindowDragScrollerConfiguration> configurationFactory, DesktopOverviewConfiguration overviewConfiguration) :
+public sealed class DesktopOverviewDragScroller(IPanState panState, IScroller scroller, Func<DesktopOverviewDragScrollerConfiguration> configurationFactory, DesktopOverviewConfiguration overviewConfiguration) :
     IDisposable
 {
     private const double EdgeThreshold = 160;
