@@ -28,6 +28,9 @@ public sealed partial class DesktopScrollPreviewView :
     private readonly IPager pager;
     private readonly IScroller scroller;
     private readonly IWorkspace workspace;
+    private readonly IDesktopBackgroundSource backgroundSource;
+    private readonly DesktopOverviewConfiguration overviewConfiguration;
+    private readonly DesktopOverviewForegroundThemeResolver foregroundThemeResolver;
     private readonly DesktopScrollPreviewAnimator animator;
     private readonly DesktopOverviewLayoutPresenter layoutPresenter;
     private readonly DesktopPageStrip pageStrip;
@@ -46,8 +49,11 @@ public sealed partial class DesktopScrollPreviewView :
     private int overlayScreenOriginY;
     private int workAreaOffsetX;
     private int workAreaOffsetY;
+    private int monitorWidth;
+    private int monitorHeight;
+    private int foregroundGeneration;
 
-    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IPanState panState, IPager pager, IScroller scroller, IWorkspace workspace, DesktopScrollPreviewAnimator animator, DesktopOverviewLayoutPresenter layoutPresenter, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationDockViewModel applicationDock, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator, DesktopOverviewInputController inputController, DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator)
+    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IPanState panState, IPager pager, IScroller scroller, IWorkspace workspace, IDesktopBackgroundSource backgroundSource, DesktopOverviewConfiguration overviewConfiguration, DesktopOverviewForegroundThemeResolver foregroundThemeResolver, DesktopScrollPreviewAnimator animator, DesktopOverviewLayoutPresenter layoutPresenter, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationDockViewModel applicationDock, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator, DesktopOverviewInputController inputController, DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator)
     {
         InitializeComponent();
 
@@ -57,6 +63,9 @@ public sealed partial class DesktopScrollPreviewView :
         this.pager = pager;
         this.scroller = scroller;
         this.workspace = workspace;
+        this.backgroundSource = backgroundSource;
+        this.overviewConfiguration = overviewConfiguration;
+        this.foregroundThemeResolver = foregroundThemeResolver;
         this.animator = animator;
         this.layoutPresenter = layoutPresenter;
         this.pageStrip = pageStrip;
@@ -135,6 +144,8 @@ public sealed partial class DesktopScrollPreviewView :
 
         overlayScreenOriginX = overlayBounds.X;
         overlayScreenOriginY = overlayBounds.Y;
+        monitorWidth = monitorBounds.Width;
+        monitorHeight = monitorBounds.Height;
         pageStrip.SetMonitorBounds(monitorBounds.X, monitorBounds.Y, monitorBounds.Width, monitorBounds.Height);
         bool originChanged = RefreshMonitorOrigin();
         cursorConfinement.SetOwner(ownerWindowHandle);
@@ -149,6 +160,7 @@ public sealed partial class DesktopScrollPreviewView :
             pageStrip.Start(PageCanvas, PageShadowCanvas, PageTitleCanvas, PreviewSurface, animator.Scale);
             snapInteractionCoordinator.Start(monitorOriginX, monitorOriginY);
             Synchronise();
+            QueueSettingsForegroundRefresh();
 
             SetInteractionEnabled(false);
             Opacity = 1;
@@ -156,6 +168,7 @@ public sealed partial class DesktopScrollPreviewView :
         else if (originChanged)
         {
             Synchronise();
+            QueueSettingsForegroundRefresh();
         }
     }
 
@@ -215,6 +228,7 @@ public sealed partial class DesktopScrollPreviewView :
         }
 
         isRunning = false;
+        foregroundGeneration++;
         cursorConfinement.Release();
         ShortcutHintsFlyout.Hide();
         ApplicationPickerFlyout.Hide();
@@ -225,6 +239,7 @@ public sealed partial class DesktopScrollPreviewView :
         WindowSearchBox.Text = string.Empty;
         previews.ClearSelection();
         inputController.ResetModifiers();
+        SettingsButton.RequestedTheme = ElementTheme.Default;
         snapInteractionCoordinator.Stop();
 
         animator.Reset(PreviewSurface, GetAnimationWidth(), GetAnimationHeight());
@@ -341,6 +356,7 @@ public sealed partial class DesktopScrollPreviewView :
         windowCollection.WindowStackRefreshed += HandleSynchroniseRequested;
         windowCollection.WorkspaceLayoutChanged += HandleSynchroniseRequested;
         windowCollection.RefreshRequested += HandleLayoutRefreshRequested;
+        backgroundSource.BackgroundChanged += HandleDesktopBackgroundChanged;
     }
 
     private void UnsubscribeEvents()
@@ -358,6 +374,7 @@ public sealed partial class DesktopScrollPreviewView :
         windowCollection.WindowStackRefreshed -= HandleSynchroniseRequested;
         windowCollection.WorkspaceLayoutChanged -= HandleSynchroniseRequested;
         windowCollection.RefreshRequested -= HandleLayoutRefreshRequested;
+        backgroundSource.BackgroundChanged -= HandleDesktopBackgroundChanged;
     }
 
     private void HandleCollectionChanged(object? sender, TrackedWindow trackedWindow) => QueueSynchronise();
@@ -369,6 +386,68 @@ public sealed partial class DesktopScrollPreviewView :
     private void HandleSynchroniseRequested(object? sender, EventArgs args) => QueueSynchronise();
 
     private void HandleLayoutRefreshRequested(object? sender, EventArgs args) => QueueLayoutRefresh();
+
+    private void HandleDesktopBackgroundChanged(object? sender, EventArgs args) => QueueSettingsForegroundRefresh();
+
+    private void HandleActualThemeChanged(FrameworkElement sender, object args) => QueueSettingsForegroundRefresh();
+
+    private void QueueSettingsForegroundRefresh()
+    {
+        if (!isRunning)
+        {
+            return;
+        }
+
+        if (!DispatcherQueue.HasThreadAccess)
+        {
+            DispatcherQueue.TryEnqueue(QueueSettingsForegroundRefresh);
+            return;
+        }
+
+        int generation = ++foregroundGeneration;
+        _ = ResolveSettingsForegroundAsync(generation);
+    }
+
+    private async Task ResolveSettingsForegroundAsync(int generation)
+    {
+        ElementTheme theme;
+
+        try
+        {
+            double rasterizationScale = XamlRoot?.RasterizationScale ?? 1;
+            Windows.Foundation.Point buttonCenter = SettingsButton.TransformToVisual(this).TransformPoint(
+                new Windows.Foundation.Point(SettingsButton.ActualWidth / 2, SettingsButton.ActualHeight / 2));
+            Windows.Foundation.Point monitorPoint = new(buttonCenter.X * rasterizationScale,
+                buttonCenter.Y * rasterizationScale);
+            theme = await foregroundThemeResolver.ResolveAsync(overviewConfiguration.Backdrop,
+                backgroundSource.GetBackground(),
+                monitorWidth,
+                monitorHeight,
+                monitorPoint,
+                WallpaperContrastTint.Background,
+                ActualTheme);
+        }
+        catch (InvalidOperationException)
+        {
+            return;
+        }
+
+        if (!DispatcherQueue.HasThreadAccess)
+        {
+            DispatcherQueue.TryEnqueue(() => ApplySettingsForeground(generation, theme));
+            return;
+        }
+
+        ApplySettingsForeground(generation, theme);
+    }
+
+    private void ApplySettingsForeground(int generation, ElementTheme theme)
+    {
+        if (isRunning && generation == foregroundGeneration)
+        {
+            SettingsButton.RequestedTheme = theme;
+        }
+    }
 
     private void HandleOffsetChanged()
     {

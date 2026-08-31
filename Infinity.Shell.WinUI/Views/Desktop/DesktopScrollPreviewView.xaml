@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Local="using:Infinity.Shell.WinUI"
     xmlns:Shell="using:Infinity.Shell"
+    ActualThemeChanged="HandleActualThemeChanged"
     Background="Transparent"
     CharacterReceived="HandleCharacterReceived"
     Opacity="0">
@@ -123,6 +124,11 @@
         </Flyout>
     </UserControl.Resources>
     <Grid>
+        <Border
+            x:Name="WallpaperContrastTint"
+            Background="{ThemeResource SmokeFillColorDefaultBrush}"
+            IsHitTestVisible="False"
+            Opacity="0" />
         <Canvas x:Name="PageShadowCanvas" IsHitTestVisible="False" />
         <Grid x:Name="PreviewSurface">
             <Grid
@@ -423,16 +429,7 @@
                     KeyUp="HandleWindowSearchBoxKeyUp"
                     LostFocus="HandleWindowSearchBoxLostFocus"
                     TextChanged="HandleWindowSearchBoxTextChanged"
-                    VerticalContentAlignment="Center">
-                    <TextBox.Resources>
-                        <StaticResource x:Key="TextControlBackground" ResourceKey="ControlFillColorDefaultBrush" />
-                        <StaticResource x:Key="TextControlBackgroundPointerOver" ResourceKey="ControlFillColorSecondaryBrush" />
-                        <StaticResource x:Key="TextControlBackgroundFocused" ResourceKey="ControlFillColorInputActiveBrush" />
-                        <StaticResource x:Key="TextControlBorderBrush" ResourceKey="ControlElevationBorderBrush" />
-                        <StaticResource x:Key="TextControlBorderBrushPointerOver" ResourceKey="ControlElevationBorderBrush" />
-                        <StaticResource x:Key="TextControlBorderBrushFocused" ResourceKey="ControlElevationBorderBrush" />
-                    </TextBox.Resources>
-                </TextBox>
+                    VerticalContentAlignment="Center" />
                 <FontIcon
                     Margin="17,0,0,0"
                     HorizontalAlignment="Left"

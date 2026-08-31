@@ -184,14 +184,14 @@ public sealed class DesktopBackgroundSourceTests
     }
 
     private static DesktopBackgroundSource CreateSource(TestLogger logger,
-        Func<DesktopBackgroundSource.DesktopBackgroundSnapshot> snapshotReader) =>
+        Func<DesktopBackgroundSnapshot> snapshotReader) =>
         new(logger,
             snapshotReader,
             PollingInterval,
             RecoveryPollingInterval,
             false);
 
-    private static DesktopBackgroundSource.DesktopBackgroundSnapshot CreateSnapshot(uint colour) =>
+    private static DesktopBackgroundSnapshot CreateSnapshot(uint colour) =>
         new(string.Empty, colour);
 
     private static async Task WaitUntilAsync(Func<bool> condition)

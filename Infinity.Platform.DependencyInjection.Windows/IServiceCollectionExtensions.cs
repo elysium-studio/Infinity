@@ -17,6 +17,7 @@ public static class IServiceCollectionExtensions
         {
             services.AddSingleton<IMessageWindow, MessageWindow>();
             services.AddSingleton<IWorkspace, DesktopWorkspace>();
+            services.AddSingleton<DesktopWallpaperSnapshotReader>();
             services.AddSingleton<IDesktopBackgroundSource, DesktopBackgroundSource>();
             services.AddSingleton<ApplicationCatalog>();
             services.AddSingleton<IApplicationCatalog>(provider => provider.GetRequiredService<ApplicationCatalog>());

@@ -21,6 +21,8 @@ public sealed class DesktopModule :
             .AddSingleton<DesktopOverviewBackdropAnimator>()
             .AddSingleton<DesktopWallpaperSurfaceProvider>()
             .AddSingleton<DesktopWallpaperBrushFactory>()
+            .AddSingleton<DesktopWallpaperColorSampler>()
+            .AddSingleton<DesktopOverviewForegroundThemeResolver>()
             .AddSingleton<DesktopOverviewWallpaperPresenter>()
             .AddSingleton<DesktopScrollPreviewAnimator>()
             .AddSingleton<DesktopPageLayoutCalculator>()
@@ -90,6 +92,9 @@ public sealed class DesktopModule :
         IPager pager = provider.GetRequiredService<IPager>();
         IScroller scroller = provider.GetRequiredService<IScroller>();
         IWorkspace workspace = provider.GetRequiredService<IWorkspace>();
+        IDesktopBackgroundSource backgroundSource = provider.GetRequiredService<IDesktopBackgroundSource>();
+        DesktopOverviewConfiguration overviewConfiguration = provider.GetRequiredService<DesktopOverviewConfiguration>();
+        DesktopOverviewForegroundThemeResolver foregroundThemeResolver = provider.GetRequiredService<DesktopOverviewForegroundThemeResolver>();
         DesktopScrollPreviewAnimator animator = provider.GetRequiredService<DesktopScrollPreviewAnimator>();
         DesktopOverviewLayoutPresenter layoutPresenter = provider.GetRequiredService<DesktopOverviewLayoutPresenter>();
         DesktopPageStrip pageStrip = provider.GetRequiredService<DesktopPageStrip>();
@@ -102,7 +107,7 @@ public sealed class DesktopModule :
         DesktopOverviewInputController inputController = provider.GetRequiredService<DesktopOverviewInputController>();
         DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator = provider.GetRequiredService<DesktopWindowSnapInteractionCoordinator>();
 
-        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, panState, pager, scroller, workspace, animator, layoutPresenter, pageStrip, previews, cursorConfinement, shortcutHints, applicationPicker, applicationDock, applicationLaunchCoordinator, inputController, snapInteractionCoordinator);
+        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, panState, pager, scroller, workspace, backgroundSource, overviewConfiguration, foregroundThemeResolver, animator, layoutPresenter, pageStrip, previews, cursorConfinement, shortcutHints, applicationPicker, applicationDock, applicationLaunchCoordinator, inputController, snapInteractionCoordinator);
     }
 
     private static DesktopOverviewView CreateDesktopOverviewView(IServiceProvider provider)

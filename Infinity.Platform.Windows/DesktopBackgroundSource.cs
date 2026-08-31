@@ -1,26 +1,14 @@
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
-using System.Runtime.InteropServices;
 
 namespace Infinity.Platform.Windows;
 
-public sealed unsafe partial class DesktopBackgroundSource :
+public sealed class DesktopBackgroundSource :
     IDesktopBackgroundSource,
     IDisposable
 {
     private static readonly TimeSpan PollingInterval = TimeSpan.FromSeconds(2);
     private static readonly TimeSpan RecoveryPollingInterval = TimeSpan.FromSeconds(30);
-
-    private const uint SpiGetDesktopWallpaper = 0x0073;
-    private const int ColorDesktop = 1;
-    private const int MaximumWallpaperPathLength = 260;
-
-    [LibraryImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool SystemParametersInfo(uint action, uint parameter, char* value, uint update);
-
-    [LibraryImport("user32.dll")]
-    private static partial uint GetSysColor(int index);
 
     private readonly Lock lifecycleLock = new();
     private readonly Timer changeTimer;
@@ -36,9 +24,10 @@ public sealed unsafe partial class DesktopBackgroundSource :
 
     public event EventHandler? BackgroundChanged;
 
-    public DesktopBackgroundSource(ILogger<DesktopBackgroundSource> logger) :
+    public DesktopBackgroundSource(ILogger<DesktopBackgroundSource> logger,
+        DesktopWallpaperSnapshotReader snapshotReader) :
         this(logger,
-            ReadSystemSnapshot,
+            snapshotReader.Read,
             PollingInterval,
             RecoveryPollingInterval,
             true)
@@ -111,25 +100,6 @@ public sealed unsafe partial class DesktopBackgroundSource :
         }
     }
 
-    private static DesktopBackgroundSnapshot ReadSystemSnapshot()
-    {
-        Span<char> pathBuffer = stackalloc char[MaximumWallpaperPathLength];
-        string wallpaperPath = string.Empty;
-
-        fixed (char* path = pathBuffer)
-        {
-            if (SystemParametersInfo(SpiGetDesktopWallpaper,
-                MaximumWallpaperPathLength,
-                path,
-                0))
-            {
-                wallpaperPath = new string(path);
-            }
-        }
-
-        return new DesktopBackgroundSnapshot(wallpaperPath, GetSysColor(ColorDesktop));
-    }
-
     internal bool PollForChanges()
     {
         if (disposed)
@@ -186,10 +156,7 @@ public sealed unsafe partial class DesktopBackgroundSource :
         return true;
     }
 
-    private void CheckForChanges(object? state)
-    {
-        _ = PollForChanges();
-    }
+    private void CheckForChanges(object? state) => _ = PollForChanges();
 
     private void ScheduleNextPoll(TimeSpan dueTime)
     {
@@ -223,6 +190,4 @@ public sealed unsafe partial class DesktopBackgroundSource :
 
         GC.SuppressFinalize(this);
     }
-
-    internal sealed record DesktopBackgroundSnapshot(string WallpaperPath, uint Colour);
 }
