@@ -22,10 +22,6 @@ public sealed record TrackedWindow
 
     public bool IsConcealed { get; set; }
 
-    public bool IsSticky { get; set; }
-
-    public int StickyViewportX { get; set; }
-
     public void InvalidatePlacement()
     {
         LastPlacedX = int.MinValue;

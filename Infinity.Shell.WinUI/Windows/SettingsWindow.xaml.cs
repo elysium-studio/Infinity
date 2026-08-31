@@ -1,5 +1,6 @@
 using Elysium.Application.Abstractions;
 using Elysium.Presentation.Abstractions;
+using Infinity.Application.Abstractions;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -20,6 +21,7 @@ public sealed partial class SettingsWindow :
     private readonly IApplicationLifetime applicationLifetime;
     private readonly ITextLocalizer localizer;
     private readonly INavigator navigator;
+    private readonly SettingsNavigationPathResolver navigationPathResolver;
     private readonly Dictionary<ISettingViewModel, NavigationViewItem> navigationItems = [];
     private readonly List<ISettingViewModel> navigationPath = [];
     private bool isAboutDialogOpen;
@@ -30,7 +32,8 @@ public sealed partial class SettingsWindow :
     public SettingsWindow(ITextLocalizer localizer,
         IApplicationLifetime applicationLifetime,
         INavigator navigator,
-        AboutViewModel aboutViewModel)
+        AboutViewModel aboutViewModel,
+        SettingsNavigationPathResolver navigationPathResolver)
     {
         InitializeComponent();
 
@@ -38,6 +41,7 @@ public sealed partial class SettingsWindow :
         this.applicationLifetime = applicationLifetime;
         this.navigator = navigator;
         this.aboutViewModel = aboutViewModel;
+        this.navigationPathResolver = navigationPathResolver;
 
         Closed += HandleClosed;
         ExtendsContentIntoTitleBar = true;
@@ -80,18 +84,14 @@ public sealed partial class SettingsWindow :
             return;
         }
 
-        List<ISettingViewModel>? path = FindNavigationPath(selectedItem);
+        IReadOnlyList<ISettingViewModel> path = navigationPathResolver.GetSelectionPath(ViewModel, selectedItem);
 
-        if (path is null)
+        if (path.Count == 0)
         {
             return;
         }
 
-        if (selectedItem.Children.Count > 0)
-        {
-            path.Add(selectedItem.Children[0]);
-            SettingsNavigation.SelectedItem = navigationItems[selectedItem.Children[0]];
-        }
+        SettingsNavigation.SelectedItem = navigationItems[path[^1]];
 
         Navigate(path);
     }
@@ -190,14 +190,8 @@ public sealed partial class SettingsWindow :
             return;
         }
 
-        List<ISettingViewModel> path = [.. navigationPath.Take(args.Index + 1)];
+        IReadOnlyList<ISettingViewModel> path = navigationPathResolver.GetBreadcrumbPath(navigationPath, args.Index);
         ISettingViewModel target = path[^1];
-
-        if (target.Children.Count > 0)
-        {
-            target = target.Children[0];
-            path.Add(target);
-        }
 
         if (navigationItems.TryGetValue(target, out NavigationViewItem? item))
         {
@@ -223,7 +217,7 @@ public sealed partial class SettingsWindow :
             return;
         }
 
-        List<ISettingViewModel> path = [.. navigationPath.Take(navigationPath.Count - 1)];
+        IReadOnlyList<ISettingViewModel> path = navigationPathResolver.GetBackPath(navigationPath);
         ISettingViewModel target = path[^1];
 
         if (navigationItems.TryGetValue(target, out NavigationViewItem? item))
@@ -244,18 +238,11 @@ public sealed partial class SettingsWindow :
             SettingsNavigation.MenuItems.Add(CreateNavigationItem(root));
         }
 
-        ISettingViewModel? initial = ViewModel.FirstOrDefault();
+        IReadOnlyList<ISettingViewModel> path = navigationPathResolver.GetInitialPath(ViewModel);
 
-        if (initial is null)
+        if (path.Count == 0)
         {
             return;
-        }
-
-        List<ISettingViewModel> path = [initial];
-
-        if (initial.Children.Count > 0)
-        {
-            path.Add(initial.Children[0]);
         }
 
         ISettingViewModel selectedItem = path.Last(navigationItems.ContainsKey);
@@ -286,44 +273,6 @@ public sealed partial class SettingsWindow :
         }
 
         return item;
-    }
-
-    private List<ISettingViewModel>? FindNavigationPath(ISettingViewModel target)
-    {
-        foreach (ISettingViewModel root in ViewModel)
-        {
-            List<ISettingViewModel> path = [];
-
-            if (TryFindNavigationPath(root, target, path))
-            {
-                return path;
-            }
-        }
-
-        return null;
-    }
-
-    private static bool TryFindNavigationPath(ISettingViewModel current,
-        ISettingViewModel target,
-        List<ISettingViewModel> path)
-    {
-        path.Add(current);
-
-        if (ReferenceEquals(current, target))
-        {
-            return true;
-        }
-
-        foreach (ISettingViewModel child in current.Children)
-        {
-            if (TryFindNavigationPath(child, target, path))
-            {
-                return true;
-            }
-        }
-
-        path.RemoveAt(path.Count - 1);
-        return false;
     }
 
     private void Navigate(IReadOnlyList<ISettingViewModel> path)

@@ -1,5 +1,6 @@
 using Infinity.Application;
 using Infinity.Application.Abstractions;
+using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Infinity.Tests;
@@ -7,7 +8,7 @@ namespace Infinity.Tests;
 public sealed class TrackedWindowDragControllerTests
 {
     [Fact]
-    public void MoveUsesWorkspaceDeltaAndRepositionsWindow()
+    public void MoveToUsesCanvasPositionAndRepositionsWindow()
     {
         WindowStore store = new();
         TrackedWindow window = CreateWindow(2250, 100);
@@ -15,12 +16,13 @@ public sealed class TrackedWindowDragControllerTests
         TestScroller scroller = new() { VisualOffset = 2000 };
         TrackedWindowDragController controller = new(store,
             scroller,
+            new TestWindowResizeSynchronizer(),
             NullLogger<TrackedWindowDragController>.Instance);
         int changedCount = 0;
         store.WindowChanged += (_, _) => changedCount++;
 
         bool began = controller.Begin(window.Handle);
-        bool moved = controller.Move(window.Handle, 500, 50);
+        bool moved = controller.MoveTo(window.Handle, 2750, 150);
 
         Assert.True(began);
         Assert.True(moved);
@@ -37,27 +39,6 @@ public sealed class TrackedWindowDragControllerTests
     }
 
     [Fact]
-    public void MoveUpdatesStickyWindowViewportAnchor()
-    {
-        WindowStore store = new();
-        TrackedWindow window = CreateWindow(2250, 100);
-        window.IsSticky = true;
-        window.StickyViewportX = 250;
-        store.Add(window);
-        TestScroller scroller = new() { VisualOffset = 2000 };
-        TrackedWindowDragController controller = new(store,
-            scroller,
-            NullLogger<TrackedWindowDragController>.Instance);
-
-        Assert.True(controller.Begin(window.Handle));
-        Assert.True(controller.Move(window.Handle, -75, 25));
-
-        Assert.Equal(175, window.StickyViewportX);
-        Assert.Equal(2175, window.CanvasX);
-        Assert.Equal(125, window.CanvasY);
-    }
-
-    [Fact]
     public void EndClearsOnlyMatchingDrag()
     {
         WindowStore store = new();
@@ -67,6 +48,7 @@ public sealed class TrackedWindowDragControllerTests
         store.Add(secondWindow);
         TrackedWindowDragController controller = new(store,
             new TestScroller(),
+            new TestWindowResizeSynchronizer(),
             NullLogger<TrackedWindowDragController>.Instance);
         Assert.True(controller.Begin(window.Handle));
         Assert.False(controller.Begin(new IntPtr(2)));
@@ -79,6 +61,22 @@ public sealed class TrackedWindowDragControllerTests
     }
 
     [Fact]
+    public void MoveToUsesExactCanvasPositionRegardlessOfScrollOffset()
+    {
+        WindowStore store = new();
+        TrackedWindow window = CreateWindow(2250, 100);
+        store.Add(window);
+        TestScroller scroller = new() { VisualOffset = 6000 };
+        TrackedWindowDragController controller = new(store, scroller, new TestWindowResizeSynchronizer(), NullLogger<TrackedWindowDragController>.Instance);
+
+        Assert.True(controller.Begin(window.Handle));
+        Assert.True(controller.MoveTo(window.Handle, 250, 175));
+        Assert.Equal(250, window.CanvasX);
+        Assert.Equal(175, window.CanvasY);
+        Assert.Equal(1, scroller.RepositionCount);
+    }
+
+    [Fact]
     public void RemovedWindowEndsActiveDrag()
     {
         WindowStore store = new();
@@ -86,11 +84,12 @@ public sealed class TrackedWindowDragControllerTests
         store.Add(window);
         TrackedWindowDragController controller = new(store,
             new TestScroller(),
+            new TestWindowResizeSynchronizer(),
             NullLogger<TrackedWindowDragController>.Instance);
         Assert.True(controller.Begin(window.Handle));
         store.Remove(window.Handle);
 
-        Assert.False(controller.Move(window.Handle, 50, 0));
+        Assert.False(controller.MoveTo(window.Handle, 300, 100));
         Assert.Equal(IntPtr.Zero, controller.DraggingWindow);
     }
 
@@ -103,13 +102,47 @@ public sealed class TrackedWindowDragControllerTests
         TestScroller scroller = new();
         TrackedWindowDragController controller = new(store,
             scroller,
+            new TestWindowResizeSynchronizer(),
             NullLogger<TrackedWindowDragController>.Instance);
 
         Assert.True(controller.Begin(window.Handle));
-        Assert.False(controller.Move(window.Handle, double.NaN, 0));
+        Assert.False(controller.MoveTo(window.Handle, double.NaN, 0));
         Assert.Equal(250, window.CanvasX);
         Assert.Equal(100, window.CanvasY);
         Assert.Equal(0, scroller.RepositionCount);
+    }
+
+    [Fact]
+    public void MoveAndResizeCommitsNewTrackedGeometry()
+    {
+        WindowStore store = new();
+        TrackedWindow window = CreateWindow(250, 100);
+        store.Add(window);
+        TestScroller scroller = new();
+        TestWindowResizeSynchronizer resizeSynchronizer = new();
+        TrackedWindowDragController controller = new(store, scroller, resizeSynchronizer, NullLogger<TrackedWindowDragController>.Instance);
+
+        Assert.True(controller.Begin(window.Handle));
+        Assert.True(controller.MoveAndResize(window.Handle, 1920, 0, 960, 1080));
+        Assert.Equal((1920, 0, 960, 1080), (window.CanvasX, window.CanvasY, window.Width, window.Height));
+        Assert.Equal(int.MinValue, window.LastPlacedX);
+        Assert.Equal(int.MinValue, window.LastPlacedY);
+        Assert.Equal(1, scroller.RepositionCount);
+        Assert.Equal((window.Handle, 960, 1080), resizeSynchronizer.LastRequest);
+    }
+
+    [Fact]
+    public void MoveAndResizeRepairsTheSourceSurfaceWhenSizeIsUnchanged()
+    {
+        WindowStore store = new();
+        TrackedWindow window = CreateWindow(250, 100);
+        store.Add(window);
+        TestWindowResizeSynchronizer resizeSynchronizer = new();
+        TrackedWindowDragController controller = new(store, new TestScroller(), resizeSynchronizer, NullLogger<TrackedWindowDragController>.Instance);
+
+        Assert.True(controller.Begin(window.Handle));
+        Assert.True(controller.MoveAndResize(window.Handle, 400, 200, window.Width, window.Height));
+        Assert.Equal((window.Handle, window.Width, window.Height), resizeSynchronizer.LastRequest);
     }
 
     private static TrackedWindow CreateWindow(int canvasX, int canvasY) => new()
@@ -120,4 +153,16 @@ public sealed class TrackedWindowDragControllerTests
         Width = 800,
         Height = 600
     };
+
+    private sealed class TestWindowResizeSynchronizer :
+        IWindowResizeSynchronizer
+    {
+        public (nint Handle, int Width, int Height)? LastRequest { get; private set; }
+
+        public bool TrySynchronize(nint windowHandle, int width, int height)
+        {
+            LastRequest = (windowHandle, width, height);
+            return true;
+        }
+    }
 }

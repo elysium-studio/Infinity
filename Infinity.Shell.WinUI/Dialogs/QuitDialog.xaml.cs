@@ -1,3 +1,4 @@
+using Infinity.Application.Abstractions;
 using Microsoft.UI.Xaml.Controls;
 
 namespace Infinity.Shell.WinUI;

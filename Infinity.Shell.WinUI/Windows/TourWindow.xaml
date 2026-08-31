@@ -21,29 +21,27 @@
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <ScrollViewer
+            <Grid
                 Grid.Row="0"
-                Background="{ThemeResource LayerOnAcrylicFillColorDefault}"
-                HorizontalScrollMode="Disabled"
-                VerticalScrollBarVisibility="Auto">
-                <Grid Padding="48,48,48,48">
-                    <ContentControl
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        HorizontalContentAlignment="Center"
-                        VerticalContentAlignment="Center"
-                        Content="{x:Bind ViewModel.CurrentStep, Mode=OneWay}"
-                        ContentTemplateSelector="{WinUI:ViewTemplateSelector}" />
-                    <PipsPager
-                        Grid.Column="0"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Bottom"
-                        NextButtonVisibility="Collapsed"
-                        NumberOfPages="{x:Bind ViewModel.Count, Mode=OneTime}"
-                        PreviousButtonVisibility="Collapsed"
-                        SelectedPageIndex="{x:Bind ViewModel.SelectedIndex, Mode=TwoWay}" />
-                </Grid>
-            </ScrollViewer>
+                Padding="48,48,48,24"
+                Background="{ThemeResource LayerOnAcrylicFillColorDefault}">
+                <ContentControl
+                    Margin="0,0,0,32"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Top"
+                    Content="{x:Bind ViewModel.CurrentStep, Mode=OneWay}"
+                    ContentTemplateSelector="{WinUI:ViewTemplateSelector}" />
+                <PipsPager
+                    Grid.Column="0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Bottom"
+                    NextButtonVisibility="Collapsed"
+                    NumberOfPages="{x:Bind ViewModel.Count, Mode=OneTime}"
+                    PreviousButtonVisibility="Collapsed"
+                    SelectedPageIndex="{x:Bind ViewModel.SelectedIndex, Mode=TwoWay}" />
+            </Grid>
             <Border
                 Grid.Row="1"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"

@@ -1,0 +1,601 @@
+using Infinity.Application.Abstractions;
+using Infinity.Platform.Abstractions;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
+using System;
+using System.Numerics;
+using Windows.Foundation;
+using Windows.System;
+
+namespace Infinity.Shell.WinUI;
+
+internal sealed class DesktopWindowPreview :
+    IDisposable
+{
+    private const float ShadowDepth = 40;
+    private const double DragThreshold = 4;
+    private const int DraggedZIndex = 1_000_000;
+    private const int DraggedPageZIndex = 999_000;
+
+    private readonly ThumbnailCompositionPreview? preview;
+    private readonly Border focusHost;
+    private readonly Grid focusVisual;
+    private readonly Grid selectionVisual;
+    private readonly ITrackedWindowDragController dragController;
+    private readonly DesktopOverviewDragScroller overviewDragScroller;
+    private readonly DesktopWindowDragPositionResolver dragPositionResolver;
+    private readonly DesktopDragBoundaryCalculator dragBoundaryCalculator;
+    private readonly DesktopDragCursorConfinement cursorConfinement;
+    private readonly DesktopWindowPlacementCoordinator windowPlacementCoordinator;
+    private readonly nint windowHandle;
+    private readonly double layoutScale;
+    private readonly float shadowDepth;
+    private uint? dragPointerId;
+    private Point dragStartPoint;
+    private Point dragLastPoint;
+    private UIElement? dragCoordinateRoot;
+    private double dragHorizontalDelta;
+    private double dragVerticalDelta;
+    private double x;
+    private double y;
+    private double width;
+    private double height;
+    private DesktopWindowSnapTarget? snapTarget;
+    private bool interactionEnabled;
+    private bool isControlClick;
+    private bool isFilterMatch = true;
+    private bool isDragging;
+    private bool isGroupDragLeader;
+    private bool isGroupStacked;
+    private bool isKeyboardFocused;
+    private bool isPagePromoted;
+    private bool isPromoted;
+    private bool isSelected;
+    private bool suppressNextTap;
+    private bool disposed;
+    private int zIndex;
+    private int groupStackIndex;
+    private double groupTargetX;
+    private double groupTargetY;
+    private double heldGroupLeaderX;
+    private double heldGroupLeaderY;
+
+    public DesktopWindowPreview(nint windowHandle, Border host, Border focusHost, ThumbnailCompositionPreview? preview, Grid focusVisual, Grid selectionVisual, ITrackedWindowDragController dragController, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, double layoutScale)
+    {
+        this.windowHandle = windowHandle;
+        Host = host;
+        this.focusHost = focusHost;
+        this.preview = preview;
+        this.focusVisual = focusVisual;
+        this.selectionVisual = selectionVisual;
+        this.dragController = dragController;
+        this.overviewDragScroller = overviewDragScroller;
+        this.dragPositionResolver = dragPositionResolver;
+        this.dragBoundaryCalculator = dragBoundaryCalculator;
+        this.cursorConfinement = cursorConfinement;
+        this.windowPlacementCoordinator = windowPlacementCoordinator;
+        this.layoutScale = double.IsFinite(layoutScale) && layoutScale > 0 ? layoutScale : 1;
+        shadowDepth = ToFloat(ShadowDepth / this.layoutScale);
+
+        Host.PointerPressed += HandlePointerPressed;
+        Host.PointerMoved += HandlePointerMoved;
+        Host.PointerReleased += HandlePointerReleased;
+        Host.PointerCanceled += HandlePointerCanceled;
+        Host.PointerCaptureLost += HandlePointerCaptureLost;
+        Host.Tapped += HandleTapped;
+        Host.ContextFlyout = contextMenuBuilder.Create(windowHandle);
+    }
+
+    public event Action<nint>? Invoked;
+
+    public event Action<nint>? SelectionToggled;
+
+    public event Action<nint>? PositionChanged;
+
+    public event Action<nint, double, double>? DragMoved;
+
+    public event Action<nint>? DragStarted;
+
+    public event Action<DesktopWindowDragCompletion>? DragCompleted;
+
+    public Border Host { get; }
+
+    public Border FocusHost => focusHost;
+
+    public int ZIndex => zIndex;
+
+    public double SourceWidth { get; private set; }
+
+    public double SourceHeight { get; private set; }
+
+    public double VisualX => x + dragHorizontalDelta;
+
+    public double VisualY => y + dragVerticalDelta;
+
+    public double LayoutScale => layoutScale;
+
+    public void RefreshSourceSize(TrackedWindow trackedWindow, IWindowGeometryReader geometryReader)
+    {
+        double previousWidth = SourceWidth;
+        double previousHeight = SourceHeight;
+
+        if (geometryReader.TryReadVisibleGeometry(trackedWindow.Handle, out _, out _, out int visibleWidth, out int visibleHeight))
+        {
+            SourceWidth = visibleWidth;
+            SourceHeight = visibleHeight;
+        }
+        else
+        {
+            SourceWidth = trackedWindow.Width;
+            SourceHeight = trackedWindow.Height;
+        }
+
+        if (previousWidth > 0 && previousHeight > 0 && (previousWidth != SourceWidth || previousHeight != SourceHeight))
+        {
+            preview?.RefreshSource();
+        }
+    }
+
+    public void SetZIndex(int value)
+    {
+        zIndex = value;
+        ApplyZIndex();
+    }
+
+    public void SetPagePromoted(bool value)
+    {
+        if (isPagePromoted == value)
+        {
+            return;
+        }
+
+        isPagePromoted = value;
+        ApplyZIndex();
+    }
+
+    public void SetInteractionEnabled(bool value)
+    {
+        interactionEnabled = value;
+
+        if (!value)
+        {
+            CompleteDrag();
+            Host.ReleasePointerCaptures();
+        }
+
+        ApplyInteractionState();
+    }
+
+    public void SetFilterMatch(bool value)
+    {
+        isFilterMatch = value;
+
+        if (!value)
+        {
+            CompleteDrag();
+            Host.ReleasePointerCaptures();
+        }
+
+        double opacity = value ? 1 : 0;
+        Host.Opacity = opacity;
+        focusHost.Opacity = opacity;
+        ApplyInteractionState();
+    }
+
+    public void SetKeyboardFocused(bool value)
+    {
+        isKeyboardFocused = value;
+        ApplyIndicatorVisibility();
+    }
+
+    public void SetSelected(bool value)
+    {
+        isSelected = value;
+        ApplyIndicatorVisibility();
+    }
+
+    public void SetGroupDragLeader(bool value)
+    {
+        isGroupDragLeader = value;
+
+        if (value)
+        {
+            heldGroupLeaderX = x + dragHorizontalDelta;
+            heldGroupLeaderY = y + dragVerticalDelta;
+        }
+
+        ApplyIndicatorVisibility();
+    }
+
+    public void SetGroupStackTarget(double targetX, double targetY, float scale, int stackIndex, TimeSpan? transitionDuration)
+    {
+        isGroupStacked = true;
+        groupTargetX = targetX;
+        groupTargetY = targetY;
+        groupStackIndex = Math.Max(1, stackIndex);
+
+        SetGroupTransitions(transitionDuration);
+
+        Vector3 targetScale = new(Math.Clamp(scale, 0.82f, 1), Math.Clamp(scale, 0.82f, 1), 1);
+        Host.Scale = targetScale;
+        focusHost.Scale = targetScale;
+
+        ApplyTranslation();
+        ApplyZIndex();
+        ApplyIndicatorVisibility();
+        ApplyInteractionState();
+    }
+
+    public void ClearGroupDragVisual(TimeSpan? transitionDuration)
+    {
+        bool wasGroupDragLeader = isGroupDragLeader;
+        SetGroupTransitions(transitionDuration);
+
+        isGroupDragLeader = false;
+        isGroupStacked = false;
+        groupStackIndex = 0;
+        Host.Scale = Vector3.One;
+        focusHost.Scale = Vector3.One;
+
+        if (!wasGroupDragLeader)
+        {
+            ApplyTranslation();
+        }
+        ApplyZIndex();
+        ApplyIndicatorVisibility();
+        ApplyInteractionState();
+    }
+
+    public void Update(double x, double y, double width, double height, TimeSpan? transitionDuration = null)
+    {
+        Host.TranslationTransition = transitionDuration.HasValue ? new Vector3Transition { Duration = transitionDuration.Value } : null;
+        focusHost.TranslationTransition = transitionDuration.HasValue ? new Vector3Transition { Duration = transitionDuration.Value } : null;
+
+        if (isDragging)
+        {
+            dragHorizontalDelta += this.x - x;
+            dragVerticalDelta += this.y - y;
+
+            ReconcilePointerBoundary();
+        }
+
+        this.x = x;
+        this.y = y;
+        ApplyTranslation();
+
+        if (this.width != width || this.height != height)
+        {
+            this.width = width;
+            this.height = height;
+
+            ApplySize(width, height);
+        }
+    }
+
+    public void SetSnapTarget(DesktopWindowSnapTarget? target)
+    {
+        snapTarget = target;
+    }
+
+    public void ClearTranslationTransition()
+    {
+        Host.TranslationTransition = null;
+        focusHost.TranslationTransition = null;
+    }
+
+    public void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        disposed = true;
+
+        CompleteDrag();
+        Host.ReleasePointerCaptures();
+
+        Host.PointerPressed -= HandlePointerPressed;
+        Host.PointerMoved -= HandlePointerMoved;
+        Host.PointerReleased -= HandlePointerReleased;
+        Host.PointerCanceled -= HandlePointerCanceled;
+        Host.PointerCaptureLost -= HandlePointerCaptureLost;
+        Host.Tapped -= HandleTapped;
+
+        preview?.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    private static float ToFloat(double value) => (float)Math.Clamp(value, -float.MaxValue, float.MaxValue);
+
+    private void HandleTapped(object sender, TappedRoutedEventArgs args)
+    {
+        if (suppressNextTap)
+        {
+            suppressNextTap = false;
+            args.Handled = true;
+            return;
+        }
+
+        args.Handled = true;
+
+        if (isControlClick)
+        {
+            isControlClick = false;
+            SelectionToggled?.Invoke(windowHandle);
+            return;
+        }
+
+        Invoked?.Invoke(windowHandle);
+    }
+
+    private void HandlePointerPressed(object sender, PointerRoutedEventArgs args)
+    {
+        suppressNextTap = false;
+        isControlClick = args.KeyModifiers.HasFlag(VirtualKeyModifiers.Control);
+        var point = args.GetCurrentPoint(Host);
+
+        if (!point.Properties.IsLeftButtonPressed)
+        {
+            return;
+        }
+
+        UIElement coordinateRoot = Host.XamlRoot?.Content as UIElement ?? Host;
+
+        if (!Host.CapturePointer(args.Pointer))
+        {
+            return;
+        }
+
+        dragPointerId = args.Pointer.PointerId;
+        dragCoordinateRoot = coordinateRoot;
+        dragStartPoint = args.GetCurrentPoint(coordinateRoot).Position;
+        dragLastPoint = dragStartPoint;
+
+        SetPromoted(true);
+
+        args.Handled = true;
+    }
+
+    private void HandlePointerMoved(object sender, PointerRoutedEventArgs args)
+    {
+        if (dragPointerId != args.Pointer.PointerId || dragCoordinateRoot is null)
+        {
+            return;
+        }
+
+        Point rawPoint = args.GetCurrentPoint(dragCoordinateRoot).Position;
+        double viewportWidth = Host.XamlRoot?.Size.Width ?? 0;
+        double viewportHeight = Host.XamlRoot?.Size.Height ?? 0;
+        (double pointerX, double pointerY) = dragBoundaryCalculator.Constrain(rawPoint.X, rawPoint.Y, viewportWidth, viewportHeight, layoutScale);
+        Point currentPoint = new(pointerX, pointerY);
+        double horizontalDelta = currentPoint.X - dragStartPoint.X;
+        double verticalDelta = currentPoint.Y - dragStartPoint.Y;
+
+        if (!isDragging)
+        {
+            double distance = Math.Sqrt(horizontalDelta * horizontalDelta + verticalDelta * verticalDelta);
+
+            if (distance < DragThreshold)
+            {
+                return;
+            }
+
+            if (!double.IsFinite(layoutScale) || layoutScale <= 0 || !dragController.Begin(windowHandle))
+            {
+                CompleteDrag();
+                Host.ReleasePointerCapture(args.Pointer);
+                return;
+            }
+
+            isDragging = true;
+            isControlClick = false;
+            suppressNextTap = true;
+            dragHorizontalDelta = horizontalDelta / layoutScale;
+            dragVerticalDelta = verticalDelta / layoutScale;
+            dragLastPoint = currentPoint;
+            ClearTranslationTransition();
+            ApplyIndicatorVisibility();
+            DragStarted?.Invoke(windowHandle);
+            cursorConfinement.Begin(viewportWidth, viewportHeight, layoutScale, Host.XamlRoot?.RasterizationScale ?? 1, constrainVertical: true);
+        }
+        else
+        {
+            dragHorizontalDelta += (currentPoint.X - dragLastPoint.X) / layoutScale;
+            dragVerticalDelta += (currentPoint.Y - dragLastPoint.Y) / layoutScale;
+            dragLastPoint = currentPoint;
+        }
+
+        overviewDragScroller.Update(Host.DispatcherQueue, currentPoint.X, viewportWidth);
+        cursorConfinement.Update(viewportWidth, viewportHeight, layoutScale, Host.XamlRoot?.RasterizationScale ?? 1);
+        DragMoved?.Invoke(windowHandle, currentPoint.X, currentPoint.Y);
+        ApplyTranslation();
+        args.Handled = true;
+    }
+
+    private void HandlePointerReleased(object sender, PointerRoutedEventArgs args)
+    {
+        if (dragPointerId != args.Pointer.PointerId)
+        {
+            return;
+        }
+
+        bool wasDragging = isDragging;
+
+        CompleteDrag();
+        Host.ReleasePointerCapture(args.Pointer);
+
+        args.Handled = wasDragging;
+    }
+
+    private void HandlePointerCanceled(object sender, PointerRoutedEventArgs args)
+    {
+        if (dragPointerId != args.Pointer.PointerId)
+        {
+            return;
+        }
+
+        isControlClick = false;
+        CompleteDrag();
+        Host.ReleasePointerCapture(args.Pointer);
+        args.Handled = true;
+    }
+
+    private void HandlePointerCaptureLost(object sender, PointerRoutedEventArgs args)
+    {
+        if (dragPointerId == args.Pointer.PointerId)
+        {
+            isControlClick = false;
+            CompleteDrag();
+        }
+    }
+
+    private void CompleteDrag()
+    {
+        bool wasDragging = isDragging;
+        bool wasGroupDrag = wasDragging && isGroupDragLeader;
+        double horizontalDelta = dragHorizontalDelta;
+        double verticalDelta = dragVerticalDelta;
+        DesktopWindowSnapTarget? completedSnapTarget = snapTarget;
+
+        if (wasDragging)
+        {
+            overviewDragScroller.Stop();
+            cursorConfinement.Release();
+        }
+
+        dragPointerId = null;
+        dragCoordinateRoot = null;
+        if (wasGroupDrag)
+        {
+            heldGroupLeaderX = x + dragHorizontalDelta;
+            heldGroupLeaderY = y + dragVerticalDelta;
+        }
+
+        isDragging = false;
+        ApplyIndicatorVisibility();
+        snapTarget = null;
+
+        if (wasDragging)
+        {
+            if (wasGroupDrag)
+            {
+                DragCompleted?.Invoke(new DesktopWindowDragCompletion(windowHandle, horizontalDelta, verticalDelta, completedSnapTarget, true, false));
+                dragController.End(windowHandle);
+                dragHorizontalDelta = 0;
+                dragVerticalDelta = 0;
+                isGroupDragLeader = false;
+                SetPromoted(false);
+                ApplySize(width, height);
+                ApplyTranslation();
+                ApplyIndicatorVisibility();
+                return;
+            }
+
+            dragHorizontalDelta = 0;
+            dragVerticalDelta = 0;
+            SetPromoted(false);
+
+            bool moved = completedSnapTarget is { OccupantHandle: not 0 } swapTarget
+                ? windowPlacementCoordinator.TrySwapIntoSlot(windowHandle, swapTarget.OccupantHandle, swapTarget.Placement)
+                : completedSnapTarget.HasValue
+                ? dragController.MoveAndResize(windowHandle, completedSnapTarget.Value.Placement.CanvasX, completedSnapTarget.Value.Placement.CanvasY, completedSnapTarget.Value.Placement.Width, completedSnapTarget.Value.Placement.Height)
+                : dragPositionResolver.TryResolve(windowHandle, horizontalDelta, verticalDelta, out DesktopWindowDragPosition position) && dragController.MoveTo(windowHandle, position.CanvasX, position.CanvasY);
+
+            dragController.End(windowHandle);
+
+            if (moved)
+            {
+                PositionChanged?.Invoke(windowHandle);
+                DragCompleted?.Invoke(new DesktopWindowDragCompletion(windowHandle, horizontalDelta, verticalDelta, completedSnapTarget, false, true));
+                return;
+            }
+
+            DragCompleted?.Invoke(new DesktopWindowDragCompletion(windowHandle, horizontalDelta, verticalDelta, completedSnapTarget, false, false));
+        }
+        else
+        {
+            dragHorizontalDelta = 0;
+            dragVerticalDelta = 0;
+            SetPromoted(false);
+        }
+
+        ApplySize(width, height);
+        ApplyTranslation();
+    }
+
+    private void ReconcilePointerBoundary()
+    {
+        double viewportWidth = Host.XamlRoot?.Size.Width ?? 0;
+        double viewportHeight = Host.XamlRoot?.Size.Height ?? 0;
+        (double pointerX, double pointerY) = dragBoundaryCalculator.Constrain(dragLastPoint.X, dragLastPoint.Y, viewportWidth, viewportHeight, layoutScale);
+
+        dragHorizontalDelta += (pointerX - dragLastPoint.X) / layoutScale;
+        dragVerticalDelta += (pointerY - dragLastPoint.Y) / layoutScale;
+        dragLastPoint = new Point(pointerX, pointerY);
+    }
+
+    private void ApplyTranslation()
+    {
+        double targetX = isGroupStacked ? groupTargetX : isGroupDragLeader && !isDragging ? heldGroupLeaderX : x + dragHorizontalDelta;
+        double targetY = isGroupStacked ? groupTargetY : isGroupDragLeader && !isDragging ? heldGroupLeaderY : y + dragVerticalDelta;
+        Vector3 translation = new(ToFloat(targetX), ToFloat(targetY), shadowDepth);
+
+        Host.Translation = translation;
+        focusHost.Translation = translation;
+    }
+
+    private void ApplySize(double targetWidth, double targetHeight)
+    {
+        Host.Width = targetWidth;
+        Host.Height = targetHeight;
+        focusHost.Width = targetWidth;
+        focusHost.Height = targetHeight;
+        Host.CenterPoint = new Vector3(ToFloat(targetWidth / 2), ToFloat(targetHeight / 2), 0);
+        focusHost.CenterPoint = Host.CenterPoint;
+        preview?.Update(targetWidth, targetHeight, true);
+    }
+
+    private void SetPromoted(bool value)
+    {
+        if (isPromoted == value)
+        {
+            return;
+        }
+
+        isPromoted = value;
+        ApplyZIndex();
+    }
+
+    private void ApplyZIndex()
+    {
+        int valueToApply = isPromoted
+            ? DraggedZIndex
+            : isGroupStacked
+                ? DraggedZIndex - Math.Clamp(groupStackIndex, 1, 1000)
+                : isPagePromoted
+                    ? DraggedPageZIndex + Math.Clamp(zIndex, 0, DraggedZIndex - DraggedPageZIndex - 1)
+                    : zIndex;
+
+        Canvas.SetZIndex(Host, valueToApply);
+        Canvas.SetZIndex(focusHost, valueToApply);
+    }
+
+    private void ApplyInteractionState() => Host.IsHitTestVisible = interactionEnabled && isFilterMatch && !isGroupStacked;
+
+    private void ApplyIndicatorVisibility()
+    {
+        bool groupDragging = isGroupDragLeader || isGroupStacked;
+        focusVisual.Visibility = isKeyboardFocused && !isSelected && !isDragging && !groupDragging ? Visibility.Visible : Visibility.Collapsed;
+        selectionVisual.Visibility = isSelected && !isDragging && !groupDragging ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void SetGroupTransitions(TimeSpan? duration)
+    {
+        Host.TranslationTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
+        focusHost.TranslationTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
+        Host.ScaleTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
+        focusHost.ScaleTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
+    }
+}

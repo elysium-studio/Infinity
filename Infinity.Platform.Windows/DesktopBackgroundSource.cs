@@ -23,7 +23,7 @@ public sealed unsafe partial class DesktopBackgroundSource :
     private static partial uint GetSysColor(int index);
 
     private readonly Lock lifecycleLock = new();
-    private readonly System.Threading.Timer changeTimer;
+    private readonly Timer changeTimer;
     private readonly ILogger<DesktopBackgroundSource> logger;
     private readonly Func<DesktopBackgroundSnapshot> snapshotReader;
     private readonly TimeSpan pollingInterval;

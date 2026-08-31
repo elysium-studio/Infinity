@@ -73,23 +73,47 @@
   <data name="UpdateReadyToastTitle" xml:space="preserve">
     <value>Aktualizacja gotowa</value>
   </data>
-  <data name="AboutTitleBar.Title" xml:space="preserve">
-    <value>O</value>
-  </data>
   <data name="BooleanToggle.OffContent" xml:space="preserve">
     <value>Nie</value>
   </data>
   <data name="BooleanToggle.OnContent" xml:space="preserve">
     <value>Tak</value>
   </data>
-  <data name="CloseWindowButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Zamknij okno</value>
+  <data name="OnOffToggle.OffContent" xml:space="preserve">
+    <value>Wył.</value>
   </data>
-  <data name="DesktopBlurCard.Description" xml:space="preserve">
-    <value>Rozmyj tło podczas przewijania i filtrowania</value>
+  <data name="OnOffToggle.OnContent" xml:space="preserve">
+    <value>Wł.</value>
   </data>
-  <data name="DesktopBlurCard.Header" xml:space="preserve">
-    <value>Rozmycie tła</value>
+  <data name="PagesSettingsSectionTitle" xml:space="preserve">
+    <value>Strony</value>
+  </data>
+  <data name="ScrollingSettingsSectionTitle" xml:space="preserve">
+    <value>Przewijanie</value>
+  </data>
+  <data name="OverviewSettingsSectionTitle" xml:space="preserve">
+    <value>Przegląd</value>
+  </data>
+  <data name="OverviewBackdropCard.Header" xml:space="preserve">
+    <value>Tło podglądu</value>
+  </data>
+  <data name="OverviewBackdropCard.Description" xml:space="preserve">
+    <value>Wybierz, co ma być wyświetlane za podglądem pulpitu</value>
+  </data>
+  <data name="OverviewBackdropWallpaperOption.Content" xml:space="preserve">
+    <value>Tapeta</value>
+  </data>
+  <data name="OverviewBackdropDarkOption.Content" xml:space="preserve">
+    <value>Ciemny</value>
+  </data>
+  <data name="OverviewBackdropLightOption.Content" xml:space="preserve">
+    <value>Jasny</value>
+  </data>
+  <data name="DesktopApplicationDockAllAppsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Wszystkie aplikacje</value>
+  </data>
+  <data name="AdvancedSettingsSectionTitle" xml:space="preserve">
+    <value>Zaawansowane</value>
   </data>
   <data name="DesktopSectionTitle.Text" xml:space="preserve">
     <value>Pulpit</value>
@@ -100,54 +124,14 @@
   <data name="DragScrollSpeedCard.Header" xml:space="preserve">
     <value>Przeciągnij prędkość przewijania</value>
   </data>
-  <data name="PreviewBackgroundCard.Description" xml:space="preserve">
-    <value>Pokaż tło pulpitu na pasku podglądu</value>
-  </data>
-  <data name="PreviewBackgroundCard.Header" xml:space="preserve">
-    <value>Tło pulpitu</value>
-  </data>
-  <data name="PreviewDebugWaitingText.Text" xml:space="preserve">
-    <value>Czekam...</value>
-  </data>
-  <data name="PreviewDebugWindow.Title" xml:space="preserve">
-    <value>Siatka podglądu okna</value>
-  </data>
-  <data name="PreviewPositionAutoOption.Content" xml:space="preserve">
-    <value>Automat</value>
-  </data>
-  <data name="PreviewPositionBottomOption.Content" xml:space="preserve">
-    <value>Dół</value>
-  </data>
-  <data name="PreviewPositionCard.Description" xml:space="preserve">
-    <value>Gdzie na ekranie pojawia się pasek podglądu</value>
-  </data>
-  <data name="PreviewPositionCard.Header" xml:space="preserve">
-    <value>Podgląd pozycji</value>
-  </data>
-  <data name="PreviewPositionTopOption.Content" xml:space="preserve">
-    <value>Góra</value>
-  </data>
-  <data name="PreviewSectionTitle.Text" xml:space="preserve">
-    <value>Podgląd</value>
-  </data>
-  <data name="PreviewSizeCard.Description" xml:space="preserve">
-    <value>Kontroluje wysokość paska podglądu u dołu ekranu</value>
-  </data>
-  <data name="PreviewSizeCard.Header" xml:space="preserve">
-    <value>Podgląd rozmiaru</value>
-  </data>
-  <data name="PreviewSizeCompactOption.Content" xml:space="preserve">
-    <value>Kompaktowy</value>
-  </data>
-  <data name="PreviewSizeDefaultOption.Content" xml:space="preserve">
-    <value>Domyślne</value>
-  </data>
-  <data name="PreviewSizeLargeOption.Content" xml:space="preserve">
-    <value>Duży</value>
-  </data>
   <data name="PageTitle" xml:space="preserve">
     <value>Strona {0}</value>
   </data>
+  <data name="PageTitleCancelButton" xml:space="preserve"><value>Cancel editing</value></data>
+  <data name="PageTitleEditButton" xml:space="preserve"><value>Edit page title</value></data>
+  <data name="PageTitleSaveButton" xml:space="preserve"><value>Save page title</value></data>
+  <data name="PageLayoutEditButton" xml:space="preserve"><value>Choose snap layout</value></data>
+  <data name="PageLayoutClearButton" xml:space="preserve"><value>Wyczyść układ</value></data>
   <data name="ScrollShortcutCancelButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Anuluj</value>
   </data>
@@ -188,6 +172,9 @@
     <value>Szybkość przewijania</value>
   </data>
   <data name="SettingsTitleBar.Title" xml:space="preserve">
+    <value>Ustawienia</value>
+  </data>
+  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Ustawienia</value>
   </data>
   <data name="SpeedFastOption.Content" xml:space="preserve">
@@ -307,53 +294,11 @@
   <data name="VirtualPagesUnlimitedOption.Content" xml:space="preserve">
     <value>Nieograniczony</value>
   </data>
-  <data name="WindowAboutMenuItem.Text" xml:space="preserve">
-    <value>O</value>
-  </data>
-  <data name="WindowExitMenuItem.Text" xml:space="preserve">
-    <value>Wyjdź</value>
-  </data>
-  <data name="WindowOptionsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Opcje</value>
-  </data>
-  <data name="WindowPeekCard.Description" xml:space="preserve">
-    <value>Kiedy najeżdżasz kursorem na miniaturę okna lub stosujesz filtr, ukryj wszystkie pozostałe okna, tak aby widoczne było tylko pasujące (lub pasujące).</value>
-  </data>
-  <data name="WindowPeekCard.Header" xml:space="preserve">
-    <value>Window Peek</value>
-  </data>
   <data name="WindowSearchBox.PlaceholderText" xml:space="preserve">
     <value>Znajdź okno na pulpicie...</value>
   </data>
   <data name="WindowsSectionTitle.Text" xml:space="preserve">
     <value>Okna</value>
-  </data>
-  <data name="WindowSettingsMenuItem.Text" xml:space="preserve">
-    <value>Ustawienia</value>
-  </data>
-  <data name="WindowTourMenuItem.Text" xml:space="preserve">
-    <value>Wybierz się na wycieczkę</value>
-  </data>
-  <data name="AlwaysOpenApplicationOnPageMenuItem" xml:space="preserve">
-    <value>Zawsze otwieraj tę aplikację na</value>
-  </data>
-  <data name="MoveWindowToPageMenuItem" xml:space="preserve">
-    <value>Przenieś okno na</value>
-  </data>
-  <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
-    <value>Usuń regułę otwierania</value>
-  </data>
-  <data name="PinWindowMenuItem" xml:space="preserve">
-    <value>Przypnij do wszystkich stron</value>
-  </data>
-  <data name="UnpinWindowMenuItem" xml:space="preserve">
-    <value>Odepnij od wszystkich stron</value>
-  </data>
-  <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Przypięte do wszystkich stron</value>
-  </data>
-  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Ustawienia</value>
   </data>
   <data name="TourNavigationItem.Content" xml:space="preserve">
     <value>Wybierz się na wycieczkę</value>
@@ -382,4 +327,119 @@
   <data name="QuitDialogCloseButton" xml:space="preserve">
     <value>Anuluj</value>
   </data>
-</root>
+  <data name="SpanCompatibleDisplaysCard.Header" xml:space="preserve">
+    <value>Rozciągnij na zgodne ekrany</value>
+  </data>
+  <data name="SpanCompatibleDisplaysCard.Description" xml:space="preserve">
+    <value>Rozszerza przegląd na sąsiednie ekrany o zgodnej rozdzielczości, skali i wyrównaniu</value>
+  </data>
+  <data name="OverviewEdgeScrollingCard.Header" xml:space="preserve">
+    <value>Przewijanie przy krawędzi podczas przeciągania</value>
+  </data>
+  <data name="OverviewEdgeScrollingCard.Description" xml:space="preserve">
+    <value>Przewija między stronami, gdy okno lub strona jest przeciągana w pobliżu lewej albo prawej krawędzi</value>
+  </data>
+  <data name="SnapAssistanceCard.Header" xml:space="preserve">
+    <value>Asystent przyciągania</value>
+  </data>
+  <data name="SnapAssistanceCard.Description" xml:space="preserve">
+    <value>Pokazuje skonfigurowane strefy przyciągania i zmienia rozmiar podglądu okna podczas przeciągania nad stroną</value>
+  </data>
+  <data name="ResetPageCustomizationsCard.Header" xml:space="preserve">
+    <value>Dostosowania stron</value>
+  </data>
+  <data name="ResetPageCustomizationsCard.Description" xml:space="preserve">
+    <value>Usuwa wszystkie niestandardowe nazwy stron i zapisane układy przyciągania</value>
+  </data>
+  <data name="ResetPageCustomizationsButton.Content" xml:space="preserve">
+    <value>Resetuj</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogTitle" xml:space="preserve">
+    <value>Zresetować dostosowania stron?</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogMessage" xml:space="preserve">
+    <value>Wszystkie niestandardowe nazwy stron i zapisane układy przyciągania zostaną usunięte. Tej operacji nie można cofnąć.</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogPrimaryButton" xml:space="preserve">
+    <value>Resetuj</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogCloseButton" xml:space="preserve">
+    <value>Anuluj</value>
+  </data>
+  <data name="ResetPageCustomizationsError" xml:space="preserve">
+    <value>Infinity nie może zresetować dostosowań stron. Spróbuj ponownie.</value>
+  </data>
+  <data name="DesktopShortcutHintsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Skróty klawiaturowe</value>
+  </data>
+  <data name="DesktopShortcutHintsButtonLabel.Text" xml:space="preserve">
+    <value>Skróty klawiaturowe</value>
+  </data>
+  <data name="DesktopShortcutHintsTitle.Text" xml:space="preserve">
+    <value>Skróty klawiaturowe</value>
+  </data>
+  <data name="DesktopShortcutHintsDescription.Text" xml:space="preserve">
+    <value>Przechodź między stronami i porządkuj okna bez odrywania rąk od klawiatury.</value>
+  </data>
+  <data name="DesktopShortcutNavigationGroup.Text" xml:space="preserve">
+    <value>Nawigacja</value>
+  </data>
+  <data name="DesktopShortcutSwitchPage.Text" xml:space="preserve">
+    <value>Przełącz strony</value>
+  </data>
+  <data name="DesktopShortcutGoToPage.Text" xml:space="preserve">
+    <value>Przejdź do strony o podanym numerze</value>
+  </data>
+  <data name="DesktopShortcutWindowGroup.Text" xml:space="preserve">
+    <value>Aktywne okno</value>
+  </data>
+  <data name="DesktopShortcutMoveWindow.Text" xml:space="preserve">
+    <value>Przenieś na sąsiednią stronę</value>
+  </data>
+  <data name="DesktopShortcutSendWindow.Text" xml:space="preserve">
+    <value>Wyślij na stronę o podanym numerze</value>
+  </data>
+  <data name="DesktopShortcutShiftKey.Text" xml:space="preserve">
+    <value>Shift</value>
+  </data>
+  <data name="PageOpenApplicationButton" xml:space="preserve">
+    <value>Otwórz aplikację</value>
+  </data>
+  <data name="DesktopAppPickerTitle.Text" xml:space="preserve">
+    <value>Otwórz aplikację</value>
+  </data>
+  <data name="DesktopAppPickerSearchBox.PlaceholderText" xml:space="preserve">
+    <value>Wyszukaj aplikacje</value>
+  </data>
+  <data name="DesktopAppPickerSearchHeader.Text" xml:space="preserve">
+    <value>Wyszukaj</value>
+  </data>
+  <data name="DesktopAppPickerEmpty.Text" xml:space="preserve">
+    <value>Nie znaleziono aplikacji</value>
+  </data>
+  <data name="DesktopAppPickerPageDestination" xml:space="preserve">
+    <value>Na tej stronie</value>
+  </data>
+  <data name="DesktopAppPickerSlotDestination" xml:space="preserve">
+    <value>Obszar {0}</value>
+  </data>
+  <data name="DesktopAppPickerDestinationHeader" xml:space="preserve">
+    <value>Otwórz w</value>
+  </data>
+  <data name="PageLayoutArrangeButton" xml:space="preserve"><value>Rozmieść tę stronę</value></data>
+  <data name="DesktopWindowBringToCurrentPage" xml:space="preserve"><value>Przenieś na bieżącą stronę</value></data>
+  <data name="DesktopWindowSendToPage" xml:space="preserve"><value>Wyślij na stronę</value></data>
+  <data name="DesktopWindowMoveToSlot" xml:space="preserve"><value>Przenieś do pola</value></data>
+  <data name="DesktopWindowSlot" xml:space="preserve"><value>Pole {0}</value></data>
+  <data name="DesktopWindowSwapWith" xml:space="preserve"><value>Zamień z</value></data>
+  <data name="DesktopWindowUntitled" xml:space="preserve"><value>Okno bez nazwy</value></data>
+  <data name="DesktopWindowCenterOnPage" xml:space="preserve"><value>Wyśrodkuj na stronie</value></data>
+  <data name="DesktopWindowClose" xml:space="preserve"><value>Zamknij okno</value></data>
+  <data name="DesktopShortcutOverviewGroup.Text" xml:space="preserve"><value>W podglądzie</value></data>
+  <data name="DesktopShortcutOverviewNavigatePages.Text" xml:space="preserve"><value>Nawiguj po stronach</value></data>
+  <data name="DesktopShortcutOverviewSelectWindows.Text" xml:space="preserve"><value>Wybierz okna</value></data>
+  <data name="DesktopShortcutOverviewMoveSelected.Text" xml:space="preserve"><value>Przenieś wybrane okna</value></data>
+  <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>Dodaj okno do zaznaczenia lub je usuń</value></data>
+  <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>Otwórz wybrane okno</value></data>
+  <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>Wyszukaj okna</value></data>
++</root>

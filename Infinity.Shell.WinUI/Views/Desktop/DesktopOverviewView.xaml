@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Controls:DesktopOverlay
+    x:Class="Infinity.Shell.WinUI.DesktopOverviewView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="using:Infinity.UI.WinUI"
+    xmlns:WinUI="using:Elysium.UI.WinUI"
+    HorizontalContentAlignment="Stretch"
+    VerticalContentAlignment="Stretch"
+    DataContext="{WinUI:ViewModel Key=DesktopOverviewView}"
+    IsOpen="{x:Bind ViewModel.IsOpen, Mode=TwoWay}"
+    StaysOpen="{x:Bind ViewModel.StaysOpen, Mode=TwoWay}">
+    <Grid>
+        <Border
+            x:Name="BackgroundSurface"
+            IsHitTestVisible="False"
+            Opacity="0" />
+        <Border
+            x:Name="ThemeBackgroundSurface"
+            Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+            IsHitTestVisible="False"
+            Opacity="0" />
+        <Border
+            x:Name="BackgroundTint"
+            Background="{ThemeResource SmokeFillColorDefaultBrush}"
+            IsHitTestVisible="False" />
+        <ContentControl
+            x:Name="DesktopPreviewContent"
+            HorizontalContentAlignment="Stretch"
+            VerticalContentAlignment="Stretch" />
+    </Grid>
+</Controls:DesktopOverlay>

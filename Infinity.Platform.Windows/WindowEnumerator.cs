@@ -11,7 +11,11 @@ public sealed class WindowEnumerator :
     {
         PInvoke.EnumWindows((windowHandle, _) =>
         {
-            action(windowHandle);
+            if (PInvoke.IsWindowVisible(windowHandle))
+            {
+                action(windowHandle);
+            }
+
             return true;
         }, new LPARAM(0));
     }

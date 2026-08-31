@@ -1,4 +1,6 @@
 ﻿DwmFlush
+DCompositionWaitForCompositorClock
+RedrawWindow
 MSLLHOOKSTRUCT
 SetForegroundWindow
 ShowWindow
@@ -35,12 +37,14 @@ GetClassName
 GetDesktopWindow
 GetShellWindow
 GetWindowLong
+GetLayeredWindowAttributes
 GetWindowText
 GetWindowThreadProcessId
 IsHungAppWindow
 IsIconic
 IsWindowVisible
 GetCursorPos
+ClipCursor
 MonitorFromPoint
 GetMonitorInfo
 SetWinEventHook
@@ -73,6 +77,9 @@ GetCurrentThreadId
 GetApplicationUserModelId
 CreateDIBSection
 GetAsyncKeyState
+GetKeyboardState
+MapVirtualKey
+ToUnicodeEx
 ShowWindowAsync
 GetClassLong
 RemoveProp

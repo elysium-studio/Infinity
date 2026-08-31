@@ -13,8 +13,8 @@ public sealed class WindowCollection(IWindowStore store,
     IForegroundWindowTracker foregroundWindowTracker,
     IWindowEventListener listener,
     IWorkspace workspace,
-    IWindowFilterState filterState,
-    IForegroundWindowCoordinator coordinator,
+    IForegroundWindowCoordinator foregroundCoordinator,
+    IWindowNavigationCoordinator navigationCoordinator,
     IDispatcher dispatcher,
     ILogger<WindowCollection> logger) :
     IWindowCollection
@@ -24,7 +24,6 @@ public sealed class WindowCollection(IWindowStore store,
 
     private bool refreshQueued;
     private bool reorderQueued;
-    private bool queuedRefreshShouldClearFilter;
     private bool queuedRefreshShouldRefreshWindowStack;
 
     public event EventHandler<TrackedWindow>? WindowAdded;
@@ -62,7 +61,7 @@ public sealed class WindowCollection(IWindowStore store,
         workspace.WorkspaceLayoutChanged += HandleWorkspaceLayoutChanged;
 
         windowStack.Refresh();
-        Queue(false, false);
+        Queue(false);
     }
 
     public void Stop()
@@ -83,7 +82,6 @@ public sealed class WindowCollection(IWindowStore store,
         lock (refreshSyncRoot)
         {
             refreshQueued = false;
-            queuedRefreshShouldClearFilter = false;
             queuedRefreshShouldRefreshWindowStack = false;
         }
 
@@ -93,13 +91,12 @@ public sealed class WindowCollection(IWindowStore store,
         }
     }
 
-    public void Queue(bool clearFilter, bool refreshWindowStack)
+    public void Queue(bool refreshWindowStack)
     {
         bool shouldQueue;
 
         lock (refreshSyncRoot)
         {
-            queuedRefreshShouldClearFilter |= clearFilter;
             queuedRefreshShouldRefreshWindowStack |= refreshWindowStack;
 
             shouldQueue = !refreshQueued;
@@ -137,19 +134,19 @@ public sealed class WindowCollection(IWindowStore store,
         logger.LogInformation("Window added: {Title} ({Handle})", trackedWindow.Title, trackedWindow.Handle);
 
         WindowAdded?.Invoke(this, trackedWindow);
-        Queue(true, true);
+        Queue(true);
     }
 
     private void HandleWindowRemoved(object? sender, IntPtr handle)
     {
         logger.LogInformation("Window removed: {Handle}", handle);
 
-        coordinator.NotifyWindowClosed(handle);
+        foregroundCoordinator.NotifyWindowClosed(handle);
 
         dispatcher.Dispatch(() =>
         {
             WindowRemoved?.Invoke(this, handle);
-            Queue(false, true);
+            Queue(true);
         });
     }
 
@@ -157,48 +154,44 @@ public sealed class WindowCollection(IWindowStore store,
         dispatcher.Dispatch(() => WindowChanged?.Invoke(this, trackedWindow));
 
     private void HandleScrollTick(object? sender, EventArgs args) =>
-        Queue(false, false);
+        Queue(false);
 
     private void HandleScrollStopped(object? sender, EventArgs args) =>
-        ScrollStopped?.Invoke(this, EventArgs.Empty);
+        dispatcher.Dispatch(() =>
+        {
+            navigationCoordinator.CompleteNavigation();
+            ScrollStopped?.Invoke(this, EventArgs.Empty);
+        });
 
     private void HandleWindowStackChanged(object? sender, EventArgs args) =>
         QueueReorder();
 
     private void HandleForegroundWindowChanged(object? sender, IntPtr handle) =>
-        dispatcher.Dispatch(() => coordinator.HandleForegroundWindowChanged(handle));
+        dispatcher.Dispatch(() => foregroundCoordinator.HandleForegroundWindowChanged(handle));
 
     private void HandleWindowMinimizeStarted(IntPtr handle) =>
-        dispatcher.Dispatch(() => coordinator.HandleWindowMinimizeStarted(handle));
+        dispatcher.Dispatch(() => foregroundCoordinator.HandleWindowMinimizeStarted(handle));
 
     private void HandleWindowMinimizeEnded(IntPtr handle) =>
-        dispatcher.Dispatch(() => coordinator.HandleWindowMinimizeEnded(handle));
+        dispatcher.Dispatch(() => foregroundCoordinator.HandleWindowMinimizeEnded(handle));
 
     private void HandleWorkspaceLayoutChanged(object? sender, EventArgs args)
     {
         logger.LogInformation("Workspace layout changed");
 
-        Queue(false, false);
+        Queue(false);
         WorkspaceLayoutChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void ProcessQueuedRefresh()
     {
-        bool shouldClearFilter;
         bool shouldRefreshWindowStack;
 
         lock (refreshSyncRoot)
         {
             refreshQueued = false;
-            shouldClearFilter = queuedRefreshShouldClearFilter;
             shouldRefreshWindowStack = queuedRefreshShouldRefreshWindowStack;
-            queuedRefreshShouldClearFilter = false;
             queuedRefreshShouldRefreshWindowStack = false;
-        }
-
-        if (shouldClearFilter && filterState.IsActive)
-        {
-            filterState.Filter = string.Empty;
         }
 
         if (shouldRefreshWindowStack)

@@ -4,13 +4,13 @@ public interface IWindowNavigationCoordinator
 {
     event EventHandler<NavigationStartedEventArgs>? NavigationStarted;
 
+    event EventHandler? NavigationCompleted;
+
     event EventHandler? WindowActivationRequested;
 
     int NavigationTargetPage { get; set; }
 
     double NavigationTargetOffset { get; set; }
-
-    int PageBeforeFilter { get; set; }
 
     IntPtr PendingActivation { get; set; }
 
@@ -19,4 +19,8 @@ public interface IWindowNavigationCoordinator
     void NavigateToPage(IntPtr handle);
 
     void Activate(IntPtr handle);
+
+    void CancelNavigation();
+
+    void CompleteNavigation();
 }

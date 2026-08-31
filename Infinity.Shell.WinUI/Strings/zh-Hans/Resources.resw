@@ -73,23 +73,47 @@
   <data name="UpdateReadyToastTitle" xml:space="preserve">
     <value>更新准备就绪</value>
   </data>
-  <data name="AboutTitleBar.Title" xml:space="preserve">
-    <value>关于</value>
-  </data>
   <data name="BooleanToggle.OffContent" xml:space="preserve">
     <value>否</value>
   </data>
   <data name="BooleanToggle.OnContent" xml:space="preserve">
     <value>是的</value>
   </data>
-  <data name="CloseWindowButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>关闭窗口</value>
+  <data name="OnOffToggle.OffContent" xml:space="preserve">
+    <value>关</value>
   </data>
-  <data name="DesktopBlurCard.Description" xml:space="preserve">
-    <value>滚动和过滤时模糊背景</value>
+  <data name="OnOffToggle.OnContent" xml:space="preserve">
+    <value>开</value>
   </data>
-  <data name="DesktopBlurCard.Header" xml:space="preserve">
-    <value>背景模糊</value>
+  <data name="PagesSettingsSectionTitle" xml:space="preserve">
+    <value>页面</value>
+  </data>
+  <data name="ScrollingSettingsSectionTitle" xml:space="preserve">
+    <value>滚动</value>
+  </data>
+  <data name="OverviewSettingsSectionTitle" xml:space="preserve">
+    <value>概览</value>
+  </data>
+  <data name="OverviewBackdropCard.Header" xml:space="preserve">
+    <value>概览背景</value>
+  </data>
+  <data name="OverviewBackdropCard.Description" xml:space="preserve">
+    <value>选择桌面概览后面显示的内容</value>
+  </data>
+  <data name="OverviewBackdropWallpaperOption.Content" xml:space="preserve">
+    <value>壁纸</value>
+  </data>
+  <data name="OverviewBackdropDarkOption.Content" xml:space="preserve">
+    <value>深色</value>
+  </data>
+  <data name="OverviewBackdropLightOption.Content" xml:space="preserve">
+    <value>浅色</value>
+  </data>
+  <data name="DesktopApplicationDockAllAppsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>所有应用</value>
+  </data>
+  <data name="AdvancedSettingsSectionTitle" xml:space="preserve">
+    <value>高级</value>
   </data>
   <data name="DesktopSectionTitle.Text" xml:space="preserve">
     <value>桌面</value>
@@ -100,54 +124,14 @@
   <data name="DragScrollSpeedCard.Header" xml:space="preserve">
     <value>拖动滚动速度</value>
   </data>
-  <data name="PreviewBackgroundCard.Description" xml:space="preserve">
-    <value>在预览栏中显示您的桌面背景</value>
-  </data>
-  <data name="PreviewBackgroundCard.Header" xml:space="preserve">
-    <value>桌面背景</value>
-  </data>
-  <data name="PreviewDebugWaitingText.Text" xml:space="preserve">
-    <value>等待...</value>
-  </data>
-  <data name="PreviewDebugWindow.Title" xml:space="preserve">
-    <value>窗口预览网格</value>
-  </data>
-  <data name="PreviewPositionAutoOption.Content" xml:space="preserve">
-    <value>汽车</value>
-  </data>
-  <data name="PreviewPositionBottomOption.Content" xml:space="preserve">
-    <value>底部</value>
-  </data>
-  <data name="PreviewPositionCard.Description" xml:space="preserve">
-    <value>预览栏出现在屏幕上的位置</value>
-  </data>
-  <data name="PreviewPositionCard.Header" xml:space="preserve">
-    <value>预览位置</value>
-  </data>
-  <data name="PreviewPositionTopOption.Content" xml:space="preserve">
-    <value>顶部</value>
-  </data>
-  <data name="PreviewSectionTitle.Text" xml:space="preserve">
-    <value>预览</value>
-  </data>
-  <data name="PreviewSizeCard.Description" xml:space="preserve">
-    <value>控制预览栏在屏幕底部显示的高度</value>
-  </data>
-  <data name="PreviewSizeCard.Header" xml:space="preserve">
-    <value>预览尺寸</value>
-  </data>
-  <data name="PreviewSizeCompactOption.Content" xml:space="preserve">
-    <value>紧凑型</value>
-  </data>
-  <data name="PreviewSizeDefaultOption.Content" xml:space="preserve">
-    <value>默认</value>
-  </data>
-  <data name="PreviewSizeLargeOption.Content" xml:space="preserve">
-    <value>大号</value>
-  </data>
   <data name="PageTitle" xml:space="preserve">
     <value>第 {0} 页</value>
   </data>
+  <data name="PageTitleCancelButton" xml:space="preserve"><value>Cancel editing</value></data>
+  <data name="PageTitleEditButton" xml:space="preserve"><value>Edit page title</value></data>
+  <data name="PageTitleSaveButton" xml:space="preserve"><value>Save page title</value></data>
+  <data name="PageLayoutEditButton" xml:space="preserve"><value>Choose snap layout</value></data>
+  <data name="PageLayoutClearButton" xml:space="preserve"><value>清除布局</value></data>
   <data name="ScrollShortcutCancelButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>取消</value>
   </data>
@@ -188,6 +172,9 @@
     <value>滚动速度</value>
   </data>
   <data name="SettingsTitleBar.Title" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>设置</value>
   </data>
   <data name="SpeedFastOption.Content" xml:space="preserve">
@@ -307,53 +294,11 @@
   <data name="VirtualPagesUnlimitedOption.Content" xml:space="preserve">
     <value>无限</value>
   </data>
-  <data name="WindowAboutMenuItem.Text" xml:space="preserve">
-    <value>关于</value>
-  </data>
-  <data name="WindowExitMenuItem.Text" xml:space="preserve">
-    <value>退出</value>
-  </data>
-  <data name="WindowOptionsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>选项</value>
-  </data>
-  <data name="WindowPeekCard.Description" xml:space="preserve">
-    <value>将鼠标悬停在窗口缩略图或应用筛选器时，隐藏所有其他窗口，以便只有匹配的一个（或多个）窗口保持可见。</value>
-  </data>
-  <data name="WindowPeekCard.Header" xml:space="preserve">
-    <value>Window Peek</value>
-  </data>
   <data name="WindowSearchBox.PlaceholderText" xml:space="preserve">
     <value>找到桌面窗口...</value>
   </data>
   <data name="WindowsSectionTitle.Text" xml:space="preserve">
     <value>窗户</value>
-  </data>
-  <data name="WindowSettingsMenuItem.Text" xml:space="preserve">
-    <value>设置</value>
-  </data>
-  <data name="WindowTourMenuItem.Text" xml:space="preserve">
-    <value>参观一下</value>
-  </data>
-  <data name="AlwaysOpenApplicationOnPageMenuItem" xml:space="preserve">
-    <value>始终在此页面打开此应用</value>
-  </data>
-  <data name="MoveWindowToPageMenuItem" xml:space="preserve">
-    <value>将窗口移至</value>
-  </data>
-  <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
-    <value>删除打开页面规则</value>
-  </data>
-  <data name="PinWindowMenuItem" xml:space="preserve">
-    <value>固定到所有页面</value>
-  </data>
-  <data name="UnpinWindowMenuItem" xml:space="preserve">
-    <value>从所有页面取消固定</value>
-  </data>
-  <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>已固定到所有页面</value>
-  </data>
-  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>设置</value>
   </data>
   <data name="TourNavigationItem.Content" xml:space="preserve">
     <value>参观一下</value>
@@ -382,4 +327,119 @@
   <data name="QuitDialogCloseButton" xml:space="preserve">
     <value>取消</value>
   </data>
-</root>
+  <data name="SpanCompatibleDisplaysCard.Header" xml:space="preserve">
+    <value>跨兼容显示器显示</value>
+  </data>
+  <data name="SpanCompatibleDisplaysCard.Description" xml:space="preserve">
+    <value>当相邻显示器的分辨率、缩放和对齐方式兼容时，将概览扩展到这些显示器</value>
+  </data>
+  <data name="OverviewEdgeScrollingCard.Header" xml:space="preserve">
+    <value>拖动时边缘滚动</value>
+  </data>
+  <data name="OverviewEdgeScrollingCard.Description" xml:space="preserve">
+    <value>将窗口或页面拖到左侧或右侧边缘附近时，在页面之间滚动</value>
+  </data>
+  <data name="SnapAssistanceCard.Header" xml:space="preserve">
+    <value>贴靠辅助</value>
+  </data>
+  <data name="SnapAssistanceCard.Description" xml:space="preserve">
+    <value>显示已配置的贴靠区域，并在页面上拖动时调整窗口预览的大小</value>
+  </data>
+  <data name="ResetPageCustomizationsCard.Header" xml:space="preserve">
+    <value>页面自定义</value>
+  </data>
+  <data name="ResetPageCustomizationsCard.Description" xml:space="preserve">
+    <value>移除所有自定义页面名称和已保存的贴靠布局</value>
+  </data>
+  <data name="ResetPageCustomizationsButton.Content" xml:space="preserve">
+    <value>重置</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogTitle" xml:space="preserve">
+    <value>要重置页面自定义吗？</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogMessage" xml:space="preserve">
+    <value>所有自定义页面名称和已保存的贴靠布局都将被移除。此操作无法撤消。</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogPrimaryButton" xml:space="preserve">
+    <value>重置</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogCloseButton" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="ResetPageCustomizationsError" xml:space="preserve">
+    <value>Infinity 无法重置页面自定义。请重试。</value>
+  </data>
+  <data name="DesktopShortcutHintsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>键盘快捷键</value>
+  </data>
+  <data name="DesktopShortcutHintsButtonLabel.Text" xml:space="preserve">
+    <value>键盘快捷键</value>
+  </data>
+  <data name="DesktopShortcutHintsTitle.Text" xml:space="preserve">
+    <value>键盘快捷键</value>
+  </data>
+  <data name="DesktopShortcutHintsDescription.Text" xml:space="preserve">
+    <value>无需离开键盘即可在页面之间移动并整理窗口。</value>
+  </data>
+  <data name="DesktopShortcutNavigationGroup.Text" xml:space="preserve">
+    <value>导航</value>
+  </data>
+  <data name="DesktopShortcutSwitchPage.Text" xml:space="preserve">
+    <value>切换页面</value>
+  </data>
+  <data name="DesktopShortcutGoToPage.Text" xml:space="preserve">
+    <value>转到编号页面</value>
+  </data>
+  <data name="DesktopShortcutWindowGroup.Text" xml:space="preserve">
+    <value>活动窗口</value>
+  </data>
+  <data name="DesktopShortcutMoveWindow.Text" xml:space="preserve">
+    <value>移至相邻页面</value>
+  </data>
+  <data name="DesktopShortcutSendWindow.Text" xml:space="preserve">
+    <value>发送到编号页面</value>
+  </data>
+  <data name="DesktopShortcutShiftKey.Text" xml:space="preserve">
+    <value>Shift</value>
+  </data>
+  <data name="PageOpenApplicationButton" xml:space="preserve">
+    <value>打开应用</value>
+  </data>
+  <data name="DesktopAppPickerTitle.Text" xml:space="preserve">
+    <value>打开应用</value>
+  </data>
+  <data name="DesktopAppPickerSearchBox.PlaceholderText" xml:space="preserve">
+    <value>搜索应用</value>
+  </data>
+  <data name="DesktopAppPickerSearchHeader.Text" xml:space="preserve">
+    <value>搜索</value>
+  </data>
+  <data name="DesktopAppPickerEmpty.Text" xml:space="preserve">
+    <value>未找到应用</value>
+  </data>
+  <data name="DesktopAppPickerPageDestination" xml:space="preserve">
+    <value>在此页面</value>
+  </data>
+  <data name="DesktopAppPickerSlotDestination" xml:space="preserve">
+    <value>区域 {0}</value>
+  </data>
+  <data name="DesktopAppPickerDestinationHeader" xml:space="preserve">
+    <value>打开位置</value>
+  </data>
+  <data name="PageLayoutArrangeButton" xml:space="preserve"><value>整理此页面</value></data>
+  <data name="DesktopWindowBringToCurrentPage" xml:space="preserve"><value>移至当前页面</value></data>
+  <data name="DesktopWindowSendToPage" xml:space="preserve"><value>发送到页面</value></data>
+  <data name="DesktopWindowMoveToSlot" xml:space="preserve"><value>移至槽位</value></data>
+  <data name="DesktopWindowSlot" xml:space="preserve"><value>槽位 {0}</value></data>
+  <data name="DesktopWindowSwapWith" xml:space="preserve"><value>与以下窗口交换</value></data>
+  <data name="DesktopWindowUntitled" xml:space="preserve"><value>未命名窗口</value></data>
+  <data name="DesktopWindowCenterOnPage" xml:space="preserve"><value>在页面上居中</value></data>
+  <data name="DesktopWindowClose" xml:space="preserve"><value>关闭窗口</value></data>
+  <data name="DesktopShortcutOverviewGroup.Text" xml:space="preserve"><value>在概览中</value></data>
+  <data name="DesktopShortcutOverviewNavigatePages.Text" xml:space="preserve"><value>浏览页面</value></data>
+  <data name="DesktopShortcutOverviewSelectWindows.Text" xml:space="preserve"><value>选择窗口</value></data>
+  <data name="DesktopShortcutOverviewMoveSelected.Text" xml:space="preserve"><value>移动所选窗口</value></data>
+  <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>在所选内容中添加或移除窗口</value></data>
+  <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>打开所选窗口</value></data>
+  <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>搜索窗口</value></data>
++</root>

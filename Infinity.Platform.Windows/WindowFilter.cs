@@ -65,9 +65,22 @@ public sealed class WindowFilter(WindowFilterOptions options) :
 
         int exStyle = PInvoke.GetWindowLong(hwnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
         bool isToolWindow = (exStyle & 0x00000080) != 0;
-        bool isAppWindow = (exStyle & 0x00040000) != 0;
 
-        if (isToolWindow && !isAppWindow)
+        if ((exStyle & 0x00080000) != 0)
+        {
+            COLORREF colourKey = default;
+            byte alpha = byte.MaxValue;
+            LAYERED_WINDOW_ATTRIBUTES_FLAGS flags = default;
+
+            if (PInvoke.GetLayeredWindowAttributes(hwnd, &colourKey, &alpha, &flags) &&
+                (flags & LAYERED_WINDOW_ATTRIBUTES_FLAGS.LWA_ALPHA) != 0 &&
+                alpha == 0)
+            {
+                return false;
+            }
+        }
+
+        if (isToolWindow)
         {
             return false;
         }

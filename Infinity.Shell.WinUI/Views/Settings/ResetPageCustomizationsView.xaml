@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Infinity.Shell.WinUI.ResetPageCustomizationsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:CommunityToolkit="using:CommunityToolkit.WinUI.Controls"
+    Loaded="{x:Bind ViewModel.Activate}"
+    Unloaded="{x:Bind ViewModel.Deactivate}">
+    <StackPanel Spacing="8">
+        <CommunityToolkit:SettingsCard x:Uid="ResetPageCustomizationsCard">
+            <Button
+                x:Uid="ResetPageCustomizationsButton"
+                MinWidth="132"
+                Click="HandleResetClicked"
+                IsEnabled="{x:Bind ViewModel.CanReset, Mode=OneWay}" />
+        </CommunityToolkit:SettingsCard>
+        <InfoBar
+            IsClosable="True"
+            IsOpen="{x:Bind ViewModel.IsErrorOpen, Mode=TwoWay}"
+            Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
+            Severity="Error" />
+    </StackPanel>
+</UserControl>

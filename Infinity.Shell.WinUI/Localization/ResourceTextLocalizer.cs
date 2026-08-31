@@ -1,4 +1,5 @@
 using Elysium.UI.WinUI;
+using Infinity.Application.Abstractions;
 
 namespace Infinity.Shell.WinUI;
 

@@ -3,11 +3,11 @@ using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
-using System.Threading;
 
 namespace Infinity.Application;
 
 public sealed class Scroller(IPanState state,
+    IScrollPresentationSession presentationSession,
     IWindowStore store,
     IWindowMover mover,
     IWindowConcealer concealer,
@@ -18,12 +18,15 @@ public sealed class Scroller(IPanState state,
     Func<ScrollerConfiguration> configurationFactory,
     IDeltaScrollMotion pixelMotion,
     IDeltaScrollMotion easingMotion,
+    IDeltaScrollMotion navigationMotion,
     IVelocityScrollMotion momentumMotion,
+    IPageCenterTargetResolver pageCenterTargetResolver,
     Action startTimer,
     Action stopTimer,
     ILogger<Scroller> logger) :
     IScroller
 {
+    private const int StandardWheelDelta = 120;
     private const double WheelScrollScale = 0.50;
 
     private const double SpringStiffness = 0.35;
@@ -39,14 +42,24 @@ public sealed class Scroller(IPanState state,
     private double springVelocity;
     private bool isSpinging;
     private bool isStarted;
+    private bool isInputCenteringPending;
+    private double? inputNavigationTarget;
 
     private WindowMoveScope? activeMoveScope;
     private Timer? moveGuardReleaseTimer;
 
     public event EventHandler? ScrollStarted;
+
     public event EventHandler? ScrollStopped;
 
     public double VisualOffset => state.Offset + springPosition;
+
+    public void CancelNavigation()
+    {
+        navigationMotion.Reset();
+        isInputCenteringPending = false;
+        inputNavigationTarget = null;
+    }
 
     public void Dispose()
     {
@@ -54,14 +67,34 @@ public sealed class Scroller(IPanState state,
         GC.SuppressFinalize(this);
     }
 
+    public void CommitPresentation()
+    {
+        if (!presentationSession.IsActive)
+        {
+            return;
+        }
+
+        try
+        {
+            RepositionWindows((int)Math.Round(state.Offset));
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Failed to reconcile window positions after scrolling");
+        }
+    }
+
     public void Reset()
     {
         pixelMotion.Reset();
         easingMotion.Reset();
+        navigationMotion.Reset();
         momentumMotion.Reset();
         springPosition = 0;
         springVelocity = 0;
         isSpinging = false;
+        isInputCenteringPending = false;
+        inputNavigationTarget = null;
         haltRequested = false;
     }
 
@@ -71,17 +104,19 @@ public sealed class Scroller(IPanState state,
         {
             pixelMotion.Reset();
             easingMotion.Reset();
+            navigationMotion.Reset();
             momentumMotion.Reset();
             springPosition = 0;
             springVelocity = 0;
             isSpinging = false;
+            isInputCenteringPending = false;
+            inputNavigationTarget = null;
             haltRequested = false;
-            stopTimer();
-            ScrollStopped?.Invoke(this, EventArgs.Empty);
+            CompleteScroll();
             return;
         }
 
-        double delta = pixelMotion.Drain() + easingMotion.Drain() + momentumMotion.Drain();
+        double delta = pixelMotion.Drain() + easingMotion.Drain() + navigationMotion.Drain() + momentumMotion.Drain();
 
         if (Math.Abs(delta) > 0.01)
         {
@@ -136,35 +171,60 @@ public sealed class Scroller(IPanState state,
         double exactOffset = state.Offset + springPosition;
         int intOffset = (int)Math.Round(exactOffset);
 
-        RepositionWindows(intOffset);
-
-        if (!pixelMotion.IsActive && !easingMotion.IsActive && !momentumMotion.IsActive && !isSpinging)
+        if (!presentationSession.IsActive)
         {
-            stopTimer();
-            ScrollStopped?.Invoke(this, EventArgs.Empty);
+            RepositionWindows(intOffset);
+        }
+
+        if (!pixelMotion.IsActive && !easingMotion.IsActive && !navigationMotion.IsActive && !momentumMotion.IsActive && !isSpinging)
+        {
+            if (TryStartInputCentering())
+            {
+                return;
+            }
+
+            inputNavigationTarget = null;
+            CompleteScroll();
         }
     }
 
     public void ScrollBy(double pixels)
     {
+        if (pixels == 0)
+        {
+            return;
+        }
+
+        if (!IsMotionActive())
+        {
+            ScrollStarted?.Invoke(this, EventArgs.Empty);
+        }
+
         haltRequested = false;
+        isInputCenteringPending = false;
+        inputNavigationTarget = null;
         pixelMotion.AddDelta(pixels);
         dispatcher.Dispatch(startTimer);
     }
 
     public void ScrollTo(double offset, bool animate = true)
     {
+        isInputCenteringPending = false;
+        inputNavigationTarget = null;
         double target = Math.Clamp(offset, state.MinOffset, state.MaxOffset);
 
         if (animate)
         {
-            haltRequested = false;
-            easingMotion.Reset();
-            easingMotion.AddDelta(target - state.Offset);
-            dispatcher.Dispatch(startTimer);
-        }
-        else
-        {
+            if (Math.Abs(target - state.Offset) < 0.01)
+            {
+                return;
+            }
+
+            if (!IsMotionActive())
+            {
+                ScrollStarted?.Invoke(this, EventArgs.Empty);
+            }
+
             pixelMotion.Reset();
             easingMotion.Reset();
             momentumMotion.Reset();
@@ -172,12 +232,32 @@ public sealed class Scroller(IPanState state,
             springVelocity = 0;
             isSpinging = false;
             haltRequested = false;
+            navigationMotion.Reset();
+            navigationMotion.AddDelta(target - state.Offset);
+            dispatcher.Dispatch(startTimer);
+        }
+        else
+        {
+            pixelMotion.Reset();
+            easingMotion.Reset();
+            navigationMotion.Reset();
+            momentumMotion.Reset();
+            springPosition = 0;
+            springVelocity = 0;
+            isSpinging = false;
+            haltRequested = false;
             state.SetOffset(target);
-            RepositionWindows((int)Math.Round(target));
+            if (!presentationSession.IsActive)
+            {
+                RepositionWindows((int)Math.Round(target));
+            }
         }
     }
 
-    public void Reposition() => RepositionWindows((int)Math.Round(VisualOffset));
+    public void Reposition()
+    {
+        RepositionWindows((int)Math.Round(VisualOffset));
+    }
 
     public void Start()
     {
@@ -206,6 +286,22 @@ public sealed class Scroller(IPanState state,
 
         stopTimer();
 
+        if (presentationSession.IsActive)
+        {
+            try
+            {
+                RepositionWindows((int)Math.Round(state.Offset));
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, "Failed to reconcile window positions while stopping the scroller");
+            }
+            finally
+            {
+                presentationSession.End();
+            }
+        }
+
         moveGuardReleaseTimer?.Dispose();
         moveGuardReleaseTimer = null;
 
@@ -222,55 +318,51 @@ public sealed class Scroller(IPanState state,
 
         mover.BeginBatch(store.Count);
 
-        foreach (TrackedWindow trackedWindow in store)
+        try
         {
-            if (anyDragging && dragGuard.IsDragging(trackedWindow.Handle))
+            foreach (TrackedWindow trackedWindow in store)
             {
-                continue;
-            }
-
-            int targetX;
-
-            if (trackedWindow.IsSticky)
-            {
-                long stickyCanvasX = (long)intOffset + trackedWindow.StickyViewportX;
-
-                if (stickyCanvasX is < int.MinValue or > int.MaxValue)
+                if (anyDragging && dragGuard.IsDragging(trackedWindow.Handle))
                 {
-                    logger.LogWarning("Sticky window {Handle} exceeded the supported canvas range", trackedWindow.Handle);
                     continue;
                 }
 
-                trackedWindow.CanvasX = (int)stickyCanvasX;
-                targetX = trackedWindow.StickyViewportX;
-            }
-            else
-            {
-                targetX = trackedWindow.CanvasX - intOffset;
-            }
+                int targetX = trackedWindow.CanvasX - intOffset;
 
-            if (concealedHandles.Contains(trackedWindow.Handle))
-            {
-                continue;
+                if (concealedHandles.Contains(trackedWindow.Handle))
+                {
+                    continue;
+                }
+
+                int targetY = trackedWindow.CanvasY;
+
+                if (trackedWindow.LastPlacedX == targetX &&
+                    trackedWindow.LastPlacedY == targetY)
+                {
+                    continue;
+                }
+
+                mover.MoveTo(trackedWindow.Handle, targetX, targetY, trackedWindow.Width, trackedWindow.Height);
+                trackedWindow.LastPlacedX = targetX;
+                trackedWindow.LastPlacedY = targetY;
             }
-
-            int targetY = trackedWindow.CanvasY;
-
-            if (trackedWindow.LastPlacedX == targetX &&
-                trackedWindow.LastPlacedY == targetY)
-            {
-                continue;
-            }
-
-            mover.MoveTo(trackedWindow.Handle, targetX, targetY, trackedWindow.Width, trackedWindow.Height);
-            trackedWindow.LastPlacedX = targetX;
-            trackedWindow.LastPlacedY = targetY;
         }
-
-        mover.EndBatch();
+        finally
+        {
+            mover.EndBatch();
+        }
 
         ScheduleMoveGuardRelease();
     }
+
+    private void CompleteScroll()
+    {
+        stopTimer();
+        ScrollStopped?.Invoke(this, EventArgs.Empty);
+    }
+
+    private bool IsMotionActive() =>
+        pixelMotion.IsActive || easingMotion.IsActive || navigationMotion.IsActive || momentumMotion.IsActive || isSpinging;
 
     private void ScheduleMoveGuardRelease()
     {
@@ -300,10 +392,28 @@ public sealed class Scroller(IPanState state,
             return;
         }
 
-        if (!pixelMotion.IsActive && !easingMotion.IsActive && !momentumMotion.IsActive && !isSpinging)
+        bool wasPresentationActive = presentationSession.IsActive;
+
+        if (!IsMotionActive())
         {
             ScrollStarted?.Invoke(this, EventArgs.Empty);
         }
+
+        if (!wasPresentationActive && presentationSession.IsActive)
+        {
+            DispatchInputCallback(startTimer, "scroll input");
+            return;
+        }
+
+        if (nativeScrollDelta % StandardWheelDelta == 0)
+        {
+            NavigateByWheelDelta(nativeScrollDelta);
+            return;
+        }
+
+        navigationMotion.Reset();
+        inputNavigationTarget = null;
+        isInputCenteringPending = true;
 
         double pixelsPerNotch = configurationFactory().PixelsPerScrollNotch;
         double pixels = (-nativeScrollDelta / 120.0) * pixelsPerNotch * WheelScrollScale;
@@ -319,11 +429,13 @@ public sealed class Scroller(IPanState state,
             return;
         }
 
-        if (!pixelMotion.IsActive && !easingMotion.IsActive && !momentumMotion.IsActive && !isSpinging)
+        if (!IsMotionActive())
         {
             ScrollStarted?.Invoke(this, EventArgs.Empty);
         }
 
+        isInputCenteringPending = true;
+        inputNavigationTarget = null;
         momentumMotion.AddVelocity(velocity);
         DispatchInputCallback(startTimer, "scroll momentum");
     }
@@ -342,6 +454,58 @@ public sealed class Scroller(IPanState state,
 
     private void HandleHoldStarted()
     {
+        isInputCenteringPending = false;
+        inputNavigationTarget = null;
         haltRequested = true;
+    }
+
+    private void NavigateByWheelDelta(int nativeScrollDelta)
+    {
+        int pageDelta = -Math.Sign(nativeScrollDelta) * Math.Max(1, Math.Abs(nativeScrollDelta) / StandardWheelDelta);
+        double origin = inputNavigationTarget ?? state.Offset;
+
+        if (!pageCenterTargetResolver.TryResolveAdjacent(origin, pageDelta, state.MinOffset, state.MaxOffset, out double targetOffset))
+        {
+            return;
+        }
+
+        pixelMotion.Reset();
+        easingMotion.Reset();
+        momentumMotion.Reset();
+        navigationMotion.Reset();
+        springPosition = 0;
+        springVelocity = 0;
+        isSpinging = false;
+        isInputCenteringPending = false;
+        inputNavigationTarget = targetOffset;
+        haltRequested = false;
+        navigationMotion.AddDelta(targetOffset - state.Offset);
+        DispatchInputCallback(startTimer, "wheel page navigation");
+    }
+
+    private bool TryStartInputCentering()
+    {
+        if (!isInputCenteringPending)
+        {
+            return false;
+        }
+
+        isInputCenteringPending = false;
+
+        if (!pageCenterTargetResolver.TryResolve(state.Offset, state.MinOffset, state.MaxOffset, out double targetOffset))
+        {
+            return false;
+        }
+
+        navigationMotion.Reset();
+        navigationMotion.AddDelta(targetOffset - state.Offset);
+
+        if (!navigationMotion.IsActive)
+        {
+            return false;
+        }
+
+        dispatcher.Dispatch(startTimer);
+        return true;
     }
 }

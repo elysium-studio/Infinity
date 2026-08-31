@@ -4,8 +4,6 @@ using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Infinity.Application;
 
@@ -13,12 +11,12 @@ public sealed class WindowPageCoordinator(IWindowStore store,
     IScroller scroller,
     IWorkspace workspace,
     IWindowActivator activator,
-    IDispatcher dispatcher) :
-    IWindowPageCoordinator
+    IDispatcher dispatcher,
+    WindowPageGeometry geometry) :
+    IWindowNavigationCoordinator,
+    IForegroundWindowCoordinator,
+    ITrackedForegroundWindowSource
 {
-    private const double ScrollTolerance = 2.0;
-    private const double MeaningfulVisibilityRatio = 0.60;
-
     private static readonly TimeSpan ProgrammaticForegroundWindow = TimeSpan.FromMilliseconds(600);
     private static readonly TimeSpan ForegroundFollowDeferDelay = TimeSpan.FromMilliseconds(80);
     private static readonly TimeSpan ForegroundFollowSuppressionWindow = TimeSpan.FromMilliseconds(900);
@@ -28,16 +26,20 @@ public sealed class WindowPageCoordinator(IWindowStore store,
     private CancellationTokenSource? foregroundFollowCancellationTokenSource;
     private IntPtr expectedProgrammaticHandle;
     private IntPtr foregroundWindowHandle;
+    private IntPtr trackedForegroundWindowHandle;
+    private IntPtr suppressedForegroundWindowHandle;
     private long expectedProgrammaticAtTimestamp;
     private long foregroundFollowSuppressedAtTimestamp;
     private long foregroundFollowGeneration;
+    private bool suppressAllForegroundFollow;
 
     private int navigationTargetPage = -1;
     private double navigationTargetOffset = -1;
-    private int pageBeforeFilter = -1;
     private IntPtr pendingActivation;
 
     public event EventHandler<NavigationStartedEventArgs>? NavigationStarted;
+
+    public event EventHandler? NavigationCompleted;
 
     public event EventHandler? WindowActivationRequested;
 
@@ -73,24 +75,6 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             lock (syncRoot)
             {
                 navigationTargetOffset = value;
-            }
-        }
-    }
-
-    public int PageBeforeFilter
-    {
-        get
-        {
-            lock (syncRoot)
-            {
-                return pageBeforeFilter;
-            }
-        }
-        set
-        {
-            lock (syncRoot)
-            {
-                pageBeforeFilter = value;
             }
         }
     }
@@ -131,23 +115,16 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             return;
         }
 
-        if (IsWindowFullyVisible(trackedWindow, workspaceWidth))
+        int windowPage = geometry.GetCenterPage(trackedWindow, workspaceWidth);
+        double targetOffset = windowPage * (double)workspaceWidth;
+
+        if (geometry.AreClose(scroller.VisualOffset, targetOffset))
         {
             RequestActivation(handle);
             return;
         }
-
-        int windowPage = GetWindowPage(trackedWindow, workspaceWidth);
-        double targetOffset = GetTargetOffset(trackedWindow, workspaceWidth, windowPage);
 
         PendingActivation = handle;
-
-        if (IsNavigationSettled(windowPage, targetOffset))
-        {
-            RequestActivation(handle);
-            return;
-        }
-
         SetNavigationTarget(windowPage, targetOffset);
         NavigationStarted?.Invoke(this, new NavigationStartedEventArgs(windowPage));
         scroller.ScrollTo(targetOffset);
@@ -170,13 +147,13 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             return;
         }
 
-        if (IsWindowFullyVisible(trackedWindow, workspaceWidth))
+        if (geometry.IsFullyVisible(trackedWindow, scroller.VisualOffset, workspaceWidth))
         {
             return;
         }
 
-        int windowPage = GetWindowPage(trackedWindow, workspaceWidth);
-        double targetOffset = GetTargetOffset(trackedWindow, workspaceWidth, windowPage);
+        int windowPage = geometry.GetPage(trackedWindow, workspaceWidth);
+        double targetOffset = geometry.GetTargetOffset(trackedWindow, workspaceWidth, windowPage);
 
         if (IsNavigationSettled(windowPage, targetOffset))
         {
@@ -199,19 +176,20 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             return;
         }
 
-        RecordForegroundWindow(handle);
-
         if (!store.TryGet(handle, out TrackedWindow? trackedWindow))
         {
+            RecordForegroundWindow(handle, false);
             return;
         }
+
+        RecordForegroundWindow(handle, true);
 
         if (!TryGetWorkspaceWidth(out int workspaceWidth))
         {
             return;
         }
 
-        if (IsWindowMeaningfullyVisible(trackedWindow, workspaceWidth))
+        if (geometry.IsMeaningfullyVisible(trackedWindow, scroller.VisualOffset, workspaceWidth))
         {
             return;
         }
@@ -226,13 +204,18 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             return;
         }
 
-        SuppressForegroundFollow();
+        SuppressAllForegroundFollow();
 
         lock (syncRoot)
         {
             if (handle == foregroundWindowHandle)
             {
                 foregroundWindowHandle = default;
+            }
+
+            if (handle == trackedForegroundWindowHandle)
+            {
+                trackedForegroundWindowHandle = default;
             }
         }
     }
@@ -244,11 +227,12 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             return;
         }
 
-        SuppressForegroundFollow();
+        SuppressAllForegroundFollow();
 
         lock (syncRoot)
         {
             foregroundWindowHandle = handle;
+            trackedForegroundWindowHandle = handle;
         }
 
         NavigateToPage(handle);
@@ -258,7 +242,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
     {
         lock (syncRoot)
         {
-            StartForegroundFollowSuppressionCore();
+            StartForegroundFollowSuppressionCore(true);
 
             if (handle != default && handle == expectedProgrammaticHandle)
             {
@@ -268,6 +252,11 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             if (handle != default && handle == foregroundWindowHandle)
             {
                 foregroundWindowHandle = default;
+            }
+
+            if (handle != default && handle == trackedForegroundWindowHandle)
+            {
+                trackedForegroundWindowHandle = default;
             }
         }
     }
@@ -286,6 +275,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
 
             expectedProgrammaticHandle = handle;
             foregroundWindowHandle = handle;
+            trackedForegroundWindowHandle = handle;
             expectedProgrammaticAtTimestamp = Stopwatch.GetTimestamp();
         }
     }
@@ -299,6 +289,41 @@ public sealed class WindowPageCoordinator(IWindowStore store,
 
         ExpectProgrammaticActivation(handle);
         activator.Activate(handle);
+    }
+
+    public void CancelNavigation()
+    {
+        lock (syncRoot)
+        {
+            navigationTargetPage = -1;
+            navigationTargetOffset = -1;
+            pendingActivation = default;
+        }
+    }
+
+    public void CompleteNavigation()
+    {
+        IntPtr handle;
+
+        lock (syncRoot)
+        {
+            if (navigationTargetPage < 0 || !geometry.AreClose(scroller.VisualOffset, navigationTargetOffset))
+            {
+                return;
+            }
+
+            navigationTargetPage = -1;
+            navigationTargetOffset = -1;
+            handle = pendingActivation;
+            pendingActivation = default;
+        }
+
+        NavigationCompleted?.Invoke(this, EventArgs.Empty);
+
+        if (handle != default)
+        {
+            RequestActivation(handle);
+        }
     }
 
     private void RequestActivation(IntPtr handle)
@@ -374,7 +399,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             return;
         }
 
-        if (!ShouldCommitForegroundFollow(generation))
+        if (!ShouldCommitForegroundFollow(generation, handle))
         {
             return;
         }
@@ -389,13 +414,13 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             return;
         }
 
-        if (IsWindowMeaningfullyVisible(trackedWindow, workspaceWidth))
+        if (geometry.IsMeaningfullyVisible(trackedWindow, scroller.VisualOffset, workspaceWidth))
         {
             return;
         }
 
-        int windowPage = GetWindowPage(trackedWindow, workspaceWidth);
-        double targetOffset = GetTargetOffset(trackedWindow, workspaceWidth, windowPage);
+        int windowPage = geometry.GetPage(trackedWindow, workspaceWidth);
+        double targetOffset = geometry.GetTargetOffset(trackedWindow, workspaceWidth, windowPage);
 
         PendingActivation = handle;
 
@@ -409,7 +434,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         scroller.ScrollTo(targetOffset);
     }
 
-    private bool ShouldCommitForegroundFollow(long generation)
+    private bool ShouldCommitForegroundFollow(long generation, IntPtr handle)
     {
         lock (syncRoot)
         {
@@ -418,7 +443,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
                 return false;
             }
 
-            if (IsForegroundFollowSuppressedCore())
+            if (IsForegroundFollowSuppressedCore(handle))
             {
                 return false;
             }
@@ -431,7 +456,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
     {
         lock (syncRoot)
         {
-            if (IsForegroundFollowSuppressedCore())
+            if (IsForegroundFollowSuppressedCore(handle))
             {
                 return true;
             }
@@ -459,11 +484,24 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         }
     }
 
-    private void RecordForegroundWindow(IntPtr handle)
+    public IntPtr GetTrackedForegroundWindow()
+    {
+        lock (syncRoot)
+        {
+            return trackedForegroundWindowHandle;
+        }
+    }
+
+    private void RecordForegroundWindow(IntPtr handle, bool isTracked)
     {
         lock (syncRoot)
         {
             foregroundWindowHandle = handle;
+
+            if (isTracked)
+            {
+                trackedForegroundWindowHandle = handle;
+            }
         }
     }
 
@@ -471,17 +509,27 @@ public sealed class WindowPageCoordinator(IWindowStore store,
     {
         lock (syncRoot)
         {
-            StartForegroundFollowSuppressionCore();
+            StartForegroundFollowSuppressionCore(false);
         }
     }
 
-    private void StartForegroundFollowSuppressionCore()
+    private void SuppressAllForegroundFollow()
+    {
+        lock (syncRoot)
+        {
+            StartForegroundFollowSuppressionCore(true);
+        }
+    }
+
+    private void StartForegroundFollowSuppressionCore(bool suppressAll)
     {
         foregroundFollowSuppressedAtTimestamp = Stopwatch.GetTimestamp();
+        suppressedForegroundWindowHandle = foregroundWindowHandle;
+        suppressAllForegroundFollow = suppressAll;
         CancelPendingForegroundFollowCore();
     }
 
-    private bool IsForegroundFollowSuppressedCore()
+    private bool IsForegroundFollowSuppressedCore(IntPtr handle)
     {
         if (foregroundFollowSuppressedAtTimestamp == 0)
         {
@@ -490,10 +538,12 @@ public sealed class WindowPageCoordinator(IWindowStore store,
 
         if (Stopwatch.GetElapsedTime(foregroundFollowSuppressedAtTimestamp) < ForegroundFollowSuppressionWindow)
         {
-            return true;
+            return suppressAllForegroundFollow || handle == suppressedForegroundWindowHandle;
         }
 
         foregroundFollowSuppressedAtTimestamp = 0;
+        suppressedForegroundWindowHandle = default;
+        suppressAllForegroundFollow = false;
         return false;
     }
 
@@ -542,7 +592,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
     {
         double visualOffset = scroller.VisualOffset;
 
-        if (!IsFinite(visualOffset))
+        if (!geometry.IsFinite(visualOffset))
         {
             return false;
         }
@@ -550,8 +600,8 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         lock (syncRoot)
         {
             return navigationTargetPage == page &&
-                AreClose(navigationTargetOffset, offset) &&
-                AreClose(visualOffset, offset);
+                geometry.AreClose(navigationTargetOffset, offset) &&
+                geometry.AreClose(visualOffset, offset);
         }
     }
 
@@ -559,159 +609,6 @@ public sealed class WindowPageCoordinator(IWindowStore store,
     {
         workspaceWidth = workspace.Width;
         return workspaceWidth > 0;
-    }
-
-    private bool IsWindowFullyVisible(TrackedWindow trackedWindow, int workspaceWidth)
-    {
-        double viewportLeft = scroller.VisualOffset;
-
-        if (!IsFinite(viewportLeft))
-        {
-            return false;
-        }
-
-        double viewportRight = viewportLeft + workspaceWidth;
-
-        return IsFullyInView(trackedWindow, viewportLeft, viewportRight);
-    }
-
-    private bool IsWindowMeaningfullyVisible(TrackedWindow trackedWindow, int workspaceWidth)
-    {
-        double viewportLeft = scroller.VisualOffset;
-
-        if (!IsFinite(viewportLeft))
-        {
-            return false;
-        }
-
-        double viewportRight = viewportLeft + workspaceWidth;
-
-        return IsMeaningfullyInView(trackedWindow, viewportLeft, viewportRight);
-    }
-
-    private static int GetWindowPage(TrackedWindow trackedWindow, int workspaceWidth)
-    {
-        double canvasX = GetSafeCanvasX(trackedWindow);
-
-        if (workspaceWidth <= 0)
-        {
-            return 0;
-        }
-
-        double page = Math.Floor(canvasX / workspaceWidth);
-
-        if (page > int.MaxValue)
-        {
-            return int.MaxValue;
-        }
-
-        if (page < int.MinValue)
-        {
-            return int.MinValue;
-        }
-
-        return (int)page;
-    }
-
-    private static double GetTargetOffset(TrackedWindow trackedWindow, int workspaceWidth, int windowPage)
-    {
-        double windowLeft = GetSafeCanvasX(trackedWindow);
-        double windowWidth = GetSafeWidth(trackedWindow);
-        double windowCenter = windowLeft + windowWidth / 2.0;
-        double targetOffset = windowCenter - workspaceWidth / 2.0;
-        double pageLeft = windowPage * (double)workspaceWidth;
-
-        if (!IsFinite(targetOffset))
-        {
-            return pageLeft;
-        }
-
-        return Math.Max(pageLeft, targetOffset);
-    }
-
-    private static bool IsFullyInView(TrackedWindow trackedWindow, double viewportLeft, double viewportRight)
-    {
-        if (!IsFinite(viewportLeft) || !IsFinite(viewportRight) || viewportRight < viewportLeft)
-        {
-            return false;
-        }
-
-        double windowLeft = GetSafeCanvasX(trackedWindow);
-        double windowRight = windowLeft + GetSafeWidth(trackedWindow);
-
-        return windowLeft >= viewportLeft - ScrollTolerance &&
-            windowRight <= viewportRight + ScrollTolerance;
-    }
-
-    private static bool IsMeaningfullyInView(TrackedWindow trackedWindow, double viewportLeft, double viewportRight)
-    {
-        if (!IsFinite(viewportLeft) || !IsFinite(viewportRight) || viewportRight < viewportLeft)
-        {
-            return false;
-        }
-
-        double windowLeft = GetSafeCanvasX(trackedWindow);
-        double windowWidth = GetSafeWidth(trackedWindow);
-        double windowRight = windowLeft + windowWidth;
-
-        if (windowWidth <= 0)
-        {
-            return false;
-        }
-
-        if (windowLeft >= viewportLeft - ScrollTolerance && windowRight <= viewportRight + ScrollTolerance)
-        {
-            return true;
-        }
-
-        double windowCenter = windowLeft + windowWidth / 2.0;
-
-        if (windowCenter >= viewportLeft && windowCenter <= viewportRight)
-        {
-            return true;
-        }
-
-        double visibleLeft = Math.Max(windowLeft, viewportLeft);
-        double visibleRight = Math.Min(windowRight, viewportRight);
-        double visibleWidth = Math.Max(0, visibleRight - visibleLeft);
-        double visibleRatio = visibleWidth / windowWidth;
-
-        return visibleRatio >= MeaningfulVisibilityRatio;
-    }
-
-    private static double GetSafeCanvasX(TrackedWindow trackedWindow)
-    {
-        if (!IsFinite(trackedWindow.CanvasX))
-        {
-            return 0;
-        }
-
-        return trackedWindow.CanvasX;
-    }
-
-    private static double GetSafeWidth(TrackedWindow trackedWindow)
-    {
-        if (!IsFinite(trackedWindow.Width) || trackedWindow.Width < 0)
-        {
-            return 0;
-        }
-
-        return trackedWindow.Width;
-    }
-
-    private static bool AreClose(double left, double right)
-    {
-        if (!IsFinite(left) || !IsFinite(right))
-        {
-            return false;
-        }
-
-        return Math.Abs(left - right) < ScrollTolerance;
-    }
-
-    private static bool IsFinite(double value)
-    {
-        return !double.IsNaN(value) && !double.IsInfinity(value);
     }
 
     private static void TryCancel(CancellationTokenSource cancellationTokenSource)

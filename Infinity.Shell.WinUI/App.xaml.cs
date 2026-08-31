@@ -1,7 +1,6 @@
 using Elysium.Application;
 using Elysium.Application.Abstractions;
 using Elysium.Application.DependencyInjection;
-using Elysium.Presentation;
 using Elysium.Presentation.Abstractions;
 using Elysium.UI.WinUI;
 using Infinity.Application.DependencyInjection;
@@ -12,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,7 +28,14 @@ public sealed partial class App
     private Task? shutdownTask;
     private Task? startupNavigationTask;
 
-    public App() => InitializeComponent();
+    public App()
+    {
+#if DEBUG
+        UnhandledException += (_, args) => Debug.WriteLine($"Unhandled WinUI exception:{Environment.NewLine}{args.Exception}");
+#endif
+
+        InitializeComponent();
+    }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
@@ -55,7 +62,6 @@ public sealed partial class App
                                 new NavigationModule(),
                                 new DesktopSettingsModule(),
                                 new DesktopModule(),
-                                new PreviewSettingsModule(),
                                 new ShellModule(),
                                 new SettingsModule(),
                                 new TourModule(),
@@ -69,10 +75,28 @@ public sealed partial class App
             ViewExtension.DefaultProvider = startingHost.Services;
             ViewModelExtension.DefaultProvider = startingHost.Services;
 
-            _ = startingHost.Services.GetRequiredKeyedService<DesktopFlyoutView>("DesktopFlyoutView");
-            _ = startingHost.Services.GetRequiredKeyedService<PageTintView>("PageTintView");
+            DesktopOverviewView desktopOverview = startingHost.Services.GetRequiredKeyedService<DesktopOverviewView>("DesktopOverviewView");
 
             startingHost.Start();
+
+#if DEBUG
+            if (Enum.TryParse(Environment.GetEnvironmentVariable("INFINITY_DEBUG_LEVEL"), true, out DebugLaunchLevel debugLevel))
+            {
+                dispatcherQueue.TryEnqueue(() =>
+                {
+                    _ = debugLevel switch
+                    {
+                        DebugLaunchLevel.DesktopOverview => desktopOverview.ViewModel.OpenDesktopPreviewForDebugAsync(),
+                        DebugLaunchLevel.DesktopOverviewDark => OpenDesktopOverviewWithBackdropForDebugAsync(desktopOverview, startingHost.Services, DesktopOverviewBackdrop.Dark),
+                        DebugLaunchLevel.DesktopOverviewLight => OpenDesktopOverviewWithBackdropForDebugAsync(desktopOverview, startingHost.Services, DesktopOverviewBackdrop.Light),
+                        DebugLaunchLevel.DesktopApplicationPicker => OpenDesktopApplicationPickerForDebugAsync(desktopOverview),
+                        DebugLaunchLevel.DesktopApplicationDock => OpenDesktopApplicationDockForDebugAsync(desktopOverview),
+                        DebugLaunchLevel.Settings => startingHost.Services.GetRequiredService<INavigator>().NavigateAsync("SettingsWindow"),
+                        _ => Task.CompletedTask
+                    };
+                });
+            }
+#endif
 
             if (startingHost.Services.GetRequiredService<Settings>() is { ShowHintOnStartup: true })
             {
@@ -97,6 +121,38 @@ public sealed partial class App
             throw;
         }
     }
+
+#if DEBUG
+    private static async Task OpenDesktopApplicationPickerForDebugAsync(DesktopOverviewView desktopOverview)
+    {
+        await desktopOverview.ViewModel.OpenDesktopPreviewForDebugAsync();
+        await desktopOverview.OpenApplicationPickerForDebugAsync();
+    }
+
+    private static Task OpenDesktopOverviewWithBackdropForDebugAsync(DesktopOverviewView desktopOverview,
+        IServiceProvider services,
+        DesktopOverviewBackdrop backdrop)
+    {
+        services.GetRequiredService<DesktopOverviewConfiguration>().Backdrop = backdrop;
+        return desktopOverview.ViewModel.OpenDesktopPreviewForDebugAsync();
+    }
+
+    private static async Task OpenDesktopApplicationDockForDebugAsync(DesktopOverviewView desktopOverview)
+    {
+        await desktopOverview.ViewModel.OpenDesktopPreviewForDebugAsync();
+    }
+
+    private enum DebugLaunchLevel
+    {
+        None,
+        DesktopOverview,
+        DesktopOverviewDark,
+        DesktopOverviewLight,
+        DesktopApplicationPicker,
+        DesktopApplicationDock,
+        Settings
+    }
+#endif
 
     private Task ShutdownAsync()
     {

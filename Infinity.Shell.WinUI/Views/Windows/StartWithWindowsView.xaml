@@ -9,7 +9,6 @@
     <CommunityToolkit:SettingsCard x:Uid="StartWithWindowsCard">
         <ToggleSwitch
             x:Uid="BooleanToggle"
-            IsOn="{x:Bind ViewModel.Value, Mode=TwoWay}"
-            />
+            IsOn="{x:Bind ViewModel.Value, Mode=TwoWay}" />
     </CommunityToolkit:SettingsCard>
 </UserControl>

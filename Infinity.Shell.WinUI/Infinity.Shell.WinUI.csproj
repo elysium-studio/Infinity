@@ -52,7 +52,6 @@
 		<PackageReference Include="Elysium.Presentation" Version="$(ElysiumVersion)" />
 		<PackageReference Include="Elysium.Presentation.Abstractions" Version="$(ElysiumVersion)" />
 		<PackageReference Include="Elysium.Presentation.DependencyInjection" Version="$(ElysiumVersion)" />
-		<PackageReference Include="Elysium.UI.Controls.WinUI" Version="$(ElysiumVersion)" />
 		<PackageReference Include="Elysium.UI.WinUI" Version="$(ElysiumVersion)" />
 		<PackageReference Include="Elysium.Updates" Version="$(ElysiumVersion)" />
 		<PackageReference Include="Elysium.Updates.Abstractions" Version="$(ElysiumVersion)" />
@@ -71,6 +70,7 @@
 		<ProjectReference Include="..\Infinity.Platform.DependencyInjection.Windows\Infinity.Platform.Windows.DependencyInjection.csproj" />
 		<ProjectReference Include="..\Infinity.Platform.Windows\Infinity.Platform.Windows.csproj" />
 		<ProjectReference Include="..\Infinity.Shell\Infinity.Shell.csproj" />
+		<ProjectReference Include="..\Infinity.UI.WinUI\Infinity.UI.WinUI.csproj" />
 		<Content Include="..\Infinity.Platform.Windows.Native\$(Platform)\$(Configuration)\Infinity.Platform.Windows.Native.dll">
 			<Link>Infinity.Platform.Windows.Native.dll</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

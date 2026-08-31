@@ -1,0 +1,16 @@
+GetCursorPos
+MonitorFromPoint
+GetDpiForMonitor
+GetMonitorInfo
+SetWindowPos
+SetWindowsHookEx
+UnhookWindowsHookEx
+CallNextHookEx
+GetWindowLong
+SetWindowLong
+SetLayeredWindowAttributes
+EnumDisplayMonitors
+MONITORINFO
+WindowFromPoint
+GetAncestor
+MSLLHOOKSTRUCT

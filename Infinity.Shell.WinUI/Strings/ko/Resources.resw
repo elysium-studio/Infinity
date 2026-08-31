@@ -73,23 +73,47 @@
   <data name="UpdateReadyToastTitle" xml:space="preserve">
     <value>업데이트 준비됨</value>
   </data>
-  <data name="AboutTitleBar.Title" xml:space="preserve">
-    <value>소개</value>
-  </data>
   <data name="BooleanToggle.OffContent" xml:space="preserve">
     <value>아니요</value>
   </data>
   <data name="BooleanToggle.OnContent" xml:space="preserve">
     <value>예</value>
   </data>
-  <data name="CloseWindowButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>창 닫기</value>
+  <data name="OnOffToggle.OffContent" xml:space="preserve">
+    <value>끔</value>
   </data>
-  <data name="DesktopBlurCard.Description" xml:space="preserve">
-    <value>스크롤 및 필터링 중에 배경을 흐리게 합니다.</value>
+  <data name="OnOffToggle.OnContent" xml:space="preserve">
+    <value>켬</value>
   </data>
-  <data name="DesktopBlurCard.Header" xml:space="preserve">
-    <value>배경 흐림</value>
+  <data name="PagesSettingsSectionTitle" xml:space="preserve">
+    <value>페이지</value>
+  </data>
+  <data name="ScrollingSettingsSectionTitle" xml:space="preserve">
+    <value>스크롤</value>
+  </data>
+  <data name="OverviewSettingsSectionTitle" xml:space="preserve">
+    <value>개요</value>
+  </data>
+  <data name="OverviewBackdropCard.Header" xml:space="preserve">
+    <value>오버레이 배경</value>
+  </data>
+  <data name="OverviewBackdropCard.Description" xml:space="preserve">
+    <value>데스크톱 개요 뒤에 표시할 항목을 선택합니다</value>
+  </data>
+  <data name="OverviewBackdropWallpaperOption.Content" xml:space="preserve">
+    <value>배경 화면</value>
+  </data>
+  <data name="OverviewBackdropDarkOption.Content" xml:space="preserve">
+    <value>어둡게</value>
+  </data>
+  <data name="OverviewBackdropLightOption.Content" xml:space="preserve">
+    <value>밝게</value>
+  </data>
+  <data name="DesktopApplicationDockAllAppsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>모든 앱</value>
+  </data>
+  <data name="AdvancedSettingsSectionTitle" xml:space="preserve">
+    <value>고급</value>
   </data>
   <data name="DesktopSectionTitle.Text" xml:space="preserve">
     <value>데스크탑</value>
@@ -100,54 +124,14 @@
   <data name="DragScrollSpeedCard.Header" xml:space="preserve">
     <value>드래그 스크롤 속도</value>
   </data>
-  <data name="PreviewBackgroundCard.Description" xml:space="preserve">
-    <value>미리보기 표시줄에 바탕화면 배경 표시</value>
-  </data>
-  <data name="PreviewBackgroundCard.Header" xml:space="preserve">
-    <value>데스크탑 배경</value>
-  </data>
-  <data name="PreviewDebugWaitingText.Text" xml:space="preserve">
-    <value>기다리는 중...</value>
-  </data>
-  <data name="PreviewDebugWindow.Title" xml:space="preserve">
-    <value>창 미리보기 그리드</value>
-  </data>
-  <data name="PreviewPositionAutoOption.Content" xml:space="preserve">
-    <value>자동</value>
-  </data>
-  <data name="PreviewPositionBottomOption.Content" xml:space="preserve">
-    <value>바닥</value>
-  </data>
-  <data name="PreviewPositionCard.Description" xml:space="preserve">
-    <value>화면에 미리보기 표시줄이 나타나는 위치</value>
-  </data>
-  <data name="PreviewPositionCard.Header" xml:space="preserve">
-    <value>미리보기 위치</value>
-  </data>
-  <data name="PreviewPositionTopOption.Content" xml:space="preserve">
-    <value>탑</value>
-  </data>
-  <data name="PreviewSectionTitle.Text" xml:space="preserve">
-    <value>미리보기</value>
-  </data>
-  <data name="PreviewSizeCard.Description" xml:space="preserve">
-    <value>화면 하단에 표시되는 미리보기 막대의 높이를 제어합니다.</value>
-  </data>
-  <data name="PreviewSizeCard.Header" xml:space="preserve">
-    <value>미리보기 크기</value>
-  </data>
-  <data name="PreviewSizeCompactOption.Content" xml:space="preserve">
-    <value>콤팩트</value>
-  </data>
-  <data name="PreviewSizeDefaultOption.Content" xml:space="preserve">
-    <value>기본값</value>
-  </data>
-  <data name="PreviewSizeLargeOption.Content" xml:space="preserve">
-    <value>대형</value>
-  </data>
   <data name="PageTitle" xml:space="preserve">
     <value>페이지 {0}</value>
   </data>
+  <data name="PageTitleCancelButton" xml:space="preserve"><value>Cancel editing</value></data>
+  <data name="PageTitleEditButton" xml:space="preserve"><value>Edit page title</value></data>
+  <data name="PageTitleSaveButton" xml:space="preserve"><value>Save page title</value></data>
+  <data name="PageLayoutEditButton" xml:space="preserve"><value>Choose snap layout</value></data>
+  <data name="PageLayoutClearButton" xml:space="preserve"><value>레이아웃 지우기</value></data>
   <data name="ScrollShortcutCancelButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>취소</value>
   </data>
@@ -188,6 +172,9 @@
     <value>스크롤 속도</value>
   </data>
   <data name="SettingsTitleBar.Title" xml:space="preserve">
+    <value>설정</value>
+  </data>
+  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>설정</value>
   </data>
   <data name="SpeedFastOption.Content" xml:space="preserve">
@@ -307,53 +294,11 @@
   <data name="VirtualPagesUnlimitedOption.Content" xml:space="preserve">
     <value>무제한</value>
   </data>
-  <data name="WindowAboutMenuItem.Text" xml:space="preserve">
-    <value>소개</value>
-  </data>
-  <data name="WindowExitMenuItem.Text" xml:space="preserve">
-    <value>종료</value>
-  </data>
-  <data name="WindowOptionsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>옵션</value>
-  </data>
-  <data name="WindowPeekCard.Description" xml:space="preserve">
-    <value>창 축소판을 가리키거나 필터를 적용할 때 일치하는 창만 표시되도록 다른 모든 창을 숨깁니다.</value>
-  </data>
-  <data name="WindowPeekCard.Header" xml:space="preserve">
-    <value>Window Peek</value>
-  </data>
   <data name="WindowSearchBox.PlaceholderText" xml:space="preserve">
     <value>데스크톱 창 찾기...</value>
   </data>
   <data name="WindowsSectionTitle.Text" xml:space="preserve">
     <value>윈도우</value>
-  </data>
-  <data name="WindowSettingsMenuItem.Text" xml:space="preserve">
-    <value>설정</value>
-  </data>
-  <data name="WindowTourMenuItem.Text" xml:space="preserve">
-    <value>둘러보기</value>
-  </data>
-  <data name="AlwaysOpenApplicationOnPageMenuItem" xml:space="preserve">
-    <value>항상 이 페이지에서 앱 열기</value>
-  </data>
-  <data name="MoveWindowToPageMenuItem" xml:space="preserve">
-    <value>창 이동 위치</value>
-  </data>
-  <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
-    <value>시작 페이지 규칙 제거</value>
-  </data>
-  <data name="PinWindowMenuItem" xml:space="preserve">
-    <value>모든 페이지에 고정</value>
-  </data>
-  <data name="UnpinWindowMenuItem" xml:space="preserve">
-    <value>모든 페이지에서 고정 해제</value>
-  </data>
-  <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>모든 페이지에 고정됨</value>
-  </data>
-  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>설정</value>
   </data>
   <data name="TourNavigationItem.Content" xml:space="preserve">
     <value>둘러보기</value>
@@ -382,4 +327,119 @@
   <data name="QuitDialogCloseButton" xml:space="preserve">
     <value>취소</value>
   </data>
-</root>
+  <data name="SpanCompatibleDisplaysCard.Header" xml:space="preserve">
+    <value>호환 디스플레이에 걸쳐 표시</value>
+  </data>
+  <data name="SpanCompatibleDisplaysCard.Description" xml:space="preserve">
+    <value>해상도, 배율 및 정렬이 호환되는 인접 디스플레이로 개요를 확장합니다</value>
+  </data>
+  <data name="OverviewEdgeScrollingCard.Header" xml:space="preserve">
+    <value>끌 때 가장자리 스크롤</value>
+  </data>
+  <data name="OverviewEdgeScrollingCard.Description" xml:space="preserve">
+    <value>창이나 페이지를 왼쪽 또는 오른쪽 가장자리 가까이 끌면 페이지 사이를 스크롤합니다</value>
+  </data>
+  <data name="SnapAssistanceCard.Header" xml:space="preserve">
+    <value>스냅 도우미</value>
+  </data>
+  <data name="SnapAssistanceCard.Description" xml:space="preserve">
+    <value>구성된 스냅 영역을 표시하고 페이지 위로 끌 때 창 미리 보기의 크기를 조정합니다</value>
+  </data>
+  <data name="ResetPageCustomizationsCard.Header" xml:space="preserve">
+    <value>페이지 사용자 지정</value>
+  </data>
+  <data name="ResetPageCustomizationsCard.Description" xml:space="preserve">
+    <value>모든 사용자 지정 페이지 이름과 저장된 스냅 레이아웃을 제거합니다</value>
+  </data>
+  <data name="ResetPageCustomizationsButton.Content" xml:space="preserve">
+    <value>초기화</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogTitle" xml:space="preserve">
+    <value>페이지 사용자 지정을 초기화할까요?</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogMessage" xml:space="preserve">
+    <value>모든 사용자 지정 페이지 이름과 저장된 스냅 레이아웃이 제거됩니다. 이 작업은 실행 취소할 수 없습니다.</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogPrimaryButton" xml:space="preserve">
+    <value>초기화</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogCloseButton" xml:space="preserve">
+    <value>취소</value>
+  </data>
+  <data name="ResetPageCustomizationsError" xml:space="preserve">
+    <value>Infinity에서 페이지 사용자 지정을 초기화하지 못했습니다. 다시 시도하세요.</value>
+  </data>
+  <data name="DesktopShortcutHintsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>키보드 바로 가기</value>
+  </data>
+  <data name="DesktopShortcutHintsButtonLabel.Text" xml:space="preserve">
+    <value>키보드 바로 가기</value>
+  </data>
+  <data name="DesktopShortcutHintsTitle.Text" xml:space="preserve">
+    <value>키보드 바로 가기</value>
+  </data>
+  <data name="DesktopShortcutHintsDescription.Text" xml:space="preserve">
+    <value>키보드에서 손을 떼지 않고 페이지를 이동하고 창을 정리하세요.</value>
+  </data>
+  <data name="DesktopShortcutNavigationGroup.Text" xml:space="preserve">
+    <value>탐색</value>
+  </data>
+  <data name="DesktopShortcutSwitchPage.Text" xml:space="preserve">
+    <value>페이지 전환</value>
+  </data>
+  <data name="DesktopShortcutGoToPage.Text" xml:space="preserve">
+    <value>번호가 지정된 페이지로 이동</value>
+  </data>
+  <data name="DesktopShortcutWindowGroup.Text" xml:space="preserve">
+    <value>활성 창</value>
+  </data>
+  <data name="DesktopShortcutMoveWindow.Text" xml:space="preserve">
+    <value>인접한 페이지로 이동</value>
+  </data>
+  <data name="DesktopShortcutSendWindow.Text" xml:space="preserve">
+    <value>번호가 지정된 페이지로 보내기</value>
+  </data>
+  <data name="DesktopShortcutShiftKey.Text" xml:space="preserve">
+    <value>Shift</value>
+  </data>
+  <data name="PageOpenApplicationButton" xml:space="preserve">
+    <value>앱 열기</value>
+  </data>
+  <data name="DesktopAppPickerTitle.Text" xml:space="preserve">
+    <value>앱 열기</value>
+  </data>
+  <data name="DesktopAppPickerSearchBox.PlaceholderText" xml:space="preserve">
+    <value>앱 검색</value>
+  </data>
+  <data name="DesktopAppPickerSearchHeader.Text" xml:space="preserve">
+    <value>검색</value>
+  </data>
+  <data name="DesktopAppPickerEmpty.Text" xml:space="preserve">
+    <value>앱을 찾을 수 없음</value>
+  </data>
+  <data name="DesktopAppPickerPageDestination" xml:space="preserve">
+    <value>이 페이지</value>
+  </data>
+  <data name="DesktopAppPickerSlotDestination" xml:space="preserve">
+    <value>슬롯 {0}</value>
+  </data>
+  <data name="DesktopAppPickerDestinationHeader" xml:space="preserve">
+    <value>열 위치</value>
+  </data>
+  <data name="PageLayoutArrangeButton" xml:space="preserve"><value>이 페이지 정렬</value></data>
+  <data name="DesktopWindowBringToCurrentPage" xml:space="preserve"><value>현재 페이지로 가져오기</value></data>
+  <data name="DesktopWindowSendToPage" xml:space="preserve"><value>페이지로 보내기</value></data>
+  <data name="DesktopWindowMoveToSlot" xml:space="preserve"><value>슬롯으로 이동</value></data>
+  <data name="DesktopWindowSlot" xml:space="preserve"><value>슬롯 {0}</value></data>
+  <data name="DesktopWindowSwapWith" xml:space="preserve"><value>다음과 바꾸기</value></data>
+  <data name="DesktopWindowUntitled" xml:space="preserve"><value>제목 없는 창</value></data>
+  <data name="DesktopWindowCenterOnPage" xml:space="preserve"><value>페이지 가운데에 배치</value></data>
+  <data name="DesktopWindowClose" xml:space="preserve"><value>창 닫기</value></data>
+  <data name="DesktopShortcutOverviewGroup.Text" xml:space="preserve"><value>개요에서</value></data>
+  <data name="DesktopShortcutOverviewNavigatePages.Text" xml:space="preserve"><value>페이지 탐색</value></data>
+  <data name="DesktopShortcutOverviewSelectWindows.Text" xml:space="preserve"><value>창 선택</value></data>
+  <data name="DesktopShortcutOverviewMoveSelected.Text" xml:space="preserve"><value>선택한 창 이동</value></data>
+  <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>선택 항목에 창 추가 또는 제거</value></data>
+  <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>선택한 창 열기</value></data>
+  <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>창 검색</value></data>
++</root>

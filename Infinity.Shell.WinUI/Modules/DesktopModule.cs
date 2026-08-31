@@ -8,7 +8,6 @@ using Infinity.Platform.Abstractions;
 using Infinity.Platform.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System;
 
 namespace Infinity.Shell.WinUI;
@@ -19,74 +18,111 @@ public sealed class DesktopModule :
     public void Register(IServiceCollection services)
     {
         services
-            .AddSingleton<IDesktopBackgroundController>(provider => new DesktopBackgroundController(provider.GetRequiredService<IDesktopBackgroundSource>(),
-                provider.GetRequiredService<IDispatcher>()))
-            .AddViewFor(ServiceLifetime.Singleton,
-                provider => new PageTintView(provider.GetRequiredService<IMonitorLocator>(),
-                    provider.GetRequiredService<ITaskbarLocator>()),
-                provider => new PageTintViewModel(provider,
-                    provider.GetRequiredService<IServiceFactory>(),
-                    provider.GetRequiredService<IMessenger>(),
-                    provider.GetRequiredService<IDisposer>(),
-                    provider.GetRequiredService<IDispatcher>(),
-                    provider.GetRequiredService<IPointerInputSource>(),
-                    provider.GetRequiredService<IModifierKeyState>(),
-                    provider.GetRequiredService<IWindowDragScroller>(),
-                    provider.GetRequiredService<IPageGestureSource>(),
-                    provider.GetRequiredService<IOptionsMonitor<Settings>>(),
-                    provider.GetRequiredService<IWritableOptions<Settings>>(),
-                    provider.GetRequiredService<IPager>(),
-                    provider.GetRequiredService<IPanState>(),
-                    provider.GetRequiredService<IInfinityGlanceBridge>(),
-                    provider.GetRequiredService<ITextLocalizer>(),
-                    provider.GetRequiredService<ILogger<PageTintViewModel>>()))
-            .AddViewFor(ServiceLifetime.Singleton,
-                provider => new DesktopFlyoutView(provider.GetRequiredService<IWindowPreviewSurface>()),
-                provider => new DesktopFlyoutViewModel(provider,
-                    provider.GetRequiredService<IServiceFactory>(),
-                    provider.GetRequiredService<IMessenger>(),
-                    provider.GetRequiredService<IDisposer>(),
-                    provider.GetRequiredService<IDispatcher>(),
-                    provider.GetRequiredService<IWorkspace>(),
-                    provider.GetRequiredService<IModifierKeyState>(),
-                    provider.GetRequiredService<IInfinityGlanceBridge>(),
-                    provider.GetRequiredService<Settings>()))
-            .AddView(ServiceLifetime.Singleton, provider => new ScrollTriggerView())
-            .AddViewFor(ServiceLifetime.Singleton,
-                provider => new TrackedWindowCollectionView(),
-                provider => new TrackedWindowCollectionViewModel(provider,
-                    provider.GetRequiredService<IServiceFactory>(),
-                    provider.GetRequiredService<IMessenger>(),
-                    provider.GetRequiredService<IDispatcher>(),
-                    provider.GetRequiredService<IDisposer>(),
-                    provider.GetRequiredService<IWorkspace>(),
-                    provider.GetRequiredService<IShellLayoutCalculator>(),
-                    provider.GetRequiredService<IPager>(),
-                    provider.GetRequiredService<IPanState>(),
-                    provider.GetRequiredService<IScroller>(),
-                    provider.GetRequiredService<ITrackedWindowDragController>(),
-                    provider.GetRequiredService<IWindowCollection>(),
-                    provider.GetRequiredService<ITrackedWindowCollection>(),
-                    provider.GetRequiredService<IWindowSelector>(),
-                    provider.GetRequiredService<IWindowFilterState>(),
-                    provider.GetRequiredService<IWindowPeekController>(),
-                    provider.GetRequiredService<IWindowPeekSource>(),
-                    provider.GetRequiredService<IDesktopBackgroundController>(),
-                    provider.GetRequiredService<IWindowNavigationCoordinator>(),
-                    provider.GetRequiredService<INavigator>(),
-                    provider.GetRequiredService<IOptionsMonitor<Settings>>(),
-                    provider.GetRequiredService<ILogger<TrackedWindowCollectionViewModel>>()));
+            .AddSingleton<DesktopOverviewBackdropAnimator>()
+            .AddSingleton<DesktopOverviewWallpaperPresenter>()
+            .AddSingleton<DesktopScrollPreviewAnimator>()
+            .AddSingleton<DesktopPageLayoutCalculator>()
+            .AddSingleton<DesktopWallpaperPlacementCalculator>()
+            .AddSingleton<DesktopSnapLayoutCatalog>()
+            .AddSingleton<DesktopSnapPlacementResolver>()
+            .AddSingleton<DesktopSnapSlotOccupancyResolver>()
+            .AddSingleton<DesktopWindowPlacementCoordinator>()
+            .AddSingleton<DesktopWindowDropNavigationCoordinator>()
+            .AddSingleton<DesktopWindowGroupDragCoordinator>()
+            .AddSingleton<DesktopWindowSelectionModel>()
+            .AddSingleton<DesktopPageArrangementCoordinator>()
+            .AddSingleton<DesktopApplicationPlacementResolver>()
+            .AddSingleton<DesktopApplicationLaunchCoordinator>()
+            .AddSingleton<IDesktopApplicationPickerCatalog, DesktopApplicationPickerCatalog>()
+            .AddSingleton<IRecentApplicationStore, RecentApplicationStore>()
+            .AddSingleton<IDesktopApplicationDockCatalog, DesktopApplicationDockCatalog>()
+            .AddSingleton<DesktopDragBoundaryCalculator>()
+            .AddSingleton<DesktopPageReorderController>()
+            .AddSingleton<DesktopPageBackgroundFactory>()
+            .AddSingleton<DesktopPageStrip>()
+            .AddSingleton<DesktopOverviewDragScroller>()
+            .AddSingleton<DesktopDragCursorConfinement>()
+            .AddSingleton<DesktopWindowDragPositionResolver>()
+            .AddSingleton<DesktopWindowContextMenuBuilder>()
+            .AddSingleton<DesktopWindowPreviewFactory>()
+            .AddSingleton<DesktopWindowPreviewCollection>()
+            .AddSingleton<DesktopWindowGroupStackAnimator>()
+            .AddSingleton<DesktopOverviewInputController>()
+            .AddSingleton<DesktopWindowSnapInteractionCoordinator>()
+            .AddSingleton<DesktopOverviewLayoutPresenter>()
+            .AddSingleton<IDesktopOverviewSettingsNavigator, DesktopOverviewSettingsNavigator>()
+            .AddSingleton<DesktopOverviewSessionController>()
+            .AddSingleton<WindowInputTransparencyController>()
+            .AddSingleton(provider => new DesktopShortcutHintsViewModel(
+                provider.GetRequiredService<IMessenger>(),
+                provider.GetRequiredService<IDispatcher>(),
+                provider.GetRequiredService<Settings>(),
+                provider.GetRequiredService<IKeyLabelProvider>()))
+            .AddSingleton<DesktopApplicationPickerViewModel>()
+            .AddSingleton<DesktopApplicationDockViewModel>()
+            .AddSingleton<PageTitleStore>()
+            .AddSingleton<PageLayoutStore>()
+            .AddSingleton<PageNavigationPublisher>()
+            .AddSingleton(provider => CreateDesktopScrollPreviewView(provider))
+            .AddViewFor(ServiceLifetime.Singleton, provider => CreateDesktopOverviewView(provider), provider => CreateDesktopOverviewViewModel(provider))
+            .AddView(ServiceLifetime.Singleton, provider => new ScrollTriggerView());
 
-        services.Subscribe<IDesktopBackgroundController>((provider, backgroundController) =>
+        services.Subscribe<PageNavigationPublisher>((provider, publisher) =>
         {
-            IMessenger messenger = provider.GetRequiredService<IMessenger>();
-
-            void HandleBackgroundChanged(object? sender, EventArgs args) =>
-                messenger.Send(new DesktopBackgroundChangedEventArgs());
-
-            backgroundController.BackgroundChanged += HandleBackgroundChanged;
-
-            return () => backgroundController.BackgroundChanged -= HandleBackgroundChanged;
+            publisher.Start();
+            return publisher.Stop;
         });
+
+        services.Subscribe<IDesktopBackgroundSource>((provider, backgroundSource) =>
+        {
+            backgroundSource.Start();
+            return backgroundSource.Stop;
+        });
+    }
+
+    private static DesktopScrollPreviewView CreateDesktopScrollPreviewView(IServiceProvider provider)
+    {
+        IWindowPreviewSurface windowPreviewSurface = provider.GetRequiredService<IWindowPreviewSurface>();
+        IWindowCollection windowCollection = provider.GetRequiredService<IWindowCollection>();
+        IPanState panState = provider.GetRequiredService<IPanState>();
+        IPager pager = provider.GetRequiredService<IPager>();
+        IScroller scroller = provider.GetRequiredService<IScroller>();
+        IWorkspace workspace = provider.GetRequiredService<IWorkspace>();
+        DesktopScrollPreviewAnimator animator = provider.GetRequiredService<DesktopScrollPreviewAnimator>();
+        DesktopOverviewLayoutPresenter layoutPresenter = provider.GetRequiredService<DesktopOverviewLayoutPresenter>();
+        DesktopPageStrip pageStrip = provider.GetRequiredService<DesktopPageStrip>();
+        DesktopWindowPreviewCollection previews = provider.GetRequiredService<DesktopWindowPreviewCollection>();
+        DesktopDragCursorConfinement cursorConfinement = provider.GetRequiredService<DesktopDragCursorConfinement>();
+        DesktopShortcutHintsViewModel shortcutHints = provider.GetRequiredService<DesktopShortcutHintsViewModel>();
+        DesktopApplicationPickerViewModel applicationPicker = provider.GetRequiredService<DesktopApplicationPickerViewModel>();
+        DesktopApplicationDockViewModel applicationDock = provider.GetRequiredService<DesktopApplicationDockViewModel>();
+        DesktopApplicationLaunchCoordinator applicationLaunchCoordinator = provider.GetRequiredService<DesktopApplicationLaunchCoordinator>();
+        DesktopOverviewInputController inputController = provider.GetRequiredService<DesktopOverviewInputController>();
+        DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator = provider.GetRequiredService<DesktopWindowSnapInteractionCoordinator>();
+
+        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, panState, pager, scroller, workspace, animator, layoutPresenter, pageStrip, previews, cursorConfinement, shortcutHints, applicationPicker, applicationDock, applicationLaunchCoordinator, inputController, snapInteractionCoordinator);
+    }
+
+    private static DesktopOverviewView CreateDesktopOverviewView(IServiceProvider provider)
+    {
+        DesktopScrollPreviewView desktopScrollPreview = provider.GetRequiredService<DesktopScrollPreviewView>();
+        DesktopOverviewBackdropAnimator backdropAnimator = provider.GetRequiredService<DesktopOverviewBackdropAnimator>();
+        DesktopOverviewWallpaperPresenter wallpaperPresenter = provider.GetRequiredService<DesktopOverviewWallpaperPresenter>();
+        WindowInputTransparencyController inputController = provider.GetRequiredService<WindowInputTransparencyController>();
+        IDesktopBackgroundSource backgroundSource = provider.GetRequiredService<IDesktopBackgroundSource>();
+        IKeyboardInputSource keyboardInputSource = provider.GetRequiredService<IKeyboardInputSource>();
+        DesktopOverviewConfiguration overviewConfiguration = provider.GetRequiredService<DesktopOverviewConfiguration>();
+
+        return new DesktopOverviewView(desktopScrollPreview, backdropAnimator, wallpaperPresenter, inputController, backgroundSource, keyboardInputSource, overviewConfiguration);
+    }
+
+    private static DesktopOverviewViewModel CreateDesktopOverviewViewModel(IServiceProvider provider)
+    {
+        IServiceFactory serviceFactory = provider.GetRequiredService<IServiceFactory>();
+        IMessenger messenger = provider.GetRequiredService<IMessenger>();
+        IDisposer disposer = provider.GetRequiredService<IDisposer>();
+        DesktopOverviewSessionController sessionController = provider.GetRequiredService<DesktopOverviewSessionController>();
+
+        return new DesktopOverviewViewModel(provider, serviceFactory, messenger, disposer, sessionController);
     }
 }

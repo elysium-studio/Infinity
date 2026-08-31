@@ -28,9 +28,7 @@ public sealed class Pager(IWindowStore repository,
         get
         {
             int currentPage = CurrentPage;
-            TrackedWindow? rightmostWindow = repository
-                .Where(window => !window.IsSticky)
-                .MaxBy(window => (long)window.CanvasX + window.Width);
+            TrackedWindow? rightmostWindow = repository.MaxBy(window => (long)window.CanvasX + window.Width);
 
             int pageCount = rightmostWindow is not null && workspace.Width > 0
                 ? (int)Math.Ceiling(((long)rightmostWindow.CanvasX + rightmostWindow.Width - 1) / (double)workspace.Width)
@@ -43,19 +41,36 @@ public sealed class Pager(IWindowStore repository,
         }
     }
 
+    public bool IsPageCentered(int page)
+    {
+        if (workspace.Width <= 0)
+        {
+            return true;
+        }
+
+        int targetPage = NormalizePage(page);
+        double targetOffset = targetPage * workspace.Width;
+        return Math.Abs(coordinator.VisualOffset - targetOffset) < 0.5;
+    }
+
     public void NavigateToPage(int page)
     {
-        int targetPage = maxPages.HasValue
-            ? Math.Min(page, maxPages.Value - 1)
-            : page;
-
-        targetPage = Math.Max(0, targetPage);
+        int targetPage = NormalizePage(page);
 
         logger.LogInformation("Navigating to page {Page}", targetPage);
 
         double targetOffset = targetPage * workspace.Width;
         foregroundWindowCoordinator.SuppressForegroundFollow();
         coordinator.ScrollTo(targetOffset);
+    }
+
+    private int NormalizePage(int page)
+    {
+        int targetPage = maxPages.HasValue
+            ? Math.Min(page, maxPages.Value - 1)
+            : page;
+
+        return Math.Max(0, targetPage);
     }
 
     public void SetMaxPages(int? maxPages)

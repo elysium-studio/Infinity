@@ -5,7 +5,6 @@ using Elysium.Presentation.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
 
 namespace Infinity.Shell.WinUI;

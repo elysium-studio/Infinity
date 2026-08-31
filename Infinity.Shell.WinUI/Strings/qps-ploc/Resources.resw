@@ -73,23 +73,47 @@
   <data name="UpdateReadyToastTitle" xml:space="preserve">
     <value>[!! Ûþðàţë ŕëàðÿ ~~~~ !!]</value>
   </data>
-  <data name="AboutTitleBar.Title" xml:space="preserve">
-    <value>[!! Àƀôûţ ~~~ !!]</value>
-  </data>
   <data name="BooleanToggle.OffContent" xml:space="preserve">
     <value>[!! Ñô ~~~ !!]</value>
   </data>
   <data name="BooleanToggle.OnContent" xml:space="preserve">
     <value>[!! Ÿëš ~~~ !!]</value>
   </data>
-  <data name="CloseWindowButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>[!! Çļôšë ŵîñðôŵ ~~~~ !!]</value>
+  <data name="OnOffToggle.OffContent" xml:space="preserve">
+    <value>[!! Öƒƒ ~~~ !!]</value>
   </data>
-  <data name="DesktopBlurCard.Description" xml:space="preserve">
-    <value>[!! Ɓļûŕ ţħë ƀàçķĝŕôûñð ðûŕîñĝ šçŕôļļîñĝ àñð ƒîļţëŕîñĝ ~~~~~~~~~~~~~~~ !!]</value>
+  <data name="OnOffToggle.OnContent" xml:space="preserve">
+    <value>[!! Öñ ~~~ !!]</value>
   </data>
-  <data name="DesktopBlurCard.Header" xml:space="preserve">
-    <value>[!! Ɓàçķĝŕôûñð Ɓļûŕ ~~~~~ !!]</value>
+  <data name="PagesSettingsSectionTitle" xml:space="preserve">
+    <value>[Pågéš]</value>
+  </data>
+  <data name="ScrollingSettingsSectionTitle" xml:space="preserve">
+    <value>[Šçrøļļîñg]</value>
+  </data>
+  <data name="OverviewSettingsSectionTitle" xml:space="preserve">
+    <value>[Øvérvîéŵ]</value>
+  </data>
+  <data name="OverviewBackdropCard.Header" xml:space="preserve">
+    <value>[Övèrláý báckdröp]</value>
+  </data>
+  <data name="OverviewBackdropCard.Description" xml:space="preserve">
+    <value>[Chööse whát áppeárs bèhïnd thè dèsktöp övèrvïèw]</value>
+  </data>
+  <data name="OverviewBackdropWallpaperOption.Content" xml:space="preserve">
+    <value>[Wállpápèr]</value>
+  </data>
+  <data name="OverviewBackdropDarkOption.Content" xml:space="preserve">
+    <value>[Dárk]</value>
+  </data>
+  <data name="OverviewBackdropLightOption.Content" xml:space="preserve">
+    <value>[Lïght]</value>
+  </data>
+  <data name="DesktopApplicationDockAllAppsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>[Áll ápps]</value>
+  </data>
+  <data name="AdvancedSettingsSectionTitle" xml:space="preserve">
+    <value>[Åðvåñçéð]</value>
   </data>
   <data name="DesktopSectionTitle.Text" xml:space="preserve">
     <value>[!! Ðëšķţôþ ~~~ !!]</value>
@@ -100,54 +124,14 @@
   <data name="DragScrollSpeedCard.Header" xml:space="preserve">
     <value>[!! Ðŕàĝ Šçŕôļļ Šþëëð ~~~~~~ !!]</value>
   </data>
-  <data name="PreviewBackgroundCard.Description" xml:space="preserve">
-    <value>[!! Šħôŵ ÿôûŕ ðëšķţôþ ƀàçķĝŕôûñð îñ ţħë þŕëṽîëŵ ƀàŕ ~~~~~~~~~~~~~~~ !!]</value>
-  </data>
-  <data name="PreviewBackgroundCard.Header" xml:space="preserve">
-    <value>[!! Ðëšķţôþ Ɓàçķĝŕôûñð ~~~~~~ !!]</value>
-  </data>
-  <data name="PreviewDebugWaitingText.Text" xml:space="preserve">
-    <value>[!! Ŵàîţîñĝ... ~~~ !!]</value>
-  </data>
-  <data name="PreviewDebugWindow.Title" xml:space="preserve">
-    <value>[!! Ŵîñðôŵ þŕëṽîëŵ ĝŕîð ~~~~~~ !!]</value>
-  </data>
-  <data name="PreviewPositionAutoOption.Content" xml:space="preserve">
-    <value>[!! Àûţô ~~~ !!]</value>
-  </data>
-  <data name="PreviewPositionBottomOption.Content" xml:space="preserve">
-    <value>[!! Ɓôţţôɱ ~~~ !!]</value>
-  </data>
-  <data name="PreviewPositionCard.Description" xml:space="preserve">
-    <value>[!! Ŵħëŕë ţħë þŕëṽîëŵ ƀàŕ àþþëàŕš ôñ šçŕëëñ ~~~~~~~~~~~~ !!]</value>
-  </data>
-  <data name="PreviewPositionCard.Header" xml:space="preserve">
-    <value>[!! Þŕëṽîëŵ Þôšîţîôñ ~~~~~ !!]</value>
-  </data>
-  <data name="PreviewPositionTopOption.Content" xml:space="preserve">
-    <value>[!! Ţôþ ~~~ !!]</value>
-  </data>
-  <data name="PreviewSectionTitle.Text" xml:space="preserve">
-    <value>[!! Þŕëṽîëŵ ~~~ !!]</value>
-  </data>
-  <data name="PreviewSizeCard.Description" xml:space="preserve">
-    <value>[!! Çôñţŕôļš ħôŵ ţàļļ ţħë þŕëṽîëŵ ƀàŕ àþþëàŕš àţ ţħë ƀôţţôɱ ôƒ ÿôûŕ šçŕëëñ ~~~~~~~~~~~~~~~~~~~~~ !!]</value>
-  </data>
-  <data name="PreviewSizeCard.Header" xml:space="preserve">
-    <value>[!! Þŕëṽîëŵ Šîžë ~~~~ !!]</value>
-  </data>
-  <data name="PreviewSizeCompactOption.Content" xml:space="preserve">
-    <value>[!! Çôɱþàçţ ~~~ !!]</value>
-  </data>
-  <data name="PreviewSizeDefaultOption.Content" xml:space="preserve">
-    <value>[!! Ðëƒàûļţ ~~~ !!]</value>
-  </data>
-  <data name="PreviewSizeLargeOption.Content" xml:space="preserve">
-    <value>[!! Ļàŕĝë ~~~ !!]</value>
-  </data>
   <data name="PageTitle" xml:space="preserve">
     <value>[!! Þàĝë {0} ~~~ !!]</value>
   </data>
+  <data name="PageTitleCancelButton" xml:space="preserve"><value>Cancel editing</value></data>
+  <data name="PageTitleEditButton" xml:space="preserve"><value>Edit page title</value></data>
+  <data name="PageTitleSaveButton" xml:space="preserve"><value>Save page title</value></data>
+  <data name="PageLayoutEditButton" xml:space="preserve"><value>Choose snap layout</value></data>
+  <data name="PageLayoutClearButton" xml:space="preserve"><value>[Çļéàŕ ļàýöüţ]</value></data>
   <data name="ScrollShortcutCancelButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>[!! Çàñçëļ ~~~ !!]</value>
   </data>
@@ -188,6 +172,9 @@
     <value>[!! Šçŕôļļ Šþëëð ~~~~ !!]</value>
   </data>
   <data name="SettingsTitleBar.Title" xml:space="preserve">
+    <value>[!! Šëţţîñĝš ~~~ !!]</value>
+  </data>
+  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>[!! Šëţţîñĝš ~~~ !!]</value>
   </data>
   <data name="SpeedFastOption.Content" xml:space="preserve">
@@ -307,53 +294,11 @@
   <data name="VirtualPagesUnlimitedOption.Content" xml:space="preserve">
     <value>[!! Ûñļîɱîţëð ~~~ !!]</value>
   </data>
-  <data name="WindowAboutMenuItem.Text" xml:space="preserve">
-    <value>[!! Àƀôûţ ~~~ !!]</value>
-  </data>
-  <data name="WindowExitMenuItem.Text" xml:space="preserve">
-    <value>[!! Ëẋîţ ~~~ !!]</value>
-  </data>
-  <data name="WindowOptionsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>[!! Ôþţîôñš ~~~ !!]</value>
-  </data>
-  <data name="WindowPeekCard.Description" xml:space="preserve">
-    <value>[!! Ŵħëñ ħôṽëŕîñĝ à ŵîñðôŵ ţħûɱƀñàîļ ôŕ àþþļÿîñĝ à ƒîļţëŕ, ħîðë àļļ ôţħëŕ ŵîñðôŵš šô ôñļÿ ţħë ɱàţçħîñĝ ôñë (ôŕ ôñëš) šţàÿ ṽîšîƀļë. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !!]</value>
-  </data>
-  <data name="WindowPeekCard.Header" xml:space="preserve">
-    <value>[!! Ŵîñðôŵ Þëëķ ~~~~ !!]</value>
-  </data>
   <data name="WindowSearchBox.PlaceholderText" xml:space="preserve">
     <value>[!! Ƒîñð à ðëšķţôþ ŵîñðôŵ... ~~~~~~~~ !!]</value>
   </data>
   <data name="WindowsSectionTitle.Text" xml:space="preserve">
     <value>[!! Ŵîñðôŵš ~~~ !!]</value>
-  </data>
-  <data name="WindowSettingsMenuItem.Text" xml:space="preserve">
-    <value>[!! Šëţţîñĝš ~~~ !!]</value>
-  </data>
-  <data name="WindowTourMenuItem.Text" xml:space="preserve">
-    <value>[!! Ţàķë à ţôûŕ ~~~~ !!]</value>
-  </data>
-  <data name="AlwaysOpenApplicationOnPageMenuItem" xml:space="preserve">
-    <value>[!! Àļŵàÿš ôþëñ ţħîš àþþ ôñ ~~~~~~~~~ !!]</value>
-  </data>
-  <data name="MoveWindowToPageMenuItem" xml:space="preserve">
-    <value>[!! Ṁôṽë ŵîñðôŵ ţô ~~~~~~ !!]</value>
-  </data>
-  <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
-    <value>[!! Ŕëɱôṽë ôþëñîñĝ ŕûļë ~~~~~~~~ !!]</value>
-  </data>
-  <data name="PinWindowMenuItem" xml:space="preserve">
-    <value>[!! Þîñ ţô àļļ þàĝëš ~~~~~~ !!]</value>
-  </data>
-  <data name="UnpinWindowMenuItem" xml:space="preserve">
-    <value>[!! Ûñþîñ ƒŕôɱ àļļ þàĝëš ~~~~~~~~ !!]</value>
-  </data>
-  <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>[!! Þîññëð ţô àļļ þàĝëš ~~~~~~~ !!]</value>
-  </data>
-  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>[Šéţţîñĝš]</value>
   </data>
   <data name="TourNavigationItem.Content" xml:space="preserve">
     <value>[!! Ţàķë à ţôûŕ ~~~~ !!]</value>
@@ -382,4 +327,119 @@
   <data name="QuitDialogCloseButton" xml:space="preserve">
     <value>[Cåncél]</value>
   </data>
-</root>
+  <data name="SpanCompatibleDisplaysCard.Header" xml:space="preserve">
+    <value>[Špåñ çømpåtîbļé dîšpļåýš]</value>
+  </data>
+  <data name="SpanCompatibleDisplaysCard.Description" xml:space="preserve">
+    <value>[Éxtéñð thé øvérvîéŵ åçrøšš åðjåçéñt dîšpļåýš ŵhéñ théîr réšøļûtîøñ, šçåļé, åñð åļîgñméñt åré çømpåtîbļé]</value>
+  </data>
+  <data name="OverviewEdgeScrollingCard.Header" xml:space="preserve">
+    <value>[Éðgé šçrøļļîñg ŵhîļé dråggîñg]</value>
+  </data>
+  <data name="OverviewEdgeScrollingCard.Description" xml:space="preserve">
+    <value>[Šçrøļļ bétŵééñ pågéš ŵhéñ å ŵîñðøŵ ør pågé îš dråggéð ñéår thé ļéft ør rîght éðgé]</value>
+  </data>
+  <data name="SnapAssistanceCard.Header" xml:space="preserve">
+    <value>[Šñåp åššîštåñçé]</value>
+  </data>
+  <data name="SnapAssistanceCard.Description" xml:space="preserve">
+    <value>[Šhøŵ çøñfîgûréð šñåp zøñéš åñð réšîzé thé ŵîñðøŵ prévîéŵ ŵhéñ dråggîñg øvér å pågé]</value>
+  </data>
+  <data name="ResetPageCustomizationsCard.Header" xml:space="preserve">
+    <value>[Pågé çûštømîzåtîøñš]</value>
+  </data>
+  <data name="ResetPageCustomizationsCard.Description" xml:space="preserve">
+    <value>[Rémøvé évérý çûštøm pågé ñåmé åñð šåvéð šñåp ļåýøût]</value>
+  </data>
+  <data name="ResetPageCustomizationsButton.Content" xml:space="preserve">
+    <value>[Réšét]</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogTitle" xml:space="preserve">
+    <value>[Réšét pågé çûštømîzåtîøñš?]</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogMessage" xml:space="preserve">
+    <value>[Åļļ çûštøm pågé ñåméš åñð šåvéð šñåp ļåýøûtš ŵîļļ bé rémøvéð. Thîš çåñ't bé ûñðøñé.]</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogPrimaryButton" xml:space="preserve">
+    <value>[Réšét]</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogCloseButton" xml:space="preserve">
+    <value>[Çåñçéļ]</value>
+  </data>
+  <data name="ResetPageCustomizationsError" xml:space="preserve">
+    <value>[Infinity çøûļðñ't réšét ýøûr pågé çûštømîzåtîøñš. Trý ågåîñ.]</value>
+  </data>
+  <data name="DesktopShortcutHintsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>[Kéýbøårð šhørtçûtš]</value>
+  </data>
+  <data name="DesktopShortcutHintsButtonLabel.Text" xml:space="preserve">
+    <value>[Kéýbøårð šhørtçûtš]</value>
+  </data>
+  <data name="DesktopShortcutHintsTitle.Text" xml:space="preserve">
+    <value>[Kéýbøårð šhørtçûtš]</value>
+  </data>
+  <data name="DesktopShortcutHintsDescription.Text" xml:space="preserve">
+    <value>[Møvé bétŵééñ pågéš åñð ørgåñîšé ŵîñðøŵš ŵîthøût ļéåvîñg thé kéýbøårð.]</value>
+  </data>
+  <data name="DesktopShortcutNavigationGroup.Text" xml:space="preserve">
+    <value>[Ñåvîgåtîøñ]</value>
+  </data>
+  <data name="DesktopShortcutSwitchPage.Text" xml:space="preserve">
+    <value>[Šŵîtçh pågéš]</value>
+  </data>
+  <data name="DesktopShortcutGoToPage.Text" xml:space="preserve">
+    <value>[Gø tø å ñûmbéréð pågé]</value>
+  </data>
+  <data name="DesktopShortcutWindowGroup.Text" xml:space="preserve">
+    <value>[Føçûšéð ŵîñðøŵ]</value>
+  </data>
+  <data name="DesktopShortcutMoveWindow.Text" xml:space="preserve">
+    <value>[Møvé tø åñ åðjåçéñt pågé]</value>
+  </data>
+  <data name="DesktopShortcutSendWindow.Text" xml:space="preserve">
+    <value>[Šéñð tø å ñûmbéréð pågé]</value>
+  </data>
+  <data name="DesktopShortcutShiftKey.Text" xml:space="preserve">
+    <value>[Šhîft]</value>
+  </data>
+  <data name="PageOpenApplicationButton" xml:space="preserve">
+    <value>[Öþéñ åþþ]</value>
+  </data>
+  <data name="DesktopAppPickerTitle.Text" xml:space="preserve">
+    <value>[Öþéñ åñ åþþ]</value>
+  </data>
+  <data name="DesktopAppPickerSearchBox.PlaceholderText" xml:space="preserve">
+    <value>[Šéåŕçĥ åþþš]</value>
+  </data>
+  <data name="DesktopAppPickerSearchHeader.Text" xml:space="preserve">
+    <value>[Šéåŕçĥ]</value>
+  </data>
+  <data name="DesktopAppPickerEmpty.Text" xml:space="preserve">
+    <value>[Ñö åþþš ƒöµñð]</value>
+  </data>
+  <data name="DesktopAppPickerPageDestination" xml:space="preserve">
+    <value>[Öñ ţĥîš þåĝé]</value>
+  </data>
+  <data name="DesktopAppPickerSlotDestination" xml:space="preserve">
+    <value>[Šļöţ {0}]</value>
+  </data>
+  <data name="DesktopAppPickerDestinationHeader" xml:space="preserve">
+    <value>[Öþéñ îñ]</value>
+  </data>
+  <data name="PageLayoutArrangeButton" xml:space="preserve"><value>[Årråñgé ţhîš pågé]</value></data>
+  <data name="DesktopWindowBringToCurrentPage" xml:space="preserve"><value>[Brîñg ţö çürréñţ pågé]</value></data>
+  <data name="DesktopWindowSendToPage" xml:space="preserve"><value>[Šéñð ţö pågé]</value></data>
+  <data name="DesktopWindowMoveToSlot" xml:space="preserve"><value>[Mövé ţö šlöţ]</value></data>
+  <data name="DesktopWindowSlot" xml:space="preserve"><value>[Šlöţ {0}]</value></data>
+  <data name="DesktopWindowSwapWith" xml:space="preserve"><value>[Šwåp wîţh]</value></data>
+  <data name="DesktopWindowUntitled" xml:space="preserve"><value>[Üñţîţléð wîñðöw]</value></data>
+  <data name="DesktopWindowCenterOnPage" xml:space="preserve"><value>[Çéñţré öñ pågé]</value></data>
+  <data name="DesktopWindowClose" xml:space="preserve"><value>[Çlöšé wîñðöw]</value></data>
+  <data name="DesktopShortcutOverviewGroup.Text" xml:space="preserve"><value>[Îñ övérvîéw]</value></data>
+  <data name="DesktopShortcutOverviewNavigatePages.Text" xml:space="preserve"><value>[Ñåvîgåţé pågéš]</value></data>
+  <data name="DesktopShortcutOverviewSelectWindows.Text" xml:space="preserve"><value>[Šéléçţ wîñðöwš]</value></data>
+  <data name="DesktopShortcutOverviewMoveSelected.Text" xml:space="preserve"><value>[Mövé šéléçţéð wîñðöwš]</value></data>
+  <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>[Åðð ör rémövé å wîñðöw fröm ţhé šéléçţîöñ]</value></data>
+  <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>[Öpéñ šéléçţéð wîñðöw]</value></data>
+  <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>[Šéårçh wîñðöwš]</value></data>
++</root>

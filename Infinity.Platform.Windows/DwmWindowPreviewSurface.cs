@@ -161,6 +161,29 @@ public sealed class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> log
         }
     }
 
+    public void RefreshSource(DwmWindowPreview preview)
+    {
+        lock (syncLock)
+        {
+            if (isDisposed || !previews.TryGetValue(preview.Id, out PreviewState? state) || !ReferenceEquals(state.Preview, preview) || state.SharedTargetHandle == 0)
+            {
+                return;
+            }
+
+            int result = TryRefreshSource((ulong)preview.Id);
+
+            if (result < 0 && result != lastRenderFailure)
+            {
+                lastRenderFailure = result;
+                logger.LogWarning("DWM thumbnail source refresh failed with HRESULT 0x{HResult:X8}", result);
+            }
+            else if (result >= 0)
+            {
+                lastRenderFailure = 0;
+            }
+        }
+    }
+
     [DllImport(LibraryName, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
     private static extern void DwmThumbnailVisual_Clear();
 
@@ -171,6 +194,9 @@ public sealed class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> log
     private static extern int DwmThumbnailVisual_RenderBatch(nint ownerWindowHandle,
         DwmThumbnailVisualItem[] items,
         int count);
+
+    [DllImport(LibraryName, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+    private static extern int DwmThumbnailVisual_RefreshSource(ulong previewId);
 
     private static int NormalizeLength(double value)
     {
@@ -222,6 +248,22 @@ public sealed class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> log
         try
         {
             return DwmThumbnailVisual_RenderBatch(ownerWindowHandle, items, count);
+        }
+        catch (DllNotFoundException)
+        {
+            return unchecked((int)0x8007007E);
+        }
+        catch (EntryPointNotFoundException)
+        {
+            return unchecked((int)0x8007007F);
+        }
+    }
+
+    private static int TryRefreshSource(ulong previewId)
+    {
+        try
+        {
+            return DwmThumbnailVisual_RefreshSource(previewId);
         }
         catch (DllNotFoundException)
         {

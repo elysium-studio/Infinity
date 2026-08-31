@@ -11,7 +11,9 @@ public sealed class ModifiedScrollInput(IPointerInputSource pointer,
     private bool isStarted;
 
     public event Action<int>? ScrollDeltaReceived;
+
     public event Action<double>? ScrollVelocityIdle;
+
     public event Action? MiddleButtonClicked;
 
     public void Start()

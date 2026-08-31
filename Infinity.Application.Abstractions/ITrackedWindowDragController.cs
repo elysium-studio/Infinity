@@ -6,7 +6,9 @@ public interface ITrackedWindowDragController
 
     bool Begin(IntPtr windowHandle);
 
-    bool Move(IntPtr windowHandle, double horizontalDelta, double verticalDelta);
+    bool MoveTo(IntPtr windowHandle, double canvasX, double canvasY);
+
+    bool MoveAndResize(IntPtr windowHandle, double canvasX, double canvasY, double width, double height);
 
     void End(IntPtr windowHandle);
 }

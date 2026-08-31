@@ -73,23 +73,47 @@
   <data name="UpdateReadyToastTitle" xml:space="preserve">
     <value>Update gereed</value>
   </data>
-  <data name="AboutTitleBar.Title" xml:space="preserve">
-    <value>Over</value>
-  </data>
   <data name="BooleanToggle.OffContent" xml:space="preserve">
     <value>Nee</value>
   </data>
   <data name="BooleanToggle.OnContent" xml:space="preserve">
     <value>Ja</value>
   </data>
-  <data name="CloseWindowButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Sluit venster</value>
+  <data name="OnOffToggle.OffContent" xml:space="preserve">
+    <value>Uit</value>
   </data>
-  <data name="DesktopBlurCard.Description" xml:space="preserve">
-    <value>Vervaag de achtergrond tijdens het scrollen en filteren</value>
+  <data name="OnOffToggle.OnContent" xml:space="preserve">
+    <value>Aan</value>
   </data>
-  <data name="DesktopBlurCard.Header" xml:space="preserve">
-    <value>Achtergrondvervaging</value>
+  <data name="PagesSettingsSectionTitle" xml:space="preserve">
+    <value>Pagina's</value>
+  </data>
+  <data name="ScrollingSettingsSectionTitle" xml:space="preserve">
+    <value>Scrollen</value>
+  </data>
+  <data name="OverviewSettingsSectionTitle" xml:space="preserve">
+    <value>Overzicht</value>
+  </data>
+  <data name="OverviewBackdropCard.Header" xml:space="preserve">
+    <value>Achtergrond van overzicht</value>
+  </data>
+  <data name="OverviewBackdropCard.Description" xml:space="preserve">
+    <value>Kies wat achter het bureaubladoverzicht wordt weergegeven</value>
+  </data>
+  <data name="OverviewBackdropWallpaperOption.Content" xml:space="preserve">
+    <value>Achtergrond</value>
+  </data>
+  <data name="OverviewBackdropDarkOption.Content" xml:space="preserve">
+    <value>Donker</value>
+  </data>
+  <data name="OverviewBackdropLightOption.Content" xml:space="preserve">
+    <value>Licht</value>
+  </data>
+  <data name="DesktopApplicationDockAllAppsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Alle apps</value>
+  </data>
+  <data name="AdvancedSettingsSectionTitle" xml:space="preserve">
+    <value>Geavanceerd</value>
   </data>
   <data name="DesktopSectionTitle.Text" xml:space="preserve">
     <value>Bureaublad</value>
@@ -100,54 +124,14 @@
   <data name="DragScrollSpeedCard.Header" xml:space="preserve">
     <value>Sleep de scrollsnelheid</value>
   </data>
-  <data name="PreviewBackgroundCard.Description" xml:space="preserve">
-    <value>Toon uw bureaubladachtergrond in de voorbeeldbalk</value>
-  </data>
-  <data name="PreviewBackgroundCard.Header" xml:space="preserve">
-    <value>Bureaubladachtergrond</value>
-  </data>
-  <data name="PreviewDebugWaitingText.Text" xml:space="preserve">
-    <value>Wachten...</value>
-  </data>
-  <data name="PreviewDebugWindow.Title" xml:space="preserve">
-    <value>Venstervoorbeeldraster</value>
-  </data>
-  <data name="PreviewPositionAutoOption.Content" xml:space="preserve">
-    <value>Automatisch</value>
-  </data>
-  <data name="PreviewPositionBottomOption.Content" xml:space="preserve">
-    <value>Onderkant</value>
-  </data>
-  <data name="PreviewPositionCard.Description" xml:space="preserve">
-    <value>Waar de voorbeeldbalk op het scherm verschijnt</value>
-  </data>
-  <data name="PreviewPositionCard.Header" xml:space="preserve">
-    <value>Voorbeeldpositie</value>
-  </data>
-  <data name="PreviewPositionTopOption.Content" xml:space="preserve">
-    <value>Boven</value>
-  </data>
-  <data name="PreviewSectionTitle.Text" xml:space="preserve">
-    <value>Voorbeeld</value>
-  </data>
-  <data name="PreviewSizeCard.Description" xml:space="preserve">
-    <value>Bepaalt hoe groot de voorbeeldbalk onder aan uw scherm wordt weergegeven</value>
-  </data>
-  <data name="PreviewSizeCard.Header" xml:space="preserve">
-    <value>Voorbeeldgrootte</value>
-  </data>
-  <data name="PreviewSizeCompactOption.Content" xml:space="preserve">
-    <value>Compact</value>
-  </data>
-  <data name="PreviewSizeDefaultOption.Content" xml:space="preserve">
-    <value>Standaard</value>
-  </data>
-  <data name="PreviewSizeLargeOption.Content" xml:space="preserve">
-    <value>Groot</value>
-  </data>
   <data name="PageTitle" xml:space="preserve">
     <value>Pagina {0}</value>
   </data>
+  <data name="PageTitleCancelButton" xml:space="preserve"><value>Cancel editing</value></data>
+  <data name="PageTitleEditButton" xml:space="preserve"><value>Edit page title</value></data>
+  <data name="PageTitleSaveButton" xml:space="preserve"><value>Save page title</value></data>
+  <data name="PageLayoutEditButton" xml:space="preserve"><value>Choose snap layout</value></data>
+  <data name="PageLayoutClearButton" xml:space="preserve"><value>Indeling wissen</value></data>
   <data name="ScrollShortcutCancelButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Annuleer</value>
   </data>
@@ -188,6 +172,9 @@
     <value>Scrollsnelheid</value>
   </data>
   <data name="SettingsTitleBar.Title" xml:space="preserve">
+    <value>Instellingen</value>
+  </data>
+  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Instellingen</value>
   </data>
   <data name="SpeedFastOption.Content" xml:space="preserve">
@@ -307,53 +294,11 @@
   <data name="VirtualPagesUnlimitedOption.Content" xml:space="preserve">
     <value>Onbeperkt</value>
   </data>
-  <data name="WindowAboutMenuItem.Text" xml:space="preserve">
-    <value>Over</value>
-  </data>
-  <data name="WindowExitMenuItem.Text" xml:space="preserve">
-    <value>Afsluiten</value>
-  </data>
-  <data name="WindowOptionsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Opties</value>
-  </data>
-  <data name="WindowPeekCard.Description" xml:space="preserve">
-    <value>Wanneer u de muisaanwijzer op een vensterminiatuur beweegt of een filter toepast, verberg dan alle andere vensters zodat alleen de overeenkomende vensters zichtbaar blijven.</value>
-  </data>
-  <data name="WindowPeekCard.Header" xml:space="preserve">
-    <value>Window Peek</value>
-  </data>
   <data name="WindowSearchBox.PlaceholderText" xml:space="preserve">
     <value>Zoek een bureaubladvenster...</value>
   </data>
   <data name="WindowsSectionTitle.Text" xml:space="preserve">
     <value>Ramen</value>
-  </data>
-  <data name="WindowSettingsMenuItem.Text" xml:space="preserve">
-    <value>Instellingen</value>
-  </data>
-  <data name="WindowTourMenuItem.Text" xml:space="preserve">
-    <value>Volg een rondleiding</value>
-  </data>
-  <data name="AlwaysOpenApplicationOnPageMenuItem" xml:space="preserve">
-    <value>Deze app altijd openen op</value>
-  </data>
-  <data name="MoveWindowToPageMenuItem" xml:space="preserve">
-    <value>Venster verplaatsen naar</value>
-  </data>
-  <data name="RemoveApplicationPageRuleMenuItem" xml:space="preserve">
-    <value>Openingsregel verwijderen</value>
-  </data>
-  <data name="PinWindowMenuItem" xml:space="preserve">
-    <value>Vastmaken op alle pagina's</value>
-  </data>
-  <data name="UnpinWindowMenuItem" xml:space="preserve">
-    <value>Losmaken van alle pagina's</value>
-  </data>
-  <data name="PinnedWindowIndicator.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Vastgemaakt op alle pagina's</value>
-  </data>
-  <data name="WindowSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Instellingen</value>
   </data>
   <data name="TourNavigationItem.Content" xml:space="preserve">
     <value>Volg een rondleiding</value>
@@ -382,4 +327,119 @@
   <data name="QuitDialogCloseButton" xml:space="preserve">
     <value>Annuleren</value>
   </data>
-</root>
+  <data name="SpanCompatibleDisplaysCard.Header" xml:space="preserve">
+    <value>Over compatibele beeldschermen spreiden</value>
+  </data>
+  <data name="SpanCompatibleDisplaysCard.Description" xml:space="preserve">
+    <value>Breidt het overzicht uit over aangrenzende beeldschermen met een compatibele resolutie, schaal en uitlijning</value>
+  </data>
+  <data name="OverviewEdgeScrollingCard.Header" xml:space="preserve">
+    <value>Randscrollen tijdens slepen</value>
+  </data>
+  <data name="OverviewEdgeScrollingCard.Description" xml:space="preserve">
+    <value>Scrollt tussen pagina's wanneer een venster of pagina naar de linker- of rechterrand wordt gesleept</value>
+  </data>
+  <data name="SnapAssistanceCard.Header" xml:space="preserve">
+    <value>Vastmaakhulp</value>
+  </data>
+  <data name="SnapAssistanceCard.Description" xml:space="preserve">
+    <value>Toont ingestelde vastmaakzones en past het venstervoorbeeld aan tijdens het slepen over een pagina</value>
+  </data>
+  <data name="ResetPageCustomizationsCard.Header" xml:space="preserve">
+    <value>Pagina-aanpassingen</value>
+  </data>
+  <data name="ResetPageCustomizationsCard.Description" xml:space="preserve">
+    <value>Verwijdert alle aangepaste paginanamen en opgeslagen vastmaakindelingen</value>
+  </data>
+  <data name="ResetPageCustomizationsButton.Content" xml:space="preserve">
+    <value>Opnieuw instellen</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogTitle" xml:space="preserve">
+    <value>Pagina-aanpassingen opnieuw instellen?</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogMessage" xml:space="preserve">
+    <value>Alle aangepaste paginanamen en opgeslagen vastmaakindelingen worden verwijderd. Dit kan niet ongedaan worden gemaakt.</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogPrimaryButton" xml:space="preserve">
+    <value>Opnieuw instellen</value>
+  </data>
+  <data name="ResetPageCustomizationsDialogCloseButton" xml:space="preserve">
+    <value>Annuleren</value>
+  </data>
+  <data name="ResetPageCustomizationsError" xml:space="preserve">
+    <value>Infinity kan de pagina-aanpassingen niet opnieuw instellen. Probeer het opnieuw.</value>
+  </data>
+  <data name="DesktopShortcutHintsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Sneltoetsen</value>
+  </data>
+  <data name="DesktopShortcutHintsButtonLabel.Text" xml:space="preserve">
+    <value>Sneltoetsen</value>
+  </data>
+  <data name="DesktopShortcutHintsTitle.Text" xml:space="preserve">
+    <value>Sneltoetsen</value>
+  </data>
+  <data name="DesktopShortcutHintsDescription.Text" xml:space="preserve">
+    <value>Navigeer tussen pagina's en orden vensters zonder het toetsenbord te verlaten.</value>
+  </data>
+  <data name="DesktopShortcutNavigationGroup.Text" xml:space="preserve">
+    <value>Navigatie</value>
+  </data>
+  <data name="DesktopShortcutSwitchPage.Text" xml:space="preserve">
+    <value>Van pagina wisselen</value>
+  </data>
+  <data name="DesktopShortcutGoToPage.Text" xml:space="preserve">
+    <value>Naar een genummerde pagina gaan</value>
+  </data>
+  <data name="DesktopShortcutWindowGroup.Text" xml:space="preserve">
+    <value>Actief venster</value>
+  </data>
+  <data name="DesktopShortcutMoveWindow.Text" xml:space="preserve">
+    <value>Naar een aangrenzende pagina verplaatsen</value>
+  </data>
+  <data name="DesktopShortcutSendWindow.Text" xml:space="preserve">
+    <value>Naar een genummerde pagina verzenden</value>
+  </data>
+  <data name="DesktopShortcutShiftKey.Text" xml:space="preserve">
+    <value>Shift</value>
+  </data>
+  <data name="PageOpenApplicationButton" xml:space="preserve">
+    <value>App openen</value>
+  </data>
+  <data name="DesktopAppPickerTitle.Text" xml:space="preserve">
+    <value>Een app openen</value>
+  </data>
+  <data name="DesktopAppPickerSearchBox.PlaceholderText" xml:space="preserve">
+    <value>Apps zoeken</value>
+  </data>
+  <data name="DesktopAppPickerSearchHeader.Text" xml:space="preserve">
+    <value>Zoeken</value>
+  </data>
+  <data name="DesktopAppPickerEmpty.Text" xml:space="preserve">
+    <value>Geen apps gevonden</value>
+  </data>
+  <data name="DesktopAppPickerPageDestination" xml:space="preserve">
+    <value>Op deze pagina</value>
+  </data>
+  <data name="DesktopAppPickerSlotDestination" xml:space="preserve">
+    <value>Vak {0}</value>
+  </data>
+  <data name="DesktopAppPickerDestinationHeader" xml:space="preserve">
+    <value>Openen in</value>
+  </data>
+  <data name="PageLayoutArrangeButton" xml:space="preserve"><value>Deze pagina rangschikken</value></data>
+  <data name="DesktopWindowBringToCurrentPage" xml:space="preserve"><value>Naar huidige pagina brengen</value></data>
+  <data name="DesktopWindowSendToPage" xml:space="preserve"><value>Naar pagina verzenden</value></data>
+  <data name="DesktopWindowMoveToSlot" xml:space="preserve"><value>Naar vak verplaatsen</value></data>
+  <data name="DesktopWindowSlot" xml:space="preserve"><value>Vak {0}</value></data>
+  <data name="DesktopWindowSwapWith" xml:space="preserve"><value>Wisselen met</value></data>
+  <data name="DesktopWindowUntitled" xml:space="preserve"><value>Naamloos venster</value></data>
+  <data name="DesktopWindowCenterOnPage" xml:space="preserve"><value>Centreren op pagina</value></data>
+  <data name="DesktopWindowClose" xml:space="preserve"><value>Venster sluiten</value></data>
+  <data name="DesktopShortcutOverviewGroup.Text" xml:space="preserve"><value>In het overzicht</value></data>
+  <data name="DesktopShortcutOverviewNavigatePages.Text" xml:space="preserve"><value>Door pagina’s navigeren</value></data>
+  <data name="DesktopShortcutOverviewSelectWindows.Text" xml:space="preserve"><value>Vensters selecteren</value></data>
+  <data name="DesktopShortcutOverviewMoveSelected.Text" xml:space="preserve"><value>Geselecteerde vensters verplaatsen</value></data>
+  <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>Venster aan selectie toevoegen of eruit verwijderen</value></data>
+  <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>Geselecteerd venster openen</value></data>
+  <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>Vensters zoeken</value></data>
++</root>

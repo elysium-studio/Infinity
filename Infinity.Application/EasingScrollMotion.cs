@@ -1,5 +1,5 @@
-using System.Diagnostics;
 using Infinity.Application.Abstractions;
+using System.Diagnostics;
 
 namespace Infinity.Application;
 

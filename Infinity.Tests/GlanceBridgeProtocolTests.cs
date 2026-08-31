@@ -36,14 +36,13 @@ public sealed class GlanceBridgeProtocolTests
     }
 
     [Fact]
-    public void NavigationRemainsVisibleUntilEverySurfaceCloses()
+    public void NavigationVisibilityTracksDesktopOverviewSurface()
     {
         using InfinityGlanceBridge bridge = new(NullLogger<InfinityGlanceBridge>.Instance);
 
-        Assert.True(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.PageTint, true));
-        Assert.False(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.DesktopFlyout, true));
-        Assert.False(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.PageTint, false));
-        Assert.True(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.DesktopFlyout, false));
+        Assert.True(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.DesktopOverview, true));
+        Assert.True(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.DesktopOverview, false));
+        Assert.False(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.DesktopOverview, false));
     }
 
     [Fact]
@@ -55,7 +54,7 @@ public sealed class GlanceBridgeProtocolTests
         Assert.True(bridge.TrySetLatestState(state));
         bridge.TakePendingUpdates();
 
-        Assert.True(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.PageTint, true));
+        Assert.True(bridge.TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface.DesktopOverview, true));
 
         (InfinityPageNavigationState? page, bool? visibility) = bridge.TakePendingUpdates();
         Assert.Equal(state, page);
@@ -70,7 +69,7 @@ public sealed class GlanceBridgeProtocolTests
         Parallel.For(0, 1000, index =>
         {
             bridge.PublishPageNavigation(new InfinityPageNavigationState(index, index + 1, $"Page {index + 1}"));
-            bridge.SetPageNavigationSurfaceVisible(InfinityPageNavigationSurface.PageTint, index % 2 == 0);
+            bridge.SetPageNavigationSurfaceVisible(InfinityPageNavigationSurface.DesktopOverview, index % 2 == 0);
         });
 
         (InfinityPageNavigationState? page, bool? visibility) = bridge.TakePendingUpdates();

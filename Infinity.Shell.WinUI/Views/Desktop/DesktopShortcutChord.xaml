@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Infinity.Shell.WinUI.DesktopShortcutChord"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    IsHitTestVisible="False">
+    <UserControl.Resources>
+        <Style x:Key="ShortcutKeyCapStyle" TargetType="Border">
+            <Setter Property="MinWidth" Value="32" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="Background" Value="{ThemeResource ControlFillColorSecondaryBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource ControlStrokeColorSecondaryBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+        </Style>
+        <Style x:Key="ShortcutKeyLabelStyle" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+        </Style>
+    </UserControl.Resources>
+    <StackPanel
+        HorizontalAlignment="Right"
+        VerticalAlignment="Center"
+        Orientation="Horizontal"
+        Spacing="5">
+        <Grid>
+            <Border Style="{StaticResource ShortcutKeyCapStyle}" />
+            <TextBlock Style="{StaticResource ShortcutKeyLabelStyle}" Text="{x:Bind FirstModifier, Mode=OneWay}" />
+        </Grid>
+        <TextBlock
+            VerticalAlignment="Center"
+            Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+            Text="+" />
+        <Grid>
+            <Border Style="{StaticResource ShortcutKeyCapStyle}" />
+            <TextBlock Style="{StaticResource ShortcutKeyLabelStyle}" Text="{x:Bind SecondModifier, Mode=OneWay}" />
+        </Grid>
+        <TextBlock
+            VerticalAlignment="Center"
+            Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+            Text="+"
+            Visibility="{x:Bind ToVisibility(ShowShift), Mode=OneWay}" />
+        <Grid Visibility="{x:Bind ToVisibility(ShowShift), Mode=OneWay}">
+            <Border Style="{StaticResource ShortcutKeyCapStyle}" />
+            <TextBlock x:Uid="DesktopShortcutShiftKey" Style="{StaticResource ShortcutKeyLabelStyle}" />
+        </Grid>
+        <TextBlock
+            VerticalAlignment="Center"
+            Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+            Text="+" />
+        <Grid>
+            <Border MinWidth="52" Style="{StaticResource ShortcutKeyCapStyle}" />
+            <TextBlock Style="{StaticResource ShortcutKeyLabelStyle}" Text="{x:Bind ActionLabel, Mode=OneWay}" />
+        </Grid>
+    </StackPanel>
+</UserControl>
