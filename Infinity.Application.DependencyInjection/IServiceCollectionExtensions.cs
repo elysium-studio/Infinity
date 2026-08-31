@@ -48,8 +48,6 @@ public static class IServiceCollectionExtensions
                 new ModifiedScrollInput(provider.GetRequiredService<IPointerInputSource>(),
                     provider.GetRequiredService<IModifierKeyState>()));
 
-            services.AddSingleton<IScrollSnapTargetResolver, PageScrollSnapTargetResolver>();
-
             services.AddSingleton<IScroller>(provider =>
             {
                 IScrollTimer scrollTimer = provider.GetRequiredService<IScrollTimer>();
@@ -67,7 +65,6 @@ public static class IServiceCollectionExtensions
                     new EasingScrollMotion(),
                     new FluentNavigationScrollMotion(TimeProvider.System),
                     new MomentumScrollMotion(),
-                    provider.GetRequiredService<IScrollSnapTargetResolver>(),
                     scrollTimer.Start,
                     scrollTimer.Stop,
                     provider.GetRequiredService<ILogger<Scroller>>());
