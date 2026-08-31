@@ -13,7 +13,7 @@ using System.Linq;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, IPager pager, IScroller scroller, IWorkspace workspace, PageTitleStore pageTitleStore, PageLayoutStore pageLayoutStore, DesktopPageReorderController reorderController, DesktopPageArrangementCoordinator arrangementCoordinator, DesktopOverviewDragScroller overviewDragScroller, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, ITextLocalizer localizer, DesktopPageLayoutCalculator layoutCalculator, DesktopSnapLayoutCatalog snapLayoutCatalog, DesktopPageBackgroundFactory backgroundFactory, DesktopWallpaperPlacementCalculator wallpaperPlacementCalculator, ILogger<DesktopPageStrip> logger) :
+public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, IPager pager, IScroller scroller, IWorkspace workspace, PageTitleStore pageTitleStore, PageLayoutStore pageLayoutStore, DesktopPageReorderController reorderController, DesktopPageArrangementCoordinator arrangementCoordinator, DesktopOverviewDragScroller overviewDragScroller, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, ITextLocalizer localizer, DesktopPageLayoutCalculator layoutCalculator, DesktopSnapLayoutCatalog snapLayoutCatalog, DesktopPageBackgroundFactory backgroundFactory, DesktopWallpaperPlacementCalculator wallpaperPlacementCalculator, DesktopWallpaperBrushFactory wallpaperBrushFactory, ILogger<DesktopPageStrip> logger) :
     IDisposable
 {
     private static readonly TimeSpan ReorderAnimationDuration = TimeSpan.FromMilliseconds(180);
@@ -430,7 +430,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
 
         for (int index = pagePool.Count; index < capacity; index++)
         {
-            DesktopPagePreview page = new(scaleVisual, overviewScale, snapLayoutCatalog, editorLabels);
+            DesktopPagePreview page = new(scaleVisual, overviewScale, snapLayoutCatalog, wallpaperBrushFactory, editorLabels);
 
             page.Click += HandlePageClicked;
             page.DragStarted += HandlePageDragStarted;

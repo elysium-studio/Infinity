@@ -19,6 +19,8 @@ public sealed class DesktopModule :
     {
         services
             .AddSingleton<DesktopOverviewBackdropAnimator>()
+            .AddSingleton<DesktopWallpaperSurfaceProvider>()
+            .AddSingleton<DesktopWallpaperBrushFactory>()
             .AddSingleton<DesktopOverviewWallpaperPresenter>()
             .AddSingleton<DesktopScrollPreviewAnimator>()
             .AddSingleton<DesktopPageLayoutCalculator>()

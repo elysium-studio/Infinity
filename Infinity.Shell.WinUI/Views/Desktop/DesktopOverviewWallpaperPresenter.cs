@@ -10,20 +10,17 @@ using System;
 using System.Globalization;
 using System.Numerics;
 using System.Threading.Tasks;
-using Windows.Storage;
-using Windows.Storage.Streams;
 using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopOverviewWallpaperPresenter(ILogger<DesktopOverviewWallpaperPresenter> logger) :
+public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfaceProvider wallpaperSurfaceProvider, DesktopWallpaperBrushFactory wallpaperBrushFactory, ILogger<DesktopOverviewWallpaperPresenter> logger) :
     IDisposable
 {
     private readonly DispatcherQueue dispatcherQueue = DispatcherQueue.GetForCurrentThread();
     private DesktopBackground? background;
     private DesktopBackground? pendingBackground;
     private Task<bool>? pendingPreparation;
-    private LoadedImageSurface? imageSurface;
     private CompositionSurfaceBrush? imageBrush;
     private CompositionEffectFactory? effectFactory;
     private CompositionEffectBrush? effectBrush;
@@ -108,43 +105,21 @@ public sealed class DesktopOverviewWallpaperPresenter(ILogger<DesktopOverviewWal
                 return await CommitColourAsync(compositionHost, requestedBackground, generation);
             }
 
-            StorageFile file = await StorageFile.GetFileFromPathAsync(requestedBackground.Wallpaper);
+            LoadedImageSurface surface = await DispatchAsync(() => wallpaperSurfaceProvider.GetOrCreate(requestedBackground));
+            LoadedImageSourceLoadStatus status = await wallpaperSurfaceProvider.WaitForLoadAsync(surface);
 
-            using IRandomAccessStream stream = await file.OpenAsync(FileAccessMode.Read);
-            LoadedImageSurface surface = await DispatchAsync(() => LoadedImageSurface.StartLoadFromStream(stream));
-            bool ownershipTransferred = false;
-
-            try
+            if (status != LoadedImageSourceLoadStatus.Success)
             {
-                LoadedImageSourceLoadStatus status = await WaitForLoadAsync(surface);
-
-                if (status != LoadedImageSourceLoadStatus.Success)
-                {
-                    logger.LogWarning("Failed to decode desktop wallpaper {Wallpaper}: {Status}",
-                        requestedBackground.Wallpaper,
-                        status);
-                    return await CommitColourAsync(compositionHost, requestedBackground, generation);
-                }
-
-                bool committed = await DispatchAsync(() => CommitWallpaper(compositionHost,
-                    requestedBackground,
-                    generation,
-                    surface));
-
-                if (committed)
-                {
-                    ownershipTransferred = true;
-                }
-
-                return committed;
+                logger.LogWarning("Failed to decode desktop wallpaper {Wallpaper}: {Status}",
+                    requestedBackground.Wallpaper,
+                    status);
+                return await CommitColourAsync(compositionHost, requestedBackground, generation);
             }
-            finally
-            {
-                if (!ownershipTransferred)
-                {
-                    surface.Dispose();
-                }
-            }
+
+            return await DispatchAsync(() => CommitWallpaper(compositionHost,
+                requestedBackground,
+                generation,
+                surface));
         }
         catch (Exception exception)
         {
@@ -188,10 +163,7 @@ public sealed class DesktopOverviewWallpaperPresenter(ILogger<DesktopOverviewWal
 
         Visual hostVisual = ElementCompositionPreview.GetElementVisual(compositionHost);
         Compositor compositor = hostVisual.Compositor;
-        CompositionSurfaceBrush newImageBrush = compositor.CreateSurfaceBrush(surface);
-        newImageBrush.Stretch = CompositionStretch.UniformToFill;
-        newImageBrush.HorizontalAlignmentRatio = 0.5f;
-        newImageBrush.VerticalAlignmentRatio = 0.5f;
+        CompositionSurfaceBrush newImageBrush = wallpaperBrushFactory.Create(compositor, surface);
 
         GaussianBlurEffect blurEffect = new()
         {
@@ -208,7 +180,6 @@ public sealed class DesktopOverviewWallpaperPresenter(ILogger<DesktopOverviewWal
 
         Detach();
         ReleaseResources();
-        imageSurface = surface;
         imageBrush = newImageBrush;
         effectFactory = newEffectFactory;
         effectBrush = newEffectBrush;
@@ -270,21 +241,6 @@ public sealed class DesktopOverviewWallpaperPresenter(ILogger<DesktopOverviewWal
         return completion.Task;
     }
 
-    private static Task<LoadedImageSourceLoadStatus> WaitForLoadAsync(LoadedImageSurface surface)
-    {
-        TaskCompletionSource<LoadedImageSourceLoadStatus> completion =
-            new(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        void HandleLoadCompleted(LoadedImageSurface sender, LoadedImageSourceLoadCompletedEventArgs args)
-        {
-            sender.LoadCompleted -= HandleLoadCompleted;
-            completion.TrySetResult(args.Status);
-        }
-
-        surface.LoadCompleted += HandleLoadCompleted;
-        return completion.Task;
-    }
-
     private void ReleaseResources()
     {
         if (visual is not null)
@@ -300,8 +256,6 @@ public sealed class DesktopOverviewWallpaperPresenter(ILogger<DesktopOverviewWal
         effectFactory = null;
         imageBrush?.Dispose();
         imageBrush = null;
-        imageSurface?.Dispose();
-        imageSurface = null;
         colourBrush?.Dispose();
         colourBrush = null;
         background = null;

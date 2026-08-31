@@ -27,7 +27,8 @@ public sealed partial class DesktopPagePreview :
     private readonly Border shadowHost;
     private readonly ThemeShadow pageShadow;
     private readonly Canvas wallpaperHost;
-    private readonly Image wallpaperImage;
+    private readonly DesktopWallpaperBrushFactory wallpaperBrushFactory;
+    private readonly SpriteVisual wallpaperVisual;
     private readonly Border interactionLayer;
     private readonly DesktopSnapZonePresenter snapZones;
     private readonly double visualScale;
@@ -39,6 +40,8 @@ public sealed partial class DesktopPagePreview :
     private readonly Visual interactionVisual;
     private readonly Visual shadowVisual;
     private readonly Visual titleVisual;
+    private LoadedImageSurface? wallpaperSurface;
+    private CompositionSurfaceBrush? wallpaperBrush;
     private Vector3 pageTranslation;
     private Vector3 shadowTranslation;
     private Vector3 titleTranslation;
@@ -52,8 +55,9 @@ public sealed partial class DesktopPagePreview :
     private bool interactionEnabled;
     private bool disposed;
 
-    public DesktopPagePreview(Visual scaleVisual, double overviewScale, DesktopSnapLayoutCatalog snapLayoutCatalog, DesktopPageEditorLabels labels)
+    public DesktopPagePreview(Visual scaleVisual, double overviewScale, DesktopSnapLayoutCatalog snapLayoutCatalog, DesktopWallpaperBrushFactory wallpaperBrushFactory, DesktopPageEditorLabels labels)
     {
+        this.wallpaperBrushFactory = wallpaperBrushFactory;
         visualScale = double.IsFinite(overviewScale) && overviewScale > 0 ? overviewScale : 1;
         SolidColorBrush transparentBrush = new(Color.FromArgb(0, 0, 0, 0));
         pageShadow = new ThemeShadow();
@@ -77,16 +81,10 @@ public sealed partial class DesktopPagePreview :
         Resources["ButtonBorderBrushPressed"] = transparentBrush;
         Resources["ButtonBorderBrushDisabled"] = transparentBrush;
 
-        wallpaperImage = new Image
-        {
-            IsHitTestVisible = false,
-            Stretch = Stretch.UniformToFill
-        };
         wallpaperHost = new Canvas
         {
             IsHitTestVisible = false
         };
-        wallpaperHost.Children.Add(wallpaperImage);
         interactionLayer = new Border
         {
             IsHitTestVisible = false,
@@ -121,6 +119,9 @@ public sealed partial class DesktopPagePreview :
         pageHostVisual = ElementCompositionPreview.GetElementVisual(PageHost);
         Compositor compositor = pageHostVisual.Compositor;
         pageHostVisual.Properties.InsertVector3("Translation", Vector3.Zero);
+
+        wallpaperVisual = compositor.CreateSpriteVisual();
+        ElementCompositionPreview.SetElementChildVisual(wallpaperHost, wallpaperVisual);
 
         ElementCompositionPreview.SetIsTranslationEnabled(shadowHost, true);
         shadowVisual = ElementCompositionPreview.GetElementVisual(shadowHost);
@@ -186,19 +187,22 @@ public sealed partial class DesktopPagePreview :
         wallpaperHost.Width = width;
         wallpaperHost.Height = height;
         wallpaperHost.Background = background.Fill;
-        wallpaperImage.Source = background.Wallpaper;
 
         if (background.Wallpaper is not null)
         {
-            wallpaperImage.Width = wallpaperPlacement.IsValid ? wallpaperPlacement.Width : width;
-            wallpaperImage.Height = wallpaperPlacement.IsValid ? wallpaperPlacement.Height : height;
-            Canvas.SetLeft(wallpaperImage, wallpaperPlacement.IsValid ? wallpaperPlacement.X : 0);
-            Canvas.SetTop(wallpaperImage, wallpaperPlacement.IsValid ? wallpaperPlacement.Y : 0);
-            wallpaperImage.Visibility = Visibility.Visible;
+            SetWallpaperSurface(background.Wallpaper);
+            wallpaperVisual.Size = new Vector2(
+                ToFloat(wallpaperPlacement.IsValid ? wallpaperPlacement.Width : width),
+                ToFloat(wallpaperPlacement.IsValid ? wallpaperPlacement.Height : height));
+            wallpaperVisual.Offset = new Vector3(
+                ToFloat(wallpaperPlacement.IsValid ? wallpaperPlacement.X : 0),
+                ToFloat(wallpaperPlacement.IsValid ? wallpaperPlacement.Y : 0),
+                0);
+            wallpaperVisual.Opacity = 1;
         }
         else
         {
-            wallpaperImage.Visibility = Visibility.Collapsed;
+            wallpaperVisual.Opacity = 0;
         }
         snapZones.Bind(width, height);
         TitleEditor.ViewModel.ConfigureDisplay(width, height, rasterizationScale);
@@ -329,6 +333,13 @@ public sealed partial class DesktopPagePreview :
         interactionVisual.StopAnimation(nameof(Visual.Opacity));
         snapZones.Dispose();
 
+        ElementCompositionPreview.SetElementChildVisual(wallpaperHost, null);
+        wallpaperVisual.Brush = null;
+        wallpaperBrush?.Dispose();
+        wallpaperBrush = null;
+        wallpaperSurface = null;
+        wallpaperVisual.Dispose();
+
         CancelPointerOperation(false);
 
         PageHost.RemoveHandler(PointerPressedEvent, new PointerEventHandler(HandlePointerPressed));
@@ -353,6 +364,20 @@ public sealed partial class DesktopPagePreview :
         clipGeometry.Dispose();
 
         GC.SuppressFinalize(this);
+    }
+
+    private void SetWallpaperSurface(LoadedImageSurface surface)
+    {
+        if (ReferenceEquals(wallpaperSurface, surface) && wallpaperBrush is not null)
+        {
+            return;
+        }
+
+        wallpaperVisual.Brush = null;
+        wallpaperBrush?.Dispose();
+        wallpaperSurface = surface;
+        wallpaperBrush = wallpaperBrushFactory.Create(pageVisual.Compositor, surface);
+        wallpaperVisual.Brush = wallpaperBrush;
     }
 
     private static void StartTranslationAnimation(Visual visual, Vector3 target, TimeSpan duration)

@@ -1,13 +1,12 @@
 using Infinity.Platform.Abstractions;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Media.Imaging;
 using System;
 using System.Globalization;
 using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopPageBackgroundFactory
+public sealed class DesktopPageBackgroundFactory(DesktopWallpaperSurfaceProvider wallpaperSurfaceProvider)
 {
     private DesktopBackground? background;
     private DesktopPageBackground? pageBackground;
@@ -21,7 +20,7 @@ public sealed class DesktopPageBackgroundFactory
 
         this.background = background;
         pageBackground = !string.IsNullOrWhiteSpace(background.Wallpaper)
-            ? new DesktopPageBackground(new BitmapImage(new Uri(background.Wallpaper, UriKind.Absolute)), null)
+            ? new DesktopPageBackground(wallpaperSurfaceProvider.GetOrCreate(background), null)
             : new DesktopPageBackground(null, new SolidColorBrush(ParseColour(background.Colour)));
 
         return pageBackground;
