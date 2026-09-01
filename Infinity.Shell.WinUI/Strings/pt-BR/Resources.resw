@@ -417,6 +417,12 @@
   <data name="DesktopAppPickerEmpty.Text" xml:space="preserve">
     <value>Nenhum aplicativo encontrado</value>
   </data>
+  <data name="DesktopApplicationDockUnpin" xml:space="preserve">
+    <value>Desafixar</value>
+  </data>
+  <data name="DesktopApplicationDockPin" xml:space="preserve">
+    <value>Fixar</value>
+  </data>
   <data name="DesktopAppPickerPageDestination" xml:space="preserve">
     <value>Nesta página</value>
   </data>

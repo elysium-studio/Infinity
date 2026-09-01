@@ -118,6 +118,14 @@ public partial class DesktopOverlay :
     protected virtual void OnClosed()
     { }
 
+    protected void PromoteTopMost()
+    {
+        host.SetTopMost(true);
+        header.PromoteTopMost();
+    }
+
+    protected void SetTopMost(bool enabled) => host.SetTopMost(enabled);
+
     private static void OnHeaderPropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs args)
     {
         if (dependencyObject is DesktopOverlay overlay)

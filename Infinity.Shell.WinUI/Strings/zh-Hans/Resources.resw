@@ -417,6 +417,12 @@
   <data name="DesktopAppPickerEmpty.Text" xml:space="preserve">
     <value>未找到应用</value>
   </data>
+  <data name="DesktopApplicationDockUnpin" xml:space="preserve">
+    <value>取消固定</value>
+  </data>
+  <data name="DesktopApplicationDockPin" xml:space="preserve">
+    <value>固定</value>
+  </data>
   <data name="DesktopAppPickerPageDestination" xml:space="preserve">
     <value>在此页面</value>
   </data>

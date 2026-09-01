@@ -24,6 +24,14 @@ public sealed partial class DesktopApplicationPickerViewModel(IDesktopApplicatio
 
     public DesktopApplicationTarget Target { get; private set; }
 
+    public bool TryGetApplication(string identifier, out LaunchableApplication? application)
+    {
+        DesktopApplicationPickerItemViewModel? item = applications.FirstOrDefault(candidate =>
+            string.Equals(candidate.Application.Id, identifier, StringComparison.Ordinal));
+        application = item?.Application;
+        return application is not null;
+    }
+
     public async Task LoadAsync(DesktopApplicationTarget requestedTarget, CancellationToken cancellationToken = default)
     {
         bool loadApplications = false;

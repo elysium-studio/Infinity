@@ -4,7 +4,7 @@ namespace Infinity.Shell;
 
 public interface IDesktopApplicationDockCatalog
 {
-    Task<IReadOnlyList<LaunchableApplication>> GetApplicationsAsync(
+    Task<IReadOnlyList<DesktopApplicationDockEntry>> GetApplicationsAsync(
         int maximumCount,
         CancellationToken cancellationToken = default);
 }

@@ -109,29 +109,65 @@ internal sealed class DesktopWindowPreview :
 
     public double SourceHeight { get; private set; }
 
+    public double SourceOffsetX { get; private set; }
+
+    public double SourceOffsetY { get; private set; }
+
     public double VisualX => x + dragHorizontalDelta;
 
     public double VisualY => y + dragVerticalDelta;
 
     public double LayoutScale => layoutScale;
 
-    public void RefreshSourceSize(TrackedWindow trackedWindow, IWindowGeometryReader geometryReader)
+    public void RefreshSourceGeometry(TrackedWindow trackedWindow, IWindowGeometryReader geometryReader)
     {
         double previousWidth = SourceWidth;
         double previousHeight = SourceHeight;
+        double previousOffsetX = SourceOffsetX;
+        double previousOffsetY = SourceOffsetY;
 
-        if (geometryReader.TryReadVisibleGeometry(trackedWindow.Handle, out _, out _, out int visibleWidth, out int visibleHeight))
+        if (geometryReader.TryReadVisibleGeometry(trackedWindow.Handle,
+            out int visibleX,
+            out int visibleY,
+            out int visibleWidth,
+            out int visibleHeight))
         {
             SourceWidth = visibleWidth;
             SourceHeight = visibleHeight;
+
+            if (geometryReader.TryReadGeometry(trackedWindow.Handle,
+                out int windowX,
+                out int windowY,
+                out int windowWidth,
+                out int windowHeight))
+            {
+                SourceOffsetX = Math.Clamp(visibleX - windowX,
+                    0,
+                    Math.Max(0, windowWidth - visibleWidth));
+                SourceOffsetY = Math.Clamp(visibleY - windowY,
+                    0,
+                    Math.Max(0, windowHeight - visibleHeight));
+            }
+            else
+            {
+                SourceOffsetX = 0;
+                SourceOffsetY = 0;
+            }
         }
         else
         {
             SourceWidth = trackedWindow.Width;
             SourceHeight = trackedWindow.Height;
+            SourceOffsetX = 0;
+            SourceOffsetY = 0;
         }
 
-        if (previousWidth > 0 && previousHeight > 0 && (previousWidth != SourceWidth || previousHeight != SourceHeight))
+        if (previousWidth > 0 &&
+            previousHeight > 0 &&
+            (previousWidth != SourceWidth ||
+                previousHeight != SourceHeight ||
+                previousOffsetX != SourceOffsetX ||
+                previousOffsetY != SourceOffsetY))
         {
             preview?.RefreshSource();
         }

@@ -5,12 +5,13 @@ namespace Infinity.Shell;
 
 public sealed class DesktopApplicationDockCatalog(
     IDesktopApplicationPickerCatalog applicationCatalog,
-    IApplicationUsageHistory usageHistory,
-    IRecentApplicationStore infinityHistory,
+    ITaskbarPinnedApplicationSource taskbarPins,
+    IDesktopApplicationPinStore infinityPins,
+    IDesktopApplicationDockOrderStore orderStore,
     ILogger<DesktopApplicationDockCatalog> logger) :
     IDesktopApplicationDockCatalog
 {
-    public async Task<IReadOnlyList<LaunchableApplication>> GetApplicationsAsync(
+    public async Task<IReadOnlyList<DesktopApplicationDockEntry>> GetApplicationsAsync(
         int maximumCount,
         CancellationToken cancellationToken = default)
     {
@@ -19,14 +20,30 @@ public sealed class DesktopApplicationDockCatalog(
             return [];
         }
 
-        IReadOnlyList<LaunchableApplication> windowsHistory;
+        IReadOnlyList<LaunchableApplication> availableApplications =
+            await applicationCatalog.GetApplicationsAsync(cancellationToken);
+        Task<IReadOnlyList<LaunchableApplication>> taskbarTask = GetTaskbarPinsAsync(
+            availableApplications,
+            cancellationToken);
 
+        List<DesktopApplicationDockEntry> result = new(maximumCount);
+        HashSet<string> identifiers = new(StringComparer.OrdinalIgnoreCase);
+        IReadOnlyList<LaunchableApplication> infinityApplications = infinityPins.Applications;
+        int taskbarLimit = Math.Max(0, maximumCount - Math.Min(infinityApplications.Count, maximumCount));
+
+        AddDistinct((await taskbarTask).Take(taskbarLimit), DesktopApplicationDockSource.Taskbar, result, identifiers, maximumCount);
+        AddDistinct(infinityApplications, DesktopApplicationDockSource.Infinity, result, identifiers, maximumCount);
+
+        return DesktopApplicationDockOrderer.Apply(result, orderStore.ApplicationIdentifiers);
+    }
+
+    private async Task<IReadOnlyList<LaunchableApplication>> GetTaskbarPinsAsync(
+        IReadOnlyList<LaunchableApplication> availableApplications,
+        CancellationToken cancellationToken)
+    {
         try
         {
-            IReadOnlyList<LaunchableApplication> applications =
-                await applicationCatalog.GetApplicationsAsync(cancellationToken);
-            windowsHistory =
-                await usageHistory.GetRecentlyUsedApplicationsAsync(applications, maximumCount, cancellationToken);
+            return await taskbarPins.GetPinnedApplicationsAsync(availableApplications, cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -34,22 +51,15 @@ public sealed class DesktopApplicationDockCatalog(
         }
         catch (Exception exception)
         {
-            logger.LogDebug(exception, "The Windows recent application list could not be loaded");
-            windowsHistory = [];
+            logger.LogDebug(exception, "The taskbar pinned application list could not be loaded");
+            return [];
         }
-
-        List<LaunchableApplication> result = new(maximumCount);
-        HashSet<string> identifiers = new(StringComparer.OrdinalIgnoreCase);
-
-        AddDistinct(windowsHistory, result, identifiers, maximumCount);
-        AddDistinct(infinityHistory.Applications, result, identifiers, maximumCount);
-
-        return result;
     }
 
     private static void AddDistinct(
         IEnumerable<LaunchableApplication> applications,
-        ICollection<LaunchableApplication> result,
+        DesktopApplicationDockSource source,
+        ICollection<DesktopApplicationDockEntry> result,
         ISet<string> identifiers,
         int maximumCount)
     {
@@ -62,7 +72,7 @@ public sealed class DesktopApplicationDockCatalog(
 
             if (identifiers.Add(application.Id))
             {
-                result.Add(application);
+                result.Add(new DesktopApplicationDockEntry(application, source));
             }
         }
     }

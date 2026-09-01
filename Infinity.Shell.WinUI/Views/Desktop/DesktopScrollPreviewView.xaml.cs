@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -15,6 +16,7 @@ using System.Numerics;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Graphics;
 
 namespace Infinity.Shell.WinUI;
@@ -22,12 +24,15 @@ namespace Infinity.Shell.WinUI;
 public sealed partial class DesktopScrollPreviewView :
     UserControl
 {
+    private const string ApplicationPickerDragProperty = "Infinity.ApplicationPin.Identifier";
+
     private readonly IWindowPreviewSurface windowPreviewSurface;
     private readonly IWindowCollection windowCollection;
     private readonly IPanState panState;
     private readonly IPager pager;
     private readonly IScroller scroller;
     private readonly IWorkspace workspace;
+    private readonly IScrollInputSuppression scrollInputSuppression;
     private readonly IDesktopBackgroundSource backgroundSource;
     private readonly DesktopOverviewConfiguration overviewConfiguration;
     private readonly DesktopOverviewForegroundThemeResolver foregroundThemeResolver;
@@ -36,10 +41,14 @@ public sealed partial class DesktopScrollPreviewView :
     private readonly DesktopPageStrip pageStrip;
     private readonly DesktopWindowPreviewCollection previews;
     private readonly DesktopDragCursorConfinement cursorConfinement;
+    private readonly DesktopApplicationDockContextMenuBuilder applicationDockContextMenuBuilder;
+    private readonly DesktopApplicationDockPressAnimator applicationDockPressAnimator;
     private readonly DesktopApplicationLaunchCoordinator applicationLaunchCoordinator;
     private readonly DesktopOverviewInputController inputController;
     private readonly DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator;
+    private readonly ILogger<DesktopScrollPreviewView> logger;
     private CancellationTokenSource? applicationLaunchCancellation;
+    private IDisposable? applicationPickerScrollSuppression;
     private bool eventsSubscribed;
     private bool isRunning;
     private double spacingProgress = 1;
@@ -53,7 +62,7 @@ public sealed partial class DesktopScrollPreviewView :
     private int monitorHeight;
     private int foregroundGeneration;
 
-    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IPanState panState, IPager pager, IScroller scroller, IWorkspace workspace, IDesktopBackgroundSource backgroundSource, DesktopOverviewConfiguration overviewConfiguration, DesktopOverviewForegroundThemeResolver foregroundThemeResolver, DesktopScrollPreviewAnimator animator, DesktopOverviewLayoutPresenter layoutPresenter, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationDockViewModel applicationDock, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator, DesktopOverviewInputController inputController, DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator)
+    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IPanState panState, IPager pager, IScroller scroller, IWorkspace workspace, IScrollInputSuppression scrollInputSuppression, IDesktopBackgroundSource backgroundSource, DesktopOverviewConfiguration overviewConfiguration, DesktopOverviewForegroundThemeResolver foregroundThemeResolver, DesktopScrollPreviewAnimator animator, DesktopOverviewLayoutPresenter layoutPresenter, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationDockViewModel applicationDock, DesktopApplicationDockContextMenuBuilder applicationDockContextMenuBuilder, DesktopApplicationDockPressAnimator applicationDockPressAnimator, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator, DesktopOverviewInputController inputController, DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator, ILogger<DesktopScrollPreviewView> logger)
     {
         InitializeComponent();
 
@@ -63,6 +72,7 @@ public sealed partial class DesktopScrollPreviewView :
         this.pager = pager;
         this.scroller = scroller;
         this.workspace = workspace;
+        this.scrollInputSuppression = scrollInputSuppression;
         this.backgroundSource = backgroundSource;
         this.overviewConfiguration = overviewConfiguration;
         this.foregroundThemeResolver = foregroundThemeResolver;
@@ -74,15 +84,24 @@ public sealed partial class DesktopScrollPreviewView :
         this.applicationLaunchCoordinator = applicationLaunchCoordinator;
         this.inputController = inputController;
         this.snapInteractionCoordinator = snapInteractionCoordinator;
+        this.logger = logger;
         ShortcutHints = shortcutHints;
         ApplicationPicker = applicationPicker;
         ApplicationDock = applicationDock;
+        this.applicationDockContextMenuBuilder = applicationDockContextMenuBuilder;
+        this.applicationDockPressAnimator = applicationDockPressAnimator;
 
         this.pageStrip.PageInvoked += HandlePageInvoked;
         this.pageStrip.ReorderPreviewChanged += HandlePageReorderPreviewChanged;
         this.previews.WindowInvoked += HandleWindowInvoked;
         this.previews.WindowPositionChanged += HandleWindowPositionChanged;
         this.inputController.WindowInvoked += HandleWindowInvoked;
+        ApplicationPickerFlyout.Opened += HandleApplicationPickerOpened;
+        ApplicationPickerFlyout.Closed += HandleApplicationPickerClosed;
+        ApplicationResultsList.AddHandler(PointerWheelChangedEvent,
+            new PointerEventHandler(HandleApplicationResultsPointerWheelChanged),
+            true);
+        AttachApplicationDockPressHandlers(AllApplicationsButton);
 
         ElementCompositionPreview.SetIsTranslationEnabled(PreviewSurface, true);
         ElementCompositionPreview.SetIsTranslationEnabled(ApplicationDockSurface, true);
@@ -160,7 +179,7 @@ public sealed partial class DesktopScrollPreviewView :
             pageStrip.Start(PageCanvas, PageShadowCanvas, PageTitleCanvas, PreviewSurface, animator.Scale);
             snapInteractionCoordinator.Start(monitorOriginX, monitorOriginY);
             Synchronise();
-            QueueSettingsForegroundRefresh();
+            QueueAdaptiveForegroundRefresh();
 
             SetInteractionEnabled(false);
             Opacity = 1;
@@ -168,7 +187,7 @@ public sealed partial class DesktopScrollPreviewView :
         else if (originChanged)
         {
             Synchronise();
-            QueueSettingsForegroundRefresh();
+            QueueAdaptiveForegroundRefresh();
         }
     }
 
@@ -232,6 +251,7 @@ public sealed partial class DesktopScrollPreviewView :
         cursorConfinement.Release();
         ShortcutHintsFlyout.Hide();
         ApplicationPickerFlyout.Hide();
+        ReleaseApplicationPickerScrollSuppression();
         applicationLaunchCancellation?.Cancel();
         applicationLaunchCancellation?.Dispose();
         applicationLaunchCancellation = null;
@@ -240,6 +260,7 @@ public sealed partial class DesktopScrollPreviewView :
         previews.ClearSelection();
         inputController.ResetModifiers();
         SettingsButton.RequestedTheme = ElementTheme.Default;
+        ShortcutHintSurface.RequestedTheme = ElementTheme.Default;
         snapInteractionCoordinator.Stop();
 
         animator.Reset(PreviewSurface, GetAnimationWidth(), GetAnimationHeight());
@@ -387,11 +408,11 @@ public sealed partial class DesktopScrollPreviewView :
 
     private void HandleLayoutRefreshRequested(object? sender, EventArgs args) => QueueLayoutRefresh();
 
-    private void HandleDesktopBackgroundChanged(object? sender, EventArgs args) => QueueSettingsForegroundRefresh();
+    private void HandleDesktopBackgroundChanged(object? sender, EventArgs args) => QueueAdaptiveForegroundRefresh();
 
-    private void HandleActualThemeChanged(FrameworkElement sender, object args) => QueueSettingsForegroundRefresh();
+    private void HandleActualThemeChanged(FrameworkElement sender, object args) => QueueAdaptiveForegroundRefresh();
 
-    private void QueueSettingsForegroundRefresh()
+    private void QueueAdaptiveForegroundRefresh()
     {
         if (!isRunning)
         {
@@ -400,32 +421,41 @@ public sealed partial class DesktopScrollPreviewView :
 
         if (!DispatcherQueue.HasThreadAccess)
         {
-            DispatcherQueue.TryEnqueue(QueueSettingsForegroundRefresh);
+            DispatcherQueue.TryEnqueue(QueueAdaptiveForegroundRefresh);
             return;
         }
 
         int generation = ++foregroundGeneration;
-        _ = ResolveSettingsForegroundAsync(generation);
+        _ = ResolveAdaptiveForegroundsAsync(generation);
     }
 
-    private async Task ResolveSettingsForegroundAsync(int generation)
+    private async Task ResolveAdaptiveForegroundsAsync(int generation)
     {
-        ElementTheme theme;
+        ElementTheme settingsTheme;
+        ElementTheme shortcutTheme;
 
         try
         {
             double rasterizationScale = XamlRoot?.RasterizationScale ?? 1;
-            Windows.Foundation.Point buttonCenter = SettingsButton.TransformToVisual(this).TransformPoint(
-                new Windows.Foundation.Point(SettingsButton.ActualWidth / 2, SettingsButton.ActualHeight / 2));
-            Windows.Foundation.Point monitorPoint = new(buttonCenter.X * rasterizationScale,
-                buttonCenter.Y * rasterizationScale);
-            theme = await foregroundThemeResolver.ResolveAsync(overviewConfiguration.Backdrop,
-                backgroundSource.GetBackground(),
+            DesktopBackground background = backgroundSource.GetBackground();
+            Windows.Foundation.Point settingsPoint = GetMonitorPoint(SettingsButton, rasterizationScale);
+            Windows.Foundation.Point shortcutPoint = GetMonitorPoint(ShortcutHintSurface, rasterizationScale);
+            Task<ElementTheme> settingsThemeTask = foregroundThemeResolver.ResolveAsync(overviewConfiguration.Backdrop,
+                background,
                 monitorWidth,
                 monitorHeight,
-                monitorPoint,
+                settingsPoint,
                 WallpaperContrastTint.Background,
                 ActualTheme);
+            Task<ElementTheme> shortcutThemeTask = foregroundThemeResolver.ResolveAsync(overviewConfiguration.Backdrop,
+                background,
+                monitorWidth,
+                monitorHeight,
+                shortcutPoint,
+                WallpaperContrastTint.Background,
+                ActualTheme);
+            settingsTheme = await settingsThemeTask;
+            shortcutTheme = await shortcutThemeTask;
         }
         catch (InvalidOperationException)
         {
@@ -434,18 +464,26 @@ public sealed partial class DesktopScrollPreviewView :
 
         if (!DispatcherQueue.HasThreadAccess)
         {
-            DispatcherQueue.TryEnqueue(() => ApplySettingsForeground(generation, theme));
+            DispatcherQueue.TryEnqueue(() => ApplyAdaptiveForegrounds(generation, settingsTheme, shortcutTheme));
             return;
         }
 
-        ApplySettingsForeground(generation, theme);
+        ApplyAdaptiveForegrounds(generation, settingsTheme, shortcutTheme);
     }
 
-    private void ApplySettingsForeground(int generation, ElementTheme theme)
+    private Windows.Foundation.Point GetMonitorPoint(FrameworkElement element, double rasterizationScale)
+    {
+        Windows.Foundation.Point center = element.TransformToVisual(this).TransformPoint(
+            new Windows.Foundation.Point(element.ActualWidth / 2, element.ActualHeight / 2));
+        return new Windows.Foundation.Point(center.X * rasterizationScale, center.Y * rasterizationScale);
+    }
+
+    private void ApplyAdaptiveForegrounds(int generation, ElementTheme settingsTheme, ElementTheme shortcutTheme)
     {
         if (isRunning && generation == foregroundGeneration)
         {
-            SettingsButton.RequestedTheme = theme;
+            SettingsButton.RequestedTheme = settingsTheme;
+            ShortcutHintSurface.RequestedTheme = shortcutTheme;
         }
     }
 
@@ -540,12 +578,166 @@ public sealed partial class DesktopScrollPreviewView :
         }
     }
 
-    private async void HandleDockApplicationClicked(object sender, RoutedEventArgs args)
+    private async void HandleDockApplicationClicked(object sender, ItemClickEventArgs args)
     {
-        if (sender is FrameworkElement { Tag: DesktopApplicationPickerItemViewModel item })
+        if (args.ClickedItem is DesktopApplicationDockItemViewModel item)
         {
             await LaunchApplicationAsync(item.Application, new DesktopApplicationTarget(pager.CurrentPage), hidePicker: false);
         }
+    }
+
+    private void HandleApplicationDragItemsStarting(object sender, DragItemsStartingEventArgs args)
+    {
+        if (args.Items.Count == 0 || args.Items[0] is not DesktopApplicationPickerItemViewModel item)
+        {
+            args.Cancel = true;
+            return;
+        }
+
+        args.Data.RequestedOperation = DataPackageOperation.Copy;
+        args.Data.Properties[ApplicationPickerDragProperty] = item.Application.Id;
+    }
+
+    private void HandleApplicationDockDragOver(object sender, DragEventArgs args)
+    {
+        if (!args.DataView.Properties.ContainsKey(ApplicationPickerDragProperty))
+        {
+            return;
+        }
+
+        args.AcceptedOperation = DataPackageOperation.Copy;
+        args.Handled = true;
+    }
+
+    private void HandleApplicationDockDrop(object sender, DragEventArgs args)
+    {
+        if (!args.DataView.Properties.TryGetValue(
+                ApplicationPickerDragProperty,
+                out object? value) ||
+            value is not string applicationIdentifier)
+        {
+            return;
+        }
+
+        args.AcceptedOperation = DataPackageOperation.Copy;
+        args.Handled = true;
+        _ = PinDroppedApplicationAsync(applicationIdentifier);
+    }
+
+    private async Task PinDroppedApplicationAsync(string applicationIdentifier)
+    {
+        try
+        {
+            if (ApplicationPicker.TryGetApplication(
+                    applicationIdentifier,
+                    out LaunchableApplication? application) &&
+                application is not null)
+            {
+                await ApplicationDock.PinAsync(application);
+            }
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Could not apply the dropped application to the dock");
+        }
+    }
+
+    private async void HandleApplicationDockDragItemsCompleted(
+        ListViewBase sender,
+        DragItemsCompletedEventArgs args)
+    {
+        await ApplicationDock.SaveOrderAsync();
+    }
+
+    private void HandleApplicationDockButtonPointerPressed(object sender, PointerRoutedEventArgs args)
+    {
+        if (GetApplicationDockIcon(sender) is FrameworkElement icon &&
+            args.GetCurrentPoint(icon).Properties.IsLeftButtonPressed)
+        {
+            applicationDockPressAnimator.Press(icon);
+        }
+
+    }
+
+    private void HandleApplicationDockButtonPointerReleased(object sender, PointerRoutedEventArgs args)
+    {
+        if (GetApplicationDockIcon(sender) is FrameworkElement icon)
+        {
+            applicationDockPressAnimator.Release(icon);
+        }
+
+    }
+
+    private void HandleApplicationDockContainerContentChanging(
+        ListViewBase sender,
+        ContainerContentChangingEventArgs args)
+    {
+        if (args.InRecycleQueue)
+        {
+            args.ItemContainer.ContextFlyout = null;
+            DetachApplicationDockPressHandlers(args.ItemContainer);
+            return;
+        }
+
+        DetachApplicationDockPressHandlers(args.ItemContainer);
+        AttachApplicationDockPressHandlers(args.ItemContainer);
+
+        if (args.Item is DesktopApplicationDockItemViewModel item)
+        {
+            args.ItemContainer.ContextFlyout = applicationDockContextMenuBuilder.CreateUnpin(item);
+        }
+    }
+
+    private void AttachApplicationDockPressHandlers(Control control)
+    {
+        control.AddHandler(PointerPressedEvent,
+            new PointerEventHandler(HandleApplicationDockButtonPointerPressed),
+            true);
+        control.AddHandler(PointerReleasedEvent,
+            new PointerEventHandler(HandleApplicationDockButtonPointerReleased),
+            true);
+        control.AddHandler(PointerCanceledEvent,
+            new PointerEventHandler(HandleApplicationDockButtonPointerReleased),
+            true);
+        control.AddHandler(PointerCaptureLostEvent,
+            new PointerEventHandler(HandleApplicationDockButtonPointerReleased),
+            true);
+    }
+
+    private void DetachApplicationDockPressHandlers(Control control)
+    {
+        control.RemoveHandler(PointerPressedEvent,
+            new PointerEventHandler(HandleApplicationDockButtonPointerPressed));
+        control.RemoveHandler(PointerReleasedEvent,
+            new PointerEventHandler(HandleApplicationDockButtonPointerReleased));
+        control.RemoveHandler(PointerCanceledEvent,
+            new PointerEventHandler(HandleApplicationDockButtonPointerReleased));
+        control.RemoveHandler(PointerCaptureLostEvent,
+            new PointerEventHandler(HandleApplicationDockButtonPointerReleased));
+    }
+
+    private static FrameworkElement? GetApplicationDockIcon(object sender) =>
+        sender switch
+        {
+            ContentControl { ContentTemplateRoot: FrameworkElement icon } => icon,
+            ContentControl { Content: FrameworkElement icon } => icon,
+            _ => null
+        };
+
+    private void HandleApplicationPickerOpened(object? sender, object args)
+        => applicationPickerScrollSuppression ??= scrollInputSuppression.Suppress();
+
+    private void HandleApplicationPickerClosed(object? sender, object args)
+        => ReleaseApplicationPickerScrollSuppression();
+
+    private static void HandleApplicationResultsPointerWheelChanged(
+        object sender,
+        PointerRoutedEventArgs args) => args.Handled = true;
+
+    private void ReleaseApplicationPickerScrollSuppression()
+    {
+        applicationPickerScrollSuppression?.Dispose();
+        applicationPickerScrollSuppression = null;
     }
 
     private async void HandleApplicationClicked(object sender, ItemClickEventArgs args)
@@ -600,8 +792,15 @@ public sealed partial class DesktopScrollPreviewView :
 
     private async void HandleApplicationContainerContentChanging(ListViewBase sender, ContainerContentChangingEventArgs args)
     {
-        if (!args.InRecycleQueue && args.Item is DesktopApplicationPickerItemViewModel item)
+        if (args.InRecycleQueue)
         {
+            args.ItemContainer.ContextFlyout = null;
+            return;
+        }
+
+        if (args.Item is DesktopApplicationPickerItemViewModel item)
+        {
+            args.ItemContainer.ContextFlyout = applicationDockContextMenuBuilder.CreatePin(item.Application);
             await ApplicationPicker.LoadIconAsync(item);
         }
     }

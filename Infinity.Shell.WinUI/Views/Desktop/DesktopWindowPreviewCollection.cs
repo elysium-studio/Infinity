@@ -57,7 +57,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
                 previews.Add(trackedWindow.Handle, preview);
             }
 
-            preview.RefreshSourceSize(trackedWindow, geometryReader);
+            preview.RefreshSourceGeometry(trackedWindow, geometryReader);
             preview.SetFilterMatch(WindowTitleFilter.Matches(trackedWindow.Title, filterText));
             preview.SetKeyboardFocused(trackedWindow.Handle == selection.FocusedHandle);
             preview.SetSelected(selection.SelectedHandles.Contains(trackedWindow.Handle));
@@ -124,7 +124,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
     {
         if (previews.TryGetValue(trackedWindow.Handle, out DesktopWindowPreview? preview))
         {
-            preview.RefreshSourceSize(trackedWindow, geometryReader);
+            preview.RefreshSourceGeometry(trackedWindow, geometryReader);
             preview.SetFilterMatch(WindowTitleFilter.Matches(trackedWindow.Title, filterText));
         }
     }

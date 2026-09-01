@@ -10,7 +10,7 @@ public sealed class UserAssistApplicationUsageHistory(ILogger<UserAssistApplicat
     private const string RegistryPath = @"Software\Microsoft\Windows\CurrentVersion\Explorer\UserAssist";
     private const string CountSubKeyName = "Count";
 
-    public async Task<IReadOnlyList<LaunchableApplication>> GetRecentlyUsedApplicationsAsync(
+    public async Task<IReadOnlyList<LaunchableApplication>> GetMostUsedApplicationsAsync(
         IReadOnlyList<LaunchableApplication> applications,
         int maximumCount,
         CancellationToken cancellationToken = default)
@@ -34,7 +34,7 @@ public sealed class UserAssistApplicationUsageHistory(ILogger<UserAssistApplicat
         }
         catch (Exception exception)
         {
-            logger.LogDebug(exception, "Windows application usage history could not be read");
+            logger.LogDebug(exception, "Windows application usage counts could not be read");
             return [];
         }
     }

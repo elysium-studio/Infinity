@@ -7,7 +7,6 @@ using Microsoft.UI.Xaml;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using WindowExtensions = Elysium.Platform.Windows.WindowExtensions;
 
 namespace Infinity.Shell.WinUI;
 
@@ -34,6 +33,7 @@ public sealed partial class DesktopOverviewView :
     private readonly IDesktopBackgroundSource backgroundSource;
     private readonly IKeyboardInputSource keyboardInputSource;
     private readonly DesktopOverviewConfiguration overviewConfiguration;
+    private readonly DesktopOverlayTopMostCoordinator topMostCoordinator;
     private readonly DispatcherQueue dispatcherQueue;
     private readonly HashSet<int> consumedKeyUps = [];
     private readonly Lock consumedKeyUpsLock = new();
@@ -45,7 +45,7 @@ public sealed partial class DesktopOverviewView :
     private int globalDismissQueued;
     private int openingGeneration;
 
-    public DesktopOverviewView(DesktopScrollPreviewView desktopScrollPreview, DesktopOverviewBackdropAnimator backdropAnimator, DesktopOverviewWallpaperPresenter wallpaperPresenter, WindowInputTransparencyController inputController, IDesktopBackgroundSource backgroundSource, IKeyboardInputSource keyboardInputSource, DesktopOverviewConfiguration overviewConfiguration)
+    public DesktopOverviewView(DesktopScrollPreviewView desktopScrollPreview, DesktopOverviewBackdropAnimator backdropAnimator, DesktopOverviewWallpaperPresenter wallpaperPresenter, WindowInputTransparencyController inputController, IDesktopBackgroundSource backgroundSource, IKeyboardInputSource keyboardInputSource, IWindowEventListener windowEventListener, DesktopOverviewConfiguration overviewConfiguration)
     {
         InitializeComponent();
 
@@ -58,6 +58,11 @@ public sealed partial class DesktopOverviewView :
         this.keyboardInputSource = keyboardInputSource;
         this.overviewConfiguration = overviewConfiguration;
         dispatcherQueue = DispatcherQueue;
+        topMostCoordinator = new DesktopOverlayTopMostCoordinator(
+            windowEventListener,
+            dispatcherQueue,
+            () => isOverlayOpen && IsOpen,
+            PromoteTopMost);
 
         backdropAnimator.Reset(BackgroundSurface);
         backdropAnimator.Reset(ThemeBackgroundSurface);
@@ -74,6 +79,7 @@ public sealed partial class DesktopOverviewView :
         backgroundSource.BackgroundChanged += HandleBackgroundChanged;
         this.keyboardInputSource.KeyDown += HandleGlobalKeyDown;
         this.keyboardInputSource.KeyUp += HandleGlobalKeyUp;
+        topMostCoordinator.Start();
     }
 
     public DesktopOverviewViewModel ViewModel => (DesktopOverviewViewModel)DataContext;
@@ -99,6 +105,7 @@ public sealed partial class DesktopOverviewView :
         isOverlayOpen = true;
         int generation = ++openingGeneration;
         CancelPreviewCleanup();
+        topMostCoordinator.PromoteNow();
         UpdateBindings();
         OpenOverview(generation);
     }
@@ -109,7 +116,8 @@ public sealed partial class DesktopOverviewView :
         Interlocked.Exchange(ref globalDismissQueued, 0);
         openingGeneration++;
         inputController.SetInputEnabled(Handle, false);
-        WindowExtensions.SetTopMost(Handle, false);
+        SetTopMost(false);
+        topMostCoordinator.Reset();
         SchedulePreviewCleanup();
     }
 
@@ -348,7 +356,7 @@ public sealed partial class DesktopOverviewView :
             backdropAnimator.AnimateIn(ThemeBackgroundSurface);
         }
 
-        WindowExtensions.SetTopMost(Handle, true);
+        topMostCoordinator.PromoteNow();
         inputController.SetInputEnabled(Handle, true);
 
         if (ViewModel.IsDesktopPreviewActive)
@@ -379,7 +387,7 @@ public sealed partial class DesktopOverviewView :
             if (desktopScrollPreview.IsRunning && IsOpen && ViewModel.IsDesktopPreviewActive && !ViewModel.IsDesktopPreviewCompletionRequested)
             {
                 desktopScrollPreview.AnimateInward();
-                WindowExtensions.SetTopMost(Handle, true);
+                topMostCoordinator.PromoteNow();
             }
             else
             {
@@ -462,7 +470,7 @@ public sealed partial class DesktopOverviewView :
         backdropAnimator.Reset(ThemeBackgroundSurface);
         backdropAnimator.Reset(BackgroundTint);
         desktopScrollPreview.Deactivate();
-        WindowExtensions.SetTopMost(Handle, false);
+        SetTopMost(false);
     }
 
     private void HandleBackgroundInvoked(object? sender, EventArgs args) => ViewModel.DismissDesktopPreview();

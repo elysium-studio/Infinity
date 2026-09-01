@@ -37,8 +37,12 @@ public sealed class DesktopModule :
             .AddSingleton<DesktopPageArrangementCoordinator>()
             .AddSingleton<DesktopApplicationPlacementResolver>()
             .AddSingleton<DesktopApplicationLaunchCoordinator>()
+            .AddSingleton<DesktopApplicationDockContextMenuBuilder>()
+            .AddSingleton<DesktopApplicationDockPressAnimator>()
             .AddSingleton<IDesktopApplicationPickerCatalog, DesktopApplicationPickerCatalog>()
             .AddSingleton<IRecentApplicationStore, RecentApplicationStore>()
+            .AddSingleton<IDesktopApplicationPinStore, DesktopApplicationPinStore>()
+            .AddSingleton<IDesktopApplicationDockOrderStore, DesktopApplicationDockOrderStore>()
             .AddSingleton<IDesktopApplicationDockCatalog, DesktopApplicationDockCatalog>()
             .AddSingleton<DesktopDragBoundaryCalculator>()
             .AddSingleton<DesktopPageReorderController>()
@@ -92,6 +96,7 @@ public sealed class DesktopModule :
         IPager pager = provider.GetRequiredService<IPager>();
         IScroller scroller = provider.GetRequiredService<IScroller>();
         IWorkspace workspace = provider.GetRequiredService<IWorkspace>();
+        IScrollInputSuppression scrollInputSuppression = provider.GetRequiredService<IScrollInputSuppression>();
         IDesktopBackgroundSource backgroundSource = provider.GetRequiredService<IDesktopBackgroundSource>();
         DesktopOverviewConfiguration overviewConfiguration = provider.GetRequiredService<DesktopOverviewConfiguration>();
         DesktopOverviewForegroundThemeResolver foregroundThemeResolver = provider.GetRequiredService<DesktopOverviewForegroundThemeResolver>();
@@ -103,11 +108,14 @@ public sealed class DesktopModule :
         DesktopShortcutHintsViewModel shortcutHints = provider.GetRequiredService<DesktopShortcutHintsViewModel>();
         DesktopApplicationPickerViewModel applicationPicker = provider.GetRequiredService<DesktopApplicationPickerViewModel>();
         DesktopApplicationDockViewModel applicationDock = provider.GetRequiredService<DesktopApplicationDockViewModel>();
+        DesktopApplicationDockContextMenuBuilder applicationDockContextMenuBuilder = provider.GetRequiredService<DesktopApplicationDockContextMenuBuilder>();
+        DesktopApplicationDockPressAnimator applicationDockPressAnimator = provider.GetRequiredService<DesktopApplicationDockPressAnimator>();
         DesktopApplicationLaunchCoordinator applicationLaunchCoordinator = provider.GetRequiredService<DesktopApplicationLaunchCoordinator>();
         DesktopOverviewInputController inputController = provider.GetRequiredService<DesktopOverviewInputController>();
         DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator = provider.GetRequiredService<DesktopWindowSnapInteractionCoordinator>();
+        ILogger<DesktopScrollPreviewView> logger = provider.GetRequiredService<ILogger<DesktopScrollPreviewView>>();
 
-        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, panState, pager, scroller, workspace, backgroundSource, overviewConfiguration, foregroundThemeResolver, animator, layoutPresenter, pageStrip, previews, cursorConfinement, shortcutHints, applicationPicker, applicationDock, applicationLaunchCoordinator, inputController, snapInteractionCoordinator);
+        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, panState, pager, scroller, workspace, scrollInputSuppression, backgroundSource, overviewConfiguration, foregroundThemeResolver, animator, layoutPresenter, pageStrip, previews, cursorConfinement, shortcutHints, applicationPicker, applicationDock, applicationDockContextMenuBuilder, applicationDockPressAnimator, applicationLaunchCoordinator, inputController, snapInteractionCoordinator, logger);
     }
 
     private static DesktopOverviewView CreateDesktopOverviewView(IServiceProvider provider)
@@ -118,9 +126,10 @@ public sealed class DesktopModule :
         WindowInputTransparencyController inputController = provider.GetRequiredService<WindowInputTransparencyController>();
         IDesktopBackgroundSource backgroundSource = provider.GetRequiredService<IDesktopBackgroundSource>();
         IKeyboardInputSource keyboardInputSource = provider.GetRequiredService<IKeyboardInputSource>();
+        IWindowEventListener windowEventListener = provider.GetRequiredService<IWindowEventListener>();
         DesktopOverviewConfiguration overviewConfiguration = provider.GetRequiredService<DesktopOverviewConfiguration>();
 
-        return new DesktopOverviewView(desktopScrollPreview, backdropAnimator, wallpaperPresenter, inputController, backgroundSource, keyboardInputSource, overviewConfiguration);
+        return new DesktopOverviewView(desktopScrollPreview, backdropAnimator, wallpaperPresenter, inputController, backgroundSource, keyboardInputSource, windowEventListener, overviewConfiguration);
     }
 
     private static DesktopOverviewViewModel CreateDesktopOverviewViewModel(IServiceProvider provider)

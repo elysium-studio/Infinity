@@ -417,6 +417,12 @@
   <data name="DesktopAppPickerEmpty.Text" xml:space="preserve">
     <value>[Ñö åþþš ƒöµñð]</value>
   </data>
+  <data name="DesktopApplicationDockUnpin" xml:space="preserve">
+    <value>[Ûñþîñ]</value>
+  </data>
+  <data name="DesktopApplicationDockPin" xml:space="preserve">
+    <value>[Þîñ]</value>
+  </data>
   <data name="DesktopAppPickerPageDestination" xml:space="preserve">
     <value>[Öñ ţĥîš þåĝé]</value>
   </data>

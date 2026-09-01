@@ -16,6 +16,7 @@ public sealed class PointerInputSource :
     private readonly IMouseInputSource mouseInputSource;
     private readonly IModifierKeyState modifierKeyState;
     private readonly IScrollPresentationSession scrollPresentationSession;
+    private readonly IScrollInputSuppression scrollInputSuppression;
     private readonly Lock scrollGate = new();
     private readonly DeltaSample[] velocitySamples = new DeltaSample[VelocitySampleCount];
     private Timer? idleTimer;
@@ -38,11 +39,13 @@ public sealed class PointerInputSource :
 
     public PointerInputSource(IMouseInputSource mouseInputSource,
         IModifierKeyState modifierKeyState,
-        IScrollPresentationSession scrollPresentationSession)
+        IScrollPresentationSession scrollPresentationSession,
+        IScrollInputSuppression scrollInputSuppression)
     {
         this.mouseInputSource = mouseInputSource;
         this.modifierKeyState = modifierKeyState;
         this.scrollPresentationSession = scrollPresentationSession;
+        this.scrollInputSuppression = scrollInputSuppression;
 
         this.mouseInputSource.LeftButtonDown += HandleLeftButtonDown;
         this.mouseInputSource.MiddleButtonPressed += HandleMiddleButtonPressed;
@@ -78,6 +81,11 @@ public sealed class PointerInputSource :
 
     private void HandleWheelScrolled(object? sender, MouseWheelEventArgs args)
     {
+        if (scrollInputSuppression.IsSuppressed)
+        {
+            return;
+        }
+
         if (!modifierKeyState.IsActive && !scrollPresentationSession.IsActive)
         {
             return;

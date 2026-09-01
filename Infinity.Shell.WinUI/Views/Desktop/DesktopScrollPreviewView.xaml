@@ -30,6 +30,18 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
         </Style>
+        <Style x:Key="ApplicationDockItemContainerStyle" TargetType="ListViewItem">
+            <Setter Property="Width" Value="48" />
+            <Setter Property="Height" Value="48" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="IsTabStop" Value="False" />
+        </Style>
         <Style x:Key="ApplicationDockMenuDotStyle" TargetType="Ellipse">
             <Setter Property="Width" Value="4" />
             <Setter Property="Height" Value="4" />
@@ -62,7 +74,9 @@
                     <ListView
                         x:Name="ApplicationResultsList"
                         Margin="4,8"
+                        CanDragItems="True"
                         ContainerContentChanging="HandleApplicationContainerContentChanging"
+                        DragItemsStarting="HandleApplicationDragItemsStarting"
                         IsItemClickEnabled="True"
                         ItemClick="HandleApplicationClicked"
                         ItemsSource="{x:Bind ApplicationPicker.Results}">
@@ -144,6 +158,7 @@
         <Canvas x:Name="PageTitleCanvas" />
         <Border
             x:Name="ApplicationDockSurface"
+            AllowDrop="True"
             Height="64"
             MinWidth="64"
             Padding="8"
@@ -152,21 +167,50 @@
             Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
             BorderBrush="{ThemeResource SurfaceStrokeColorDefaultBrush}"
             BorderThickness="1"
-            CornerRadius="16">
+            CornerRadius="16"
+            DragOver="HandleApplicationDockDragOver"
+            Drop="HandleApplicationDockDrop">
             <StackPanel Orientation="Horizontal" Spacing="4">
-                <ItemsRepeater ItemsSource="{x:Bind ApplicationDock.RecentApplications}">
-                    <ItemsRepeater.Layout>
-                        <StackLayout Orientation="Horizontal" Spacing="4" />
-                    </ItemsRepeater.Layout>
-                    <ItemsRepeater.ItemTemplate>
-                        <DataTemplate x:DataType="Shell:DesktopApplicationPickerItemViewModel">
-                            <Button
-                                Style="{StaticResource ApplicationDockButtonStyle}"
+                <ListView
+                    x:Name="ApplicationDockList"
+                    AllowDrop="True"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    CanDragItems="True"
+                    CanReorderItems="True"
+                    ContainerContentChanging="HandleApplicationDockContainerContentChanging"
+                    DragItemsCompleted="HandleApplicationDockDragItemsCompleted"
+                    DragOver="HandleApplicationDockDragOver"
+                    Drop="HandleApplicationDockDrop"
+                    IsItemClickEnabled="True"
+                    IsSwipeEnabled="True"
+                    ItemClick="HandleDockApplicationClicked"
+                    ItemContainerStyle="{StaticResource ApplicationDockItemContainerStyle}"
+                    ItemsSource="{x:Bind ApplicationDock.Applications}"
+                    ReorderMode="Enabled"
+                    SelectionMode="None"
+                    ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                    ScrollViewer.HorizontalScrollMode="Disabled"
+                    ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                    ScrollViewer.VerticalScrollMode="Disabled">
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <ItemsStackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="Shell:DesktopApplicationDockItemViewModel">
+                            <Grid
+                                Width="48"
+                                Height="48"
                                 AutomationProperties.Name="{x:Bind DisplayName}"
-                                Click="HandleDockApplicationClicked"
                                 Tag="{x:Bind}"
                                 ToolTipService.ToolTip="{x:Bind DisplayName}">
-                                <Grid Width="32" Height="32">
+                                <Grid
+                                    Width="32"
+                                    Height="32"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
                                     <Border
                                         Background="{ThemeResource ControlFillColorSecondaryBrush}"
                                         CornerRadius="7"
@@ -181,46 +225,51 @@
                                         UseLayoutRounding="True"
                                         Visibility="{x:Bind Local:DesktopScrollPreviewView.ToApplicationIconVisibility(Icon), Mode=OneWay}" />
                                 </Grid>
-                            </Button>
+                            </Grid>
                         </DataTemplate>
-                    </ItemsRepeater.ItemTemplate>
-                </ItemsRepeater>
+                    </ListView.ItemTemplate>
+                </ListView>
                 <Rectangle
                     Width="1"
                     Margin="4,8"
                     Fill="{ThemeResource DividerStrokeColorDefaultBrush}"
-                    Visibility="{x:Bind ToVisibility(ApplicationDock.HasRecentApplications), Mode=OneWay}" />
+                    Visibility="{x:Bind ToVisibility(ApplicationDock.HasApplications), Mode=OneWay}" />
                 <Button
                     x:Name="AllApplicationsButton"
                     x:Uid="DesktopApplicationDockAllAppsButton"
                     Style="{StaticResource ApplicationDockButtonStyle}"
                     Click="HandleAllApplicationsClicked">
-                    <Grid
-                        Width="22"
-                        Height="22"
-                        ColumnSpacing="3"
-                        RowSpacing="3"
+                    <Viewbox
+                        Width="18"
+                        Height="18"
+                        Stretch="Uniform"
                         UseLayoutRounding="True">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition />
-                            <ColumnDefinition />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition />
-                            <RowDefinition />
-                            <RowDefinition />
-                        </Grid.RowDefinitions>
-                        <Ellipse Style="{StaticResource ApplicationDockMenuDotStyle}" />
-                        <Ellipse Grid.Column="1" Style="{StaticResource ApplicationDockMenuDotStyle}" />
-                        <Ellipse Grid.Column="2" Style="{StaticResource ApplicationDockMenuDotStyle}" />
-                        <Ellipse Grid.Row="1" Style="{StaticResource ApplicationDockMenuDotStyle}" />
-                        <Ellipse Grid.Row="1" Grid.Column="1" Style="{StaticResource ApplicationDockMenuDotStyle}" />
-                        <Ellipse Grid.Row="1" Grid.Column="2" Style="{StaticResource ApplicationDockMenuDotStyle}" />
-                        <Ellipse Grid.Row="2" Style="{StaticResource ApplicationDockMenuDotStyle}" />
-                        <Ellipse Grid.Row="2" Grid.Column="1" Style="{StaticResource ApplicationDockMenuDotStyle}" />
-                        <Ellipse Grid.Row="2" Grid.Column="2" Style="{StaticResource ApplicationDockMenuDotStyle}" />
-                    </Grid>
+                        <Grid
+                            Width="18"
+                            Height="18"
+                            ColumnSpacing="3"
+                            RowSpacing="3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4" />
+                                <ColumnDefinition Width="4" />
+                                <ColumnDefinition Width="4" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="4" />
+                                <RowDefinition Height="4" />
+                                <RowDefinition Height="4" />
+                            </Grid.RowDefinitions>
+                            <Ellipse Style="{StaticResource ApplicationDockMenuDotStyle}" />
+                            <Ellipse Grid.Column="1" Style="{StaticResource ApplicationDockMenuDotStyle}" />
+                            <Ellipse Grid.Column="2" Style="{StaticResource ApplicationDockMenuDotStyle}" />
+                            <Ellipse Grid.Row="1" Style="{StaticResource ApplicationDockMenuDotStyle}" />
+                            <Ellipse Grid.Row="1" Grid.Column="1" Style="{StaticResource ApplicationDockMenuDotStyle}" />
+                            <Ellipse Grid.Row="1" Grid.Column="2" Style="{StaticResource ApplicationDockMenuDotStyle}" />
+                            <Ellipse Grid.Row="2" Style="{StaticResource ApplicationDockMenuDotStyle}" />
+                            <Ellipse Grid.Row="2" Grid.Column="1" Style="{StaticResource ApplicationDockMenuDotStyle}" />
+                            <Ellipse Grid.Row="2" Grid.Column="2" Style="{StaticResource ApplicationDockMenuDotStyle}" />
+                        </Grid>
+                    </Viewbox>
                 </Button>
             </StackPanel>
         </Border>
@@ -229,18 +278,12 @@
             x:Uid="DesktopShortcutHintsButton"
             Height="36"
             Padding="16,0,12,0"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource ControlElevationBorderBrush}"
             HorizontalAlignment="Right"
             VerticalAlignment="Top"
             IsHitTestVisible="False"
             IsTabStop="False">
-            <Button.Resources>
-                <StaticResource x:Key="ButtonBackground" ResourceKey="CardBackgroundFillColorDefaultBrush" />
-                <StaticResource x:Key="ButtonBackgroundPointerOver" ResourceKey="ControlFillColorSecondaryBrush" />
-                <StaticResource x:Key="ButtonBackgroundPressed" ResourceKey="ControlFillColorTertiaryBrush" />
-                <StaticResource x:Key="ButtonBorderBrush" ResourceKey="ControlElevationBorderBrush" />
-                <StaticResource x:Key="ButtonBorderBrushPointerOver" ResourceKey="ControlElevationBorderBrush" />
-                <StaticResource x:Key="ButtonBorderBrushPressed" ResourceKey="ControlElevationBorderBrush" />
-            </Button.Resources>
             <Button.KeyboardAccelerators>
                 <KeyboardAccelerator Key="F1" Invoked="HandleShortcutHintsInvoked" />
             </Button.KeyboardAccelerators>

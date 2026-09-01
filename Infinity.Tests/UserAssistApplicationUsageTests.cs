@@ -25,7 +25,7 @@ public sealed class UserAssistApplicationUsageTests
     }
 
     [Fact]
-    public void MatcherReturnsMostRecentlyUsedStartApplications()
+    public void MatcherReturnsMostUsedStartApplications()
     {
         LaunchableApplication calculator = new(
             @"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App",
@@ -49,6 +49,6 @@ public sealed class UserAssistApplicationUsageTests
             ],
             2);
 
-        Assert.Equal([paint, calculator], result);
+        Assert.Equal([calculator, paint], result);
     }
 }

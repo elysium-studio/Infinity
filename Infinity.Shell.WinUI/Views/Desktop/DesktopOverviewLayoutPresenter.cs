@@ -140,6 +140,10 @@ public sealed class DesktopOverviewLayoutPresenter(
             }
         }
 
-        preview.Update(x, layout.Y, preview.SourceWidth, preview.SourceHeight, effectiveTransition);
+        preview.Update(x + preview.SourceOffsetX,
+            layout.Y + preview.SourceOffsetY,
+            preview.SourceWidth,
+            preview.SourceHeight,
+            effectiveTransition);
     }
 }

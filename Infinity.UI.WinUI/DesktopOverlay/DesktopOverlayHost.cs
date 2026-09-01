@@ -29,6 +29,8 @@ internal class DesktopOverlayHost
     private const uint WmRButtonDown = 0x0204u;
 
     private static readonly HWND HwndBottom = new(new nint(1));
+    private static readonly HWND HwndNotTopmost = new(new nint(-2));
+    private static readonly HWND HwndTopmost = new(new nint(-1));
     private static readonly List<HWND> globalExcludedHandles = [];
     private readonly List<(Window Window, RectInt32 Rect, SystemBackdropElement BackdropElement, Grid ContentRoot, HMONITOR Monitor)> windows = [];
     private readonly DesktopOverlayMonitorTopology monitorTopology = new();
@@ -39,6 +41,7 @@ internal class DesktopOverlayHost
     private readonly Lock hookLock = new();
     private UnhookWindowsHookExSafeHandle? mouseHook;
     private bool isVisible;
+    private volatile bool isTopMost;
     private bool isInputEnabled;
     private bool isMonitorSpanningEnabled;
     private bool blurRequested = true;
@@ -190,7 +193,8 @@ internal class DesktopOverlayHost
                 WindowExtensions.SetBorderless(handle, true);
                 ApplyInputState(window, monitor);
                 contentRoot.Visibility = isCoveredBySpan ? Visibility.Collapsed : Visibility.Visible;
-                PInvoke.SetWindowPos(handle, HwndBottom, 0, 0, 0, 0, SwpNoActivate | SwpNoSize | SwpNoMove);
+                PInvoke.SetWindowPos(handle, isTopMost ? HwndTopmost : HwndBottom, 0, 0, 0, 0,
+                    SwpNoActivate | SwpNoSize | SwpNoMove);
             });
         }
     }
@@ -198,6 +202,7 @@ internal class DesktopOverlayHost
     public void Hide()
     {
         isVisible = false;
+        isTopMost = false;
         UninstallMouseHook();
 
         foreach ((Window window, RectInt32 rect, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR monitor) in windows)
@@ -215,6 +220,25 @@ internal class DesktopOverlayHost
                         SwpNoActivate | SwpNoSize | SwpNoMove);
                 });
             });
+        }
+    }
+
+    public void SetTopMost(bool enabled)
+    {
+        isTopMost = enabled;
+        HWND insertAfter = enabled ? HwndTopmost : HwndNotTopmost;
+
+        foreach ((Window window, _, _, _, _) in windows)
+        {
+            HWND handle = new(WindowNative.GetWindowHandle(window));
+            PInvoke.SetWindowPos(
+                handle,
+                insertAfter,
+                0,
+                0,
+                0,
+                0,
+                SwpNoActivate | SwpNoSize | SwpNoMove);
         }
     }
 

@@ -417,6 +417,12 @@
   <data name="DesktopAppPickerEmpty.Text" xml:space="preserve">
     <value>앱을 찾을 수 없음</value>
   </data>
+  <data name="DesktopApplicationDockUnpin" xml:space="preserve">
+    <value>고정 해제</value>
+  </data>
+  <data name="DesktopApplicationDockPin" xml:space="preserve">
+    <value>고정</value>
+  </data>
   <data name="DesktopAppPickerPageDestination" xml:space="preserve">
     <value>이 페이지</value>
   </data>

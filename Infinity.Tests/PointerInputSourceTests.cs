@@ -11,7 +11,7 @@ public sealed class PointerInputSourceTests
     {
         TestMouseInputSource mouse = new();
         TestModifierKeyState modifiers = new() { IsActive = true };
-        using PointerInputSource pointer = new(mouse, modifiers, new ScrollPresentationSession());
+        using PointerInputSource pointer = new(mouse, modifiers, new ScrollPresentationSession(), new ScrollInputSuppression());
         int triggers = 0;
         pointer.MiddleButtonClicked += () => triggers++;
 
@@ -26,7 +26,7 @@ public sealed class PointerInputSourceTests
     {
         TestMouseInputSource mouse = new();
         TestModifierKeyState modifiers = new();
-        using PointerInputSource pointer = new(mouse, modifiers, new ScrollPresentationSession());
+        using PointerInputSource pointer = new(mouse, modifiers, new ScrollPresentationSession(), new ScrollInputSuppression());
         int triggers = 0;
         pointer.MiddleButtonClicked += () => triggers++;
 
@@ -42,7 +42,7 @@ public sealed class PointerInputSourceTests
         TestMouseInputSource mouse = new();
         TestModifierKeyState modifiers = new();
         ScrollPresentationSession presentation = new();
-        using PointerInputSource pointer = new(mouse, modifiers, presentation);
+        using PointerInputSource pointer = new(mouse, modifiers, presentation, new ScrollInputSuppression());
         int receivedDelta = 0;
         pointer.ScrollDeltaReceived += delta => receivedDelta = delta;
         presentation.Begin();
@@ -58,9 +58,28 @@ public sealed class PointerInputSourceTests
     {
         TestMouseInputSource mouse = new();
         TestModifierKeyState modifiers = new();
-        using PointerInputSource pointer = new(mouse, modifiers, new ScrollPresentationSession());
+        using PointerInputSource pointer = new(mouse, modifiers, new ScrollPresentationSession(), new ScrollInputSuppression());
         int triggers = 0;
         pointer.ScrollDeltaReceived += _ => triggers++;
+
+        MouseWheelEventArgs args = mouse.RaiseWheelScrolled(120);
+
+        Assert.False(args.Handled);
+        Assert.Equal(0, triggers);
+    }
+
+    [Fact]
+    public void SuppressedWheelRemainsAvailableWhilePresentationIsActive()
+    {
+        TestMouseInputSource mouse = new();
+        TestModifierKeyState modifiers = new();
+        ScrollPresentationSession presentation = new();
+        ScrollInputSuppression suppression = new();
+        using PointerInputSource pointer = new(mouse, modifiers, presentation, suppression);
+        using IDisposable lease = suppression.Suppress();
+        int triggers = 0;
+        pointer.ScrollDeltaReceived += _ => triggers++;
+        presentation.Begin();
 
         MouseWheelEventArgs args = mouse.RaiseWheelScrolled(120);
 

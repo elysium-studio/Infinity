@@ -352,17 +352,6 @@ namespace Infinity::Platform::Windows::Native
 			margins.bottom = MaxLong(0, windowBounds.bottom - visibleBounds.bottom);
 		}
 
-		UINT borderThickness{};
-
-		if (SUCCEEDED(DwmGetWindowAttribute(windowHandle, DWMWA_VISIBLE_FRAME_BORDER_THICKNESS, &borderThickness, sizeof(borderThickness))))
-		{
-			LONG border = static_cast<LONG>(borderThickness);
-			margins.left += border;
-			margins.top += border;
-			margins.right += border;
-			margins.bottom += border;
-		}
-
 		return margins;
 	}
 

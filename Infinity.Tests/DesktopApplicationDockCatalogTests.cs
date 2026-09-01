@@ -7,20 +7,65 @@ namespace Infinity.Tests;
 public sealed class DesktopApplicationDockCatalogTests
 {
     [Fact]
-    public async Task WindowsHistoryIsPreferredAndInfinityHistoryFillsRemainingPlaces()
+    public async Task DockContainsOnlyTaskbarAndInfinityPins()
     {
         LaunchableApplication calculator = new("calculator", "Calculator");
         LaunchableApplication paint = new("paint", "Paint");
         LaunchableApplication terminal = new("terminal", "Terminal");
+        LaunchableApplication edge = new("edge", "Microsoft Edge");
         DesktopApplicationDockCatalog catalog = new(
-            new TestPickerCatalog([calculator, paint, terminal]),
-            new TestUsageHistory([paint, calculator]),
-            new TestRecentApplicationStore([calculator, terminal]),
+            new TestPickerCatalog([calculator, paint, terminal, edge]),
+            new TestTaskbarPins([edge]),
+            new TestPinStore([terminal]),
+            new TestOrderStore([]),
             NullLogger<DesktopApplicationDockCatalog>.Instance);
 
-        IReadOnlyList<LaunchableApplication> applications = await catalog.GetApplicationsAsync(3);
+        IReadOnlyList<DesktopApplicationDockEntry> applications = await catalog.GetApplicationsAsync(4);
 
-        Assert.Equal([paint, calculator, terminal], applications);
+        Assert.Equal([edge, terminal], applications.Select(entry => entry.Application));
+        Assert.Equal(
+            [
+                DesktopApplicationDockSource.Taskbar,
+                DesktopApplicationDockSource.Infinity
+            ],
+            applications.Select(entry => entry.Source));
+    }
+
+    [Fact]
+    public async Task InfinityPinsReserveDockSpaceWhenTaskbarIsFull()
+    {
+        LaunchableApplication edge = new("edge", "Edge");
+        LaunchableApplication explorer = new("explorer", "File Explorer");
+        LaunchableApplication terminal = new("terminal", "Terminal");
+        LaunchableApplication calculator = new("calculator", "Calculator");
+        DesktopApplicationDockCatalog catalog = new(
+            new TestPickerCatalog([edge, explorer, terminal, calculator]),
+            new TestTaskbarPins([edge, explorer]),
+            new TestPinStore([terminal, calculator]),
+            new TestOrderStore([]),
+            NullLogger<DesktopApplicationDockCatalog>.Instance);
+
+        IReadOnlyList<DesktopApplicationDockEntry> applications = await catalog.GetApplicationsAsync(3);
+
+        Assert.Equal([edge, terminal, calculator], applications.Select(entry => entry.Application));
+    }
+
+    [Fact]
+    public async Task SavedOrderCanInterleaveTaskbarAndInfinityPins()
+    {
+        LaunchableApplication edge = new("edge", "Edge");
+        LaunchableApplication explorer = new("explorer", "File Explorer");
+        LaunchableApplication terminal = new("terminal", "Terminal");
+        DesktopApplicationDockCatalog catalog = new(
+            new TestPickerCatalog([edge, explorer, terminal]),
+            new TestTaskbarPins([edge, explorer]),
+            new TestPinStore([terminal]),
+            new TestOrderStore(["terminal", "explorer", "edge"]),
+            NullLogger<DesktopApplicationDockCatalog>.Instance);
+
+        IReadOnlyList<DesktopApplicationDockEntry> applications = await catalog.GetApplicationsAsync(3);
+
+        Assert.Equal([terminal, explorer, edge], applications.Select(entry => entry.Application));
     }
 
     private sealed class TestPickerCatalog(IReadOnlyList<LaunchableApplication> applications) :
@@ -35,29 +80,42 @@ public sealed class DesktopApplicationDockCatalogTests
             Task.FromResult<ApplicationIcon?>(null);
     }
 
-    private sealed class TestUsageHistory(IReadOnlyList<LaunchableApplication> applications) :
-        IApplicationUsageHistory
+    private sealed class TestTaskbarPins(IReadOnlyList<LaunchableApplication> applications) :
+        ITaskbarPinnedApplicationSource
     {
-        public Task<IReadOnlyList<LaunchableApplication>> GetRecentlyUsedApplicationsAsync(
+        public Task<IReadOnlyList<LaunchableApplication>> GetPinnedApplicationsAsync(
             IReadOnlyList<LaunchableApplication> availableApplications,
-            int maximumCount,
-            CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<LaunchableApplication>>([.. applications.Take(maximumCount)]);
+            CancellationToken cancellationToken = default) => Task.FromResult(applications);
     }
 
-    private sealed class TestRecentApplicationStore(IReadOnlyList<LaunchableApplication> applications) :
-        IRecentApplicationStore
+    private sealed class TestPinStore(IReadOnlyList<LaunchableApplication> applications) :
+        IDesktopApplicationPinStore
     {
-        public event Action<LaunchableApplication>? ApplicationRecorded;
+        public event Action? PinsChanged;
 
         public IReadOnlyList<LaunchableApplication> Applications => applications;
 
-        public Task RecordAsync(LaunchableApplication application, CancellationToken cancellationToken = default)
+        public Task PinAsync(LaunchableApplication application, CancellationToken cancellationToken = default)
         {
-            ApplicationRecorded?.Invoke(application);
+            PinsChanged?.Invoke();
             return Task.CompletedTask;
         }
 
-        public void RecordForSession(LaunchableApplication application) => ApplicationRecorded?.Invoke(application);
+        public Task UnpinAsync(LaunchableApplication application, CancellationToken cancellationToken = default)
+        {
+            PinsChanged?.Invoke();
+            return Task.CompletedTask;
+        }
     }
+
+    private sealed class TestOrderStore(IReadOnlyList<string> identifiers) :
+        IDesktopApplicationDockOrderStore
+    {
+        public IReadOnlyList<string> ApplicationIdentifiers => identifiers;
+
+        public Task SaveAsync(
+            IEnumerable<string> applicationIdentifiers,
+            CancellationToken cancellationToken = default) => Task.CompletedTask;
+    }
+
 }

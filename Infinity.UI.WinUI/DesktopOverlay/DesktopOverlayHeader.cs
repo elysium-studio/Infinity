@@ -157,6 +157,23 @@ internal class DesktopOverlayHeader
         });
     }
 
+    public void PromoteTopMost()
+    {
+        if (!isVisible)
+        {
+            return;
+        }
+
+        window.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
+        {
+            if (isVisible)
+            {
+                PInvoke.SetWindowPos(handle, HwndTopmost, 0, 0, 0, 0,
+                    SwpNoActivate | SwpNoSize | SwpNoMove);
+            }
+        });
+    }
+
     private static float EaseInOut(float progress) =>
         progress < 0.5f
             ? 2f * progress * progress

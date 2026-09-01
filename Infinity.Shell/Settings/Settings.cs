@@ -6,6 +6,8 @@ namespace Infinity.Shell;
 
 public sealed class Settings
 {
+    public List<string>? DockApplicationOrder { get; set; } = [];
+
     public DragScrollSpeed DragScrollSpeed { get; set; } = DragScrollSpeed.Normal;
 
     public bool EnableOverviewEdgeScrolling { get; set; } = true;
@@ -17,6 +19,8 @@ public sealed class Settings
     public Dictionary<int, DesktopSnapLayoutKind>? PageLayouts { get; set; } = [];
 
     public Dictionary<int, string>? PageTitles { get; set; } = [];
+
+    public List<LaunchableApplication>? PinnedApplications { get; set; } = [];
 
     public List<LaunchableApplication>? RecentApplications { get; set; } = [];
 

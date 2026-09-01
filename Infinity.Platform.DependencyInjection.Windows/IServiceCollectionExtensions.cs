@@ -23,6 +23,8 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<IApplicationCatalog>(provider => provider.GetRequiredService<ApplicationCatalog>());
             services.AddSingleton<IApplicationLauncher>(provider => provider.GetRequiredService<ApplicationCatalog>());
             services.AddSingleton<IApplicationUsageHistory, UserAssistApplicationUsageHistory>();
+            services.AddSingleton<ITaskbarPinnedApplicationSource, TaskbarPinnedApplicationSource>();
+            services.AddSingleton<IScrollInputSuppression, ScrollInputSuppression>();
             services.AddSingleton<InfinityGlanceBridge>();
             services.AddSingleton<IInfinityGlanceBridge>(provider => provider.GetRequiredService<InfinityGlanceBridge>());
             services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<InfinityGlanceBridge>());
