@@ -27,7 +27,7 @@ public sealed class UpdateModule :
         DispatcherQueue dispatcherQueue = DispatcherQueue.GetForCurrentThread();
         services.AddUpdateController(configuration =>
         {
-            configuration.FeedUrl = "https://elysiumstud.io/feeds/infinity";
+            configuration.FeedUrl = "https://elysiumstud.io/feeds/infinity2";
         });
 
         services.AddSingleton<AppToastNotifier>();

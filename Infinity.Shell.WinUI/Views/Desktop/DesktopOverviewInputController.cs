@@ -78,7 +78,7 @@ public sealed class DesktopOverviewInputController(
         }
     }
 
-    public bool TryHandleGlobalKeyDown(int virtualKeyCode, bool controlDown, bool shiftDown, bool menuDown, Action removeLastCharacter, Action<string> appendText, Action requestTextFocus)
+    public bool TryHandleGlobalKeyDown(int virtualKeyCode, bool controlDown, bool shiftDown, bool menuDown, bool windowsDown, Action removeLastCharacter, Action<string> appendText, Action requestTextFocus)
     {
         VirtualKey key = (VirtualKey)virtualKeyCode;
 
@@ -87,7 +87,7 @@ public sealed class DesktopOverviewInputController(
             return true;
         }
 
-        if (controlDown != menuDown)
+        if (windowsDown || controlDown != menuDown)
         {
             return false;
         }

@@ -21,6 +21,9 @@ public sealed partial class DesktopOverviewView :
     private const int LeftShiftVirtualKey = 0xA0;
     private const int RightShiftVirtualKey = 0xA1;
     private const int MenuVirtualKey = 0x12;
+    private const int SKeyboardVirtualKey = 0x53;
+    private const int LeftWindowsVirtualKey = 0x5B;
+    private const int RightWindowsVirtualKey = 0x5C;
     private const int LeftMenuVirtualKey = 0xA4;
     private const int RightMenuVirtualKey = 0xA5;
 
@@ -41,6 +44,7 @@ public sealed partial class DesktopOverviewView :
     private DispatcherQueueTimer? previewCleanupTimer;
     private bool isCompletingDesktopPreview;
     private bool isDesktopPreviewAnimationStarted;
+    private bool isScreenshotCapturePending;
     private volatile bool isOverlayOpen;
     private int globalDismissQueued;
     private int openingGeneration;
@@ -79,6 +83,7 @@ public sealed partial class DesktopOverviewView :
         backgroundSource.BackgroundChanged += HandleBackgroundChanged;
         this.keyboardInputSource.KeyDown += HandleGlobalKeyDown;
         this.keyboardInputSource.KeyUp += HandleGlobalKeyUp;
+        windowEventListener.ForegroundChanged += HandleForegroundChanged;
         topMostCoordinator.Start();
     }
 
@@ -113,6 +118,7 @@ public sealed partial class DesktopOverviewView :
     protected override void OnClosed()
     {
         isOverlayOpen = false;
+        isScreenshotCapturePending = false;
         Interlocked.Exchange(ref globalDismissQueued, 0);
         openingGeneration++;
         inputController.SetInputEnabled(Handle, false);
@@ -139,7 +145,17 @@ public sealed partial class DesktopOverviewView :
             bool controlDown = IsAnyKeyDown(ControlVirtualKey, LeftControlVirtualKey, RightControlVirtualKey);
             bool shiftDown = IsAnyKeyDown(ShiftVirtualKey, LeftShiftVirtualKey, RightShiftVirtualKey);
             bool menuDown = IsAnyKeyDown(MenuVirtualKey, LeftMenuVirtualKey, RightMenuVirtualKey);
-            args.Handled = desktopScrollPreview.TryHandleGlobalKeyDown(args.VirtualKeyCode, controlDown, shiftDown, menuDown);
+            bool windowsDown = IsAnyKeyDown(LeftWindowsVirtualKey, RightWindowsVirtualKey);
+
+            if (args.VirtualKeyCode == SKeyboardVirtualKey &&
+                shiftDown &&
+                windowsDown)
+            {
+                YieldForScreenshotCapture();
+                return;
+            }
+
+            args.Handled = desktopScrollPreview.TryHandleGlobalKeyDown(args.VirtualKeyCode, controlDown, shiftDown, menuDown, windowsDown);
 
             if (args.Handled)
             {
@@ -201,6 +217,33 @@ public sealed partial class DesktopOverviewView :
         keyboardInputSource.IsKeyDown(key) ||
         keyboardInputSource.IsKeyDown(leftKey) ||
         keyboardInputSource.IsKeyDown(rightKey);
+
+    private bool IsAnyKeyDown(int firstKey, int secondKey) =>
+        keyboardInputSource.IsKeyDown(firstKey) ||
+        keyboardInputSource.IsKeyDown(secondKey);
+
+    private void YieldForScreenshotCapture()
+    {
+        isScreenshotCapturePending = true;
+        topMostCoordinator.Suspend();
+    }
+
+    private void HandleForegroundChanged(nint handle)
+    {
+        if (!isScreenshotCapturePending || handle != Handle)
+        {
+            return;
+        }
+
+        isScreenshotCapturePending = false;
+        dispatcherQueue.TryEnqueue(() =>
+        {
+            if (isOverlayOpen && IsOpen)
+            {
+                topMostCoordinator.Resume();
+            }
+        });
+    }
 
     private void EnsureSubscribed()
     {

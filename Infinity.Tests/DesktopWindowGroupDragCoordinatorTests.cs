@@ -126,7 +126,7 @@ public sealed class DesktopWindowGroupDragCoordinatorTests
         DesktopWindowDragPositionResolver dragPositionResolver = new(store, workspace, layoutCalculator);
         DesktopSnapSlotOccupancyResolver occupancyResolver = new();
         DesktopSnapPlacementResolver snapPlacementResolver = new(workspace, new DesktopSnapLayoutCatalog());
-        DesktopWindowPlacementCoordinator placementCoordinator = new(store, scroller, workspace, new TestWindowResizeSynchronizer(), new TestWindowCloser(), new TestWindowStateController(), snapPlacementResolver, occupancyResolver);
+        DesktopWindowPlacementCoordinator placementCoordinator = new(store, scroller, workspace, new TestWindowResizeSynchronizer(), new TestWindowCloser(), new TestWindowStateController(), new TestWindowPageTransitionGuard(), snapPlacementResolver, occupancyResolver);
         return new DesktopWindowGroupDragCoordinator(store, workspace, pager, dragPositionResolver, occupancyResolver, placementCoordinator);
     }
 

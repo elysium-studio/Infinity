@@ -938,7 +938,7 @@ public sealed partial class DesktopScrollPreviewView :
         args.Handled = true;
     }
 
-    internal bool TryHandleGlobalKeyDown(int virtualKeyCode, bool controlDown, bool shiftDown, bool menuDown)
+    internal bool TryHandleGlobalKeyDown(int virtualKeyCode, bool controlDown, bool shiftDown, bool menuDown, bool windowsDown)
     {
         if (!isRunning ||
             ApplicationPickerFlyout.IsOpen ||
@@ -947,7 +947,7 @@ public sealed partial class DesktopScrollPreviewView :
             return false;
         }
 
-        return inputController.TryHandleGlobalKeyDown(virtualKeyCode, controlDown, shiftDown, menuDown, RemoveLastFilterCharacter, AppendFilterText, FocusWindowSearchBox);
+        return inputController.TryHandleGlobalKeyDown(virtualKeyCode, controlDown, shiftDown, menuDown, windowsDown, RemoveLastFilterCharacter, AppendFilterText, FocusWindowSearchBox);
     }
 
     private void FocusWindowSearchBox()

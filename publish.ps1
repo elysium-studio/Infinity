@@ -167,7 +167,7 @@ function Send-SftpRelease
 
     $SftpBasePath = $SftpBasePath.Replace('\', '/').TrimEnd('/')
     $sftpFeedsPath = "$SftpBasePath/feeds"
-    $sftpFeedPath = "$sftpFeedsPath/infinity"
+    $sftpFeedPath = "$sftpFeedsPath/infinity2"
     $sftpReleaseLogPath = "$sftpFeedPath/releases.json"
 
     Write-Host ""
@@ -733,8 +733,8 @@ function Send-MicrosoftStoreRelease
 
 $ProjectPath = "$PSScriptRoot\Infinity.Shell.WinUI\Infinity.Shell.WinUI.csproj"
 $NativeProjectPath = "$PSScriptRoot\Infinity.Platform.Windows.Native\Infinity.Platform.Windows.Native.vcxproj"
-$ReleaseLogPath = "$PSScriptRoot\Publish\releases.json"
-$FeedPath = "$PSScriptRoot\Publish\Feed"
+$ReleaseLogPath = "$PSScriptRoot\Publish\releases.infinity2.json"
+$FeedPath = "$PSScriptRoot\Publish\Feed\infinity2"
 $SigningMetadataPath = "$PSScriptRoot\Publish\signing-metadata.json"
 
 $releases = @()

@@ -14,6 +14,7 @@ internal sealed class DesktopOverlayTopMostCoordinator(
     private const long PromotionCooldownMilliseconds = 75;
 
     private int isStarted;
+    private int isSuspended;
     private int promotionQueued;
     private long lastPromotionTick;
 
@@ -30,7 +31,7 @@ internal sealed class DesktopOverlayTopMostCoordinator(
 
     public void PromoteNow()
     {
-        if (!isActive())
+        if (Volatile.Read(ref isSuspended) != 0 || !isActive())
         {
             return;
         }
@@ -39,7 +40,25 @@ internal sealed class DesktopOverlayTopMostCoordinator(
         promote();
     }
 
-    public void Reset() => Interlocked.Exchange(ref promotionQueued, 0);
+    public void Suspend()
+    {
+        Interlocked.Exchange(ref isSuspended, 1);
+        Interlocked.Exchange(ref promotionQueued, 0);
+    }
+
+    public void Resume()
+    {
+        if (Interlocked.Exchange(ref isSuspended, 0) != 0)
+        {
+            PromoteNow();
+        }
+    }
+
+    public void Reset()
+    {
+        Interlocked.Exchange(ref isSuspended, 0);
+        Interlocked.Exchange(ref promotionQueued, 0);
+    }
 
     private void HandleForegroundChanged(nint handle) => QueuePromotion(ignoreCooldown: true);
 
@@ -47,7 +66,7 @@ internal sealed class DesktopOverlayTopMostCoordinator(
 
     private void QueuePromotion(bool ignoreCooldown)
     {
-        if (!isActive())
+        if (Volatile.Read(ref isSuspended) != 0 || !isActive())
         {
             return;
         }
