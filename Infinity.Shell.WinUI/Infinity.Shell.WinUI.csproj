@@ -20,6 +20,7 @@
 		<StartupObject>Infinity.Shell.WinUI.Start</StartupObject>
 		<EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
 		<PublishAot>true</PublishAot>
+		<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
 		<IsAotCompatible>true</IsAotCompatible>
 		<ServerGarbageCollection>false</ServerGarbageCollection>
 		<ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>

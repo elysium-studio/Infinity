@@ -901,7 +901,6 @@ Write-Host "Publishing Infinity v$Version" -ForegroundColor Cyan
 & dotnet publish $ProjectPath -c Release -r win-x64 -o $OutputPath `
     "-p:Platform=x64" `
     "-p:SelfContained=true" `
-    "-p:WindowsAppSDKSelfContained=true" `
     "-p:PublishAot=true" `
     "-p:TrimmerSingleWarn=false" `
     "-p:DebugType=None" `
