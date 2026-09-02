@@ -1082,7 +1082,7 @@ $newEntry = [PSCustomObject]@{
             architecture = $_.Name
             runtime = $_.Runtime
             fileName = $_.InstallerFileName
-            url = "$FeedBaseUrl/$($_.InstallerFileName)"
+            url = "$FeedBaseUrl/$($_.InstallerFileName)?v=$([Uri]::EscapeDataString($Version))"
         }
     })
 }
