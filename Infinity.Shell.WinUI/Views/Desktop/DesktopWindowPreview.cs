@@ -225,7 +225,6 @@ internal sealed class DesktopWindowPreview :
         Host.Opacity = opacity;
         backgroundHost.Opacity = opacity;
         focusHost.Opacity = opacity;
-        preview?.SetOpacity(ToFloat(opacity));
         ApplyInteractionState();
     }
 
@@ -267,7 +266,6 @@ internal sealed class DesktopWindowPreview :
         Host.Scale = targetScale;
         backgroundHost.Scale = targetScale;
         focusHost.Scale = targetScale;
-        preview?.SetScale(targetScale);
 
         ApplyTranslation();
         ApplyZIndex();
@@ -286,7 +284,6 @@ internal sealed class DesktopWindowPreview :
         Host.Scale = Vector3.One;
         backgroundHost.Scale = Vector3.One;
         focusHost.Scale = Vector3.One;
-        preview?.SetScale(Vector3.One);
 
         if (!wasGroupDragLeader)
         {
@@ -302,7 +299,6 @@ internal sealed class DesktopWindowPreview :
         Host.TranslationTransition = transitionDuration.HasValue ? new Vector3Transition { Duration = transitionDuration.Value } : null;
         backgroundHost.TranslationTransition = transitionDuration.HasValue ? new Vector3Transition { Duration = transitionDuration.Value } : null;
         focusHost.TranslationTransition = transitionDuration.HasValue ? new Vector3Transition { Duration = transitionDuration.Value } : null;
-        preview?.SetTranslationTransition(transitionDuration);
 
         if (isDragging)
         {
@@ -335,7 +331,6 @@ internal sealed class DesktopWindowPreview :
         Host.TranslationTransition = null;
         backgroundHost.TranslationTransition = null;
         focusHost.TranslationTransition = null;
-        preview?.SetTranslationTransition(null);
     }
 
     public void Dispose()
@@ -637,7 +632,6 @@ internal sealed class DesktopWindowPreview :
         Host.Translation = translation;
         backgroundHost.Translation = translation;
         focusHost.Translation = translation;
-        preview?.SetOffset(translation);
     }
 
     private void ApplySize(double targetWidth, double targetHeight)
@@ -651,7 +645,6 @@ internal sealed class DesktopWindowPreview :
         Host.CenterPoint = new Vector3(ToFloat(targetWidth / 2), ToFloat(targetHeight / 2), 0);
         backgroundHost.CenterPoint = Host.CenterPoint;
         focusHost.CenterPoint = Host.CenterPoint;
-        preview?.SetCenterPoint(Host.CenterPoint);
         preview?.Update(targetWidth, targetHeight, true);
     }
 
@@ -679,7 +672,6 @@ internal sealed class DesktopWindowPreview :
         Canvas.SetZIndex(Host, valueToApply);
         Canvas.SetZIndex(backgroundHost, valueToApply);
         Canvas.SetZIndex(focusHost, valueToApply);
-        preview?.SetZIndex(valueToApply);
     }
 
     private void ApplyInteractionState() => Host.IsHitTestVisible = interactionEnabled && isFilterMatch && !isGroupStacked;
@@ -696,10 +688,8 @@ internal sealed class DesktopWindowPreview :
         Host.TranslationTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
         backgroundHost.TranslationTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
         focusHost.TranslationTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
-        preview?.SetTranslationTransition(duration);
         Host.ScaleTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
         backgroundHost.ScaleTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
         focusHost.ScaleTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
-        preview?.SetScaleTransition(duration);
     }
 }

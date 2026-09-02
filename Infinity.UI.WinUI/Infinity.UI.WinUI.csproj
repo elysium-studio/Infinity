@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <EnablePreviewFeatures>true</EnablePreviewFeatures>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Platforms>AnyCPU;x64</Platforms>
+    <Platforms>AnyCPU;x64;ARM64</Platforms>
   </PropertyGroup>
   <ItemGroup>
     <AdditionalFiles Include="NativeMethods.txt" />

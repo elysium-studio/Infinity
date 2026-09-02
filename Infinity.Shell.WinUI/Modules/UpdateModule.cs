@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
 using System;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace Infinity.Shell.WinUI;
@@ -28,6 +29,13 @@ public sealed class UpdateModule :
         services.AddUpdateController(configuration =>
         {
             configuration.FeedUrl = "https://elysiumstud.io/feeds/infinity2";
+            configuration.Channel = RuntimeInformation.ProcessArchitecture switch
+            {
+                Architecture.X64 => "win-x64",
+                Architecture.Arm64 => "win-arm64",
+                _ => throw new PlatformNotSupportedException(
+                    $"Infinity updates are not available for {RuntimeInformation.ProcessArchitecture}.")
+            };
         });
 
         services.AddSingleton<AppToastNotifier>();

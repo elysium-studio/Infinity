@@ -41,7 +41,6 @@ public sealed partial class DesktopScrollPreviewView :
     private readonly DesktopOverviewChromeAnimator chromeAnimator;
     private readonly DesktopOverviewLayoutPresenter layoutPresenter;
     private readonly DesktopPageStrip pageStrip;
-    private readonly DesktopThumbnailCompositionLayer thumbnailLayer;
     private readonly DesktopWindowPreviewCollection previews;
     private readonly DesktopDragCursorConfinement cursorConfinement;
     private readonly DesktopApplicationDockContextMenuBuilder applicationDockContextMenuBuilder;
@@ -65,7 +64,7 @@ public sealed partial class DesktopScrollPreviewView :
     private int monitorHeight;
     private int foregroundGeneration;
 
-    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IPanState panState, IPager pager, IScroller scroller, IWorkspace workspace, IScrollInputSuppression scrollInputSuppression, IDesktopBackgroundSource backgroundSource, DesktopOverviewConfiguration overviewConfiguration, DesktopOverviewForegroundThemeResolver foregroundThemeResolver, DesktopScrollPreviewAnimator animator, DesktopOverviewChromeAnimator chromeAnimator, DesktopOverviewLayoutPresenter layoutPresenter, DesktopPageStrip pageStrip, DesktopThumbnailCompositionLayer thumbnailLayer, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationDockViewModel applicationDock, DesktopApplicationDockContextMenuBuilder applicationDockContextMenuBuilder, DesktopApplicationDockPressAnimator applicationDockPressAnimator, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator, DesktopOverviewInputController inputController, DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator, ILogger<DesktopScrollPreviewView> logger)
+    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IPanState panState, IPager pager, IScroller scroller, IWorkspace workspace, IScrollInputSuppression scrollInputSuppression, IDesktopBackgroundSource backgroundSource, DesktopOverviewConfiguration overviewConfiguration, DesktopOverviewForegroundThemeResolver foregroundThemeResolver, DesktopScrollPreviewAnimator animator, DesktopOverviewChromeAnimator chromeAnimator, DesktopOverviewLayoutPresenter layoutPresenter, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationDockViewModel applicationDock, DesktopApplicationDockContextMenuBuilder applicationDockContextMenuBuilder, DesktopApplicationDockPressAnimator applicationDockPressAnimator, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator, DesktopOverviewInputController inputController, DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator, ILogger<DesktopScrollPreviewView> logger)
     {
         InitializeComponent();
 
@@ -83,7 +82,6 @@ public sealed partial class DesktopScrollPreviewView :
         this.chromeAnimator = chromeAnimator;
         this.layoutPresenter = layoutPresenter;
         this.pageStrip = pageStrip;
-        this.thumbnailLayer = thumbnailLayer;
         this.previews = previews;
         this.cursorConfinement = cursorConfinement;
         this.applicationLaunchCoordinator = applicationLaunchCoordinator;
@@ -183,7 +181,6 @@ public sealed partial class DesktopScrollPreviewView :
             spacingProgress = 1;
 
             SubscribeEvents();
-            thumbnailLayer.Attach(ThumbnailCompositionSurface);
             pageStrip.Start(PageCanvas, PageShadowCanvas, PageTitleCanvas, PreviewSurface, animator.Scale);
             snapInteractionCoordinator.Start(monitorOriginX, monitorOriginY);
             Synchronise();

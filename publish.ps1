@@ -269,13 +269,16 @@ function Send-GitHubRelease
         [string]$RepoPath,
         [string]$Version,
         [string[]]$ReleaseNotes,
-        [string]$AssetPath
+        [string[]]$AssetPaths
     )
 
-    if (-not (Test-Path $AssetPath))
+    foreach ($assetPath in $AssetPaths)
     {
-        Write-Host "Release asset not found: $AssetPath" -ForegroundColor Red
-        exit 1
+        if (-not (Test-Path $assetPath))
+        {
+            Write-Host "Release asset not found: $assetPath" -ForegroundColor Red
+            exit 1
+        }
     }
 
     Write-Host ""
@@ -315,9 +318,7 @@ function Send-GitHubRelease
     {
         Set-Content -Path $notesPath -Value $notesBody -Encoding UTF8
 
-        $ghArgs = @(
-            "release", "create", $tagName
-            $AssetPath
+        $ghArgs = @("release", "create", $tagName) + $AssetPaths + @(
             "--title", $releaseTitle
             "--notes-file", $notesPath
         )
@@ -352,7 +353,8 @@ function Send-GitHubRelease
         }
     }
 
-    Write-Host "GitHub release $tagName created with asset $(Split-Path $AssetPath -Leaf)" -ForegroundColor Green
+    $assetNames = ($AssetPaths | ForEach-Object { Split-Path $_ -Leaf }) -join ", "
+    Write-Host "GitHub release $tagName created with assets $assetNames" -ForegroundColor Green
 }
 
 function Test-AzureSigningAuth
@@ -417,7 +419,8 @@ function Get-MSBuildPath
 function Build-NativeProject
 {
     param(
-        [string]$VcxprojPath
+        [string]$VcxprojPath,
+        [string]$Platform
     )
 
     if (-not (Test-Path $VcxprojPath))
@@ -438,8 +441,9 @@ function Build-NativeProject
     Write-Host "Building native component (MSBuild)..." -ForegroundColor Cyan
     Write-Host "Project  : $VcxprojPath" -ForegroundColor DarkGray
     Write-Host "MSBuild  : $msbuildPath" -ForegroundColor DarkGray
+    Write-Host "Platform : $Platform" -ForegroundColor DarkGray
 
-    & $msbuildPath $VcxprojPath /p:Configuration=Release /p:Platform=x64 /nologo /m
+    & $msbuildPath $VcxprojPath /p:Configuration=Release "/p:Platform=$Platform" /nologo /m
 
     if ($LASTEXITCODE -ne 0)
     {
@@ -735,7 +739,24 @@ $ProjectPath = "$PSScriptRoot\Infinity.Shell.WinUI\Infinity.Shell.WinUI.csproj"
 $NativeProjectPath = "$PSScriptRoot\Infinity.Platform.Windows.Native\Infinity.Platform.Windows.Native.vcxproj"
 $ReleaseLogPath = "$PSScriptRoot\Publish\releases.infinity2.json"
 $FeedPath = "$PSScriptRoot\Publish\Feed\infinity2"
+$FeedBaseUrl = "https://elysiumstud.io/feeds/infinity2"
 $SigningMetadataPath = "$PSScriptRoot\Publish\signing-metadata.json"
+$Architectures = @(
+    [PSCustomObject]@{
+        Name              = "x64"
+        Platform          = "x64"
+        Runtime           = "win-x64"
+        Channel           = "win-x64"
+        InstallerFileName = "Infinity-win-x64-Setup.exe"
+    },
+    [PSCustomObject]@{
+        Name              = "arm64"
+        Platform          = "ARM64"
+        Runtime           = "win-arm64"
+        Channel           = "win-arm64"
+        InstallerFileName = "Infinity-win-arm64-Setup.exe"
+    }
+)
 
 $releases = @()
 
@@ -766,12 +787,31 @@ if ($GitReleaseOnly)
         exit 1
     }
 
-    $InstallerPath = "$FeedPath\Infinity-win-Setup.exe"
+    $releaseInstallers = @($existingRelease.installers)
 
-    if (-not (Test-Path $InstallerPath))
+    if ($releaseInstallers.Count -gt 0)
     {
-        Write-Host "Installer not found at $InstallerPath. Build it first without -GitReleaseOnly." -ForegroundColor Red
-        exit 1
+        $installerPaths = @($releaseInstallers | ForEach-Object { Join-Path $FeedPath $_.fileName })
+        $missingInstallerPaths = @($installerPaths | Where-Object { -not (Test-Path $_) })
+
+        if ($missingInstallerPaths.Count -gt 0)
+        {
+            Write-Host "Release v$Version is missing the following installer assets:" -ForegroundColor Red
+            $missingInstallerPaths | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+            exit 1
+        }
+    }
+    else
+    {
+        $legacyInstallerPath = Join-Path $FeedPath "Infinity-win-Setup.exe"
+
+        if (-not (Test-Path $legacyInstallerPath))
+        {
+            Write-Host "Installer was not found: $legacyInstallerPath" -ForegroundColor Red
+            exit 1
+        }
+
+        $installerPaths = @($legacyInstallerPath)
     }
 
     $releaseNotes = @($existingRelease.releaseNotes)
@@ -779,7 +819,7 @@ if ($GitReleaseOnly)
     Write-Host ""
     Write-Host "Skipping build, signing, packaging and SFTP - releasing existing v$Version to GitHub only" -ForegroundColor Cyan
 
-    Send-GitHubRelease -RepoPath $PSScriptRoot -Version $Version -ReleaseNotes $releaseNotes -AssetPath $InstallerPath
+    Send-GitHubRelease -RepoPath $PSScriptRoot -Version $Version -ReleaseNotes $releaseNotes -AssetPaths $installerPaths
 
     exit 0
 }
@@ -873,8 +913,9 @@ while ($true)
     $releaseNotes += $line
 }
 
-$OutputPath = "$PSScriptRoot\Publish\$Version\Assets"
-$InstallerPath = "$FeedPath\Infinity-win-Setup.exe"
+$ReleaseOutputPath = "$PSScriptRoot\Publish\$Version"
+$OutputPaths = @{}
+$InstallerPaths = @()
 
 if (Test-Path "$PSScriptRoot\Publish\$Version")
 {
@@ -893,67 +934,111 @@ if (-not $SkipSigning)
     Write-Host "Signing metadata written to $SigningMetadataPath" -ForegroundColor DarkGray
 }
 
-Build-NativeProject -VcxprojPath $NativeProjectPath
-
-Write-Host ""
-Write-Host "Publishing Infinity v$Version" -ForegroundColor Cyan
-
-& dotnet publish $ProjectPath -c Release -r win-x64 -o $OutputPath `
-    "-p:Platform=x64" `
-    "-p:SelfContained=true" `
-    "-p:PublishAot=true" `
-    "-p:TrimmerSingleWarn=false" `
-    "-p:DebugType=None" `
-    "-p:DebugSymbols=false" `
-    "-p:StripSymbols=true" `
-    "-p:Version=$dotnetVersion" `
-    "-p:AssemblyVersion=$dotnetVersion" `
-    "-p:FileVersion=$dotnetVersion"
-
-if ($LASTEXITCODE -ne 0)
+foreach ($architecture in $Architectures)
 {
-    Write-Host "Build failed with exit code $LASTEXITCODE" -ForegroundColor Red
-    exit $LASTEXITCODE
+    Build-NativeProject -VcxprojPath $NativeProjectPath -Platform $architecture.Platform
+
+    $outputPath = Join-Path $ReleaseOutputPath "Assets\$($architecture.Name)"
+    $OutputPaths[$architecture.Name] = $outputPath
+
+    Write-Host ""
+    Write-Host "Publishing Infinity v$Version ($($architecture.Name))" -ForegroundColor Cyan
+
+    & dotnet publish $ProjectPath -c Release -r $architecture.Runtime -o $outputPath `
+        "-p:Platform=$($architecture.Platform)" `
+        "-p:SelfContained=true" `
+        "-p:PublishAot=true" `
+        "-p:TrimmerSingleWarn=false" `
+        "-p:DebugType=None" `
+        "-p:DebugSymbols=false" `
+        "-p:StripSymbols=true" `
+        "-p:Version=$dotnetVersion" `
+        "-p:AssemblyVersion=$dotnetVersion" `
+        "-p:FileVersion=$dotnetVersion"
+
+    if ($LASTEXITCODE -ne 0)
+    {
+        Write-Host "$($architecture.Name) build failed with exit code $LASTEXITCODE" -ForegroundColor Red
+        exit $LASTEXITCODE
+    }
+
+    $exePath = Get-ChildItem -Path $outputPath -Filter "*.exe" | Select-Object -First 1
+
+    if ($exePath)
+    {
+        $fileSize = [math]::Round($exePath.Length / 1MB, 2)
+        Write-Host "$($architecture.Name) build successful" -ForegroundColor Green
+        Write-Host "Executable : $($exePath.FullName)" -ForegroundColor Green
+        Write-Host "Size       : $fileSize MB" -ForegroundColor Green
+    }
+
+    Write-Host "Packaging $($architecture.Name) with Velopack..." -ForegroundColor Cyan
+
+    $vpkArgs = @(
+        "pack"
+        "--packId", "Infinity"
+        "--packVersion", $Version
+        "--packDir", $outputPath
+        "--outputDir", $FeedPath
+        "--mainExe", "Infinity.exe"
+        "--runtime", $architecture.Runtime
+        "--channel", $architecture.Channel
+    )
+
+    if (-not $SkipSigning)
+    {
+        $vpkArgs += @("--azureTrustedSignFile", $SigningMetadataPath)
+    }
+
+    & vpk @vpkArgs
+
+    if ($LASTEXITCODE -ne 0)
+    {
+        Write-Host "$($architecture.Name) Velopack packaging failed with exit code $LASTEXITCODE" -ForegroundColor Red
+        exit $LASTEXITCODE
+    }
+
+    $installerPath = Join-Path $FeedPath $architecture.InstallerFileName
+
+    if (-not (Test-Path $installerPath))
+    {
+        Write-Host "Installer was not found: $installerPath" -ForegroundColor Red
+        exit 1
+    }
+
+    $InstallerPaths += $installerPath
 }
 
-$exePath = Get-ChildItem -Path $OutputPath -Filter "*.exe" | Select-Object -First 1
+# Keep the existing website download URL working while consumers adopt the
+# architecture-specific installer records in releases.json.
+$x64InstallerPath = Join-Path $FeedPath "Infinity-win-x64-Setup.exe"
 
-if ($exePath)
+if (Test-Path $x64InstallerPath)
 {
-    $fileSize = [math]::Round($exePath.Length / 1MB, 2)
-    Write-Host "Build successful" -ForegroundColor Green
-    Write-Host "Executable : $($exePath.FullName)" -ForegroundColor Green
-    Write-Host "Size       : $fileSize MB" -ForegroundColor Green
+    Copy-Item $x64InstallerPath (Join-Path $FeedPath "Infinity-win-Setup.exe") -Force
 }
 
-Write-Host "Packaging with Velopack..." -ForegroundColor Cyan
+# Existing Infinity 2 installations were packaged on the default 'win' channel.
+# Mirror the x64 channel index so those installations migrate to win-x64 on update.
+$x64ReleaseIndex = Join-Path $FeedPath "releases.win-x64.json"
 
-$vpkArgs = @(
-    "pack"
-    "--packId", "Infinity"
-    "--packVersion", $Version
-    "--packDir", $OutputPath
-    "--outputDir", $FeedPath
-    "--mainExe", "Infinity.exe"
-)
-
-if (-not $SkipSigning)
+if (Test-Path $x64ReleaseIndex)
 {
-    $vpkArgs += @("--azureTrustedSignFile", $SigningMetadataPath)
+    Copy-Item $x64ReleaseIndex (Join-Path $FeedPath "releases.win.json") -Force
 }
 
-& vpk @vpkArgs
+$x64AssetsIndex = Join-Path $FeedPath "assets.win-x64.json"
 
-if ($LASTEXITCODE -ne 0)
+if (Test-Path $x64AssetsIndex)
 {
-    Write-Host "Velopack packaging failed with exit code $LASTEXITCODE" -ForegroundColor Red
-    exit $LASTEXITCODE
+    Copy-Item $x64AssetsIndex (Join-Path $FeedPath "assets.win.json") -Force
 }
 
-if (-not (Test-Path $InstallerPath))
+$x64LegacyIndex = Join-Path $FeedPath "RELEASES-win-x64"
+
+if (Test-Path $x64LegacyIndex)
 {
-    Write-Host "Installer was not found: $InstallerPath" -ForegroundColor Red
-    exit 1
+    Copy-Item $x64LegacyIndex (Join-Path $FeedPath "RELEASES") -Force
 }
 
 if (-not $SkipMicrosoftStore)
@@ -963,7 +1048,7 @@ if (-not $SkipMicrosoftStore)
 
     $storeArguments = @{
         Version              = $Version
-        InputDirectory       = $OutputPath
+        InputDirectory       = $OutputPaths["x64"]
         ProductId            = $MicrosoftStoreProductId
         IdentityName         = $MicrosoftStoreIdentityName
         Publisher            = $MicrosoftStorePublisher
@@ -992,6 +1077,14 @@ $newEntry = [PSCustomObject]@{
     version = $Version
     date = (Get-Date -Format "yyyy-MM-dd")
     releaseNotes = $releaseNotes
+    installers = @($Architectures | ForEach-Object {
+        [PSCustomObject]@{
+            architecture = $_.Name
+            runtime = $_.Runtime
+            fileName = $_.InstallerFileName
+            url = "$FeedBaseUrl/$($_.InstallerFileName)"
+        }
+    })
 }
 
 $releases += $newEntry
@@ -1008,5 +1101,5 @@ if (-not $SkipSftpUpload)
 
 if (-not $SkipGitRelease)
 {
-    Send-GitHubRelease -RepoPath $PSScriptRoot -Version $Version -ReleaseNotes $releaseNotes -AssetPath $InstallerPath
+    Send-GitHubRelease -RepoPath $PSScriptRoot -Version $Version -ReleaseNotes $releaseNotes -AssetPaths $InstallerPaths
 }

@@ -53,7 +53,6 @@ public sealed class DesktopModule :
             .AddSingleton<DesktopDragCursorConfinement>()
             .AddSingleton<DesktopWindowDragPositionResolver>()
             .AddSingleton<DesktopWindowContextMenuBuilder>()
-            .AddSingleton<DesktopThumbnailCompositionLayer>()
             .AddSingleton<DesktopWindowPreviewFactory>()
             .AddSingleton<DesktopWindowPreviewCollection>()
             .AddSingleton<DesktopWindowGroupStackAnimator>()
@@ -107,7 +106,6 @@ public sealed class DesktopModule :
         DesktopOverviewChromeAnimator chromeAnimator = provider.GetRequiredService<DesktopOverviewChromeAnimator>();
         DesktopOverviewLayoutPresenter layoutPresenter = provider.GetRequiredService<DesktopOverviewLayoutPresenter>();
         DesktopPageStrip pageStrip = provider.GetRequiredService<DesktopPageStrip>();
-        DesktopThumbnailCompositionLayer thumbnailLayer = provider.GetRequiredService<DesktopThumbnailCompositionLayer>();
         DesktopWindowPreviewCollection previews = provider.GetRequiredService<DesktopWindowPreviewCollection>();
         DesktopDragCursorConfinement cursorConfinement = provider.GetRequiredService<DesktopDragCursorConfinement>();
         DesktopShortcutHintsViewModel shortcutHints = provider.GetRequiredService<DesktopShortcutHintsViewModel>();
@@ -120,7 +118,7 @@ public sealed class DesktopModule :
         DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator = provider.GetRequiredService<DesktopWindowSnapInteractionCoordinator>();
         ILogger<DesktopScrollPreviewView> logger = provider.GetRequiredService<ILogger<DesktopScrollPreviewView>>();
 
-        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, panState, pager, scroller, workspace, scrollInputSuppression, backgroundSource, overviewConfiguration, foregroundThemeResolver, animator, chromeAnimator, layoutPresenter, pageStrip, thumbnailLayer, previews, cursorConfinement, shortcutHints, applicationPicker, applicationDock, applicationDockContextMenuBuilder, applicationDockPressAnimator, applicationLaunchCoordinator, inputController, snapInteractionCoordinator, logger);
+        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, panState, pager, scroller, workspace, scrollInputSuppression, backgroundSource, overviewConfiguration, foregroundThemeResolver, animator, chromeAnimator, layoutPresenter, pageStrip, previews, cursorConfinement, shortcutHints, applicationPicker, applicationDock, applicationDockContextMenuBuilder, applicationDockPressAnimator, applicationLaunchCoordinator, inputController, snapInteractionCoordinator, logger);
     }
 
     private static DesktopOverviewView CreateDesktopOverviewView(IServiceProvider provider)

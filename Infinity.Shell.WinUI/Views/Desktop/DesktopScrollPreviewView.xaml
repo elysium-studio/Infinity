@@ -153,7 +153,6 @@
                 <Canvas x:Name="PageCanvas" />
             </Canvas>
             <Canvas x:Name="PreviewBackgroundCanvas" IsHitTestVisible="False" />
-            <Grid x:Name="ThumbnailCompositionSurface" IsHitTestVisible="False" />
             <Canvas x:Name="PreviewCanvas" />
             <Canvas x:Name="FocusCanvas" IsHitTestVisible="False" />
         </Grid>
