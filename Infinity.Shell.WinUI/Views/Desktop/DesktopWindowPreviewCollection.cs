@@ -11,6 +11,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
     IDisposable
 {
     private readonly Dictionary<nint, DesktopWindowPreview> previews = [];
+    private Canvas? backgroundHost;
     private Canvas? host;
     private Canvas? focusHost;
     private string filterText = string.Empty;
@@ -25,10 +26,11 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
     public event Action<nint>? WindowDragCompleted;
 
-    public IReadOnlyList<TrackedWindow> Synchronise(Canvas canvas, Canvas focusCanvas, IEnumerable<TrackedWindow> trackedWindows, double layoutScale)
+    public IReadOnlyList<TrackedWindow> Synchronise(Canvas backgroundCanvas, Canvas canvas, Canvas focusCanvas, IEnumerable<TrackedWindow> trackedWindows, double layoutScale)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
 
+        backgroundHost = backgroundCanvas;
         host = canvas;
         focusHost = focusCanvas;
 
@@ -46,7 +48,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
             if (!previews.TryGetValue(trackedWindow.Handle, out DesktopWindowPreview? preview))
             {
-                preview = factory.Create(canvas, focusCanvas, trackedWindow.Handle, layoutScale);
+                preview = factory.Create(backgroundCanvas, canvas, focusCanvas, trackedWindow.Handle, layoutScale);
                 preview.Invoked += HandleWindowInvoked;
                 preview.SelectionToggled += HandleWindowSelectionToggled;
                 preview.PositionChanged += HandleWindowPositionChanged;
@@ -170,9 +172,11 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
         previews.Clear();
 
+        backgroundHost?.Children.Clear();
         host?.Children.Clear();
         focusHost?.Children.Clear();
 
+        backgroundHost = null;
         host = null;
         focusHost = null;
         filterText = string.Empty;
@@ -209,6 +213,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         preview.DragStarted -= HandleWindowDragStarted;
         preview.DragCompleted -= HandleWindowDragCompleted;
         preview.Dispose();
+        backgroundHost?.Children.Remove(preview.BackgroundHost);
         host?.Children.Remove(preview.Host);
         focusHost?.Children.Remove(preview.FocusHost);
 

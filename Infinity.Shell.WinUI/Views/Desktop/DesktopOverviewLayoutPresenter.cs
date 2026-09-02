@@ -18,6 +18,7 @@ public sealed class DesktopOverviewLayoutPresenter(
     private DesktopPageReorderPreviewState? pageReorderState;
 
     public void Synchronise(
+        Canvas previewBackgroundCanvas,
         Canvas previewCanvas,
         Canvas focusCanvas,
         double scale,
@@ -26,6 +27,7 @@ public sealed class DesktopOverviewLayoutPresenter(
         double spacingProgress)
     {
         IReadOnlyList<TrackedWindow> windows = previews.Synchronise(
+            previewBackgroundCanvas,
             previewCanvas,
             focusCanvas,
             windowCollection.AllTrackedWindows,

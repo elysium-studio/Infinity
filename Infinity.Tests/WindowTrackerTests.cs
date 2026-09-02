@@ -96,6 +96,38 @@ public sealed class WindowTrackerTests
         }
     }
 
+    [Fact]
+    public void ResizeAtSamePositionRefreshesTrackedWindowGeometry()
+    {
+        WindowStore store = new();
+        TestWindowEventListener listener = new();
+        TestGeometryReader geometry = new();
+        WindowTracker tracker = CreateTracker(store, listener, geometry);
+        tracker.Start();
+
+        try
+        {
+            tracker.TryRegisterExisting(new IntPtr(5));
+            TrackedWindow? changedWindow = null;
+            store.WindowChanged += (_, window) => changedWindow = window;
+
+            geometry.Width = 1280;
+            geometry.Height = 720;
+            listener.RaiseWindowLocationChanged(new IntPtr(5));
+
+            Assert.True(store.TryGet(new IntPtr(5), out TrackedWindow window));
+            Assert.Equal(100, window.CanvasX);
+            Assert.Equal(200, window.CanvasY);
+            Assert.Equal(1280, window.Width);
+            Assert.Equal(720, window.Height);
+            Assert.Same(window, changedWindow);
+        }
+        finally
+        {
+            tracker.Stop();
+        }
+    }
+
     private static WindowTracker CreateTracker(IWindowStore store,
         IWindowEventListener listener,
         IWindowGeometryReader geometry,
@@ -110,6 +142,7 @@ public sealed class WindowTrackerTests
             filter,
             new TestAncestorResolver(),
             new TestRestoreGuard(),
+            new TestPageTransitionGuard(),
             new TestMoveGuard(),
             new TestConcealer(),
             new TestDragGuard(),
@@ -129,16 +162,24 @@ public sealed class WindowTrackerTests
 
         public bool IsWindowMinimised { get; set; }
 
+        public int X { get; set; } = 100;
+
+        public int Y { get; set; } = 200;
+
+        public int Width { get; set; } = 800;
+
+        public int Height { get; set; } = 600;
+
         public bool IsMinimised(IntPtr windowHandle) => IsWindowMinimised;
 
         public bool IsVisible(IntPtr windowHandle) => IsWindowVisible;
 
         public bool TryReadGeometry(IntPtr windowHandle, out int x, out int y, out int width, out int height)
         {
-            x = 100;
-            y = 200;
-            width = 800;
-            height = 600;
+            x = X;
+            y = Y;
+            width = Width;
+            height = Height;
             return true;
         }
 
@@ -164,6 +205,24 @@ public sealed class WindowTrackerTests
         public bool IsRestoring(IntPtr windowHandle) => false;
 
         public void MarkRestoring(IntPtr windowHandle)
+        {
+        }
+    }
+
+    private sealed class TestPageTransitionGuard :
+        IWindowPageTransitionGuard
+    {
+        public void PreservePage(nint windowHandle, int page, int workspaceWidth, int workAreaX)
+        {
+        }
+
+        public bool TryMapToPreservedPage(nint windowHandle, int candidateCanvasX, int windowWidth, out int mappedCanvasX)
+        {
+            mappedCanvasX = candidateCanvasX;
+            return false;
+        }
+
+        public void Clear(nint windowHandle)
         {
         }
     }
@@ -255,11 +314,7 @@ public sealed class WindowTrackerTests
             remove { }
         }
 
-        event Action<IntPtr>? IWindowEventListener.WindowLocationChanged
-        {
-            add { }
-            remove { }
-        }
+        public event Action<IntPtr>? WindowLocationChanged;
 
         event Action<IntPtr>? IWindowEventListener.DragStarted
         {
@@ -297,6 +352,8 @@ public sealed class WindowTrackerTests
         public void RaiseMinimizeStarted(IntPtr windowHandle) => MinimizeStarted?.Invoke(windowHandle);
 
         public void RaiseMinimizeEnded(IntPtr windowHandle) => MinimizeEnded?.Invoke(windowHandle);
+
+        public void RaiseWindowLocationChanged(IntPtr windowHandle) => WindowLocationChanged?.Invoke(windowHandle);
 
         public void Start()
         {

@@ -1,4 +1,4 @@
-using Infinity.Platform.Abstractions;
+ using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
 
 namespace Infinity.Platform.Windows;

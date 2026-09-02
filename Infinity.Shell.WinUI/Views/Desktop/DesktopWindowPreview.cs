@@ -7,6 +7,7 @@ using System;
 using System.Numerics;
 using Windows.Foundation;
 using Windows.System;
+using DispatcherQueueTimer = Microsoft.UI.Dispatching.DispatcherQueueTimer;
 
 namespace Infinity.Shell.WinUI;
 
@@ -15,10 +16,12 @@ internal sealed class DesktopWindowPreview :
 {
     private const float ShadowDepth = 40;
     private const double DragThreshold = 4;
+    private static readonly TimeSpan SourceRefreshDelay = TimeSpan.FromMilliseconds(180);
     private const int DraggedZIndex = 1_000_000;
     private const int DraggedPageZIndex = 999_000;
 
     private readonly ThumbnailCompositionPreview? preview;
+    private readonly Border backgroundHost;
     private readonly Border focusHost;
     private readonly Grid focusVisual;
     private readonly Grid selectionVisual;
@@ -31,6 +34,7 @@ internal sealed class DesktopWindowPreview :
     private readonly nint windowHandle;
     private readonly double layoutScale;
     private readonly float shadowDepth;
+    private DispatcherQueueTimer? sourceRefreshTimer;
     private uint? dragPointerId;
     private Point dragStartPoint;
     private Point dragLastPoint;
@@ -61,10 +65,11 @@ internal sealed class DesktopWindowPreview :
     private double heldGroupLeaderX;
     private double heldGroupLeaderY;
 
-    public DesktopWindowPreview(nint windowHandle, Border host, Border focusHost, ThumbnailCompositionPreview? preview, Grid focusVisual, Grid selectionVisual, ITrackedWindowDragController dragController, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, double layoutScale)
+    public DesktopWindowPreview(nint windowHandle, Border host, Border backgroundHost, Border focusHost, ThumbnailCompositionPreview? preview, Grid focusVisual, Grid selectionVisual, ITrackedWindowDragController dragController, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, double layoutScale)
     {
         this.windowHandle = windowHandle;
         Host = host;
+        this.backgroundHost = backgroundHost;
         this.focusHost = focusHost;
         this.preview = preview;
         this.focusVisual = focusVisual;
@@ -100,6 +105,8 @@ internal sealed class DesktopWindowPreview :
     public event Action<DesktopWindowDragCompletion>? DragCompleted;
 
     public Border Host { get; }
+
+    public Border BackgroundHost => backgroundHost;
 
     public Border FocusHost => focusHost;
 
@@ -170,6 +177,7 @@ internal sealed class DesktopWindowPreview :
                 previousOffsetY != SourceOffsetY))
         {
             preview?.RefreshSource();
+            ScheduleSourceRefresh();
         }
     }
 
@@ -215,7 +223,9 @@ internal sealed class DesktopWindowPreview :
 
         double opacity = value ? 1 : 0;
         Host.Opacity = opacity;
+        backgroundHost.Opacity = opacity;
         focusHost.Opacity = opacity;
+        preview?.SetOpacity(ToFloat(opacity));
         ApplyInteractionState();
     }
 
@@ -255,7 +265,9 @@ internal sealed class DesktopWindowPreview :
 
         Vector3 targetScale = new(Math.Clamp(scale, 0.82f, 1), Math.Clamp(scale, 0.82f, 1), 1);
         Host.Scale = targetScale;
+        backgroundHost.Scale = targetScale;
         focusHost.Scale = targetScale;
+        preview?.SetScale(targetScale);
 
         ApplyTranslation();
         ApplyZIndex();
@@ -272,7 +284,9 @@ internal sealed class DesktopWindowPreview :
         isGroupStacked = false;
         groupStackIndex = 0;
         Host.Scale = Vector3.One;
+        backgroundHost.Scale = Vector3.One;
         focusHost.Scale = Vector3.One;
+        preview?.SetScale(Vector3.One);
 
         if (!wasGroupDragLeader)
         {
@@ -286,7 +300,9 @@ internal sealed class DesktopWindowPreview :
     public void Update(double x, double y, double width, double height, TimeSpan? transitionDuration = null)
     {
         Host.TranslationTransition = transitionDuration.HasValue ? new Vector3Transition { Duration = transitionDuration.Value } : null;
+        backgroundHost.TranslationTransition = transitionDuration.HasValue ? new Vector3Transition { Duration = transitionDuration.Value } : null;
         focusHost.TranslationTransition = transitionDuration.HasValue ? new Vector3Transition { Duration = transitionDuration.Value } : null;
+        preview?.SetTranslationTransition(transitionDuration);
 
         if (isDragging)
         {
@@ -317,7 +333,9 @@ internal sealed class DesktopWindowPreview :
     public void ClearTranslationTransition()
     {
         Host.TranslationTransition = null;
+        backgroundHost.TranslationTransition = null;
         focusHost.TranslationTransition = null;
+        preview?.SetTranslationTransition(null);
     }
 
     public void Dispose()
@@ -339,11 +357,49 @@ internal sealed class DesktopWindowPreview :
         Host.PointerCaptureLost -= HandlePointerCaptureLost;
         Host.Tapped -= HandleTapped;
 
+        if (sourceRefreshTimer is not null)
+        {
+            sourceRefreshTimer.Stop();
+            sourceRefreshTimer.Tick -= HandleSourceRefreshTimerTick;
+            sourceRefreshTimer = null;
+        }
+
         preview?.Dispose();
         GC.SuppressFinalize(this);
     }
 
     private static float ToFloat(double value) => (float)Math.Clamp(value, -float.MaxValue, float.MaxValue);
+
+    private void ScheduleSourceRefresh()
+    {
+        if (disposed || preview is null)
+        {
+            return;
+        }
+
+        sourceRefreshTimer ??= CreateSourceRefreshTimer();
+        sourceRefreshTimer.Stop();
+        sourceRefreshTimer.Start();
+    }
+
+    private DispatcherQueueTimer CreateSourceRefreshTimer()
+    {
+        DispatcherQueueTimer timer = Host.DispatcherQueue.CreateTimer();
+        timer.Interval = SourceRefreshDelay;
+        timer.IsRepeating = false;
+        timer.Tick += HandleSourceRefreshTimerTick;
+        return timer;
+    }
+
+    private void HandleSourceRefreshTimerTick(DispatcherQueueTimer sender, object args)
+    {
+        sender.Stop();
+
+        if (!disposed)
+        {
+            preview?.RefreshSource();
+        }
+    }
 
     private void HandleTapped(object sender, TappedRoutedEventArgs args)
     {
@@ -579,17 +635,23 @@ internal sealed class DesktopWindowPreview :
         Vector3 translation = new(ToFloat(targetX), ToFloat(targetY), shadowDepth);
 
         Host.Translation = translation;
+        backgroundHost.Translation = translation;
         focusHost.Translation = translation;
+        preview?.SetOffset(translation);
     }
 
     private void ApplySize(double targetWidth, double targetHeight)
     {
         Host.Width = targetWidth;
         Host.Height = targetHeight;
+        backgroundHost.Width = targetWidth;
+        backgroundHost.Height = targetHeight;
         focusHost.Width = targetWidth;
         focusHost.Height = targetHeight;
         Host.CenterPoint = new Vector3(ToFloat(targetWidth / 2), ToFloat(targetHeight / 2), 0);
+        backgroundHost.CenterPoint = Host.CenterPoint;
         focusHost.CenterPoint = Host.CenterPoint;
+        preview?.SetCenterPoint(Host.CenterPoint);
         preview?.Update(targetWidth, targetHeight, true);
     }
 
@@ -615,7 +677,9 @@ internal sealed class DesktopWindowPreview :
                     : zIndex;
 
         Canvas.SetZIndex(Host, valueToApply);
+        Canvas.SetZIndex(backgroundHost, valueToApply);
         Canvas.SetZIndex(focusHost, valueToApply);
+        preview?.SetZIndex(valueToApply);
     }
 
     private void ApplyInteractionState() => Host.IsHitTestVisible = interactionEnabled && isFilterMatch && !isGroupStacked;
@@ -630,8 +694,12 @@ internal sealed class DesktopWindowPreview :
     private void SetGroupTransitions(TimeSpan? duration)
     {
         Host.TranslationTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
+        backgroundHost.TranslationTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
         focusHost.TranslationTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
+        preview?.SetTranslationTransition(duration);
         Host.ScaleTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
+        backgroundHost.ScaleTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
         focusHost.ScaleTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
+        preview?.SetScaleTransition(duration);
     }
 }

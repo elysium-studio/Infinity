@@ -46,7 +46,7 @@ public sealed class DesktopPageTitleViewModelTests
     }
 
     [Fact]
-    public void SelectedLayoutHighlightsEverySlot()
+    public void SelectedLayoutSelectsMatchingOption()
     {
         viewModel.ConfigureDisplay(1920, 1080, 1);
         viewModel.Bind(0, string.Empty, DesktopSnapLayoutKind.Thirds);
@@ -54,7 +54,7 @@ public sealed class DesktopPageTitleViewModelTests
         DesktopSnapLayoutOptionViewModel selected = Assert.Single(viewModel.AvailableLayouts, option => option.IsSelected);
 
         Assert.Equal(DesktopSnapLayoutKind.Thirds, selected.Kind);
-        Assert.All(selected.Slots, slot => Assert.True(slot.IsHighlighted));
+        Assert.All(selected.Slots, slot => Assert.True(slot.IsSelected));
     }
 
     [Fact]

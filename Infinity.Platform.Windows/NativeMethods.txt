@@ -42,6 +42,7 @@ GetWindowText
 GetWindowThreadProcessId
 IsHungAppWindow
 IsIconic
+IsZoomed
 IsWindowVisible
 GetCursorPos
 ClipCursor

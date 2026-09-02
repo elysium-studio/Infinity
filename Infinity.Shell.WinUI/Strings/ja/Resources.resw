@@ -434,6 +434,10 @@
   </data>
   <data name="PageLayoutArrangeButton" xml:space="preserve"><value>このページを整列</value></data>
   <data name="DesktopWindowBringToCurrentPage" xml:space="preserve"><value>現在のページに移動</value></data>
+  <data name="DesktopWindowMinimize" xml:space="preserve"><value>最小化</value></data>
+  <data name="DesktopWindowMaximize" xml:space="preserve"><value>最大化</value></data>
+  <data name="DesktopWindowRestore" xml:space="preserve"><value>元に戻す</value></data>
+  <data name="DesktopWindowNewPage" xml:space="preserve"><value>新しいページ</value></data>
   <data name="DesktopWindowSendToPage" xml:space="preserve"><value>ページに送る</value></data>
   <data name="DesktopWindowMoveToSlot" xml:space="preserve"><value>スロットに移動</value></data>
   <data name="DesktopWindowSlot" xml:space="preserve"><value>スロット {0}</value></data>
@@ -448,4 +452,4 @@
   <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>選択にウィンドウを追加または削除</value></data>
   <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>選択したウィンドウを開く</value></data>
   <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>ウィンドウを検索</value></data>
-+</root>
+</root>

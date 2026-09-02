@@ -2,9 +2,9 @@ using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Hosting;
 using System;
 using System.Numerics;
+using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
 
@@ -13,10 +13,19 @@ public sealed class ThumbnailCompositionPreview :
 {
     private const float CornerRadius = 8.0f;
 
-    private readonly FrameworkElement host;
+    private readonly FrameworkElement transformSource;
+    private readonly DesktopThumbnailCompositionLayer layer;
     private readonly IWindowPreview preview;
     private readonly SystemVisualProxyVisualPrivate proxy;
-    private readonly ContainerVisual hostContainer;
+    private readonly ContainerVisual rootVisual;
+    private readonly SpriteVisual shadowVisual;
+    private readonly CompositionColorBrush shadowSurfaceBrush;
+    private readonly ShapeVisual shadowMaskVisual;
+    private readonly CompositionSpriteShape shadowMaskShape;
+    private readonly CompositionVisualSurface shadowMaskSurface;
+    private readonly CompositionSurfaceBrush shadowMaskBrush;
+    private readonly DropShadow shadow;
+    private readonly CompositionRoundedRectangleGeometry shadowGeometry;
     private readonly CompositionRoundedRectangleGeometry roundedGeometry;
     private readonly CompositionGeometricClip roundedClip;
     private readonly ILogger logger;
@@ -25,21 +34,34 @@ public sealed class ThumbnailCompositionPreview :
     private float rasterScale = 1.0f;
     private float width;
     private float height;
+    private TimeSpan? translationTransitionDuration;
+    private TimeSpan? scaleTransitionDuration;
 
-    private ThumbnailCompositionPreview(FrameworkElement host, IWindowPreview preview, SystemVisualProxyVisualPrivate proxy, ContainerVisual hostContainer, CompositionRoundedRectangleGeometry roundedGeometry, CompositionGeometricClip roundedClip, ILogger logger)
+    private ThumbnailCompositionPreview(FrameworkElement transformSource, DesktopThumbnailCompositionLayer layer, IWindowPreview preview, SystemVisualProxyVisualPrivate proxy, ContainerVisual rootVisual, SpriteVisual shadowVisual, CompositionColorBrush shadowSurfaceBrush, ShapeVisual shadowMaskVisual, CompositionSpriteShape shadowMaskShape, CompositionVisualSurface shadowMaskSurface, CompositionSurfaceBrush shadowMaskBrush, DropShadow shadow, CompositionRoundedRectangleGeometry shadowGeometry, CompositionRoundedRectangleGeometry roundedGeometry, CompositionGeometricClip roundedClip, ILogger logger)
     {
-        this.host = host;
+        this.transformSource = transformSource;
+        this.layer = layer;
         this.preview = preview;
         this.proxy = proxy;
-        this.hostContainer = hostContainer;
+        this.rootVisual = rootVisual;
+        this.shadowVisual = shadowVisual;
+        this.shadowSurfaceBrush = shadowSurfaceBrush;
+        this.shadowMaskVisual = shadowMaskVisual;
+        this.shadowMaskShape = shadowMaskShape;
+        this.shadowMaskSurface = shadowMaskSurface;
+        this.shadowMaskBrush = shadowMaskBrush;
+        this.shadow = shadow;
+        this.shadowGeometry = shadowGeometry;
         this.roundedGeometry = roundedGeometry;
         this.roundedClip = roundedClip;
         this.logger = logger;
     }
 
-    public static ThumbnailCompositionPreview? Create(IWindowPreviewSurface previewSurface, nint windowHandle, FrameworkElement host, ILogger logger)
+    internal ContainerVisual RootVisual => rootVisual;
+
+    public static ThumbnailCompositionPreview? Create(IWindowPreviewSurface previewSurface, nint windowHandle, FrameworkElement transformSource, DesktopThumbnailCompositionLayer layer, ILogger logger)
     {
-        if (!previewSurface.IsAvailable)
+        if (!previewSurface.IsAvailable || layer.Compositor is not Compositor compositor)
         {
             return null;
         }
@@ -52,34 +74,72 @@ public sealed class ThumbnailCompositionPreview :
         }
 
         SystemVisualProxyVisualPrivate? proxy = null;
-        ContainerVisual? hostContainer = null;
+        ContainerVisual? rootVisual = null;
+        SpriteVisual? shadowVisual = null;
+        CompositionColorBrush? shadowSurfaceBrush = null;
+        ShapeVisual? shadowMaskVisual = null;
+        CompositionSpriteShape? shadowMaskShape = null;
+        CompositionVisualSurface? shadowMaskSurface = null;
+        CompositionSurfaceBrush? shadowMaskBrush = null;
+        DropShadow? shadow = null;
+        CompositionRoundedRectangleGeometry? shadowGeometry = null;
         CompositionRoundedRectangleGeometry? roundedGeometry = null;
         CompositionGeometricClip? roundedClip = null;
+        ThumbnailCompositionPreview? result = null;
 
         try
         {
-            Visual hostVisual = ElementCompositionPreview.GetElementVisual(host);
-            Compositor compositor = hostVisual.Compositor;
             proxy = SystemVisualProxyVisualPrivate.Create(compositor);
-            hostContainer = compositor.CreateContainerVisual();
-            hostContainer.RelativeSizeAdjustment = Vector2.One;
+            rootVisual = compositor.CreateContainerVisual();
+            shadowVisual = compositor.CreateSpriteVisual();
+            shadowSurfaceBrush = compositor.CreateColorBrush(Color.FromArgb(255, 32, 32, 32));
+            shadowMaskVisual = compositor.CreateShapeVisual();
+            shadowGeometry = compositor.CreateRoundedRectangleGeometry();
+            shadowMaskShape = compositor.CreateSpriteShape(shadowGeometry);
+            shadowMaskShape.FillBrush = shadowSurfaceBrush;
+            shadowMaskVisual.Shapes.Add(shadowMaskShape);
+            shadowMaskSurface = compositor.CreateVisualSurface();
+            shadowMaskSurface.SourceVisual = shadowMaskVisual;
+            shadowMaskBrush = compositor.CreateSurfaceBrush(shadowMaskSurface);
+            shadow = compositor.CreateDropShadow();
+            shadow.BlurRadius = 24;
+            shadow.Color = Color.FromArgb(255, 0, 0, 0);
+            shadow.Offset = new Vector3(0, 6, 0);
+            shadow.Opacity = 0.45f;
+            shadow.Mask = shadowMaskBrush;
+            shadowVisual.Brush = shadowMaskBrush;
+            shadowVisual.Shadow = shadow;
             roundedGeometry = compositor.CreateRoundedRectangleGeometry();
             roundedClip = compositor.CreateGeometricClip(roundedGeometry);
             proxy.Visual.Clip = roundedClip;
-            hostContainer.Children.InsertAtTop(proxy.Visual);
-            ElementCompositionPreview.SetElementChildVisual(host, hostContainer);
+            rootVisual.Children.InsertAtBottom(shadowVisual);
+            rootVisual.Children.InsertAtTop(proxy.Visual);
 
-            return new ThumbnailCompositionPreview(host, preview, proxy, hostContainer, roundedGeometry, roundedClip, logger);
+            result = new ThumbnailCompositionPreview(transformSource, layer, preview, proxy, rootVisual, shadowVisual, shadowSurfaceBrush, shadowMaskVisual, shadowMaskShape, shadowMaskSurface, shadowMaskBrush, shadow, shadowGeometry, roundedGeometry, roundedClip, logger);
+            layer.Add(result);
+            return result;
         }
         catch (Exception exception)
         {
             logger.LogError(exception, "Failed to create the composition thumbnail preview");
-            TryDetach(host, hostContainer, logger);
+            if (result is not null)
+            {
+                layer.Remove(result);
+            }
+
             TryRemove(proxy?.Visual, logger);
+            shadowVisual?.Dispose();
+            shadowMaskBrush?.Dispose();
+            shadowMaskSurface?.Dispose();
+            shadowMaskShape?.Dispose();
+            shadowMaskVisual?.Dispose();
+            shadowGeometry?.Dispose();
+            shadow?.Dispose();
+            shadowSurfaceBrush?.Dispose();
             roundedClip?.Dispose();
             roundedGeometry?.Dispose();
             proxy?.Dispose();
-            hostContainer?.Dispose();
+            rootVisual?.Dispose();
             preview.Dispose();
             return null;
         }
@@ -94,7 +154,7 @@ public sealed class ThumbnailCompositionPreview :
 
         float normalizedWidth = NormalizeLength(width);
         float normalizedHeight = NormalizeLength(height);
-        float normalizedRasterScale = NormalizeScale(host.XamlRoot?.RasterizationScale ?? 1.0);
+        float normalizedRasterScale = NormalizeScale(transformSource.XamlRoot?.RasterizationScale ?? 1.0);
         bool normalizedVisibility = isVisible && normalizedWidth > 0.0f && normalizedHeight > 0.0f;
 
         if (this.width == normalizedWidth &&
@@ -129,15 +189,113 @@ public sealed class ThumbnailCompositionPreview :
 
         isDisposed = true;
         preview.SetTarget(0, 0.0, 0.0, false);
-        TryDetach(host, hostContainer, logger);
+        layer.Remove(this);
+        rootVisual.StopAnimation(nameof(Visual.Offset));
+        rootVisual.StopAnimation(nameof(Visual.Scale));
+        rootVisual.StopAnimation(nameof(Visual.CenterPoint));
+        rootVisual.StopAnimation(nameof(Visual.Opacity));
         TryRemove(proxy.Visual, logger);
+        TryRemove(shadowVisual, logger);
         proxy.Visual.Clip = null;
+        shadowVisual.Shadow = null;
+        shadowVisual.Brush = null;
+        shadow.Mask = null;
+        shadowMaskSurface.SourceVisual = null;
+        shadowMaskBrush.Dispose();
+        shadowMaskSurface.Dispose();
+        shadowMaskShape.FillBrush = null;
+        shadowMaskShape.Dispose();
+        shadowMaskVisual.Dispose();
+        shadowGeometry.Dispose();
+        shadow.Dispose();
+        shadowSurfaceBrush.Dispose();
+        shadowVisual.Dispose();
         roundedClip.Dispose();
         roundedGeometry.Dispose();
         proxy.Dispose();
-        hostContainer.Dispose();
+        rootVisual.Dispose();
         preview.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    public void SetZIndex(int value)
+    {
+        if (!isDisposed)
+        {
+            layer.SetZIndex(this, value);
+        }
+    }
+
+    public void SetTranslationTransition(TimeSpan? duration) => translationTransitionDuration = duration;
+
+    public void SetScaleTransition(TimeSpan? duration) => scaleTransitionDuration = duration;
+
+    public void SetOffset(Vector3 value)
+    {
+        if (isDisposed)
+        {
+            return;
+        }
+
+        SetVector3(nameof(Visual.Offset), value, translationTransitionDuration);
+    }
+
+    public void SetScale(Vector3 value)
+    {
+        if (!isDisposed)
+        {
+            SetVector3(nameof(Visual.Scale), value, scaleTransitionDuration);
+        }
+    }
+
+    public void SetCenterPoint(Vector3 value)
+    {
+        if (!isDisposed)
+        {
+            rootVisual.StopAnimation(nameof(Visual.CenterPoint));
+            rootVisual.CenterPoint = value;
+        }
+    }
+
+    public void SetOpacity(float value)
+    {
+        if (!isDisposed)
+        {
+            rootVisual.StopAnimation(nameof(Visual.Opacity));
+            rootVisual.Opacity = Math.Clamp(value, 0, 1);
+        }
+    }
+
+    private void SetVector3(string property, Vector3 value, TimeSpan? duration)
+    {
+        if (!duration.HasValue)
+        {
+            rootVisual.StopAnimation(property);
+            SetVector3Value(property, value);
+            return;
+        }
+
+        Compositor compositor = rootVisual.Compositor;
+        Vector3KeyFrameAnimation animation = compositor.CreateVector3KeyFrameAnimation();
+        CubicBezierEasingFunction easing = compositor.CreateCubicBezierEasingFunction(new Vector2(0.1f, 0.9f), new Vector2(0.2f, 1));
+        animation.Duration = duration.Value;
+        animation.InsertExpressionKeyFrame(0, "this.StartingValue");
+        animation.InsertKeyFrame(1, value, easing);
+        rootVisual.StartAnimation(property, animation);
+        easing.Dispose();
+        animation.Dispose();
+    }
+
+    private void SetVector3Value(string property, Vector3 value)
+    {
+        if (property == nameof(Visual.Offset))
+        {
+            rootVisual.Offset = value;
+        }
+        else if (property == nameof(Visual.Scale))
+        {
+            rootVisual.Scale = value;
+        }
     }
 
     private void ApplyPresentation()
@@ -158,6 +316,12 @@ public sealed class ThumbnailCompositionPreview :
         proxy.Visual.Size = new Vector2(renderWidth, renderHeight);
         proxy.Visual.Scale = new Vector3(horizontalScale, verticalScale, 1.0f);
         proxy.Visual.IsVisible = isVisible;
+        shadowVisual.Size = new Vector2(width, height);
+        shadowVisual.IsVisible = isVisible;
+        shadowMaskVisual.Size = new Vector2(width, height);
+        shadowMaskSurface.SourceSize = new Vector2(width, height);
+        shadowGeometry.Size = new Vector2(width, height);
+        shadowGeometry.CornerRadius = new Vector2(MathF.Min(CornerRadius, width / 2), MathF.Min(CornerRadius, height / 2));
         UpdateClip(renderWidth, renderHeight, horizontalScale, verticalScale);
     }
 
@@ -168,26 +332,6 @@ public sealed class ThumbnailCompositionPreview :
 
         roundedGeometry.Size = new Vector2(width, height);
         roundedGeometry.CornerRadius = new Vector2(horizontalRadius, verticalRadius);
-    }
-
-    private static void TryDetach(FrameworkElement host, Visual? visual, ILogger logger)
-    {
-        if (visual is null)
-        {
-            return;
-        }
-
-        try
-        {
-            if (ReferenceEquals(ElementCompositionPreview.GetElementChildVisual(host), visual))
-            {
-                ElementCompositionPreview.SetElementChildVisual(host, null);
-            }
-        }
-        catch (Exception exception)
-        {
-            logger.LogWarning(exception, "Failed to detach the composition thumbnail preview");
-        }
     }
 
     private static void TryRemove(Visual? visual, ILogger logger)

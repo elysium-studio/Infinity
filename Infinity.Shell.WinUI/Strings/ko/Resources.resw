@@ -434,6 +434,10 @@
   </data>
   <data name="PageLayoutArrangeButton" xml:space="preserve"><value>이 페이지 정렬</value></data>
   <data name="DesktopWindowBringToCurrentPage" xml:space="preserve"><value>현재 페이지로 가져오기</value></data>
+  <data name="DesktopWindowMinimize" xml:space="preserve"><value>최소화</value></data>
+  <data name="DesktopWindowMaximize" xml:space="preserve"><value>최대화</value></data>
+  <data name="DesktopWindowRestore" xml:space="preserve"><value>복원</value></data>
+  <data name="DesktopWindowNewPage" xml:space="preserve"><value>새 페이지</value></data>
   <data name="DesktopWindowSendToPage" xml:space="preserve"><value>페이지로 보내기</value></data>
   <data name="DesktopWindowMoveToSlot" xml:space="preserve"><value>슬롯으로 이동</value></data>
   <data name="DesktopWindowSlot" xml:space="preserve"><value>슬롯 {0}</value></data>
@@ -448,4 +452,4 @@
   <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>선택 항목에 창 추가 또는 제거</value></data>
   <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>선택한 창 열기</value></data>
   <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>창 검색</value></data>
-+</root>
+</root>

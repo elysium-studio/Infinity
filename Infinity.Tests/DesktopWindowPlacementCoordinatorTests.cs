@@ -13,6 +13,8 @@ public sealed class DesktopWindowPlacementCoordinatorTests
     private readonly TestWorkspace workspace = new();
     private readonly TestWindowResizeSynchronizer resizeSynchronizer = new();
     private readonly TestWindowCloser windowCloser = new();
+    private readonly TestWindowStateController windowStateController = new();
+    private readonly TestWindowPageTransitionGuard pageTransitionGuard = new();
 
     [Fact]
     public void SwapIntoSlotMovesOccupantToDraggedWindowsPreviousBounds()
@@ -61,6 +63,23 @@ public sealed class DesktopWindowPlacementCoordinatorTests
     }
 
     [Fact]
+    public void WindowStateCommandsDelegateToPlatformController()
+    {
+        DesktopWindowPlacementCoordinator coordinator = CreateCoordinator();
+        AddWindow(42, 120, 80, 700, 500);
+
+        Assert.Equal(windowStateController.State, coordinator.GetWindowCommandState(42));
+        Assert.True(coordinator.TryMinimize(42));
+        Assert.True(coordinator.TryMaximize(42));
+        Assert.True(coordinator.TryRestore(42));
+        Assert.Equal(((nint)42, "Minimize"), windowStateController.Commands[0]);
+        Assert.Equal(((nint)42, "Maximize"), windowStateController.Commands[1]);
+        Assert.Equal(((nint)42, "Restore"), windowStateController.Commands[2]);
+        Assert.Equal((nint)42, pageTransitionGuard.WindowHandle);
+        Assert.Equal(0, pageTransitionGuard.Page);
+    }
+
+    [Fact]
     public void MoveByPagesMovesSelectedWindowsAsOneBatch()
     {
         DesktopWindowPlacementCoordinator coordinator = CreateCoordinator();
@@ -91,7 +110,7 @@ public sealed class DesktopWindowPlacementCoordinatorTests
     {
         DesktopSnapSlotOccupancyResolver occupancyResolver = new();
         DesktopSnapPlacementResolver placementResolver = new(workspace, new DesktopSnapLayoutCatalog());
-        return new DesktopWindowPlacementCoordinator(store, scroller, workspace, resizeSynchronizer, windowCloser, placementResolver, occupancyResolver);
+        return new DesktopWindowPlacementCoordinator(store, scroller, workspace, resizeSynchronizer, windowCloser, windowStateController, pageTransitionGuard, placementResolver, occupancyResolver);
     }
 
     private TrackedWindow AddWindow(nint handle, int x, int y, int width, int height)
@@ -171,6 +190,58 @@ public sealed class DesktopWindowPlacementCoordinatorTests
         {
             ClosedHandle = windowHandle;
             return true;
+        }
+    }
+
+    private sealed class TestWindowStateController : IWindowStateController
+    {
+        public WindowCommandState State { get; } = new(true, true, false);
+
+        public List<(nint Handle, string Command)> Commands { get; } = [];
+
+        public WindowCommandState GetState(nint windowHandle) => State;
+
+        public bool TryMaximize(nint windowHandle)
+        {
+            Commands.Add((windowHandle, "Maximize"));
+            return true;
+        }
+
+        public bool TryMinimize(nint windowHandle)
+        {
+            Commands.Add((windowHandle, "Minimize"));
+            return true;
+        }
+
+        public bool TryRestore(nint windowHandle)
+        {
+            Commands.Add((windowHandle, "Restore"));
+            return true;
+        }
+
+    }
+
+    private sealed class TestWindowPageTransitionGuard :
+        IWindowPageTransitionGuard
+    {
+        public nint WindowHandle { get; private set; }
+
+        public int Page { get; private set; }
+
+        public void PreservePage(nint windowHandle, int page, int workspaceWidth, int workAreaX)
+        {
+            WindowHandle = windowHandle;
+            Page = page;
+        }
+
+        public bool TryMapToPreservedPage(nint windowHandle, int candidateCanvasX, int windowWidth, out int mappedCanvasX)
+        {
+            mappedCanvasX = candidateCanvasX;
+            return false;
+        }
+
+        public void Clear(nint windowHandle)
+        {
         }
     }
 }

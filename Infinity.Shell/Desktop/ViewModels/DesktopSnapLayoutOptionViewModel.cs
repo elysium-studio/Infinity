@@ -28,11 +28,11 @@ public sealed partial class DesktopSnapLayoutOptionViewModel : ObservableObject
 
     public ObservableCollection<DesktopSnapLayoutSlotViewModel> Slots { get; }
 
-    public void SetHighlighted(bool value)
+    public void SetInteractionState(DesktopSnapLayoutOptionInteractionState state)
     {
         foreach (DesktopSnapLayoutSlotViewModel slot in Slots)
         {
-            slot.IsHighlighted = value;
+            slot.SetInteractionState(state);
         }
     }
 

@@ -178,7 +178,9 @@ public sealed partial class DesktopPageTitleViewModel(DesktopPageEditorLabels la
         foreach (DesktopSnapLayoutOptionViewModel option in AvailableLayouts)
         {
             option.IsSelected = option.Kind == Layout;
-            option.SetHighlighted(option.IsSelected);
+            option.SetInteractionState(option.IsSelected
+                ? DesktopSnapLayoutOptionInteractionState.Selected
+                : DesktopSnapLayoutOptionInteractionState.Normal);
         }
     }
 }

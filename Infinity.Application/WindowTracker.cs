@@ -12,6 +12,7 @@ public sealed class WindowTracker(IWindowStore repository,
     IWindowFilter filter,
     IWindowAncestorResolver ancestorResolver,
     IWindowRestoreGuard restoreGuard,
+    IWindowPageTransitionGuard pageTransitionGuard,
     IWindowMoveGuard moveGuard,
     IWindowConcealer concealer,
     IWindowDragGuard dragGuard,
@@ -144,6 +145,7 @@ public sealed class WindowTracker(IWindowStore repository,
     {
         CancelPendingMinimizeSuspension(windowHandle);
         suspendedWindowStates.Remove(windowHandle);
+        pageTransitionGuard.Clear(windowHandle);
         Unregister(windowHandle);
     }
 
@@ -370,12 +372,16 @@ public sealed class WindowTracker(IWindowStore repository,
             return;
         }
 
-        if (x == trackedWindow.LastPlacedX && y == trackedWindow.LastPlacedY)
+        if (x == trackedWindow.LastPlacedX &&
+            y == trackedWindow.LastPlacedY &&
+            width == trackedWindow.Width &&
+            height == trackedWindow.Height)
         {
             return;
         }
 
         int newCanvasX = x + (int)Math.Round(state.Offset);
+        _ = pageTransitionGuard.TryMapToPreservedPage(windowHandle, newCanvasX, width, out newCanvasX);
 
         trackedWindow.CanvasX = newCanvasX;
         trackedWindow.CanvasY = y;
@@ -383,6 +389,7 @@ public sealed class WindowTracker(IWindowStore repository,
         trackedWindow.Height = height;
         trackedWindow.LastPlacedX = x;
         trackedWindow.LastPlacedY = y;
+        repository.NotifyChanged(windowHandle);
     }
 
     private void Unregister(IntPtr windowHandle) => repository.Remove(windowHandle);
@@ -421,6 +428,7 @@ public sealed class WindowTracker(IWindowStore repository,
     {
         suspendedWindowStates.Remove(windowHandle);
         CancelPendingMinimizeSuspension(windowHandle);
+        pageTransitionGuard.Clear(windowHandle);
         Unregister(windowHandle);
     }
 

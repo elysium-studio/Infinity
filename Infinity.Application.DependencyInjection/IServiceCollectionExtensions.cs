@@ -19,6 +19,7 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<IWindowStore, WindowStore>();
             services.AddSingleton<IWindowTitleSynchronizer, WindowTitleSynchronizer>();
             services.AddSingleton<IWindowRestoreGuard, WindowRestoreGuard>();
+            services.AddSingleton<IWindowPageTransitionGuard, WindowPageTransitionGuard>();
             services.AddSingleton<StartupPageRestorer>();
 
             services.AddSingleton(provider => new WindowTrackingReconciler(
@@ -33,6 +34,7 @@ public static class IServiceCollectionExtensions
                     provider.GetRequiredService<IWindowFilter>(),
                     provider.GetRequiredService<IWindowAncestorResolver>(),
                     provider.GetRequiredService<IWindowRestoreGuard>(),
+                    provider.GetRequiredService<IWindowPageTransitionGuard>(),
                     provider.GetRequiredService<IWindowMoveGuard>(),
                     provider.GetRequiredService<IWindowConcealer>(),
                     provider.GetRequiredService<IWindowDragGuard>(),

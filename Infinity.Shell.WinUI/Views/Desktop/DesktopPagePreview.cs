@@ -235,8 +235,6 @@ public sealed partial class DesktopPagePreview :
         shadowHost.Opacity = 0;
         shadowHost.Shadow = null;
 
-        TitleEditor.Hide();
-
         PageHost.IsHitTestVisible = false;
         IsHitTestVisible = false;
         Opacity = 0;
@@ -285,16 +283,8 @@ public sealed partial class DesktopPagePreview :
         PageHost.IsHitTestVisible = value;
         IsHitTestVisible = value;
 
-        if (value)
-        {
-            shadowHost.Shadow = pageShadow;
-            TitleEditor.Show();
-        }
-        else
-        {
-            shadowHost.Shadow = null;
-            TitleEditor.Hide();
-        }
+        shadowHost.Shadow = value ? pageShadow : null;
+        TitleEditor.SetInteractionEnabled(value);
 
         if (!value)
         {

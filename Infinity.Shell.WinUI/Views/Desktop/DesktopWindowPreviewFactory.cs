@@ -8,9 +8,9 @@ using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSurface, ITrackedWindowDragController dragController, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, ILogger<DesktopWindowPreviewFactory> logger)
+public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSurface, DesktopThumbnailCompositionLayer thumbnailLayer, ITrackedWindowDragController dragController, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, ILogger<DesktopWindowPreviewFactory> logger)
 {
-    internal DesktopWindowPreview Create(Canvas canvas, Canvas focusCanvas, nint windowHandle, double layoutScale)
+    internal DesktopWindowPreview Create(Canvas backgroundCanvas, Canvas canvas, Canvas focusCanvas, nint windowHandle, double layoutScale)
     {
         double visualScale = double.IsFinite(layoutScale) && layoutScale > 0 ? layoutScale : 1;
         double focusOuterMargin = 4 / visualScale;
@@ -62,20 +62,18 @@ public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSur
             Margin = new Thickness(focusSecondaryMargin)
         });
 
-        Border previewHost = new()
+        Border backgroundHost = new()
         {
-            Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
+            Background = FluentVisualResources.GetBrush("CardBackgroundFillColorDefaultBrush", Color.FromArgb(255, 32, 32, 32)),
             CornerRadius = cornerRadius,
             IsHitTestVisible = false
         };
 
         Border host = new()
         {
-            Background = FluentVisualResources.GetBrush("CardBackgroundFillColorDefaultBrush", Color.FromArgb(255, 32, 32, 32)),
-            Child = previewHost,
+            Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
             CornerRadius = cornerRadius,
-            IsHitTestVisible = false,
-            Shadow = new ThemeShadow()
+            IsHitTestVisible = false
         };
 
         Grid indicatorVisual = new();
@@ -88,11 +86,12 @@ public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSur
             IsHitTestVisible = false
         };
 
+        backgroundCanvas.Children.Add(backgroundHost);
         canvas.Children.Add(host);
         focusCanvas.Children.Add(focusHost);
 
-        ThumbnailCompositionPreview? preview = ThumbnailCompositionPreview.Create(previewSurface, windowHandle, previewHost, logger);
+        ThumbnailCompositionPreview? preview = ThumbnailCompositionPreview.Create(previewSurface, windowHandle, host, thumbnailLayer, logger);
 
-        return new DesktopWindowPreview(windowHandle, host, focusHost, preview, focusVisual, selectionVisual, dragController, overviewDragScroller, dragPositionResolver, dragBoundaryCalculator, cursorConfinement, windowPlacementCoordinator, contextMenuBuilder, layoutScale);
+        return new DesktopWindowPreview(windowHandle, host, backgroundHost, focusHost, preview, focusVisual, selectionVisual, dragController, overviewDragScroller, dragPositionResolver, dragBoundaryCalculator, cursorConfinement, windowPlacementCoordinator, contextMenuBuilder, layoutScale);
     }
 }

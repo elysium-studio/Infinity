@@ -434,6 +434,10 @@
   </data>
   <data name="PageLayoutArrangeButton" xml:space="preserve"><value>Rozmieść tę stronę</value></data>
   <data name="DesktopWindowBringToCurrentPage" xml:space="preserve"><value>Przenieś na bieżącą stronę</value></data>
+  <data name="DesktopWindowMinimize" xml:space="preserve"><value>Minimalizuj</value></data>
+  <data name="DesktopWindowMaximize" xml:space="preserve"><value>Maksymalizuj</value></data>
+  <data name="DesktopWindowRestore" xml:space="preserve"><value>Przywróć</value></data>
+  <data name="DesktopWindowNewPage" xml:space="preserve"><value>Nowa strona</value></data>
   <data name="DesktopWindowSendToPage" xml:space="preserve"><value>Wyślij na stronę</value></data>
   <data name="DesktopWindowMoveToSlot" xml:space="preserve"><value>Przenieś do pola</value></data>
   <data name="DesktopWindowSlot" xml:space="preserve"><value>Pole {0}</value></data>
@@ -448,4 +452,4 @@
   <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>Dodaj okno do zaznaczenia lub je usuń</value></data>
   <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>Otwórz wybrane okno</value></data>
   <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>Wyszukaj okna</value></data>
-+</root>
+</root>

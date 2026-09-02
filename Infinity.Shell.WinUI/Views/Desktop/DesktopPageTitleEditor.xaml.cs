@@ -1,6 +1,5 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
@@ -35,26 +34,30 @@ public sealed partial class DesktopPageTitleEditor :
         HeaderSurface.Shadow = new ThemeShadow();
         HeaderSurface.Translation = new Vector3(0, 0, ShadowDepth);
 
-        Hide();
     }
 
     public DesktopPageTitleViewModel ViewModel { get; }
+
+    internal FrameworkElement EntranceSurface => this;
 
     public Visibility ToVisibility(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
 
     public static double ToOpacity(bool value) => value ? 1 : 0;
 
-    public void Show()
+    public void PrepareAnimation()
     {
-        IsHitTestVisible = true;
-        Opacity = 1;
+        IsHitTestVisible = false;
+        UpdateLayout();
     }
 
-    public void Hide()
+    public void SetInteractionEnabled(bool value)
     {
-        CloseLayoutFlyout();
-        IsHitTestVisible = false;
-        Opacity = 0;
+        IsHitTestVisible = value;
+
+        if (!value)
+        {
+            CloseLayoutFlyout();
+        }
     }
 
     public void CloseLayoutFlyout() => LayoutFlyout.Hide();
@@ -119,27 +122,12 @@ public sealed partial class DesktopPageTitleEditor :
     private void HandleTitleEditButtonInteractionChanged(object sender, RoutedEventArgs args) =>
         TitleEditIcon.Opacity = TitleEditButton.IsPointerOver || TitleEditButton.FocusState != FocusState.Unfocused ? 1 : 0;
 
-    private void HandleLayoutPointerEntered(object sender, PointerRoutedEventArgs args)
+    private void HandleLayoutInteractionStateChanged(object sender, RoutedEventArgs args)
     {
-        if (sender is FrameworkElement { Tag: DesktopSnapLayoutOptionViewModel option })
+        if (sender is DesktopSnapLayoutOptionButton { Tag: DesktopSnapLayoutOptionViewModel option } button)
         {
-            option.SetHighlighted(true);
+            option.SetInteractionState(button.InteractionState);
         }
     }
 
-    private void HandleLayoutPointerExited(object sender, PointerRoutedEventArgs args)
-    {
-        if (sender is FrameworkElement { Tag: DesktopSnapLayoutOptionViewModel option })
-        {
-            option.SetHighlighted(option.IsSelected);
-        }
-    }
-
-    private void HandleLayoutSelectionChanged(object sender, RoutedEventArgs args)
-    {
-        if (sender is ToggleButton { Tag: DesktopSnapLayoutOptionViewModel option } layout)
-        {
-            option.SetHighlighted(layout.IsPointerOver || option.IsSelected);
-        }
-    }
 }

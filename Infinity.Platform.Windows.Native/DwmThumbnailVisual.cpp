@@ -29,7 +29,6 @@ using Microsoft::WRL::ComPtr;
 namespace Infinity::Platform::Windows::Native
 {
 	using DwmpCreateSharedThumbnailVisual = HRESULT(WINAPI*)(HWND destinationWindowHandle, HWND sourceWindowHandle, DWORD thumbnailFlags, DWM_THUMBNAIL_PROPERTIES* thumbnailProperties, IDCompositionDevice* compositionDevice, void** visual, HTHUMBNAIL* thumbnailHandle);
-	using DwmpQueryWindowThumbnailSourceSize = HRESULT(WINAPI*)(HWND sourceWindowHandle, BOOL clientOnly, SIZE* size);
 
 	struct __declspec(uuid("e7894c70-af56-4f52-b382-4b3cd263dc6f")) IInteropCompositorPartner :
 		IUnknown
@@ -86,7 +85,6 @@ namespace Infinity::Platform::Windows::Native
 
 	static HMODULE dwmapiModule;
 	static DwmpCreateSharedThumbnailVisual createSharedThumbnailVisual;
-	static DwmpQueryWindowThumbnailSourceSize queryWindowThumbnailSourceSize;
 
 	static HWND ownerWindowHandle;
 	static std::vector<ThumbnailTarget> targets;
@@ -128,18 +126,6 @@ namespace Infinity::Platform::Windows::Native
 		__try
 		{
 			return function(destinationWindowHandle, sourceWindowHandle, thumbnailFlags, thumbnailProperties, device, visual, thumbnailHandle);
-		}
-		__except (EXCEPTION_EXECUTE_HANDLER)
-		{
-			return HRESULT_FROM_WIN32(ERROR_NOACCESS);
-		}
-	}
-
-	static HRESULT SafeQuerySourceSize(DwmpQueryWindowThumbnailSourceSize function, HWND sourceWindowHandle, BOOL clientOnly, SIZE* size)
-	{
-		__try
-		{
-			return function(sourceWindowHandle, clientOnly, size);
 		}
 		__except (EXCEPTION_EXECUTE_HANDLER)
 		{
@@ -307,7 +293,6 @@ namespace Infinity::Platform::Windows::Native
 		}
 
 		createSharedThumbnailVisual = reinterpret_cast<DwmpCreateSharedThumbnailVisual>(GetProcAddress(dwmapiModule, MAKEINTRESOURCEA(147)));
-		queryWindowThumbnailSourceSize = reinterpret_cast<DwmpQueryWindowThumbnailSourceSize>(GetProcAddress(dwmapiModule, MAKEINTRESOURCEA(162)));
 
 		return createSharedThumbnailVisual ? S_OK : HRESULT_FROM_WIN32(ERROR_PROC_NOT_FOUND);
 	}
@@ -315,13 +300,6 @@ namespace Infinity::Platform::Windows::Native
 	static SIZE GetSourceSize(HWND windowHandle)
 	{
 		SIZE size{};
-
-		if (queryWindowThumbnailSourceSize &&
-			SUCCEEDED(SafeQuerySourceSize(queryWindowThumbnailSourceSize, windowHandle, FALSE, &size)) &&
-			size.cx > 0 && size.cy > 0)
-		{
-			return size;
-		}
 
 		RECT rect{};
 
@@ -335,6 +313,20 @@ namespace Infinity::Platform::Windows::Native
 		size.cx = 1;
 		size.cy = 1;
 		return size;
+	}
+
+	static SIZE GetRegisteredSourceSize(ThumbnailTarget const& target)
+	{
+		SIZE size{};
+
+		if (target.ThumbnailHandle &&
+			SUCCEEDED(DwmQueryThumbnailSourceSize(target.ThumbnailHandle, &size)) &&
+			size.cx > 0 && size.cy > 0)
+		{
+			return size;
+		}
+
+		return GetSourceSize(target.SourceWindowHandle);
 	}
 
 	static RECT GetSourceMargins(HWND windowHandle)
@@ -485,6 +477,16 @@ namespace Infinity::Platform::Windows::Native
 			return FAILED(result) ? result : E_FAIL;
 		}
 
+		target.SourceSize = GetRegisteredSourceSize(target);
+		target.SourceMargins = GetSourceMargins(target.SourceWindowHandle);
+		properties = CreateThumbnailProperties(target.SourceSize, target.SourceMargins, target.Width, target.Height, target.IsVisible);
+		result = DwmUpdateThumbnailProperties(target.ThumbnailHandle, &properties);
+
+		if (FAILED(result))
+		{
+			return result;
+		}
+
 		return target.RootVisual->AddVisual(target.ThumbnailVisual.Get(), TRUE, nullptr);
 	}
 
@@ -522,7 +524,7 @@ namespace Infinity::Platform::Windows::Native
 			return result;
 		}
 
-		target.SourceSize = GetSourceSize(target.SourceWindowHandle);
+		target.SourceSize = GetRegisteredSourceSize(target);
 		target.SourceMargins = GetSourceMargins(target.SourceWindowHandle);
 		DWM_THUMBNAIL_PROPERTIES properties = CreateThumbnailProperties(target.SourceSize, target.SourceMargins, target.Width, target.Height, target.IsVisible);
 		return DwmUpdateThumbnailProperties(target.ThumbnailHandle, &properties);

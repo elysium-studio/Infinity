@@ -172,6 +172,11 @@ public sealed class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> log
 
             int result = TryRefreshSource((ulong)preview.Id);
 
+            if (result != 0 && RenderCore())
+            {
+                result = 0;
+            }
+
             if (result < 0 && result != lastRenderFailure)
             {
                 lastRenderFailure = result;

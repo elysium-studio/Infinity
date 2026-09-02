@@ -25,6 +25,7 @@ public sealed class DesktopModule :
             .AddSingleton<DesktopOverviewForegroundThemeResolver>()
             .AddSingleton<DesktopOverviewWallpaperPresenter>()
             .AddSingleton<DesktopScrollPreviewAnimator>()
+            .AddSingleton<DesktopOverviewChromeAnimator>()
             .AddSingleton<DesktopPageLayoutCalculator>()
             .AddSingleton<DesktopWallpaperPlacementCalculator>()
             .AddSingleton<DesktopSnapLayoutCatalog>()
@@ -52,6 +53,7 @@ public sealed class DesktopModule :
             .AddSingleton<DesktopDragCursorConfinement>()
             .AddSingleton<DesktopWindowDragPositionResolver>()
             .AddSingleton<DesktopWindowContextMenuBuilder>()
+            .AddSingleton<DesktopThumbnailCompositionLayer>()
             .AddSingleton<DesktopWindowPreviewFactory>()
             .AddSingleton<DesktopWindowPreviewCollection>()
             .AddSingleton<DesktopWindowGroupStackAnimator>()
@@ -86,6 +88,7 @@ public sealed class DesktopModule :
             backgroundSource.Start();
             return backgroundSource.Stop;
         });
+
     }
 
     private static DesktopScrollPreviewView CreateDesktopScrollPreviewView(IServiceProvider provider)
@@ -101,8 +104,10 @@ public sealed class DesktopModule :
         DesktopOverviewConfiguration overviewConfiguration = provider.GetRequiredService<DesktopOverviewConfiguration>();
         DesktopOverviewForegroundThemeResolver foregroundThemeResolver = provider.GetRequiredService<DesktopOverviewForegroundThemeResolver>();
         DesktopScrollPreviewAnimator animator = provider.GetRequiredService<DesktopScrollPreviewAnimator>();
+        DesktopOverviewChromeAnimator chromeAnimator = provider.GetRequiredService<DesktopOverviewChromeAnimator>();
         DesktopOverviewLayoutPresenter layoutPresenter = provider.GetRequiredService<DesktopOverviewLayoutPresenter>();
         DesktopPageStrip pageStrip = provider.GetRequiredService<DesktopPageStrip>();
+        DesktopThumbnailCompositionLayer thumbnailLayer = provider.GetRequiredService<DesktopThumbnailCompositionLayer>();
         DesktopWindowPreviewCollection previews = provider.GetRequiredService<DesktopWindowPreviewCollection>();
         DesktopDragCursorConfinement cursorConfinement = provider.GetRequiredService<DesktopDragCursorConfinement>();
         DesktopShortcutHintsViewModel shortcutHints = provider.GetRequiredService<DesktopShortcutHintsViewModel>();
@@ -115,7 +120,7 @@ public sealed class DesktopModule :
         DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator = provider.GetRequiredService<DesktopWindowSnapInteractionCoordinator>();
         ILogger<DesktopScrollPreviewView> logger = provider.GetRequiredService<ILogger<DesktopScrollPreviewView>>();
 
-        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, panState, pager, scroller, workspace, scrollInputSuppression, backgroundSource, overviewConfiguration, foregroundThemeResolver, animator, layoutPresenter, pageStrip, previews, cursorConfinement, shortcutHints, applicationPicker, applicationDock, applicationDockContextMenuBuilder, applicationDockPressAnimator, applicationLaunchCoordinator, inputController, snapInteractionCoordinator, logger);
+        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, panState, pager, scroller, workspace, scrollInputSuppression, backgroundSource, overviewConfiguration, foregroundThemeResolver, animator, chromeAnimator, layoutPresenter, pageStrip, thumbnailLayer, previews, cursorConfinement, shortcutHints, applicationPicker, applicationDock, applicationDockContextMenuBuilder, applicationDockPressAnimator, applicationLaunchCoordinator, inputController, snapInteractionCoordinator, logger);
     }
 
     private static DesktopOverviewView CreateDesktopOverviewView(IServiceProvider provider)

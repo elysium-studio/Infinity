@@ -126,7 +126,7 @@ public sealed class DesktopWindowGroupDragCoordinatorTests
         DesktopWindowDragPositionResolver dragPositionResolver = new(store, workspace, layoutCalculator);
         DesktopSnapSlotOccupancyResolver occupancyResolver = new();
         DesktopSnapPlacementResolver snapPlacementResolver = new(workspace, new DesktopSnapLayoutCatalog());
-        DesktopWindowPlacementCoordinator placementCoordinator = new(store, scroller, workspace, new TestWindowResizeSynchronizer(), new TestWindowCloser(), snapPlacementResolver, occupancyResolver);
+        DesktopWindowPlacementCoordinator placementCoordinator = new(store, scroller, workspace, new TestWindowResizeSynchronizer(), new TestWindowCloser(), new TestWindowStateController(), snapPlacementResolver, occupancyResolver);
         return new DesktopWindowGroupDragCoordinator(store, workspace, pager, dragPositionResolver, occupancyResolver, placementCoordinator);
     }
 
@@ -223,5 +223,13 @@ public sealed class DesktopWindowGroupDragCoordinatorTests
     private sealed class TestWindowCloser : IWindowCloser
     {
         public bool TryClose(nint windowHandle) => true;
+    }
+
+    private sealed class TestWindowStateController : IWindowStateController
+    {
+        public WindowCommandState GetState(nint windowHandle) => WindowCommandState.Unavailable;
+        public bool TryMaximize(nint windowHandle) => true;
+        public bool TryRestore(nint windowHandle) => true;
+        public bool TryMinimize(nint windowHandle) => true;
     }
 }

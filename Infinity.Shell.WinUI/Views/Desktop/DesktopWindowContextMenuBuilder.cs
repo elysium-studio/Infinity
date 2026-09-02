@@ -1,5 +1,6 @@
 using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
+using Infinity.Platform.Abstractions;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Linq;
@@ -11,6 +12,7 @@ public sealed class DesktopWindowContextMenuBuilder(IWindowCollection windowColl
     IWorkspace workspace,
     PageTitleStore pageTitleStore,
     PageLayoutStore pageLayoutStore,
+    DesktopPageStrip pageStrip,
     DesktopSnapLayoutCatalog layoutCatalog,
     DesktopWindowPlacementCoordinator placementCoordinator,
     ITextLocalizer localizer)
@@ -33,13 +35,25 @@ public sealed class DesktopWindowContextMenuBuilder(IWindowCollection windowColl
 
         int windowPage = placementCoordinator.GetPage(window);
         int currentPage = pager.CurrentPage;
+        WindowCommandState commandState = placementCoordinator.GetWindowCommandState(windowHandle);
+
+        flyout.Items.Add(CreateItem(localizer.GetText("DesktopWindowMinimize"),
+            () => placementCoordinator.TryMinimize(windowHandle),
+            commandState.CanMinimize));
+        flyout.Items.Add(commandState.CanRestore
+            ? CreateItem(localizer.GetText("DesktopWindowRestore"),
+                () => placementCoordinator.TryRestore(windowHandle))
+            : CreateItem(localizer.GetText("DesktopWindowMaximize"),
+                () => placementCoordinator.TryMaximize(windowHandle),
+                commandState.CanMaximize));
+        flyout.Items.Add(new MenuFlyoutSeparator());
 
         flyout.Items.Add(CreateItem(localizer.GetText("DesktopWindowBringToCurrentPage"),
             () => placementCoordinator.TryMoveToPage(windowHandle, currentPage, center: false),
             windowPage != currentPage));
 
         MenuFlyoutSubItem sendToPage = new() { Text = localizer.GetText("DesktopWindowSendToPage") };
-        int pageCount = Math.Max(pager.MaxPages ?? pager.PageCount, Math.Max(currentPage, windowPage) + 1);
+        int pageCount = pager.MaxPages ?? Math.Max(pager.PageCount, Math.Max(pageStrip.LastVisiblePage, Math.Max(currentPage, windowPage)) + 1);
 
         for (int page = 0; page < pageCount; page++)
         {
@@ -47,6 +61,14 @@ public sealed class DesktopWindowContextMenuBuilder(IWindowCollection windowColl
             sendToPage.Items.Add(CreateItem(pageTitleStore.GetTitle(page),
                 () => placementCoordinator.TryMoveToPage(windowHandle, targetPage, center: false),
                 page != windowPage));
+        }
+
+        if (!pager.MaxPages.HasValue)
+        {
+            int newPage = pageCount;
+            sendToPage.Items.Add(new MenuFlyoutSeparator());
+            sendToPage.Items.Add(CreateItem(localizer.GetText("DesktopWindowNewPage"),
+                () => placementCoordinator.TryMoveToPage(windowHandle, newPage, center: false)));
         }
 
         flyout.Items.Add(sendToPage);

@@ -434,6 +434,10 @@
   </data>
   <data name="PageLayoutArrangeButton" xml:space="preserve"><value>[Årråñgé ţhîš pågé]</value></data>
   <data name="DesktopWindowBringToCurrentPage" xml:space="preserve"><value>[Brîñg ţö çürréñţ pågé]</value></data>
+  <data name="DesktopWindowMinimize" xml:space="preserve"><value>[Mîñîɱîžé]</value></data>
+  <data name="DesktopWindowMaximize" xml:space="preserve"><value>[Måxîɱîžé]</value></data>
+  <data name="DesktopWindowRestore" xml:space="preserve"><value>[Rèšţöŕé]</value></data>
+  <data name="DesktopWindowNewPage" xml:space="preserve"><value>[Ñéŵ påĝé]</value></data>
   <data name="DesktopWindowSendToPage" xml:space="preserve"><value>[Šéñð ţö pågé]</value></data>
   <data name="DesktopWindowMoveToSlot" xml:space="preserve"><value>[Mövé ţö šlöţ]</value></data>
   <data name="DesktopWindowSlot" xml:space="preserve"><value>[Šlöţ {0}]</value></data>
@@ -448,4 +452,4 @@
   <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>[Åðð ör rémövé å wîñðöw fröm ţhé šéléçţîöñ]</value></data>
   <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>[Öpéñ šéléçţéð wîñðöw]</value></data>
   <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>[Šéårçh wîñðöwš]</value></data>
-+</root>
+</root>

@@ -9,6 +9,8 @@ public sealed class DesktopWindowPlacementCoordinator(IWindowStore windowStore,
     IWorkspace workspace,
     IWindowResizeSynchronizer resizeSynchronizer,
     IWindowCloser windowCloser,
+    IWindowStateController windowStateController,
+    IWindowPageTransitionGuard pageTransitionGuard,
     DesktopSnapPlacementResolver snapPlacementResolver,
     DesktopSnapSlotOccupancyResolver occupancyResolver)
 {
@@ -123,6 +125,14 @@ public sealed class DesktopWindowPlacementCoordinator(IWindowStore windowStore,
 
     public bool TryClose(nint windowHandle) => windowCloser.TryClose(windowHandle);
 
+    public WindowCommandState GetWindowCommandState(nint windowHandle) => windowStateController.GetState(windowHandle);
+
+    public bool TryMaximize(nint windowHandle) => TryChangeWindowState(windowHandle, windowStateController.TryMaximize);
+
+    public bool TryRestore(nint windowHandle) => TryChangeWindowState(windowHandle, windowStateController.TryRestore);
+
+    public bool TryMinimize(nint windowHandle) => windowStateController.TryMinimize(windowHandle);
+
     public int GetPage(TrackedWindow window)
     {
         if (workspace.Width <= 0)
@@ -167,6 +177,24 @@ public sealed class DesktopWindowPlacementCoordinator(IWindowStore windowStore,
     }
 
     private static DesktopSnapPlacement GetPlacement(TrackedWindow window) => new(window.CanvasX, window.CanvasY, window.Width, window.Height);
+
+    private bool TryChangeWindowState(nint windowHandle, Func<nint, bool> changeState)
+    {
+        if (!windowStore.TryGet(windowHandle, out TrackedWindow? window))
+        {
+            return false;
+        }
+
+        pageTransitionGuard.PreservePage(windowHandle, GetPage(window), workspace.Width, workspace.WorkAreaX);
+
+        if (changeState(windowHandle))
+        {
+            return true;
+        }
+
+        pageTransitionGuard.Clear(windowHandle);
+        return false;
+    }
 
     private static int Round(double value) => (int)Math.Clamp(Math.Round(value), int.MinValue, int.MaxValue);
 

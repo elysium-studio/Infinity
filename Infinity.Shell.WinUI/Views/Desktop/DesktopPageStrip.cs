@@ -49,6 +49,8 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
 
     internal bool IsEditorActive => visiblePages.Values.Any(page => page.TitleEditor.ViewModel.IsEditing);
 
+    internal int LastVisiblePage => visiblePages.Count == 0 ? pager.CurrentPage : visiblePages.Keys.Max();
+
     public void Start(Canvas canvas, Canvas shadowCanvas, Canvas titleCanvas, FrameworkElement scaleElement, double scale)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
@@ -190,6 +192,43 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         }
     }
 
+    public void AnimateHeaderEntrance(DesktopOverviewChromeAnimator animator, TimeSpan initialDelay)
+    {
+        DesktopPageTitleEditor[] headers = GetOrderedHeaders();
+        animator.AnimatePageHeaders(headers.Select(header => header.EntranceSurface).ToArray(), initialDelay);
+    }
+
+    public void PrepareHeaderEntrance(DesktopOverviewChromeAnimator animator)
+    {
+        DesktopPageTitleEditor[] headers = GetOrderedHeaders();
+
+        foreach (DesktopPageTitleEditor header in headers)
+        {
+            header.PrepareAnimation();
+        }
+
+        animator.PreparePageHeaders(headers.Select(header => header.EntranceSurface).ToArray());
+    }
+
+    public FrameworkElement[] PrepareHeaderAnimation()
+    {
+        DesktopPageTitleEditor[] headers = GetOrderedHeaders();
+
+        foreach (DesktopPageTitleEditor header in headers)
+        {
+            header.PrepareAnimation();
+        }
+
+        return [.. headers.Select(header => header.EntranceSurface)];
+    }
+
+    public void ResetHeaderAnimations(DesktopOverviewChromeAnimator animator) =>
+        animator.ResetHeaders(pagePool.Select(page => page.TitleEditor.EntranceSurface));
+
+    private DesktopPageTitleEditor[] GetOrderedHeaders() => [.. visiblePages
+        .OrderBy(entry => entry.Key)
+        .Select(entry => entry.Value.TitleEditor)];
+
     public void SetMonitorBounds(int x, int y, int width, int height)
     {
         wallpaperPlacement = wallpaperPlacementCalculator.Calculate(
@@ -315,9 +354,9 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         GC.SuppressFinalize(this);
     }
 
-    private void RefreshVisiblePages(TimeSpan? transitionDuration)
+    private void RefreshVisiblePages(TimeSpan? transitionDuration, bool preserveExistingBindings = false)
     {
-        if (host is null || background is null)
+        if (host is null || titleHost is null || background is null)
         {
             return;
         }
@@ -329,6 +368,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             if ((page < firstPage || page > lastPage) && reorderState?.SourcePage != page)
             {
                 visiblePages.Remove(page);
+                titleHost.Children.Remove(preview.TitleEditor);
                 preview.Hide();
                 availablePages.Push(preview);
             }
@@ -346,10 +386,11 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
                     continue;
                 }
 
+                titleHost.Children.Add(preview.TitleEditor);
                 preview.Bind(page, workspace.Width, workspace.Height, background, wallpaperPlacement, pageTitleStore.GetTitle(page), pageLayoutStore.GetLayout(page), GetRasterizationScale());
                 visiblePages.Add(page, preview);
             }
-            else
+            else if (!preserveExistingBindings && reorderState is null)
             {
                 preview.Bind(page, workspace.Width, workspace.Height, background, wallpaperPlacement, pageTitleStore.GetTitle(page), pageLayoutStore.GetLayout(page), GetRasterizationScale());
             }
@@ -447,7 +488,6 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
 
             host.Children.Add(page.PageHost);
             shadowHost.Children.Add(page.ShadowHost);
-            titleHost.Children.Add(page.TitleEditor);
         }
     }
 
@@ -570,6 +610,8 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
 
     private void CompletePageDrag(DesktopPageReorderPreviewState completedState, IReadOnlyDictionary<int, string>? reorderedTitles, Exception? failure)
     {
+        bool reordered = false;
+
         if (failure is not null)
         {
             logger.LogError(failure, "Failed to reorder desktop page {SourcePage} to {TargetPage}", completedState.SourcePage, completedState.TargetPage);
@@ -577,6 +619,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         else if (started && completedState.SourcePage != completedState.TargetPage && reorderedTitles is not null)
         {
             RemapVisiblePages(completedState.SourcePage, completedState.TargetPage, reorderedTitles);
+            reordered = true;
         }
 
         reorderState = null;
@@ -585,7 +628,10 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
 
         if (started)
         {
-            RefreshVisiblePages(ReorderAnimationDuration);
+            // RemapVisiblePages has already bound each preview to the page identity
+            // that travelled with it. Do not immediately overwrite that binding from
+            // an options monitor which may not have observed the persisted reorder yet.
+            RefreshVisiblePages(ReorderAnimationDuration, preserveExistingBindings: reordered);
             ReorderPreviewChanged?.Invoke(null, ReorderAnimationDuration);
         }
     }

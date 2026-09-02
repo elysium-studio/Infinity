@@ -152,25 +152,29 @@
             <Canvas>
                 <Canvas x:Name="PageCanvas" />
             </Canvas>
+            <Canvas x:Name="PreviewBackgroundCanvas" IsHitTestVisible="False" />
+            <Grid x:Name="ThumbnailCompositionSurface" IsHitTestVisible="False" />
             <Canvas x:Name="PreviewCanvas" />
             <Canvas x:Name="FocusCanvas" IsHitTestVisible="False" />
         </Grid>
         <Canvas x:Name="PageTitleCanvas" />
-        <Border
-            x:Name="ApplicationDockSurface"
-            AllowDrop="True"
-            Height="64"
-            MinWidth="64"
-            Padding="8"
+        <Grid
+            x:Name="ApplicationDockChrome"
             HorizontalAlignment="Center"
-            VerticalAlignment="Top"
-            Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
-            BorderBrush="{ThemeResource SurfaceStrokeColorDefaultBrush}"
-            BorderThickness="1"
-            CornerRadius="16"
-            DragOver="HandleApplicationDockDragOver"
-            Drop="HandleApplicationDockDrop">
-            <StackPanel Orientation="Horizontal" Spacing="4">
+            VerticalAlignment="Top">
+            <Border
+                x:Name="ApplicationDockSurface"
+                AllowDrop="True"
+                Height="64"
+                MinWidth="64"
+                Padding="8"
+                Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource SurfaceStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
+                DragOver="HandleApplicationDockDragOver"
+                Drop="HandleApplicationDockDrop">
+                <StackPanel Orientation="Horizontal" Spacing="4">
                 <ListView
                     x:Name="ApplicationDockList"
                     AllowDrop="True"
@@ -271,8 +275,9 @@
                         </Grid>
                     </Viewbox>
                 </Button>
-            </StackPanel>
-        </Border>
+                </StackPanel>
+            </Border>
+        </Grid>
         <Button
             x:Name="ShortcutHintSurface"
             x:Uid="DesktopShortcutHintsButton"
@@ -448,6 +453,7 @@
             </StackPanel>
         </Button>
         <Grid
+            x:Name="TopCommandSurface"
             Width="664"
             Height="44"
             Margin="0,32,0,0"

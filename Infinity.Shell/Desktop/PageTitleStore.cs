@@ -22,7 +22,7 @@ public sealed class PageTitleStore(IOptionsMonitor<Settings> settings, IWritable
         Settings updated = await writer.ReadAsync() ?? new Settings();
         updated.PageTitles ??= [];
 
-        if (string.IsNullOrEmpty(trimmed))
+        if (string.IsNullOrEmpty(trimmed) || trimmed == localizer.GetText("PageTitle", page + 1))
         {
             updated.PageTitles.Remove(page);
         }
@@ -33,7 +33,9 @@ public sealed class PageTitleStore(IOptionsMonitor<Settings> settings, IWritable
 
         await writer.WriteAsync(updated);
 
-        string updatedTitle = string.IsNullOrEmpty(trimmed) ? localizer.GetText("PageTitle", page + 1) : trimmed;
+        string updatedTitle = string.IsNullOrEmpty(trimmed) || trimmed == localizer.GetText("PageTitle", page + 1)
+            ? localizer.GetText("PageTitle", page + 1)
+            : trimmed;
 
         TitleChanged?.Invoke(page, updatedTitle);
 
@@ -48,18 +50,38 @@ public sealed class PageTitleStore(IOptionsMonitor<Settings> settings, IWritable
         }
 
         Settings updated = await writer.ReadAsync() ?? new Settings();
+        Dictionary<int, string> configuredTitles = updated.PageTitles is null
+            ? []
+            : new Dictionary<int, string>(updated.PageTitles);
         Dictionary<int, string> reorderedTitles = [];
+        int firstPage = Math.Min(sourcePage, targetPage);
+        int lastPage = Math.Max(sourcePage, targetPage);
+        HashSet<string> generatedTitles = [];
 
-        foreach ((int page, string title) in updated.PageTitles ?? [])
+        foreach (int page in configuredTitles.Keys)
         {
-            reorderedTitles[PageReorderMapping.Map(page, sourcePage, targetPage)] = title;
+            generatedTitles.Add(localizer.GetText("PageTitle", page + 1));
+        }
+
+        for (int page = firstPage; page <= lastPage; page++)
+        {
+            generatedTitles.Add(localizer.GetText("PageTitle", page + 1));
+        }
+
+        foreach ((int page, string title) in configuredTitles)
+        {
+            // Generated Page N labels describe positions, not persistent page
+            // identities. Do not move them, and remove any that an older build
+            // accidentally materialised into the custom-title store.
+            if (!generatedTitles.Contains(title))
+            {
+                reorderedTitles[PageReorderMapping.Map(page, sourcePage, targetPage)] = title;
+            }
         }
 
         updated.PageTitles = reorderedTitles;
         await writer.WriteAsync(updated);
 
-        int firstPage = Math.Min(sourcePage, targetPage);
-        int lastPage = Math.Max(sourcePage, targetPage);
         Dictionary<int, string> resolvedTitles = [];
 
         for (int page = firstPage; page <= lastPage; page++)

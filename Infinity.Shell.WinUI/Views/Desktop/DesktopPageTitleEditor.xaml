@@ -23,6 +23,7 @@
                     <ControlTemplate TargetType="ToggleButton">
                         <Border Background="{TemplateBinding Background}">
                             <ContentPresenter
+                                Control.IsTemplateFocusTarget="True"
                                 Content="{TemplateBinding Content}"
                                 ContentTemplate="{TemplateBinding ContentTemplate}"
                                 HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
@@ -131,18 +132,15 @@
                                             </ItemsRepeater.Layout>
                                             <ItemsRepeater.ItemTemplate>
                                                 <DataTemplate x:DataType="Shell:DesktopSnapLayoutOptionViewModel">
-                                                    <ToggleButton
+                                                    <Local:DesktopSnapLayoutOptionButton
                                                         Width="{x:Bind PreviewWidth}"
                                                         Height="{x:Bind PreviewHeight}"
                                                         Style="{StaticResource SnapLayoutButtonStyle}"
                                                         AutomationProperties.Name="{x:Bind Name}"
-                                                        Checked="HandleLayoutSelectionChanged"
                                                         Click="HandleLayoutClicked"
+                                                        InteractionStateChanged="HandleLayoutInteractionStateChanged"
                                                         IsChecked="{x:Bind IsSelected, Mode=OneWay}"
-                                                        PointerEntered="HandleLayoutPointerEntered"
-                                                        PointerExited="HandleLayoutPointerExited"
-                                                        Tag="{x:Bind}"
-                                                        Unchecked="HandleLayoutSelectionChanged">
+                                                        Tag="{x:Bind}">
                                                         <ItemsControl
                                                             Width="{x:Bind PreviewWidth}"
                                                             Height="{x:Bind PreviewHeight}"
@@ -157,12 +155,16 @@
                                                                 <DataTemplate x:DataType="Shell:DesktopSnapLayoutSlotViewModel">
                                                                     <Grid Width="{x:Bind Width}" Height="{x:Bind Height}">
                                                                         <Border Background="{ThemeResource ControlFillColorSecondaryBrush}" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="3" />
-                                                                        <Border Background="{ThemeResource AccentFillColorDefaultBrush}" BorderBrush="{ThemeResource AccentFillColorDefaultBrush}" BorderThickness="1" CornerRadius="3" Opacity="{x:Bind Local:DesktopPageTitleEditor.ToOpacity(IsHighlighted), Mode=OneWay}" />
+                                                                        <Border Background="{ThemeResource ListViewItemBackgroundPointerOver}" BorderBrush="{ThemeResource ControlStrokeColorSecondaryBrush}" BorderThickness="1" CornerRadius="3" Opacity="{x:Bind Local:DesktopPageTitleEditor.ToOpacity(IsPointerOver), Mode=OneWay}" />
+                                                                        <Border Background="{ThemeResource ListViewItemBackgroundPressed}" CornerRadius="3" Opacity="{x:Bind Local:DesktopPageTitleEditor.ToOpacity(IsPressed), Mode=OneWay}" />
+                                                                        <Border Background="{ThemeResource AccentFillColorDefaultBrush}" BorderBrush="{ThemeResource AccentFillColorDefaultBrush}" BorderThickness="1" CornerRadius="3" Opacity="{x:Bind Local:DesktopPageTitleEditor.ToOpacity(IsSelected), Mode=OneWay}" />
+                                                                        <Border Background="{ThemeResource AccentFillColorSecondaryBrush}" BorderBrush="{ThemeResource AccentFillColorSecondaryBrush}" BorderThickness="1" CornerRadius="3" Opacity="{x:Bind Local:DesktopPageTitleEditor.ToOpacity(IsSelectedPointerOver), Mode=OneWay}" />
+                                                                        <Border Background="{ThemeResource AccentFillColorTertiaryBrush}" BorderBrush="{ThemeResource AccentFillColorTertiaryBrush}" BorderThickness="1" CornerRadius="3" Opacity="{x:Bind Local:DesktopPageTitleEditor.ToOpacity(IsSelectedPressed), Mode=OneWay}" />
                                                                     </Grid>
                                                                 </DataTemplate>
                                                             </ItemsControl.ItemTemplate>
                                                         </ItemsControl>
-                                                    </ToggleButton>
+                                                    </Local:DesktopSnapLayoutOptionButton>
                                                 </DataTemplate>
                                             </ItemsRepeater.ItemTemplate>
                                         </ItemsRepeater>

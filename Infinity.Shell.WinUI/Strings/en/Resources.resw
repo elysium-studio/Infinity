@@ -444,6 +444,18 @@
   <data name="DesktopWindowBringToCurrentPage" xml:space="preserve">
     <value>Bring to current page</value>
   </data>
+  <data name="DesktopWindowMinimize" xml:space="preserve">
+    <value>Minimise</value>
+  </data>
+  <data name="DesktopWindowMaximize" xml:space="preserve">
+    <value>Maximise</value>
+  </data>
+  <data name="DesktopWindowRestore" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="DesktopWindowNewPage" xml:space="preserve">
+    <value>New page</value>
+  </data>
   <data name="DesktopWindowSendToPage" xml:space="preserve">
     <value>Send to page</value>
   </data>
@@ -472,4 +484,4 @@
   <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>Add or remove a window from the selection</value></data>
   <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>Open selected window</value></data>
   <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>Search windows</value></data>
-+</root>
+</root>

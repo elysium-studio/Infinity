@@ -59,6 +59,7 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<IWindowMover, WindowMover>();
             services.AddSingleton<IWindowResizeSynchronizer, WindowResizeSynchronizer>();
             services.AddSingleton<IWindowCloser, WindowCloser>();
+            services.AddSingleton<IWindowStateController, WindowStateController>();
             services.AddSingleton<WindowConcealer>();
             services.AddSingleton<IWindowConcealer>(provider => provider.GetRequiredService<WindowConcealer>());
             services.AddSingleton<IWindowConcealmentRecovery>(provider => provider.GetRequiredService<WindowConcealer>());

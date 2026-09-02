@@ -17,7 +17,7 @@ public sealed class DesktopPageArrangementCoordinatorTests
         DesktopSnapLayoutCatalog catalog = new();
         DesktopSnapSlotOccupancyResolver occupancyResolver = new();
         DesktopSnapPlacementResolver placementResolver = new(workspace, catalog);
-        DesktopWindowPlacementCoordinator placementCoordinator = new(store, scroller, workspace, new TestWindowResizeSynchronizer(), new TestWindowCloser(), placementResolver, occupancyResolver);
+        DesktopWindowPlacementCoordinator placementCoordinator = new(store, scroller, workspace, new TestWindowResizeSynchronizer(), new TestWindowCloser(), new TestWindowStateController(), placementResolver, occupancyResolver);
         DesktopPageArrangementCoordinator coordinator = new(store, catalog, placementResolver, occupancyResolver, placementCoordinator);
         TrackedWindow occupied = AddWindow(store, 1, 6, 6, 948, 1028);
         TrackedWindow floating = AddWindow(store, 2, 1200, 200, 500, 400);
@@ -39,7 +39,7 @@ public sealed class DesktopPageArrangementCoordinatorTests
         DesktopSnapLayoutCatalog catalog = new();
         DesktopSnapSlotOccupancyResolver occupancyResolver = new();
         DesktopSnapPlacementResolver placementResolver = new(workspace, catalog);
-        DesktopWindowPlacementCoordinator placementCoordinator = new(store, scroller, workspace, new TestWindowResizeSynchronizer(), new TestWindowCloser(), placementResolver, occupancyResolver);
+        DesktopWindowPlacementCoordinator placementCoordinator = new(store, scroller, workspace, new TestWindowResizeSynchronizer(), new TestWindowCloser(), new TestWindowStateController(), placementResolver, occupancyResolver);
         DesktopPageArrangementCoordinator coordinator = new(store, catalog, placementResolver, occupancyResolver, placementCoordinator);
         AddWindow(store, 1, 100, 100, 400, 300);
         AddWindow(store, 2, 600, 100, 400, 300);
@@ -105,5 +105,13 @@ public sealed class DesktopPageArrangementCoordinatorTests
     private sealed class TestWindowCloser : IWindowCloser
     {
         public bool TryClose(nint windowHandle) => true;
+    }
+
+    private sealed class TestWindowStateController : IWindowStateController
+    {
+        public WindowCommandState GetState(nint windowHandle) => WindowCommandState.Unavailable;
+        public bool TryMaximize(nint windowHandle) => true;
+        public bool TryRestore(nint windowHandle) => true;
+        public bool TryMinimize(nint windowHandle) => true;
     }
 }

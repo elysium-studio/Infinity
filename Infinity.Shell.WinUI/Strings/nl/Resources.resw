@@ -434,6 +434,10 @@
   </data>
   <data name="PageLayoutArrangeButton" xml:space="preserve"><value>Deze pagina rangschikken</value></data>
   <data name="DesktopWindowBringToCurrentPage" xml:space="preserve"><value>Naar huidige pagina brengen</value></data>
+  <data name="DesktopWindowMinimize" xml:space="preserve"><value>Minimaliseren</value></data>
+  <data name="DesktopWindowMaximize" xml:space="preserve"><value>Maximaliseren</value></data>
+  <data name="DesktopWindowRestore" xml:space="preserve"><value>Herstellen</value></data>
+  <data name="DesktopWindowNewPage" xml:space="preserve"><value>Nieuwe pagina</value></data>
   <data name="DesktopWindowSendToPage" xml:space="preserve"><value>Naar pagina verzenden</value></data>
   <data name="DesktopWindowMoveToSlot" xml:space="preserve"><value>Naar vak verplaatsen</value></data>
   <data name="DesktopWindowSlot" xml:space="preserve"><value>Vak {0}</value></data>
@@ -448,4 +452,4 @@
   <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>Venster aan selectie toevoegen of eruit verwijderen</value></data>
   <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>Geselecteerd venster openen</value></data>
   <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>Vensters zoeken</value></data>
-+</root>
+</root>
