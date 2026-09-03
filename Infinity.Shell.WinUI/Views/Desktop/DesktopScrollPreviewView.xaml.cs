@@ -186,8 +186,6 @@ public sealed partial class DesktopScrollPreviewView :
             Synchronise();
             QueueAdaptiveForegroundRefresh();
 
-            PageTitleCanvas.UpdateLayout();
-            pageStrip.PrepareHeaderEntrance(chromeAnimator);
             SetInteractionEnabled(false);
             Opacity = 1;
         }
@@ -214,14 +212,12 @@ public sealed partial class DesktopScrollPreviewView :
         bool restoreSpacing = spacingProgress != 1;
         spacingProgress = 1;
         SetInteractionEnabled(false);
+        pageStrip.SetHeadersVisible(false);
         TopCommandSurface.UpdateLayout();
         chromeAnimator.ResetTopChrome(TopCommandSurface);
         RefreshLayout(restoreSpacing ? animator.EnterDuration : null);
-        PageTitleCanvas.UpdateLayout();
         ApplicationDockChrome.UpdateLayout();
         ApplicationDockList.UpdateLayout();
-        pageStrip.PrepareHeaderEntrance(chromeAnimator);
-        pageStrip.AnimateHeaderEntrance(chromeAnimator, animator.EnterDuration);
         chromeAnimator.AnimateDock(ApplicationDockChrome, GetApplicationDockEntranceElements());
 
         int pendingEntranceAnimations = 2;
@@ -248,6 +244,10 @@ public sealed partial class DesktopScrollPreviewView :
         animator.AnimateInward(PreviewSurface, GetAnimationWidth(), GetAnimationHeight(), () =>
         {
             ClearLayoutTransitions();
+            if (isRunning && spacingProgress == 1)
+            {
+                pageStrip.SetHeadersVisible(true);
+            }
             CompleteEntranceAnimation();
         });
     }
@@ -268,22 +268,8 @@ public sealed partial class DesktopScrollPreviewView :
 
         spacingProgress = 0;
         SetInteractionEnabled(false);
-
-        int pendingPreExitAnimations = 2;
-        void CompletePreExitAnimation()
-        {
-            pendingPreExitAnimations--;
-
-            if (pendingPreExitAnimations == 0)
-            {
-                BeginAnimateOutward(completed);
-            }
-        }
-
-        chromeAnimator.AnimatePageHeadersOutward(
-            pageStrip.PrepareHeaderAnimation(),
-            CompletePreExitAnimation);
-        chromeAnimator.AnimateTopChromeOutward(TopCommandSurface, CompletePreExitAnimation);
+        pageStrip.SetHeadersVisible(false);
+        chromeAnimator.AnimateTopChromeOutward(TopCommandSurface, () => BeginAnimateOutward(completed));
     }
 
     public void Deactivate()
@@ -315,8 +301,6 @@ public sealed partial class DesktopScrollPreviewView :
         chromeAnimator.Reset(GetApplicationDockEntranceElements());
         chromeAnimator.ResetBottomChrome(ShortcutHintSurface);
         chromeAnimator.ResetTopChrome(TopCommandSurface);
-        pageStrip.ResetHeaderAnimations(chromeAnimator);
-
         UnsubscribeEvents();
         pageStrip.Stop();
 

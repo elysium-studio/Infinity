@@ -67,6 +67,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         scaleHost = scaleElement;
         overviewScale = scale;
         interactionEnabled = false;
+        SetHeadersVisible(false);
 
         scaleHost.SizeChanged += HandleScaleHostSizeChanged;
         ConfigureHost();
@@ -89,6 +90,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         }
 
         started = false;
+        SetHeadersVisible(false);
         overviewDragScroller.Stop();
         cursorConfinement.Release();
 
@@ -192,42 +194,16 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         }
     }
 
-    public void AnimateHeaderEntrance(DesktopOverviewChromeAnimator animator, TimeSpan initialDelay)
+    public void SetHeadersVisible(bool visible)
     {
-        DesktopPageTitleEditor[] headers = GetOrderedHeaders();
-        animator.AnimatePageHeaders(headers.Select(header => header.EntranceSurface).ToArray(), initialDelay);
-    }
-
-    public void PrepareHeaderEntrance(DesktopOverviewChromeAnimator animator)
-    {
-        DesktopPageTitleEditor[] headers = GetOrderedHeaders();
-
-        foreach (DesktopPageTitleEditor header in headers)
+        if (titleHost is null)
         {
-            header.PrepareAnimation();
+            return;
         }
 
-        animator.PreparePageHeaders(headers.Select(header => header.EntranceSurface).ToArray());
+        ElementCompositionPreview.GetElementVisual(titleHost).Opacity = visible ? 1 : 0;
+        titleHost.IsHitTestVisible = visible;
     }
-
-    public FrameworkElement[] PrepareHeaderAnimation()
-    {
-        DesktopPageTitleEditor[] headers = GetOrderedHeaders();
-
-        foreach (DesktopPageTitleEditor header in headers)
-        {
-            header.PrepareAnimation();
-        }
-
-        return [.. headers.Select(header => header.EntranceSurface)];
-    }
-
-    public void ResetHeaderAnimations(DesktopOverviewChromeAnimator animator) =>
-        animator.ResetHeaders(pagePool.Select(page => page.TitleEditor.EntranceSurface));
-
-    private DesktopPageTitleEditor[] GetOrderedHeaders() => [.. visiblePages
-        .OrderBy(entry => entry.Key)
-        .Select(entry => entry.Value.TitleEditor)];
 
     public void SetMonitorBounds(int x, int y, int width, int height)
     {

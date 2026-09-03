@@ -38,17 +38,9 @@ public sealed partial class DesktopPageTitleEditor :
 
     public DesktopPageTitleViewModel ViewModel { get; }
 
-    internal FrameworkElement EntranceSurface => this;
-
     public Visibility ToVisibility(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
 
     public static double ToOpacity(bool value) => value ? 1 : 0;
-
-    public void PrepareAnimation()
-    {
-        IsHitTestVisible = false;
-        UpdateLayout();
-    }
 
     public void SetInteractionEnabled(bool value)
     {
