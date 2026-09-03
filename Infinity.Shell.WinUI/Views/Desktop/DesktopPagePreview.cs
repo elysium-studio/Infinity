@@ -211,6 +211,8 @@ public sealed partial class DesktopPagePreview :
 
         PageHost.Opacity = 1;
         shadowHost.Opacity = 1;
+        titleVisual.Opacity = 1;
+        TitleEditor.IsEnabled = true;
         PageHost.IsHitTestVisible = interactionEnabled;
         IsHitTestVisible = interactionEnabled;
         Opacity = 1;
@@ -234,6 +236,9 @@ public sealed partial class DesktopPagePreview :
         PageHost.Opacity = 0;
         shadowHost.Opacity = 0;
         shadowHost.Shadow = null;
+        titleVisual.Opacity = 0;
+        TitleEditor.IsHitTestVisible = false;
+        TitleEditor.IsEnabled = false;
 
         PageHost.IsHitTestVisible = false;
         IsHitTestVisible = false;

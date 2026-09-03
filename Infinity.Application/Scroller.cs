@@ -44,6 +44,7 @@ public sealed class Scroller(IPanState state,
     private bool isStarted;
     private bool isInputCenteringPending;
     private double? inputNavigationTarget;
+    private int wheelDirection;
 
     private WindowMoveScope? activeMoveScope;
     private Timer? moveGuardReleaseTimer;
@@ -57,6 +58,10 @@ public sealed class Scroller(IPanState state,
     public void CancelNavigation()
     {
         navigationMotion.Reset();
+        if (inputNavigationTarget.HasValue)
+        {
+            easingMotion.Reset();
+        }
         isInputCenteringPending = false;
         inputNavigationTarget = null;
     }
@@ -387,7 +392,7 @@ public sealed class Scroller(IPanState state,
 
     private void HandleScrollDeltaReceived(int nativeScrollDelta)
     {
-        if (dragGuard.IsAnyDragging)
+        if (dragGuard.IsAnyDragging || nativeScrollDelta == 0)
         {
             return;
         }
@@ -462,24 +467,37 @@ public sealed class Scroller(IPanState state,
     private void NavigateByWheelDelta(int nativeScrollDelta)
     {
         int pageDelta = -Math.Sign(nativeScrollDelta) * Math.Max(1, Math.Abs(nativeScrollDelta) / StandardWheelDelta);
-        double origin = inputNavigationTarget ?? state.Offset;
+        int direction = Math.Sign(pageDelta);
+        bool continuing = inputNavigationTarget.HasValue;
+        double previousTarget = inputNavigationTarget ?? state.Offset;
+        // A reversal must come back from the visible page, not work through a
+        // backlog of destinations accumulated by earlier wheel events.
+        double origin = continuing && direction == wheelDirection ? previousTarget : state.Offset;
 
-        if (!pageCenterTargetResolver.TryResolveAdjacent(origin, pageDelta, state.MinOffset, state.MaxOffset, out double targetOffset))
+        if (!pageCenterTargetResolver.TryResolveAdjacent(origin, pageDelta, state.MinOffset, state.MaxOffset, out double targetOffset) &&
+            (!continuing || direction == wheelDirection))
         {
             return;
         }
 
-        pixelMotion.Reset();
-        easingMotion.Reset();
-        momentumMotion.Reset();
-        navigationMotion.Reset();
+        if (!continuing)
+        {
+            pixelMotion.Reset();
+            easingMotion.Reset();
+            momentumMotion.Reset();
+            navigationMotion.Reset();
+        }
+
         springPosition = 0;
         springVelocity = 0;
         isSpinging = false;
         isInputCenteringPending = false;
         inputNavigationTarget = targetOffset;
+        wheelDirection = direction;
         haltRequested = false;
-        navigationMotion.AddDelta(targetOffset - state.Offset);
+        // Keep the known-good spring's velocity and elapsed time. Only change
+        // its destination; restarting it on every notch starves rapid motion.
+        easingMotion.AddDelta(targetOffset - previousTarget);
         DispatchInputCallback(startTimer, "wheel page navigation");
     }
 

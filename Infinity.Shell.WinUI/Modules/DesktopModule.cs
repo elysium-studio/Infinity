@@ -20,6 +20,7 @@ public sealed class DesktopModule :
         services
             .AddSingleton<DesktopOverviewBackdropAnimator>()
             .AddSingleton<DesktopWallpaperSurfaceProvider>()
+            .AddSingleton<DesktopWallpaperPreloader>()
             .AddSingleton<DesktopWallpaperBrushFactory>()
             .AddSingleton<DesktopWallpaperColorSampler>()
             .AddSingleton<DesktopOverviewForegroundThemeResolver>()
@@ -86,6 +87,12 @@ public sealed class DesktopModule :
         {
             backgroundSource.Start();
             return backgroundSource.Stop;
+        });
+
+        services.Subscribe<DesktopWallpaperPreloader>((provider, preloader) =>
+        {
+            preloader.Start();
+            return preloader.Stop;
         });
 
     }

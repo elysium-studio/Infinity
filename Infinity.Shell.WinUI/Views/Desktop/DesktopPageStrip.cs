@@ -28,6 +28,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
     private FrameworkElement? scaleHost;
     private DesktopPageBackground? background;
     private DesktopBackground? backgroundSnapshot;
+    private DesktopPageDisplayState? displayState;
     private DesktopWallpaperPlacement wallpaperPlacement;
     private double currentOffset;
     private double currentSpacingProgress = 1;
@@ -135,6 +136,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         reorderStartContentOffset = 0;
         interactionEnabled = false;
         activeSnapPage = -1;
+        displayState = null;
     }
 
     public void Synchronise(double offset)
@@ -338,13 +340,18 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         }
 
         (int firstPage, int lastPage) = layoutCalculator.CalculateVisiblePageRange(pager.MaxPages, currentOffset, workspace.Width, GetViewportWidth(), overviewScale, currentSpacingProgress);
+        DesktopPageDisplayState nextDisplayState = new(workspace.Width, workspace.Height, GetRasterizationScale(), wallpaperPlacement);
+        bool displayChanged = displayState != nextDisplayState;
+        if (!preserveExistingBindings && reorderState is null)
+        {
+            displayState = nextDisplayState;
+        }
 
         foreach ((int page, DesktopPagePreview preview) in visiblePages.ToArray())
         {
             if ((page < firstPage || page > lastPage) && reorderState?.SourcePage != page)
             {
                 visiblePages.Remove(page);
-                titleHost.Children.Remove(preview.TitleEditor);
                 preview.Hide();
                 availablePages.Push(preview);
             }
@@ -362,16 +369,15 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
                     continue;
                 }
 
-                titleHost.Children.Add(preview.TitleEditor);
                 preview.Bind(page, workspace.Width, workspace.Height, background, wallpaperPlacement, pageTitleStore.GetTitle(page), pageLayoutStore.GetLayout(page), GetRasterizationScale());
+                preview.SetInteractionEnabled(interactionEnabled);
                 visiblePages.Add(page, preview);
             }
-            else if (!preserveExistingBindings && reorderState is null)
+            else if (displayChanged && !preserveExistingBindings && reorderState is null)
             {
                 preview.Bind(page, workspace.Width, workspace.Height, background, wallpaperPlacement, pageTitleStore.GetTitle(page), pageLayoutStore.GetLayout(page), GetRasterizationScale());
             }
 
-            preview.SetInteractionEnabled(interactionEnabled);
             UpdatePage(page, preview, transitionDuration);
         }
 
@@ -464,6 +470,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
 
             host.Children.Add(page.PageHost);
             shadowHost.Children.Add(page.ShadowHost);
+            titleHost.Children.Add(page.TitleEditor);
         }
     }
 
@@ -812,11 +819,13 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         {
             DesktopBackground current = backgroundSource.GetBackground();
 
-            if (background is null || current != backgroundSnapshot)
+            if (background is not null && current == backgroundSnapshot)
             {
-                backgroundSnapshot = current;
-                background = backgroundFactory.Create(current);
+                return;
             }
+
+            backgroundSnapshot = current;
+            background = backgroundFactory.Create(current);
 
             if (background is not null)
             {

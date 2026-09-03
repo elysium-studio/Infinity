@@ -55,6 +55,7 @@ public sealed partial class DesktopScrollPreviewView :
     private bool isRunning;
     private double spacingProgress = 1;
     private int monitorOriginX;
+    private int scrollRefreshQueued;
     private int monitorOriginY;
     private int overlayScreenOriginX;
     private int overlayScreenOriginY;
@@ -558,17 +559,36 @@ public sealed partial class DesktopScrollPreviewView :
     {
         if (DispatcherQueue.HasThreadAccess)
         {
-            ApplicationPickerFlyout.Hide();
-            RefreshLayout();
+            RefreshScrollLayout();
+            return;
         }
-        else
+
+        // The scroll worker can advance faster than XAML can render. Keep one
+        // pending refresh of the latest offset instead of building a backlog.
+        if (Interlocked.Exchange(ref scrollRefreshQueued, 1) != 0)
         {
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                ApplicationPickerFlyout.Hide();
-                RefreshLayout();
-            });
+            return;
         }
+
+        if (!DispatcherQueue.TryEnqueue(() =>
+        {
+            Interlocked.Exchange(ref scrollRefreshQueued, 0);
+            RefreshScrollLayout();
+        }))
+        {
+            Interlocked.Exchange(ref scrollRefreshQueued, 0);
+        }
+    }
+
+    private void RefreshScrollLayout()
+    {
+        if (!isRunning)
+        {
+            return;
+        }
+
+        ApplicationPickerFlyout.Hide();
+        RefreshLayout();
     }
 
     private void HandleDismissSurfaceTapped(object sender, TappedRoutedEventArgs args)

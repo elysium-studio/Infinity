@@ -1,5 +1,4 @@
 using Infinity.Application.Abstractions;
-using System.Diagnostics;
 
 namespace Infinity.Application;
 
@@ -14,12 +13,22 @@ public sealed class EasingScrollMotion :
     private const double ReversalDamping = 0.20;
 
     private readonly Lock syncLock = new();
+    private readonly TimeProvider timeProvider;
 
     private double current;
     private double target;
     private double velocity;
     private long lastDrainTimestamp;
     private bool isTracking;
+
+    public EasingScrollMotion() : this(TimeProvider.System)
+    {
+    }
+
+    public EasingScrollMotion(TimeProvider timeProvider)
+    {
+        this.timeProvider = timeProvider;
+    }
 
     public bool IsActive
     {
@@ -57,15 +66,15 @@ public sealed class EasingScrollMotion :
     {
         lock (syncLock)
         {
-            long now = Stopwatch.GetTimestamp();
+            long now = timeProvider.GetTimestamp();
 
             if (!isTracking)
             {
                 isTracking = true;
-                lastDrainTimestamp = now - (long)(InitialIntervalSeconds * Stopwatch.Frequency);
+                lastDrainTimestamp = now - (long)(InitialIntervalSeconds * timeProvider.TimestampFrequency);
             }
 
-            double elapsedSeconds = (now - lastDrainTimestamp) / (double)Stopwatch.Frequency;
+            double elapsedSeconds = timeProvider.GetElapsedTime(lastDrainTimestamp, now).TotalSeconds;
             lastDrainTimestamp = now;
 
             if (elapsedSeconds <= 0)
