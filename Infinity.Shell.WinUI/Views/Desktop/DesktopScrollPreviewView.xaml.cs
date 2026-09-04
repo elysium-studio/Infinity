@@ -26,6 +26,9 @@ public sealed partial class DesktopScrollPreviewView :
 {
     private const string ApplicationPickerDragProperty = "Infinity.ApplicationPin.Identifier";
     private const double TopCommandMargin = 32;
+    private const double ClockTopMargin = 32;
+    private const double SearchWithClockTopMargin = 144;
+    private const double SettingsTopMargin = 24;
 
     private readonly IWindowPreviewSurface windowPreviewSurface;
     private readonly IWindowCollection windowCollection;
@@ -39,6 +42,7 @@ public sealed partial class DesktopScrollPreviewView :
     private readonly DesktopOverviewForegroundThemeResolver foregroundThemeResolver;
     private readonly DesktopScrollPreviewAnimator animator;
     private readonly DesktopOverviewChromeAnimator chromeAnimator;
+    private readonly DesktopOverviewClockController clockController;
     private readonly DesktopOverviewLayoutPresenter layoutPresenter;
     private readonly DesktopPageStrip pageStrip;
     private readonly DesktopWindowPreviewCollection previews;
@@ -65,7 +69,7 @@ public sealed partial class DesktopScrollPreviewView :
     private int monitorHeight;
     private int foregroundGeneration;
 
-    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IPanState panState, IPager pager, IScroller scroller, IWorkspace workspace, IScrollInputSuppression scrollInputSuppression, IDesktopBackgroundSource backgroundSource, DesktopOverviewConfiguration overviewConfiguration, DesktopOverviewForegroundThemeResolver foregroundThemeResolver, DesktopScrollPreviewAnimator animator, DesktopOverviewChromeAnimator chromeAnimator, DesktopOverviewLayoutPresenter layoutPresenter, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationDockViewModel applicationDock, DesktopApplicationDockContextMenuBuilder applicationDockContextMenuBuilder, DesktopApplicationDockPressAnimator applicationDockPressAnimator, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator, DesktopOverviewInputController inputController, DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator, ILogger<DesktopScrollPreviewView> logger)
+    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IPanState panState, IPager pager, IScroller scroller, IWorkspace workspace, IScrollInputSuppression scrollInputSuppression, IDesktopBackgroundSource backgroundSource, DesktopOverviewConfiguration overviewConfiguration, DesktopOverviewForegroundThemeResolver foregroundThemeResolver, DesktopScrollPreviewAnimator animator, DesktopOverviewChromeAnimator chromeAnimator, DesktopOverviewClockController clockController, DesktopOverviewLayoutPresenter layoutPresenter, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationDockViewModel applicationDock, DesktopApplicationDockContextMenuBuilder applicationDockContextMenuBuilder, DesktopApplicationDockPressAnimator applicationDockPressAnimator, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator, DesktopOverviewInputController inputController, DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator, ILogger<DesktopScrollPreviewView> logger)
     {
         InitializeComponent();
 
@@ -81,6 +85,7 @@ public sealed partial class DesktopScrollPreviewView :
         this.foregroundThemeResolver = foregroundThemeResolver;
         this.animator = animator;
         this.chromeAnimator = chromeAnimator;
+        this.clockController = clockController;
         this.layoutPresenter = layoutPresenter;
         this.pageStrip = pageStrip;
         this.previews = previews;
@@ -90,6 +95,7 @@ public sealed partial class DesktopScrollPreviewView :
         this.snapInteractionCoordinator = snapInteractionCoordinator;
         this.logger = logger;
         ShortcutHints = shortcutHints;
+        Clock = clockController.ViewModel;
         ApplicationPicker = applicationPicker;
         ApplicationDock = applicationDock;
         this.applicationDockContextMenuBuilder = applicationDockContextMenuBuilder;
@@ -126,6 +132,8 @@ public sealed partial class DesktopScrollPreviewView :
     public bool IsRunning => isRunning;
 
     public DesktopShortcutHintsViewModel ShortcutHints { get; }
+
+    public DesktopOverviewClockViewModel Clock { get; }
 
     public DesktopApplicationPickerViewModel ApplicationPicker { get; }
 
@@ -171,10 +179,20 @@ public sealed partial class DesktopScrollPreviewView :
         monitorHeight = monitorBounds.Height;
         pageStrip.SetMonitorBounds(monitorBounds.X, monitorBounds.Y, monitorBounds.Width, monitorBounds.Height);
         bool originChanged = RefreshMonitorOrigin();
+        ApplyChromeSettings();
+
+        if (overviewConfiguration.ShowClock)
+        {
+            clockController.Start(DispatcherQueue);
+        }
+        else
+        {
+            clockController.Stop();
+        }
         cursorConfinement.SetOwner(ownerWindowHandle);
         windowPreviewSurface.Initialize(ownerWindowHandle);
-        TopCommandSurface.UpdateLayout();
-        chromeAnimator.ResetTopChrome(TopCommandSurface);
+        TopChromeSurface.UpdateLayout();
+        chromeAnimator.ResetTopChrome(TopChromeSurface);
 
         if (!isRunning)
         {
@@ -214,8 +232,8 @@ public sealed partial class DesktopScrollPreviewView :
         spacingProgress = 1;
         SetInteractionEnabled(false);
         pageStrip.SetHeadersVisible(false);
-        TopCommandSurface.UpdateLayout();
-        chromeAnimator.ResetTopChrome(TopCommandSurface);
+        TopChromeSurface.UpdateLayout();
+        chromeAnimator.ResetTopChrome(TopChromeSurface);
         RefreshLayout(restoreSpacing ? animator.EnterDuration : null);
         ApplicationDockChrome.UpdateLayout();
         ApplicationDockList.UpdateLayout();
@@ -247,7 +265,7 @@ public sealed partial class DesktopScrollPreviewView :
             ClearLayoutTransitions();
             if (isRunning && spacingProgress == 1)
             {
-                pageStrip.SetHeadersVisible(true);
+                pageStrip.SetHeadersVisible(overviewConfiguration.ShowPageHeaders);
             }
             CompleteEntranceAnimation();
         });
@@ -270,7 +288,7 @@ public sealed partial class DesktopScrollPreviewView :
         spacingProgress = 0;
         SetInteractionEnabled(false);
         pageStrip.SetHeadersVisible(false);
-        chromeAnimator.AnimateTopChromeOutward(TopCommandSurface, () => BeginAnimateOutward(completed));
+        chromeAnimator.AnimateTopChromeOutward(TopChromeSurface, () => BeginAnimateOutward(completed));
     }
 
     public void Deactivate()
@@ -281,6 +299,7 @@ public sealed partial class DesktopScrollPreviewView :
         }
 
         isRunning = false;
+        clockController.Stop();
         foregroundGeneration++;
         cursorConfinement.Release();
         ShortcutHintsFlyout.Hide();
@@ -294,6 +313,7 @@ public sealed partial class DesktopScrollPreviewView :
         previews.ClearSelection();
         inputController.ResetModifiers();
         SettingsButton.RequestedTheme = ElementTheme.Default;
+        ClockSurface.RequestedTheme = ElementTheme.Default;
         ShortcutHintSurface.RequestedTheme = ElementTheme.Default;
         snapInteractionCoordinator.Stop();
 
@@ -301,9 +321,10 @@ public sealed partial class DesktopScrollPreviewView :
         chromeAnimator.Reset(ApplicationDockChrome);
         chromeAnimator.Reset(GetApplicationDockEntranceElements());
         chromeAnimator.ResetBottomChrome(ShortcutHintSurface);
-        chromeAnimator.ResetTopChrome(TopCommandSurface);
+        chromeAnimator.ResetTopChrome(TopChromeSurface);
         UnsubscribeEvents();
         pageStrip.Stop();
+        windowPreviewSurface.Clear();
 
         Opacity = 0;
     }
@@ -341,22 +362,25 @@ public sealed partial class DesktopScrollPreviewView :
     private void SetInteractionEnabled(bool value)
     {
         DismissSurface.IsHitTestVisible = value;
-        WindowSearchBox.IsHitTestVisible = value;
-        WindowSearchBox.IsTabStop = value;
-        ShortcutHintSurface.IsHitTestVisible = value;
-        ShortcutHintSurface.IsTabStop = value;
-        ApplicationDockChrome.IsHitTestVisible = value;
-        ApplicationDockSurface.IsHitTestVisible = value;
-        ApplicationDockList.IsHitTestVisible = value;
-        ApplicationDockList.IsItemClickEnabled = value;
-        AllApplicationsButton.IsHitTestVisible = value;
-        AllApplicationsButton.IsTabStop = value;
+        bool searchEnabled = value && overviewConfiguration.ShowSearchBox;
+        bool shortcutButtonEnabled = value && overviewConfiguration.ShowKeyboardShortcutButton;
+        bool dockEnabled = value && overviewConfiguration.ShowApplicationDock;
+        WindowSearchBox.IsHitTestVisible = searchEnabled;
+        WindowSearchBox.IsTabStop = searchEnabled;
+        ShortcutHintSurface.IsHitTestVisible = shortcutButtonEnabled;
+        ShortcutHintSurface.IsTabStop = shortcutButtonEnabled;
+        ApplicationDockChrome.IsHitTestVisible = dockEnabled;
+        ApplicationDockSurface.IsHitTestVisible = dockEnabled;
+        ApplicationDockList.IsHitTestVisible = dockEnabled;
+        ApplicationDockList.IsItemClickEnabled = dockEnabled;
+        AllApplicationsButton.IsHitTestVisible = dockEnabled;
+        AllApplicationsButton.IsTabStop = dockEnabled;
 
         for (int index = 0; index < ApplicationDockList.Items.Count; index++)
         {
             if (ApplicationDockList.ContainerFromIndex(index) is Control container)
             {
-                container.IsHitTestVisible = value;
+                container.IsHitTestVisible = dockEnabled;
             }
         }
 
@@ -365,7 +389,7 @@ public sealed partial class DesktopScrollPreviewView :
         pageStrip.SetInteractionEnabled(value);
         previews.SetInteractionEnabled(value);
 
-        if (value)
+        if (searchEnabled)
         {
             _ = WindowSearchBox.Focus(Microsoft.UI.Xaml.FocusState.Programmatic);
         }
@@ -421,13 +445,46 @@ public sealed partial class DesktopScrollPreviewView :
         workAreaOffsetX = offsetX;
         workAreaOffsetY = offsetY;
         PreviewSurface.Translation = new Vector3(workAreaOffsetX, workAreaOffsetY, 0);
-        TopCommandSurface.Margin = new Thickness(0, workAreaOffsetY + TopCommandMargin, 0, 0);
+        UpdateTopCommandSurfaceLayout();
         ShortcutHintSurface.Margin = new Thickness(0, Math.Max(0, workAreaOffsetY + workspace.Height - 60), 24, 0);
         ApplicationDockChrome.Margin = new Thickness(0, Math.Max(0, workAreaOffsetY + workspace.Height - 88), 0, 0);
         pageStrip.SetWorkAreaOffset(workAreaOffsetX, workAreaOffsetY);
         cursorConfinement.SetWorkAreaOffsetY(workAreaOffsetY);
         snapInteractionCoordinator.UpdateMonitorOrigin(monitorOriginX, monitorOriginY);
         return changed;
+    }
+
+    private void ApplyChromeSettings()
+    {
+        ApplicationDockChrome.Visibility = overviewConfiguration.ShowApplicationDock
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        ShortcutHintSurface.Visibility = overviewConfiguration.ShowKeyboardShortcutButton
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        ClockSurface.Visibility = overviewConfiguration.ShowClock
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        SearchSurface.Visibility = overviewConfiguration.ShowSearchBox
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        if (!overviewConfiguration.ShowSearchBox && WindowSearchBox.Text.Length > 0)
+        {
+            WindowSearchBox.Text = string.Empty;
+        }
+
+        UpdateTopCommandSurfaceLayout();
+    }
+
+    private void UpdateTopCommandSurfaceLayout()
+    {
+        ClockSurface.Margin = new Thickness(0, workAreaOffsetY + ClockTopMargin, 0, 0);
+        double searchTopMargin = overviewConfiguration.ShowClock
+            ? SearchWithClockTopMargin
+            : TopCommandMargin;
+        TopCommandSurface.Margin = new Thickness(0, workAreaOffsetY + searchTopMargin, 0, 0);
+        SettingsButton.Margin = new Thickness(0, workAreaOffsetY + SettingsTopMargin, 24, 0);
     }
 
     private void SubscribeEvents()
@@ -500,6 +557,7 @@ public sealed partial class DesktopScrollPreviewView :
     private async Task ResolveAdaptiveForegroundsAsync(int generation)
     {
         ElementTheme settingsTheme;
+        ElementTheme clockTheme;
         ElementTheme shortcutTheme;
 
         try
@@ -507,7 +565,6 @@ public sealed partial class DesktopScrollPreviewView :
             double rasterizationScale = XamlRoot?.RasterizationScale ?? 1;
             DesktopBackground background = backgroundSource.GetBackground();
             Windows.Foundation.Point settingsPoint = GetMonitorPoint(SettingsButton, rasterizationScale);
-            Windows.Foundation.Point shortcutPoint = GetMonitorPoint(ShortcutHintSurface, rasterizationScale);
             Task<ElementTheme> settingsThemeTask = foregroundThemeResolver.ResolveAsync(overviewConfiguration.Backdrop,
                 background,
                 monitorWidth,
@@ -515,14 +572,42 @@ public sealed partial class DesktopScrollPreviewView :
                 settingsPoint,
                 WallpaperContrastTint.Background,
                 ActualTheme);
-            Task<ElementTheme> shortcutThemeTask = foregroundThemeResolver.ResolveAsync(overviewConfiguration.Backdrop,
-                background,
-                monitorWidth,
-                monitorHeight,
-                shortcutPoint,
-                WallpaperContrastTint.Background,
-                ActualTheme);
+            Task<ElementTheme> shortcutThemeTask;
+            Task<ElementTheme> clockThemeTask;
+
+            if (overviewConfiguration.ShowClock)
+            {
+                Windows.Foundation.Point clockPoint = GetMonitorPoint(ClockSurface, rasterizationScale);
+                clockThemeTask = foregroundThemeResolver.ResolveAsync(overviewConfiguration.Backdrop,
+                    background,
+                    monitorWidth,
+                    monitorHeight,
+                    clockPoint,
+                    WallpaperContrastTint.Background,
+                    ActualTheme);
+            }
+            else
+            {
+                clockThemeTask = Task.FromResult(ActualTheme);
+            }
+
+            if (overviewConfiguration.ShowKeyboardShortcutButton)
+            {
+                Windows.Foundation.Point shortcutPoint = GetMonitorPoint(ShortcutHintSurface, rasterizationScale);
+                shortcutThemeTask = foregroundThemeResolver.ResolveAsync(overviewConfiguration.Backdrop,
+                    background,
+                    monitorWidth,
+                    monitorHeight,
+                    shortcutPoint,
+                    WallpaperContrastTint.Background,
+                    ActualTheme);
+            }
+            else
+            {
+                shortcutThemeTask = Task.FromResult(ActualTheme);
+            }
             settingsTheme = await settingsThemeTask;
+            clockTheme = await clockThemeTask;
             shortcutTheme = await shortcutThemeTask;
         }
         catch (InvalidOperationException)
@@ -532,11 +617,11 @@ public sealed partial class DesktopScrollPreviewView :
 
         if (!DispatcherQueue.HasThreadAccess)
         {
-            DispatcherQueue.TryEnqueue(() => ApplyAdaptiveForegrounds(generation, settingsTheme, shortcutTheme));
+            DispatcherQueue.TryEnqueue(() => ApplyAdaptiveForegrounds(generation, settingsTheme, clockTheme, shortcutTheme));
             return;
         }
 
-        ApplyAdaptiveForegrounds(generation, settingsTheme, shortcutTheme);
+        ApplyAdaptiveForegrounds(generation, settingsTheme, clockTheme, shortcutTheme);
     }
 
     private Windows.Foundation.Point GetMonitorPoint(FrameworkElement element, double rasterizationScale)
@@ -546,11 +631,12 @@ public sealed partial class DesktopScrollPreviewView :
         return new Windows.Foundation.Point(center.X * rasterizationScale, center.Y * rasterizationScale);
     }
 
-    private void ApplyAdaptiveForegrounds(int generation, ElementTheme settingsTheme, ElementTheme shortcutTheme)
+    private void ApplyAdaptiveForegrounds(int generation, ElementTheme settingsTheme, ElementTheme clockTheme, ElementTheme shortcutTheme)
     {
         if (isRunning && generation == foregroundGeneration)
         {
             SettingsButton.RequestedTheme = settingsTheme;
+            ClockSurface.RequestedTheme = clockTheme;
             ShortcutHintSurface.RequestedTheme = shortcutTheme;
         }
     }
@@ -927,7 +1013,7 @@ public sealed partial class DesktopScrollPreviewView :
 
     private void HandleCharacterReceived(UIElement sender, CharacterReceivedRoutedEventArgs args)
     {
-        if (!isRunning || WindowSearchBox.FocusState != FocusState.Unfocused || ApplicationPickerFlyout.IsOpen || pageStrip.IsEditorActive || args.Character < 0x20 || args.Character == 0x7F)
+        if (!isRunning || !overviewConfiguration.ShowSearchBox || WindowSearchBox.FocusState != FocusState.Unfocused || ApplicationPickerFlyout.IsOpen || pageStrip.IsEditorActive || args.Character < 0x20 || args.Character == 0x7F)
         {
             return;
         }
@@ -953,13 +1039,18 @@ public sealed partial class DesktopScrollPreviewView :
 
     private void FocusWindowSearchBox()
     {
+        if (!overviewConfiguration.ShowSearchBox)
+        {
+            return;
+        }
+
         InputFocusRequested?.Invoke(this, EventArgs.Empty);
         _ = WindowSearchBox.Focus(FocusState.Programmatic);
     }
 
     private void RemoveLastFilterCharacter()
     {
-        if (WindowSearchBox.Text.Length == 0)
+        if (!overviewConfiguration.ShowSearchBox || WindowSearchBox.Text.Length == 0)
         {
             return;
         }
@@ -971,6 +1062,11 @@ public sealed partial class DesktopScrollPreviewView :
 
     private void AppendFilterText(string text)
     {
+        if (!overviewConfiguration.ShowSearchBox)
+        {
+            return;
+        }
+
         WindowSearchBox.Text += text;
         WindowSearchBox.SelectionStart = WindowSearchBox.Text.Length;
     }

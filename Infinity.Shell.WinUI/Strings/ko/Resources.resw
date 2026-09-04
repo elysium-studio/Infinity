@@ -339,6 +339,36 @@
   <data name="OverviewEdgeScrollingCard.Description" xml:space="preserve">
     <value>창이나 페이지를 왼쪽 또는 오른쪽 가장자리 가까이 끌면 페이지 사이를 스크롤합니다</value>
   </data>
+  <data name="ShowOverviewPageHeadersCard.Header" xml:space="preserve">
+    <value>페이지 머리글</value>
+  </data>
+  <data name="ShowOverviewPageHeadersCard.Description" xml:space="preserve">
+    <value>각 미리 보기 위에 페이지 이름과 레이아웃 단추 표시</value>
+  </data>
+  <data name="ShowOverviewApplicationDockCard.Header" xml:space="preserve">
+    <value>응용 프로그램 도크</value>
+  </data>
+  <data name="ShowOverviewApplicationDockCard.Description" xml:space="preserve">
+    <value>개요 아래쪽에 고정된 앱과 모든 앱 단추 표시</value>
+  </data>
+  <data name="ShowOverviewKeyboardShortcutButtonCard.Header" xml:space="preserve">
+    <value>키보드 바로 가기 단추</value>
+  </data>
+  <data name="ShowOverviewKeyboardShortcutButtonCard.Description" xml:space="preserve">
+    <value>개요의 오른쪽 아래 모서리에 키보드 바로 가기 단추 표시</value>
+  </data>
+  <data name="ShowOverviewClockCard.Header" xml:space="preserve">
+    <value>시계</value>
+  </data>
+  <data name="ShowOverviewClockCard.Description" xml:space="preserve">
+    <value>개요 상단에 현재 시간과 날짜 표시</value>
+  </data>
+  <data name="ShowOverviewSearchBoxCard.Header" xml:space="preserve">
+    <value>검색 상자</value>
+  </data>
+  <data name="ShowOverviewSearchBoxCard.Description" xml:space="preserve">
+    <value>개요 위쪽에 데스크톱 창 검색 표시</value>
+  </data>
   <data name="SnapAssistanceCard.Header" xml:space="preserve">
     <value>스냅 도우미</value>
   </data>

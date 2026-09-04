@@ -339,6 +339,36 @@
   <data name="OverviewEdgeScrollingCard.Description" xml:space="preserve">
     <value>[Šçrøļļ bétŵééñ pågéš ŵhéñ å ŵîñðøŵ ør pågé îš dråggéð ñéår thé ļéft ør rîght éðgé]</value>
   </data>
+  <data name="ShowOverviewPageHeadersCard.Header" xml:space="preserve">
+    <value>[Pågé héåðérš]</value>
+  </data>
+  <data name="ShowOverviewPageHeadersCard.Description" xml:space="preserve">
+    <value>[Šhøŵ éåçh pågé ñåmé åñð ļåýøût bûttøñ åbøvé îtš prévîéŵ]</value>
+  </data>
+  <data name="ShowOverviewApplicationDockCard.Header" xml:space="preserve">
+    <value>[Åppļîçåtîøñ ðøçk]</value>
+  </data>
+  <data name="ShowOverviewApplicationDockCard.Description" xml:space="preserve">
+    <value>[Šhøŵ pîññéð åppļîçåtîøñš åñð thé åļļ åppš bûttøñ åt thé bøttøm øf thé øvérvîéŵ]</value>
+  </data>
+  <data name="ShowOverviewKeyboardShortcutButtonCard.Header" xml:space="preserve">
+    <value>[Kéýbøårð šhørtçûtš bûttøñ]</value>
+  </data>
+  <data name="ShowOverviewKeyboardShortcutButtonCard.Description" xml:space="preserve">
+    <value>[Šhøŵ thé kéýbøårð šhørtçûtš bûttøñ îñ thé ļøŵér-rîght çørñér øf thé øvérvîéŵ]</value>
+  </data>
+  <data name="ShowOverviewClockCard.Header" xml:space="preserve">
+    <value>[Çļöçķ]</value>
+  </data>
+  <data name="ShowOverviewClockCard.Description" xml:space="preserve">
+    <value>[Šħöŵ ţħë çûŕŕëñţ ţîmë åñð ðåţë åţ ţħë ţöp öƒ ţħë övëŕvîëŵ]</value>
+  </data>
+  <data name="ShowOverviewSearchBoxCard.Header" xml:space="preserve">
+    <value>[Šéårçh bøx]</value>
+  </data>
+  <data name="ShowOverviewSearchBoxCard.Description" xml:space="preserve">
+    <value>[Šhøŵ ðéšktøp ŵîñðøŵ šéårçh åt thé tøp øf thé øvérvîéŵ]</value>
+  </data>
   <data name="SnapAssistanceCard.Header" xml:space="preserve">
     <value>[Šñåp åššîštåñçé]</value>
   </data>

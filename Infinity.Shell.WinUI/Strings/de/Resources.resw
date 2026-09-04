@@ -339,6 +339,36 @@
   <data name="OverviewEdgeScrollingCard.Description" xml:space="preserve">
     <value>Scrollt zwischen Seiten, wenn ein Fenster oder eine Seite an den linken oder rechten Rand gezogen wird</value>
   </data>
+  <data name="ShowOverviewPageHeadersCard.Header" xml:space="preserve">
+    <value>Seitenkopfzeilen</value>
+  </data>
+  <data name="ShowOverviewPageHeadersCard.Description" xml:space="preserve">
+    <value>Seitennamen und Layoutschaltfläche über jeder Vorschau anzeigen</value>
+  </data>
+  <data name="ShowOverviewApplicationDockCard.Header" xml:space="preserve">
+    <value>App-Dock</value>
+  </data>
+  <data name="ShowOverviewApplicationDockCard.Description" xml:space="preserve">
+    <value>Angeheftete Apps und die Schaltfläche für alle Apps unten in der Übersicht anzeigen</value>
+  </data>
+  <data name="ShowOverviewKeyboardShortcutButtonCard.Header" xml:space="preserve">
+    <value>Schaltfläche für Tastenkombinationen</value>
+  </data>
+  <data name="ShowOverviewKeyboardShortcutButtonCard.Description" xml:space="preserve">
+    <value>Die Schaltfläche für Tastenkombinationen unten rechts in der Übersicht anzeigen</value>
+  </data>
+  <data name="ShowOverviewClockCard.Header" xml:space="preserve">
+    <value>Uhr</value>
+  </data>
+  <data name="ShowOverviewClockCard.Description" xml:space="preserve">
+    <value>Aktuelle Uhrzeit und Datum oben in der Übersicht anzeigen</value>
+  </data>
+  <data name="ShowOverviewSearchBoxCard.Header" xml:space="preserve">
+    <value>Suchfeld</value>
+  </data>
+  <data name="ShowOverviewSearchBoxCard.Description" xml:space="preserve">
+    <value>Die Suche nach Desktopfenstern oben in der Übersicht anzeigen</value>
+  </data>
   <data name="SnapAssistanceCard.Header" xml:space="preserve">
     <value>Andockhilfe</value>
   </data>

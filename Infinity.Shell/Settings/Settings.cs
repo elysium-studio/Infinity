@@ -34,6 +34,16 @@ public sealed class Settings
 
     public bool ShowHintOnStartup { get; set; } = true;
 
+    public bool ShowOverviewApplicationDock { get; set; } = true;
+
+    public bool ShowOverviewKeyboardShortcutButton { get; set; } = true;
+
+    public bool ShowOverviewClock { get; set; } = true;
+
+    public bool ShowOverviewPageHeaders { get; set; } = true;
+
+    public bool ShowOverviewSearchBox { get; set; } = true;
+
     public bool SpanCompatibleDisplays { get; set; } = true;
 
     public bool StartWithWindows { get; set; } = true;

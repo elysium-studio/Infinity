@@ -136,11 +136,12 @@ public sealed class DwmWindowPreviewSurface(ILogger<DwmWindowPreviewSurface> log
                 return;
             }
 
-            if (this.ownerWindowHandle != ownerWindowHandle)
-            {
-                TryClear();
-                this.ownerWindowHandle = ownerWindowHandle;
-            }
+            // A source window can replace its redirected surface tree while the
+            // overview is closed (notably across restore/maximize). Rebuild the
+            // native targets at every overlay-session boundary instead of
+            // reusing registrations that still point at the old tree.
+            TryClear();
+            this.ownerWindowHandle = ownerWindowHandle;
 
             RenderCore();
         }

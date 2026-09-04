@@ -9,6 +9,40 @@ namespace Infinity.Tests;
 public class WindowPageCoordinatorTests
 {
     [Fact]
+    public void OverlayDragUpdatesTheTrackedForegroundWindowWithoutActivatingIt()
+    {
+        WindowStore store = new();
+        TestScroller scroller = new();
+        TestWindowActivator activator = new();
+        WindowPageCoordinator coordinator = CreateCoordinator(store, scroller, activator);
+        IntPtr previousHandle = new(41);
+        IntPtr draggedHandle = new(42);
+        store.Add(CreateWindow(previousHandle, 0));
+        store.Add(CreateWindow(draggedHandle, 0));
+        coordinator.HandleForegroundWindowChanged(previousHandle);
+
+        coordinator.SetTrackedForegroundWindow(draggedHandle);
+
+        Assert.Equal(draggedHandle, coordinator.GetTrackedForegroundWindow());
+        Assert.Equal(0, activator.ActivationCount);
+        Assert.Null(scroller.LastTargetOffset);
+    }
+
+    [Fact]
+    public void UntrackedOverlayDragCannotReplaceTheTrackedForegroundWindow()
+    {
+        WindowStore store = new();
+        WindowPageCoordinator coordinator = CreateCoordinator(store, new TestScroller(), new TestWindowActivator());
+        IntPtr previousHandle = new(43);
+        store.Add(CreateWindow(previousHandle, 0));
+        coordinator.HandleForegroundWindowChanged(previousHandle);
+
+        coordinator.SetTrackedForegroundWindow(new IntPtr(44));
+
+        Assert.Equal(previousHandle, coordinator.GetTrackedForegroundWindow());
+    }
+
+    [Fact]
     public void RestoredWindowNavigatesToItsStoredPage()
     {
         WindowStore store = new();

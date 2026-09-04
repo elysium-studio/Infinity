@@ -452,48 +452,62 @@
             </StackPanel>
         </Button>
         <Grid
-            x:Name="TopCommandSurface"
-            Width="664"
-            Height="44"
-            Margin="0,32,0,0"
-            HorizontalAlignment="Center"
+            x:Name="TopChromeSurface"
             VerticalAlignment="Top">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="40" />
-                <ColumnDefinition Width="12" />
-                <ColumnDefinition Width="560" />
-                <ColumnDefinition Width="12" />
-                <ColumnDefinition Width="40" />
-            </Grid.ColumnDefinitions>
-            <Grid Grid.Column="2">
-                <TextBox
-                    x:Name="WindowSearchBox"
-                    x:Uid="WindowSearchBox"
-                    Padding="48,10,40,4"
-                    CornerRadius="22"
-                    IsHitTestVisible="False"
-                    IsTabStop="False"
-                    KeyDown="HandleWindowSearchBoxKeyDown"
-                    KeyUp="HandleWindowSearchBoxKeyUp"
-                    LostFocus="HandleWindowSearchBoxLostFocus"
-                    TextChanged="HandleWindowSearchBoxTextChanged"
-                    VerticalContentAlignment="Center" />
-                <FontIcon
-                    Margin="17,0,0,0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Center"
-                    FontSize="18"
-                    Glyph="&#xE721;"
-                    IsHitTestVisible="False" />
+            <StackPanel
+                x:Name="ClockSurface"
+                Margin="0,32,0,0"
+                HorizontalAlignment="Center"
+                IsHitTestVisible="False"
+                Spacing="2">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="52"
+                    FontWeight="Light"
+                    Text="{x:Bind Clock.TimeText, Mode=OneWay}" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="16"
+                    Text="{x:Bind Clock.DateText, Mode=OneWay}" />
+            </StackPanel>
+            <Grid
+                x:Name="TopCommandSurface"
+                Width="560"
+                Height="44"
+                Margin="0,144,0,0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Top">
+                <Grid x:Name="SearchSurface">
+                    <TextBox
+                        x:Name="WindowSearchBox"
+                        x:Uid="WindowSearchBox"
+                        Padding="48,10,40,4"
+                        CornerRadius="22"
+                        IsHitTestVisible="False"
+                        IsTabStop="False"
+                        KeyDown="HandleWindowSearchBoxKeyDown"
+                        KeyUp="HandleWindowSearchBoxKeyUp"
+                        LostFocus="HandleWindowSearchBoxLostFocus"
+                        TextChanged="HandleWindowSearchBoxTextChanged"
+                        VerticalContentAlignment="Center" />
+                    <FontIcon
+                        Margin="17,0,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        FontSize="18"
+                        Glyph="&#xE721;"
+                        IsHitTestVisible="False" />
+                </Grid>
             </Grid>
             <Button
                 x:Name="SettingsButton"
                 x:Uid="WindowSettingsButton"
-                Grid.Column="4"
                 Width="40"
                 Height="40"
+                Margin="0,24,24,0"
+                HorizontalAlignment="Right"
                 Padding="0"
-                VerticalAlignment="Center"
+                VerticalAlignment="Top"
                 Click="HandleSettingsButtonClicked"
                 IsHitTestVisible="False"
                 IsTabStop="False">

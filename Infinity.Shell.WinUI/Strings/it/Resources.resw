@@ -339,6 +339,36 @@
   <data name="OverviewEdgeScrollingCard.Description" xml:space="preserve">
     <value>Scorre tra le pagine quando una finestra o una pagina viene trascinata vicino al bordo sinistro o destro</value>
   </data>
+  <data name="ShowOverviewPageHeadersCard.Header" xml:space="preserve">
+    <value>Intestazioni delle pagine</value>
+  </data>
+  <data name="ShowOverviewPageHeadersCard.Description" xml:space="preserve">
+    <value>Mostra il nome e il pulsante del layout di ogni pagina sopra l'anteprima</value>
+  </data>
+  <data name="ShowOverviewApplicationDockCard.Header" xml:space="preserve">
+    <value>Dock delle applicazioni</value>
+  </data>
+  <data name="ShowOverviewApplicationDockCard.Description" xml:space="preserve">
+    <value>Mostra le applicazioni aggiunte e il pulsante di tutte le app nella parte inferiore della panoramica</value>
+  </data>
+  <data name="ShowOverviewKeyboardShortcutButtonCard.Header" xml:space="preserve">
+    <value>Pulsante delle scorciatoie da tastiera</value>
+  </data>
+  <data name="ShowOverviewKeyboardShortcutButtonCard.Description" xml:space="preserve">
+    <value>Mostra il pulsante delle scorciatoie da tastiera nell'angolo inferiore destro della panoramica</value>
+  </data>
+  <data name="ShowOverviewClockCard.Header" xml:space="preserve">
+    <value>Orologio</value>
+  </data>
+  <data name="ShowOverviewClockCard.Description" xml:space="preserve">
+    <value>Mostra l’ora e la data correnti nella parte superiore della panoramica</value>
+  </data>
+  <data name="ShowOverviewSearchBoxCard.Header" xml:space="preserve">
+    <value>Casella di ricerca</value>
+  </data>
+  <data name="ShowOverviewSearchBoxCard.Description" xml:space="preserve">
+    <value>Mostra la ricerca delle finestre del desktop nella parte superiore della panoramica</value>
+  </data>
   <data name="SnapAssistanceCard.Header" xml:space="preserve">
     <value>Assistenza ancoraggio</value>
   </data>

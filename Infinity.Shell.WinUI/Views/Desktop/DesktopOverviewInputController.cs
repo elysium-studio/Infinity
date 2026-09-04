@@ -12,6 +12,7 @@ public sealed class DesktopOverviewInputController(
     IPager pager,
     DesktopWindowPlacementCoordinator windowPlacementCoordinator,
     DesktopWindowPreviewCollection previews,
+    ITrackedForegroundWindowSource trackedForegroundWindowSource,
     IKeyboardTextTranslator keyboardTextTranslator)
 {
     private bool controlKeyDown;
@@ -192,23 +193,49 @@ public sealed class DesktopOverviewInputController(
     private void MoveSelectedWindows(int pageDelta)
     {
         IReadOnlyCollection<nint> selectedHandles = previews.GetSelectedHandles();
+        nint navigationHandle = previews.GetFocusedHandle();
+
+        if (selectedHandles.Count > 0 && !selectedHandles.Contains(navigationHandle))
+        {
+            navigationHandle = selectedHandles.First();
+        }
 
         if (selectedHandles.Count == 0)
         {
-            nint focusedHandle = previews.GetFocusedHandle();
-
-            if (focusedHandle == 0)
+            if (navigationHandle == 0)
             {
-                focusedHandle = previews.SelectFirst(GetWindowsOnPage(pager.CurrentPage));
+                // Modifier-based movement targets the last window the user
+                // interacted with. It must not manufacture keyboard focus,
+                // which would display the white arrow-navigation border.
+                navigationHandle = trackedForegroundWindowSource.GetTrackedForegroundWindow();
             }
 
-            if (focusedHandle != 0)
+            if (navigationHandle != 0 && windowCollection.TryGetTrackedWindow(navigationHandle, out _))
             {
-                selectedHandles = [focusedHandle];
+                selectedHandles = [navigationHandle];
             }
         }
 
-        windowPlacementCoordinator.MoveByPages(selectedHandles, pageDelta, pager.MaxPages);
+        if (navigationHandle == 0 ||
+            !windowCollection.TryGetTrackedWindow(navigationHandle, out TrackedWindow? navigationWindow) ||
+            navigationWindow is null)
+        {
+            return;
+        }
+
+        int targetPage = windowPlacementCoordinator.GetPage(navigationWindow) + pageDelta;
+
+        if (targetPage < 0 || pager.MaxPages.HasValue && targetPage >= pager.MaxPages.Value)
+        {
+            return;
+        }
+
+        if (windowPlacementCoordinator.MoveByPages(selectedHandles, pageDelta, pager.MaxPages) > 0)
+        {
+            // Follow the moved window without assigning keyboard focus; the
+            // focus visual is reserved for explicit arrow/Tab navigation.
+            pager.NavigateToPage(targetPage);
+        }
     }
 
     private void NavigateToPage(int page)

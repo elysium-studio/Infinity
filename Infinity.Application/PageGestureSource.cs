@@ -50,7 +50,7 @@ public sealed class PageGestureSource(IKeyboardInputSource keyboardInputSource,
 
     private void HandleKeyDown(object? sender, KeyEventArgs args)
     {
-        if (!modifierKeyState.IsActive)
+        if (args.Handled || !modifierKeyState.IsActive)
         {
             return;
         }

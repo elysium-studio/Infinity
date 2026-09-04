@@ -26,7 +26,7 @@ internal sealed class DesktopWindowPreview :
     private readonly Grid focusVisual;
     private readonly Grid selectionVisual;
     private readonly ITrackedWindowDragController dragController;
-    private readonly DesktopOverviewDragScroller overviewDragScroller;
+    private readonly DesktopWindowDragPageNavigator windowDragPageNavigator;
     private readonly DesktopWindowDragPositionResolver dragPositionResolver;
     private readonly DesktopDragBoundaryCalculator dragBoundaryCalculator;
     private readonly DesktopDragCursorConfinement cursorConfinement;
@@ -65,7 +65,7 @@ internal sealed class DesktopWindowPreview :
     private double heldGroupLeaderX;
     private double heldGroupLeaderY;
 
-    public DesktopWindowPreview(nint windowHandle, Border host, Border backgroundHost, Border focusHost, ThumbnailCompositionPreview? preview, Grid focusVisual, Grid selectionVisual, ITrackedWindowDragController dragController, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, double layoutScale)
+    public DesktopWindowPreview(nint windowHandle, Border host, Border backgroundHost, Border focusHost, ThumbnailCompositionPreview? preview, Grid focusVisual, Grid selectionVisual, ITrackedWindowDragController dragController, DesktopWindowDragPageNavigator windowDragPageNavigator, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, double layoutScale)
     {
         this.windowHandle = windowHandle;
         Host = host;
@@ -75,7 +75,7 @@ internal sealed class DesktopWindowPreview :
         this.focusVisual = focusVisual;
         this.selectionVisual = selectionVisual;
         this.dragController = dragController;
-        this.overviewDragScroller = overviewDragScroller;
+        this.windowDragPageNavigator = windowDragPageNavigator;
         this.dragPositionResolver = dragPositionResolver;
         this.dragBoundaryCalculator = dragBoundaryCalculator;
         this.cursorConfinement = cursorConfinement;
@@ -90,6 +90,7 @@ internal sealed class DesktopWindowPreview :
         Host.PointerCaptureLost += HandlePointerCaptureLost;
         Host.Tapped += HandleTapped;
         Host.ContextFlyout = contextMenuBuilder.Create(windowHandle);
+        windowDragPageNavigator.PageSnapCommitted += HandleWindowPageSnapCommitted;
     }
 
     public event Action<nint>? Invoked;
@@ -351,6 +352,7 @@ internal sealed class DesktopWindowPreview :
         Host.PointerCanceled -= HandlePointerCanceled;
         Host.PointerCaptureLost -= HandlePointerCaptureLost;
         Host.Tapped -= HandleTapped;
+        windowDragPageNavigator.PageSnapCommitted -= HandleWindowPageSnapCommitted;
 
         if (sourceRefreshTimer is not null)
         {
@@ -459,6 +461,7 @@ internal sealed class DesktopWindowPreview :
         Point currentPoint = new(pointerX, pointerY);
         double horizontalDelta = currentPoint.X - dragStartPoint.X;
         double verticalDelta = currentPoint.Y - dragStartPoint.Y;
+        double horizontalPointerDelta = currentPoint.X - dragLastPoint.X;
 
         if (!isDragging)
         {
@@ -485,7 +488,12 @@ internal sealed class DesktopWindowPreview :
             ClearTranslationTransition();
             ApplyIndicatorVisibility();
             DragStarted?.Invoke(windowHandle);
-            cursorConfinement.Begin(viewportWidth, viewportHeight, layoutScale, Host.XamlRoot?.RasterizationScale ?? 1, constrainVertical: true);
+            DesktopDragBounds centeredPageBounds = dragBoundaryCalculator.GetCenteredPageBounds(viewportWidth, viewportHeight, layoutScale);
+            bool startsWithinCenteredPage = windowDragPageNavigator.IsEnabled &&
+                centeredPageBounds.IsValid &&
+                currentPoint.X >= centeredPageBounds.MinimumX &&
+                currentPoint.X <= centeredPageBounds.MaximumX;
+            cursorConfinement.Begin(viewportWidth, viewportHeight, layoutScale, Host.XamlRoot?.RasterizationScale ?? 1, constrainVertical: true, constrainToCenteredPage: startsWithinCenteredPage);
         }
         else
         {
@@ -494,7 +502,7 @@ internal sealed class DesktopWindowPreview :
             dragLastPoint = currentPoint;
         }
 
-        overviewDragScroller.Update(Host.DispatcherQueue, currentPoint.X, viewportWidth);
+        windowDragPageNavigator.Update(Host.DispatcherQueue, currentPoint.X, horizontalPointerDelta, viewportWidth, layoutScale);
         cursorConfinement.Update(viewportWidth, viewportHeight, layoutScale, Host.XamlRoot?.RasterizationScale ?? 1);
         DragMoved?.Invoke(windowHandle, currentPoint.X, currentPoint.Y);
         ApplyTranslation();
@@ -548,7 +556,7 @@ internal sealed class DesktopWindowPreview :
 
         if (wasDragging)
         {
-            overviewDragScroller.Stop();
+            windowDragPageNavigator.Stop();
             cursorConfinement.Release();
         }
 
@@ -616,11 +624,21 @@ internal sealed class DesktopWindowPreview :
     {
         double viewportWidth = Host.XamlRoot?.Size.Width ?? 0;
         double viewportHeight = Host.XamlRoot?.Size.Height ?? 0;
-        (double pointerX, double pointerY) = dragBoundaryCalculator.Constrain(dragLastPoint.X, dragLastPoint.Y, viewportWidth, viewportHeight, layoutScale);
+        (double pointerX, double pointerY) = cursorConfinement.IsConstrainedToCenteredPage
+            ? dragBoundaryCalculator.ConstrainToCenteredPage(dragLastPoint.X, dragLastPoint.Y, viewportWidth, viewportHeight, layoutScale)
+            : dragBoundaryCalculator.Constrain(dragLastPoint.X, dragLastPoint.Y, viewportWidth, viewportHeight, layoutScale);
 
         dragHorizontalDelta += (pointerX - dragLastPoint.X) / layoutScale;
         dragVerticalDelta += (pointerY - dragLastPoint.Y) / layoutScale;
         dragLastPoint = new Point(pointerX, pointerY);
+    }
+
+    private void HandleWindowPageSnapCommitted()
+    {
+        if (isDragging)
+        {
+            cursorConfinement.UseCenteredPageBounds();
+        }
     }
 
     private void ApplyTranslation()

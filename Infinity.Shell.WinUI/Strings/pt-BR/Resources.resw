@@ -339,6 +339,36 @@
   <data name="OverviewEdgeScrollingCard.Description" xml:space="preserve">
     <value>Rola entre páginas quando uma janela ou página é arrastada perto da borda esquerda ou direita</value>
   </data>
+  <data name="ShowOverviewPageHeadersCard.Header" xml:space="preserve">
+    <value>Cabeçalhos das páginas</value>
+  </data>
+  <data name="ShowOverviewPageHeadersCard.Description" xml:space="preserve">
+    <value>Mostrar o nome e o botão de layout de cada página acima da visualização</value>
+  </data>
+  <data name="ShowOverviewApplicationDockCard.Header" xml:space="preserve">
+    <value>Dock de aplicativos</value>
+  </data>
+  <data name="ShowOverviewApplicationDockCard.Description" xml:space="preserve">
+    <value>Mostrar aplicativos fixados e o botão de todos os aplicativos na parte inferior da visão geral</value>
+  </data>
+  <data name="ShowOverviewKeyboardShortcutButtonCard.Header" xml:space="preserve">
+    <value>Botão de atalhos do teclado</value>
+  </data>
+  <data name="ShowOverviewKeyboardShortcutButtonCard.Description" xml:space="preserve">
+    <value>Mostrar o botão de atalhos do teclado no canto inferior direito da visão geral</value>
+  </data>
+  <data name="ShowOverviewClockCard.Header" xml:space="preserve">
+    <value>Relógio</value>
+  </data>
+  <data name="ShowOverviewClockCard.Description" xml:space="preserve">
+    <value>Mostrar a hora e a data atuais na parte superior da visão geral</value>
+  </data>
+  <data name="ShowOverviewSearchBoxCard.Header" xml:space="preserve">
+    <value>Caixa de pesquisa</value>
+  </data>
+  <data name="ShowOverviewSearchBoxCard.Description" xml:space="preserve">
+    <value>Mostrar a pesquisa de janelas da área de trabalho na parte superior da visão geral</value>
+  </data>
   <data name="SnapAssistanceCard.Header" xml:space="preserve">
     <value>Assistência de encaixe</value>
   </data>

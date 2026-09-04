@@ -27,6 +27,9 @@ public sealed class DesktopModule :
             .AddSingleton<DesktopOverviewWallpaperPresenter>()
             .AddSingleton<DesktopScrollPreviewAnimator>()
             .AddSingleton<DesktopOverviewChromeAnimator>()
+            .AddSingleton<DesktopOverviewClockViewModel>()
+            .AddSingleton<DesktopOverviewClockFormatter>()
+            .AddSingleton<DesktopOverviewClockController>()
             .AddSingleton<DesktopPageLayoutCalculator>()
             .AddSingleton<DesktopWallpaperPlacementCalculator>()
             .AddSingleton<DesktopSnapLayoutCatalog>()
@@ -51,6 +54,7 @@ public sealed class DesktopModule :
             .AddSingleton<DesktopPageBackgroundFactory>()
             .AddSingleton<DesktopPageStrip>()
             .AddSingleton<DesktopOverviewDragScroller>()
+            .AddSingleton<DesktopWindowDragPageNavigator>()
             .AddSingleton<DesktopDragCursorConfinement>()
             .AddSingleton<DesktopWindowDragPositionResolver>()
             .AddSingleton<DesktopWindowContextMenuBuilder>()
@@ -111,6 +115,7 @@ public sealed class DesktopModule :
         DesktopOverviewForegroundThemeResolver foregroundThemeResolver = provider.GetRequiredService<DesktopOverviewForegroundThemeResolver>();
         DesktopScrollPreviewAnimator animator = provider.GetRequiredService<DesktopScrollPreviewAnimator>();
         DesktopOverviewChromeAnimator chromeAnimator = provider.GetRequiredService<DesktopOverviewChromeAnimator>();
+        DesktopOverviewClockController clockController = provider.GetRequiredService<DesktopOverviewClockController>();
         DesktopOverviewLayoutPresenter layoutPresenter = provider.GetRequiredService<DesktopOverviewLayoutPresenter>();
         DesktopPageStrip pageStrip = provider.GetRequiredService<DesktopPageStrip>();
         DesktopWindowPreviewCollection previews = provider.GetRequiredService<DesktopWindowPreviewCollection>();
@@ -125,7 +130,7 @@ public sealed class DesktopModule :
         DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator = provider.GetRequiredService<DesktopWindowSnapInteractionCoordinator>();
         ILogger<DesktopScrollPreviewView> logger = provider.GetRequiredService<ILogger<DesktopScrollPreviewView>>();
 
-        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, panState, pager, scroller, workspace, scrollInputSuppression, backgroundSource, overviewConfiguration, foregroundThemeResolver, animator, chromeAnimator, layoutPresenter, pageStrip, previews, cursorConfinement, shortcutHints, applicationPicker, applicationDock, applicationDockContextMenuBuilder, applicationDockPressAnimator, applicationLaunchCoordinator, inputController, snapInteractionCoordinator, logger);
+        return new DesktopScrollPreviewView(windowPreviewSurface, windowCollection, panState, pager, scroller, workspace, scrollInputSuppression, backgroundSource, overviewConfiguration, foregroundThemeResolver, animator, chromeAnimator, clockController, layoutPresenter, pageStrip, previews, cursorConfinement, shortcutHints, applicationPicker, applicationDock, applicationDockContextMenuBuilder, applicationDockPressAnimator, applicationLaunchCoordinator, inputController, snapInteractionCoordinator, logger);
     }
 
     private static DesktopOverviewView CreateDesktopOverviewView(IServiceProvider provider)

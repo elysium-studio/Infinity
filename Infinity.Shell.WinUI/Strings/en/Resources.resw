@@ -345,6 +345,36 @@
   <data name="OverviewEdgeScrollingCard.Description" xml:space="preserve">
     <value>Scroll between pages when a window or page is dragged near the left or right edge</value>
   </data>
+  <data name="ShowOverviewPageHeadersCard.Header" xml:space="preserve">
+    <value>Page headers</value>
+  </data>
+  <data name="ShowOverviewPageHeadersCard.Description" xml:space="preserve">
+    <value>Show each page name and layout button above its preview</value>
+  </data>
+  <data name="ShowOverviewApplicationDockCard.Header" xml:space="preserve">
+    <value>Application dock</value>
+  </data>
+  <data name="ShowOverviewApplicationDockCard.Description" xml:space="preserve">
+    <value>Show pinned applications and the all apps button at the bottom of the overview</value>
+  </data>
+  <data name="ShowOverviewKeyboardShortcutButtonCard.Header" xml:space="preserve">
+    <value>Keyboard shortcuts button</value>
+  </data>
+  <data name="ShowOverviewKeyboardShortcutButtonCard.Description" xml:space="preserve">
+    <value>Show the keyboard shortcuts button in the lower-right corner of the overview</value>
+  </data>
+  <data name="ShowOverviewClockCard.Header" xml:space="preserve">
+    <value>Clock</value>
+  </data>
+  <data name="ShowOverviewClockCard.Description" xml:space="preserve">
+    <value>Show the current time and date at the top of the overview</value>
+  </data>
+  <data name="ShowOverviewSearchBoxCard.Header" xml:space="preserve">
+    <value>Search box</value>
+  </data>
+  <data name="ShowOverviewSearchBoxCard.Description" xml:space="preserve">
+    <value>Show desktop window search at the top of the overview</value>
+  </data>
   <data name="SnapAssistanceCard.Header" xml:space="preserve">
     <value>Snap assistance</value>
   </data>

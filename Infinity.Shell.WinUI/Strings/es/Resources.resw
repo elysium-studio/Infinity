@@ -339,6 +339,36 @@
   <data name="OverviewEdgeScrollingCard.Description" xml:space="preserve">
     <value>Desplaza entre páginas al arrastrar una ventana o página cerca del borde izquierdo o derecho</value>
   </data>
+  <data name="ShowOverviewPageHeadersCard.Header" xml:space="preserve">
+    <value>Encabezados de página</value>
+  </data>
+  <data name="ShowOverviewPageHeadersCard.Description" xml:space="preserve">
+    <value>Mostrar el nombre y el botón de diseño de cada página sobre su vista previa</value>
+  </data>
+  <data name="ShowOverviewApplicationDockCard.Header" xml:space="preserve">
+    <value>Dock de aplicaciones</value>
+  </data>
+  <data name="ShowOverviewApplicationDockCard.Description" xml:space="preserve">
+    <value>Mostrar las aplicaciones ancladas y el botón de todas las aplicaciones en la parte inferior de la vista general</value>
+  </data>
+  <data name="ShowOverviewKeyboardShortcutButtonCard.Header" xml:space="preserve">
+    <value>Botón de métodos abreviados de teclado</value>
+  </data>
+  <data name="ShowOverviewKeyboardShortcutButtonCard.Description" xml:space="preserve">
+    <value>Mostrar el botón de métodos abreviados de teclado en la esquina inferior derecha de la vista general</value>
+  </data>
+  <data name="ShowOverviewClockCard.Header" xml:space="preserve">
+    <value>Reloj</value>
+  </data>
+  <data name="ShowOverviewClockCard.Description" xml:space="preserve">
+    <value>Mostrar la hora y la fecha actuales en la parte superior de la vista general</value>
+  </data>
+  <data name="ShowOverviewSearchBoxCard.Header" xml:space="preserve">
+    <value>Cuadro de búsqueda</value>
+  </data>
+  <data name="ShowOverviewSearchBoxCard.Description" xml:space="preserve">
+    <value>Mostrar la búsqueda de ventanas del escritorio en la parte superior de la vista general</value>
+  </data>
   <data name="SnapAssistanceCard.Header" xml:space="preserve">
     <value>Asistencia de acoplamiento</value>
   </data>

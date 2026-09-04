@@ -88,6 +88,11 @@ public sealed class DesktopSettingsModule :
                     provider.GetRequiredService<IWritableOptions<Settings>>(),
                     config => (int)config.OverviewBackdrop,
                     (config, backdrop) => config.OverviewBackdrop = (DesktopOverviewBackdrop)backdrop))
+            .AddViewFor<ShowOverviewClockView, IOverviewViewModel, ShowOverviewClockViewModel>(ServiceLifetime.Transient, _ => new ShowOverviewClockView(), CreateShowOverviewClockViewModel)
+            .AddViewFor<ShowOverviewPageHeadersView, IOverviewViewModel, ShowOverviewPageHeadersViewModel>(ServiceLifetime.Transient, _ => new ShowOverviewPageHeadersView(), CreateShowOverviewPageHeadersViewModel)
+            .AddViewFor<ShowOverviewApplicationDockView, IOverviewViewModel, ShowOverviewApplicationDockViewModel>(ServiceLifetime.Transient, _ => new ShowOverviewApplicationDockView(), CreateShowOverviewApplicationDockViewModel)
+            .AddViewFor<ShowOverviewKeyboardShortcutButtonView, IOverviewViewModel, ShowOverviewKeyboardShortcutButtonViewModel>(ServiceLifetime.Transient, _ => new ShowOverviewKeyboardShortcutButtonView(), CreateShowOverviewKeyboardShortcutButtonViewModel)
+            .AddViewFor<ShowOverviewSearchBoxView, IOverviewViewModel, ShowOverviewSearchBoxViewModel>(ServiceLifetime.Transient, _ => new ShowOverviewSearchBoxView(), CreateShowOverviewSearchBoxViewModel)
             .AddViewFor<SnapAssistanceView, IOverviewViewModel, SnapAssistanceViewModel>(ServiceLifetime.Transient, _ => new SnapAssistanceView(), CreateSnapAssistanceViewModel)
             .AddViewFor<SpanCompatibleDisplaysView, IOverviewViewModel, SpanCompatibleDisplaysViewModel>(ServiceLifetime.Transient, _ => new SpanCompatibleDisplaysView(), CreateSpanCompatibleDisplaysViewModel)
             .AddViewFor<AdvancedView, IDesktopViewModel, AdvancedViewModel>(ServiceLifetime.Transient, _ => new AdvancedView(), CreateAdvancedViewModel)
@@ -107,6 +112,16 @@ public sealed class DesktopSettingsModule :
     private static OverviewEdgeScrollingViewModel CreateOverviewEdgeScrollingViewModel(IServiceProvider provider) => new(provider, provider.GetRequiredService<IServiceFactory>(), provider.GetRequiredService<IMessenger>(), provider.GetRequiredService<IDisposer>(), provider.GetRequiredService<IDispatcher>(), provider.GetRequiredService<Settings>(), provider.GetRequiredService<IWritableOptions<Settings>>());
 
     private static SnapAssistanceViewModel CreateSnapAssistanceViewModel(IServiceProvider provider) => new(provider, provider.GetRequiredService<IServiceFactory>(), provider.GetRequiredService<IMessenger>(), provider.GetRequiredService<IDisposer>(), provider.GetRequiredService<IDispatcher>(), provider.GetRequiredService<Settings>(), provider.GetRequiredService<IWritableOptions<Settings>>());
+
+    private static ShowOverviewApplicationDockViewModel CreateShowOverviewApplicationDockViewModel(IServiceProvider provider) => new(provider, provider.GetRequiredService<IServiceFactory>(), provider.GetRequiredService<IMessenger>(), provider.GetRequiredService<IDisposer>(), provider.GetRequiredService<IDispatcher>(), provider.GetRequiredService<Settings>(), provider.GetRequiredService<IWritableOptions<Settings>>());
+
+    private static ShowOverviewKeyboardShortcutButtonViewModel CreateShowOverviewKeyboardShortcutButtonViewModel(IServiceProvider provider) => new(provider, provider.GetRequiredService<IServiceFactory>(), provider.GetRequiredService<IMessenger>(), provider.GetRequiredService<IDisposer>(), provider.GetRequiredService<IDispatcher>(), provider.GetRequiredService<Settings>(), provider.GetRequiredService<IWritableOptions<Settings>>());
+
+    private static ShowOverviewClockViewModel CreateShowOverviewClockViewModel(IServiceProvider provider) => new(provider, provider.GetRequiredService<IServiceFactory>(), provider.GetRequiredService<IMessenger>(), provider.GetRequiredService<IDisposer>(), provider.GetRequiredService<IDispatcher>(), provider.GetRequiredService<Settings>(), provider.GetRequiredService<IWritableOptions<Settings>>());
+
+    private static ShowOverviewPageHeadersViewModel CreateShowOverviewPageHeadersViewModel(IServiceProvider provider) => new(provider, provider.GetRequiredService<IServiceFactory>(), provider.GetRequiredService<IMessenger>(), provider.GetRequiredService<IDisposer>(), provider.GetRequiredService<IDispatcher>(), provider.GetRequiredService<Settings>(), provider.GetRequiredService<IWritableOptions<Settings>>());
+
+    private static ShowOverviewSearchBoxViewModel CreateShowOverviewSearchBoxViewModel(IServiceProvider provider) => new(provider, provider.GetRequiredService<IServiceFactory>(), provider.GetRequiredService<IMessenger>(), provider.GetRequiredService<IDisposer>(), provider.GetRequiredService<IDispatcher>(), provider.GetRequiredService<Settings>(), provider.GetRequiredService<IWritableOptions<Settings>>());
 
     private static ResetPageCustomizationsViewModel CreateResetPageCustomizationsViewModel(IServiceProvider provider) => new(provider, provider.GetRequiredService<IServiceFactory>(), provider.GetRequiredService<IMessenger>(), provider.GetRequiredService<IDisposer>(), provider.GetRequiredService<IDispatcher>(), provider.GetRequiredService<Settings>(), provider.GetRequiredService<IWritableOptions<Settings>>(), provider.GetRequiredService<ITextLocalizer>());
 }

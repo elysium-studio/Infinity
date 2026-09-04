@@ -80,6 +80,7 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<IWindowNavigationCoordinator>(provider => provider.GetRequiredService<WindowPageCoordinator>());
             services.AddSingleton<IForegroundWindowCoordinator>(provider => provider.GetRequiredService<WindowPageCoordinator>());
             services.AddSingleton<ITrackedForegroundWindowSource>(provider => provider.GetRequiredService<WindowPageCoordinator>());
+            services.AddSingleton<ITrackedForegroundWindowTarget>(provider => provider.GetRequiredService<WindowPageCoordinator>());
             services.AddSingleton<ITrackedWindowDragController>(provider => new TrackedWindowDragController(provider.GetRequiredService<IWindowStore>(),
                 provider.GetRequiredService<IScroller>(),
                 provider.GetRequiredService<IWindowResizeSynchronizer>(),

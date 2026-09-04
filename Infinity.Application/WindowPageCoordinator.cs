@@ -15,7 +15,8 @@ public sealed class WindowPageCoordinator(IWindowStore store,
     WindowPageGeometry geometry) :
     IWindowNavigationCoordinator,
     IForegroundWindowCoordinator,
-    ITrackedForegroundWindowSource
+    ITrackedForegroundWindowSource,
+    ITrackedForegroundWindowTarget
 {
     private static readonly TimeSpan ProgrammaticForegroundWindow = TimeSpan.FromMilliseconds(600);
     private static readonly TimeSpan ForegroundFollowDeferDelay = TimeSpan.FromMilliseconds(80);
@@ -489,6 +490,20 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         lock (syncRoot)
         {
             return trackedForegroundWindowHandle;
+        }
+    }
+
+    public void SetTrackedForegroundWindow(nint windowHandle)
+    {
+        if (windowHandle == default || !store.TryGet(windowHandle, out _))
+        {
+            return;
+        }
+
+        lock (syncRoot)
+        {
+            CancelPendingForegroundFollowCore();
+            trackedForegroundWindowHandle = windowHandle;
         }
     }
 

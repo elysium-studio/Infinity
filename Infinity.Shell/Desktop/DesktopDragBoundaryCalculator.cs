@@ -46,6 +46,44 @@ public sealed class DesktopDragBoundaryCalculator(IPager pager, IScroller scroll
         return new DesktopDragBounds(minimumX, minimumY, maximumX, maximumY);
     }
 
+    public DesktopDragBounds GetCenteredPageBounds(double viewportWidth, double viewportHeight, double overviewScale)
+    {
+        if (!double.IsFinite(viewportWidth) || !double.IsFinite(viewportHeight) || viewportWidth <= 0 || viewportHeight <= 0 || !HasValidDesktop(overviewScale))
+        {
+            return default;
+        }
+
+        (double minimumX, double maximumX) = GetCenteredPageHorizontalBounds(viewportWidth, overviewScale);
+        double pageHeight = Math.Min(viewportHeight, workspace.Height * overviewScale);
+        double minimumY = Math.Max(0, workAreaOffsetY + ((workspace.Height / 2.0) * (1 - overviewScale)));
+        double maximumY = Math.Min(viewportHeight, minimumY + pageHeight);
+        return new DesktopDragBounds(minimumX, minimumY, maximumX, maximumY);
+    }
+
+    public (double MinimumX, double MaximumX) GetCenteredPageHorizontalBounds(double viewportWidth, double overviewScale)
+    {
+        if (!double.IsFinite(viewportWidth) || viewportWidth <= 0 || !HasValidDesktop(overviewScale))
+        {
+            return default;
+        }
+
+        double pageWidth = Math.Min(viewportWidth, workspace.Width * overviewScale);
+        double minimumX = Math.Max(0, (viewportWidth - pageWidth) / 2);
+        return (minimumX, Math.Min(viewportWidth, minimumX + pageWidth));
+    }
+
+    public (double X, double Y) ConstrainToCenteredPage(double pointerX, double pointerY, double viewportWidth, double viewportHeight, double overviewScale)
+    {
+        DesktopDragBounds bounds = GetCenteredPageBounds(viewportWidth, viewportHeight, overviewScale);
+
+        if (!double.IsFinite(pointerX) || !double.IsFinite(pointerY) || !bounds.IsValid)
+        {
+            return (pointerX, pointerY);
+        }
+
+        return (Math.Clamp(pointerX, bounds.MinimumX, bounds.MaximumX), Math.Clamp(pointerY, bounds.MinimumY, bounds.MaximumY));
+    }
+
     private (double MinimumX, double MaximumX) GetHorizontalBounds(double viewportWidth, double overviewScale)
     {
         double visualOffset = scroller.VisualOffset;

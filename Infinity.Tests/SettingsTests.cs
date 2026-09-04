@@ -11,6 +11,11 @@ public sealed class SettingsTests
 
         Assert.True(settings.EnableOverviewEdgeScrolling);
         Assert.True(settings.EnableSnapAssistance);
+        Assert.True(settings.ShowOverviewApplicationDock);
+        Assert.True(settings.ShowOverviewKeyboardShortcutButton);
+        Assert.True(settings.ShowOverviewClock);
+        Assert.True(settings.ShowOverviewPageHeaders);
+        Assert.True(settings.ShowOverviewSearchBox);
         Assert.True(settings.SpanCompatibleDisplays);
         Assert.Equal(DesktopOverviewBackdrop.Wallpaper, settings.OverviewBackdrop);
     }

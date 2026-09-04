@@ -339,6 +339,36 @@
   <data name="OverviewEdgeScrollingCard.Description" xml:space="preserve">
     <value>ウィンドウまたはページを左右の端付近にドラッグしたときにページ間をスクロールします</value>
   </data>
+  <data name="ShowOverviewPageHeadersCard.Header" xml:space="preserve">
+    <value>ページ ヘッダー</value>
+  </data>
+  <data name="ShowOverviewPageHeadersCard.Description" xml:space="preserve">
+    <value>各プレビューの上にページ名とレイアウト ボタンを表示します</value>
+  </data>
+  <data name="ShowOverviewApplicationDockCard.Header" xml:space="preserve">
+    <value>アプリケーション ドック</value>
+  </data>
+  <data name="ShowOverviewApplicationDockCard.Description" xml:space="preserve">
+    <value>概要の下部にピン留めしたアプリとすべてのアプリ ボタンを表示します</value>
+  </data>
+  <data name="ShowOverviewKeyboardShortcutButtonCard.Header" xml:space="preserve">
+    <value>キーボード ショートカット ボタン</value>
+  </data>
+  <data name="ShowOverviewKeyboardShortcutButtonCard.Description" xml:space="preserve">
+    <value>概要の右下にキーボード ショートカット ボタンを表示します</value>
+  </data>
+  <data name="ShowOverviewClockCard.Header" xml:space="preserve">
+    <value>時計</value>
+  </data>
+  <data name="ShowOverviewClockCard.Description" xml:space="preserve">
+    <value>オーバービューの上部に現在の時刻と日付を表示します</value>
+  </data>
+  <data name="ShowOverviewSearchBoxCard.Header" xml:space="preserve">
+    <value>検索ボックス</value>
+  </data>
+  <data name="ShowOverviewSearchBoxCard.Description" xml:space="preserve">
+    <value>概要の上部にデスクトップ ウィンドウ検索を表示します</value>
+  </data>
   <data name="SnapAssistanceCard.Header" xml:space="preserve">
     <value>スナップ アシスト</value>
   </data>

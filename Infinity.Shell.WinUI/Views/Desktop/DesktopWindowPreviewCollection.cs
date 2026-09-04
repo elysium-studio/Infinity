@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory factory, IWindowGeometryReader geometryReader, IWindowStack windowStack, DesktopWindowSelectionModel selection, DesktopWindowGroupDragCoordinator groupDragCoordinator, DesktopWindowGroupStackAnimator groupStackAnimator, DesktopWindowDropNavigationCoordinator dropNavigationCoordinator) :
+public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory factory, IWindowGeometryReader geometryReader, IWindowStack windowStack, ITrackedForegroundWindowTarget trackedForegroundWindowTarget, DesktopWindowSelectionModel selection, DesktopWindowGroupDragCoordinator groupDragCoordinator, DesktopWindowGroupStackAnimator groupStackAnimator, DesktopWindowDropNavigationCoordinator dropNavigationCoordinator) :
     IDisposable
 {
     private readonly Dictionary<nint, DesktopWindowPreview> previews = [];
@@ -381,6 +381,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         }
 
         pendingForegroundHandle = handle;
+        trackedForegroundWindowTarget.SetTrackedForegroundWindow(handle);
         windowStack.BringToFront(handle);
 
         DesktopWindowPreview[] orderedPreviews = [.. previews

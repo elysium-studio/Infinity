@@ -9,4 +9,14 @@ public sealed class DesktopOverviewConfiguration
     public bool IsMonitorSpanningEnabled { get; set; } = true;
 
     public bool IsSnapAssistanceEnabled { get; set; } = true;
+
+    public bool ShowApplicationDock { get; set; } = true;
+
+    public bool ShowKeyboardShortcutButton { get; set; } = true;
+
+    public bool ShowClock { get; set; } = true;
+
+    public bool ShowPageHeaders { get; set; } = true;
+
+    public bool ShowSearchBox { get; set; } = true;
 }

@@ -16,8 +16,11 @@ public sealed class DesktopDragCursorConfinement :
     private double overviewScale;
     private double rasterizationScale;
     private bool constrainVertically;
+    private bool constrainToCenteredPage;
     private bool active;
     private bool disposed;
+
+    public bool IsConstrainedToCenteredPage => constrainToCenteredPage;
 
     public DesktopDragCursorConfinement(IPointerConfinement pointerConfinement, IPanState panState, DesktopDragBoundaryCalculator boundaryCalculator)
     {
@@ -40,7 +43,7 @@ public sealed class DesktopDragCursorConfinement :
         }
     }
 
-    public void Begin(double width, double height, double scale, double rasterScale, bool constrainVertical)
+    public void Begin(double width, double height, double scale, double rasterScale, bool constrainVertical, bool constrainToCenteredPage = false)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
 
@@ -49,6 +52,7 @@ public sealed class DesktopDragCursorConfinement :
         overviewScale = scale;
         rasterizationScale = rasterScale;
         constrainVertically = constrainVertical;
+        this.constrainToCenteredPage = constrainToCenteredPage;
         active = true;
 
         Apply();
@@ -66,6 +70,17 @@ public sealed class DesktopDragCursorConfinement :
         overviewScale = scale;
         rasterizationScale = rasterScale;
 
+        Apply();
+    }
+
+    public void UseCenteredPageBounds()
+    {
+        if (!active || constrainToCenteredPage)
+        {
+            return;
+        }
+
+        constrainToCenteredPage = true;
         Apply();
     }
 
@@ -102,7 +117,9 @@ public sealed class DesktopDragCursorConfinement :
             return;
         }
 
-        DesktopDragBounds bounds = boundaryCalculator.GetBounds(viewportWidth, viewportHeight, overviewScale);
+        DesktopDragBounds bounds = constrainToCenteredPage
+            ? boundaryCalculator.GetCenteredPageBounds(viewportWidth, viewportHeight, overviewScale)
+            : boundaryCalculator.GetBounds(viewportWidth, viewportHeight, overviewScale);
 
         if (!bounds.IsValid)
         {

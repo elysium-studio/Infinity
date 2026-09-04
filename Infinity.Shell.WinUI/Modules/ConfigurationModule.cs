@@ -71,6 +71,11 @@ public sealed class ConfigurationModule :
                 configuration.IsEdgeScrollingEnabled = options.EnableOverviewEdgeScrolling;
                 configuration.IsMonitorSpanningEnabled = options.SpanCompatibleDisplays;
                 configuration.IsSnapAssistanceEnabled = options.EnableSnapAssistance;
+                configuration.ShowApplicationDock = options.ShowOverviewApplicationDock;
+                configuration.ShowKeyboardShortcutButton = options.ShowOverviewKeyboardShortcutButton;
+                configuration.ShowClock = options.ShowOverviewClock;
+                configuration.ShowPageHeaders = options.ShowOverviewPageHeaders;
+                configuration.ShowSearchBox = options.ShowOverviewSearchBox;
             });
 
         services
@@ -93,7 +98,12 @@ public sealed class ConfigurationModule :
                     Backdrop = settings.OverviewBackdrop,
                     IsEdgeScrollingEnabled = settings.EnableOverviewEdgeScrolling,
                     IsMonitorSpanningEnabled = settings.SpanCompatibleDisplays,
-                    IsSnapAssistanceEnabled = settings.EnableSnapAssistance
+                    IsSnapAssistanceEnabled = settings.EnableSnapAssistance,
+                    ShowApplicationDock = settings.ShowOverviewApplicationDock,
+                    ShowKeyboardShortcutButton = settings.ShowOverviewKeyboardShortcutButton,
+                    ShowClock = settings.ShowOverviewClock,
+                    ShowPageHeaders = settings.ShowOverviewPageHeaders,
+                    ShowSearchBox = settings.ShowOverviewSearchBox
                 };
             })
             .AddSingleton<Func<ScrollerConfiguration>>(provider =>
