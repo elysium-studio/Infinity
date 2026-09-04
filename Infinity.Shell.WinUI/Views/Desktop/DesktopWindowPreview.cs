@@ -19,6 +19,7 @@ internal sealed class DesktopWindowPreview :
     private const int DraggedPageZIndex = 999_000;
 
     private readonly ThumbnailCompositionPreview? preview;
+    private readonly DesktopThumbnailCaptureVisibility captureVisibility;
     private readonly Border backgroundHost;
     private readonly Border focusHost;
     private readonly Grid focusVisual;
@@ -61,6 +62,10 @@ internal sealed class DesktopWindowPreview :
     private double groupTargetY;
     private double heldGroupLeaderX;
     private double heldGroupLeaderY;
+    private Vector3? appliedTranslation;
+    private int? appliedZIndex;
+    private TimeSpan? translationTransitionDuration;
+    private TimeSpan? scaleTransitionDuration;
 
     public DesktopWindowPreview(nint windowHandle, Border host, Border backgroundHost, Border focusHost, ThumbnailCompositionPreview? preview, Grid focusVisual, Grid selectionVisual, ITrackedWindowDragController dragController, DesktopWindowDragPageNavigator windowDragPageNavigator, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, double layoutScale)
     {
@@ -69,6 +74,7 @@ internal sealed class DesktopWindowPreview :
         this.backgroundHost = backgroundHost;
         this.focusHost = focusHost;
         this.preview = preview;
+        captureVisibility = new(preview, host.DispatcherQueue);
         this.focusVisual = focusVisual;
         this.selectionVisual = selectionVisual;
         this.dragController = dragController;
@@ -123,6 +129,8 @@ internal sealed class DesktopWindowPreview :
     public double VisualY => y + dragVerticalDelta;
 
     public double LayoutScale => layoutScale;
+
+    public void SetCaptureViewport(DesktopCaptureViewport viewport) => captureVisibility.SetViewport(viewport);
 
     public void RefreshSourceGeometry(TrackedWindow trackedWindow, IWindowGeometryReader geometryReader)
     {
@@ -208,6 +216,7 @@ internal sealed class DesktopWindowPreview :
         Host.Opacity = opacity;
         backgroundHost.Opacity = opacity;
         focusHost.Opacity = opacity;
+        RefreshCaptureVisibility();
         ApplyInteractionState();
     }
 
@@ -233,6 +242,7 @@ internal sealed class DesktopWindowPreview :
             heldGroupLeaderY = y + dragVerticalDelta;
         }
 
+        RefreshCaptureVisibility();
         ApplyIndicatorVisibility();
     }
 
@@ -273,15 +283,15 @@ internal sealed class DesktopWindowPreview :
             ApplyTranslation();
         }
         ApplyZIndex();
+        RefreshCaptureVisibility();
         ApplyIndicatorVisibility();
         ApplyInteractionState();
     }
 
     public void Update(double x, double y, double width, double height, TimeSpan? transitionDuration = null)
     {
-        Host.TranslationTransition = transitionDuration.HasValue ? new Vector3Transition { Duration = transitionDuration.Value } : null;
-        backgroundHost.TranslationTransition = transitionDuration.HasValue ? new Vector3Transition { Duration = transitionDuration.Value } : null;
-        focusHost.TranslationTransition = transitionDuration.HasValue ? new Vector3Transition { Duration = transitionDuration.Value } : null;
+        captureVisibility.HoldForTransition(transitionDuration);
+        SetTranslationTransition(transitionDuration);
 
         if (isDragging)
         {
@@ -293,7 +303,7 @@ internal sealed class DesktopWindowPreview :
 
         this.x = x;
         this.y = y;
-        ApplyTranslation();
+        ApplyTranslation(updateCapture: false);
 
         if (this.width != width || this.height != height)
         {
@@ -302,6 +312,7 @@ internal sealed class DesktopWindowPreview :
 
             ApplySize(width, height);
         }
+        RefreshCaptureVisibility();
     }
 
     public void SetSnapTarget(DesktopWindowSnapTarget? target)
@@ -311,9 +322,7 @@ internal sealed class DesktopWindowPreview :
 
     public void ClearTranslationTransition()
     {
-        Host.TranslationTransition = null;
-        backgroundHost.TranslationTransition = null;
-        focusHost.TranslationTransition = null;
+        SetTranslationTransition(null);
     }
 
     public void Dispose()
@@ -336,6 +345,7 @@ internal sealed class DesktopWindowPreview :
         Host.Tapped -= HandleTapped;
         windowDragPageNavigator.PageSnapCommitted -= HandleWindowPageSnapCommitted;
 
+        captureVisibility.Dispose();
         preview?.Dispose();
         GC.SuppressFinalize(this);
     }
@@ -585,16 +595,25 @@ internal sealed class DesktopWindowPreview :
         }
     }
 
-    private void ApplyTranslation()
+    private void ApplyTranslation(bool updateCapture = true)
     {
         double targetX = isGroupStacked ? groupTargetX : isGroupDragLeader && !isDragging ? heldGroupLeaderX : x + dragHorizontalDelta;
         double targetY = isGroupStacked ? groupTargetY : isGroupDragLeader && !isDragging ? heldGroupLeaderY : y + dragVerticalDelta;
         Vector3 translation = new(ToFloat(targetX), ToFloat(targetY), shadowDepth);
 
-        Host.Translation = translation;
-        backgroundHost.Translation = translation;
-        focusHost.Translation = translation;
+        if (appliedTranslation != translation)
+        {
+            appliedTranslation = translation;
+            Host.Translation = translation;
+            backgroundHost.Translation = translation;
+            focusHost.Translation = translation;
+        }
+        if (updateCapture) RefreshCaptureVisibility();
     }
+
+    private void RefreshCaptureVisibility() => captureVisibility.Update(
+        appliedTranslation?.X ?? 0, appliedTranslation?.Y ?? 0, width, height, isFilterMatch,
+        isDragging || isGroupDragLeader || isGroupStacked);
 
     private void ApplySize(double targetWidth, double targetHeight)
     {
@@ -607,7 +626,7 @@ internal sealed class DesktopWindowPreview :
         Host.CenterPoint = new Vector3(ToFloat(targetWidth / 2), ToFloat(targetHeight / 2), 0);
         backgroundHost.CenterPoint = Host.CenterPoint;
         focusHost.CenterPoint = Host.CenterPoint;
-        preview?.Update(targetWidth, targetHeight, true);
+        RefreshCaptureVisibility();
     }
 
     private void SetPromoted(bool value)
@@ -631,6 +650,8 @@ internal sealed class DesktopWindowPreview :
                     ? DraggedPageZIndex + Math.Clamp(zIndex, 0, DraggedZIndex - DraggedPageZIndex - 1)
                     : zIndex;
 
+        if (appliedZIndex == valueToApply) return;
+        appliedZIndex = valueToApply;
         Canvas.SetZIndex(Host, valueToApply);
         Canvas.SetZIndex(backgroundHost, valueToApply);
         Canvas.SetZIndex(focusHost, valueToApply);
@@ -647,11 +668,21 @@ internal sealed class DesktopWindowPreview :
 
     private void SetGroupTransitions(TimeSpan? duration)
     {
-        Host.TranslationTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
-        backgroundHost.TranslationTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
-        focusHost.TranslationTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
+        captureVisibility.HoldForTransition(duration);
+        SetTranslationTransition(duration);
+        if (scaleTransitionDuration == duration) return;
+        scaleTransitionDuration = duration;
         Host.ScaleTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
         backgroundHost.ScaleTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
         focusHost.ScaleTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
+    }
+
+    private void SetTranslationTransition(TimeSpan? duration)
+    {
+        if (translationTransitionDuration == duration) return;
+        translationTransitionDuration = duration;
+        Host.TranslationTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
+        backgroundHost.TranslationTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
+        focusHost.TranslationTransition = duration.HasValue ? new Vector3Transition { Duration = duration.Value } : null;
     }
 }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Infinity.Shell.WinUI;
 
@@ -9,6 +8,7 @@ public sealed class DesktopWindowGroupStackAnimator
     private static readonly TimeSpan TransitionDuration = TimeSpan.FromMilliseconds(160);
 
     private readonly HashSet<nint> handles = [];
+    private readonly List<KeyValuePair<nint, DesktopWindowPreview>> followers = [];
     private nint leaderHandle;
 
     public nint LeaderHandle => leaderHandle;
@@ -35,18 +35,26 @@ public sealed class DesktopWindowGroupStackAnimator
             return;
         }
 
-        DesktopWindowPreview[] followers = [.. previews
-            .Where(item => item.Key != leaderHandle && handles.Contains(item.Key))
-            .OrderByDescending(item => item.Value.ZIndex)
-            .ThenBy(item => (long)item.Key)
-            .Select(item => item.Value)];
+        followers.Clear();
+        foreach (nint handle in handles)
+        {
+            if (handle != leaderHandle && previews.TryGetValue(handle, out DesktopWindowPreview? follower))
+            {
+                followers.Add(new(handle, follower));
+            }
+        }
+        followers.Sort(static (left, right) =>
+        {
+            int order = right.Value.ZIndex.CompareTo(left.Value.ZIndex);
+            return order != 0 ? order : ((long)left.Key).CompareTo((long)right.Key);
+        });
 
-        for (int index = 0; index < followers.Length; index++)
+        for (int index = 0; index < followers.Count; index++)
         {
             int depth = index + 1;
             double offset = Math.Min(depth, 6) * (8 / leader.LayoutScale);
             float scale = Math.Max(0.86f, 1 - (Math.Min(depth, 6) * 0.025f));
-            followers[index].SetGroupStackTarget(leader.VisualX + offset, leader.VisualY + offset, scale, depth, transitionDuration);
+            followers[index].Value.SetGroupStackTarget(leader.VisualX + offset, leader.VisualY + offset, scale, depth, transitionDuration);
         }
     }
 
@@ -76,6 +84,7 @@ public sealed class DesktopWindowGroupStackAnimator
     public void Reset()
     {
         handles.Clear();
+        followers.Clear();
         leaderHandle = 0;
     }
 }

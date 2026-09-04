@@ -68,6 +68,7 @@ public sealed partial class DesktopScrollPreviewView :
     private int monitorWidth;
     private int monitorHeight;
     private int foregroundGeneration;
+    private (int X, int Y, int OffsetX, int OffsetY, int ScreenWidth, int ScreenHeight, double Width, double Height)? appliedViewport;
 
     public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IPanState panState, IPager pager, IScroller scroller, IWorkspace workspace, IScrollInputSuppression scrollInputSuppression, IDesktopBackgroundSource backgroundSource, DesktopOverviewConfiguration overviewConfiguration, DesktopOverviewForegroundThemeResolver foregroundThemeResolver, DesktopScrollPreviewAnimator animator, DesktopOverviewChromeAnimator chromeAnimator, DesktopOverviewClockController clockController, DesktopOverviewLayoutPresenter layoutPresenter, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationDockViewModel applicationDock, DesktopApplicationDockContextMenuBuilder applicationDockContextMenuBuilder, DesktopApplicationDockPressAnimator applicationDockPressAnimator, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator, DesktopOverviewInputController inputController, DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator, ILogger<DesktopScrollPreviewView> logger)
     {
@@ -190,7 +191,6 @@ public sealed partial class DesktopScrollPreviewView :
             clockController.Stop();
         }
         cursorConfinement.SetOwner(ownerWindowHandle);
-        windowPreviewSurface.Initialize(ownerWindowHandle);
         TopChromeSurface.UpdateLayout();
         chromeAnimator.ResetTopChrome(TopChromeSurface);
 
@@ -213,6 +213,10 @@ public sealed partial class DesktopScrollPreviewView :
             Synchronise();
             QueueAdaptiveForegroundRefresh();
         }
+
+        // Refresh eligibility before resuming sessions, including after the
+        // desktop has moved to a different page while the overlay was closed.
+        windowPreviewSurface.Initialize(ownerWindowHandle);
     }
 
     public void AnimateInward()
@@ -439,12 +443,24 @@ public sealed partial class DesktopScrollPreviewView :
         int y = workspace.WorkAreaY;
         int offsetX = Math.Max(0, x - overlayScreenOriginX);
         int offsetY = Math.Max(0, y - overlayScreenOriginY);
+        var viewport = (x, y, offsetX, offsetY, monitorWidth, monitorHeight, GetAnimationWidth(), GetAnimationHeight());
+        // Scrolling changes window positions, not chrome geometry. Avoid XAML
+        // layout writes and native cursor-confinement updates on every tick.
+        if (appliedViewport == viewport)
+        {
+            return false;
+        }
+
+        appliedViewport = viewport;
         bool changed = monitorOriginX != x || monitorOriginY != y || workAreaOffsetX != offsetX || workAreaOffsetY != offsetY;
         monitorOriginX = x;
         monitorOriginY = y;
         workAreaOffsetX = offsetX;
         workAreaOffsetY = offsetY;
         PreviewSurface.Translation = new Vector3(workAreaOffsetX, workAreaOffsetY, 0);
+        previews.SetCaptureViewport(DesktopCaptureViewport.Create(
+            monitorWidth, monitorHeight, GetAnimationWidth(), GetAnimationHeight(),
+            workAreaOffsetX, workAreaOffsetY, animator.Scale));
         UpdateTopCommandSurfaceLayout();
         ShortcutHintSurface.Margin = new Thickness(0, Math.Max(0, workAreaOffsetY + workspace.Height - 60), 24, 0);
         ApplicationDockChrome.Margin = new Thickness(0, Math.Max(0, workAreaOffsetY + workspace.Height - 88), 0, 0);

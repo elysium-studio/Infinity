@@ -1,6 +1,5 @@
 using Infinity.Application.Abstractions;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Infinity.Shell.WinUI;
 
@@ -70,12 +69,12 @@ public sealed class DesktopWindowSnapInteractionCoordinator(
             return;
         }
 
-        IReadOnlyCollection<nint> selectedHandles = previews.GetSelectedHandles();
+        IReadOnlySet<nint> selectedHandles = previews.GetSelectedHandles();
         TrackedWindow? occupant;
 
         if (selectedHandles.Count > 1 && selectedHandles.Contains(activeWindow))
         {
-            occupancyResolver.TryGetOccupant(placement, selectedHandles.ToHashSet(), windowCollection.AllTrackedWindows, out occupant);
+            occupancyResolver.TryGetOccupant(placement, selectedHandles, windowCollection.AllTrackedWindows, out occupant);
         }
         else
         {

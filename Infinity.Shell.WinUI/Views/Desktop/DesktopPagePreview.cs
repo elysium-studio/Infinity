@@ -45,6 +45,8 @@ public sealed partial class DesktopPagePreview :
     private Vector3 pageTranslation;
     private Vector3 shadowTranslation;
     private Vector3 titleTranslation;
+    private (Vector3 Page, Vector3 Shadow, Vector3 Title)? appliedTranslations;
+    private bool translationAnimationRunning;
     private UIElement? dragCaptureElement;
     private UIElement? dragCoordinateRoot;
     private uint? dragPointerId;
@@ -259,6 +261,7 @@ public sealed partial class DesktopPagePreview :
             return;
         }
 
+        translationAnimationRunning = true;
         StartTranslationAnimation(pageHostVisual, pageTranslation, transitionDuration.Value);
         StartTranslationAnimation(shadowVisual, shadowTranslation, transitionDuration.Value);
         StartTranslationAnimation(titleVisual, titleTranslation, transitionDuration.Value);
@@ -266,14 +269,23 @@ public sealed partial class DesktopPagePreview :
 
     public void ClearTranslationTransition()
     {
-        pageHostVisual.Properties.StopAnimation("Translation");
+        var translations = (pageTranslation, shadowTranslation, titleTranslation);
+        // Ordinary scrolling often moves the page's canvas position only.
+        // Do not repeatedly stop/rewrite its unchanged Composition translation.
+        if (!translationAnimationRunning && appliedTranslations == translations) return;
+
+        if (translationAnimationRunning)
+        {
+            pageHostVisual.Properties.StopAnimation("Translation");
+            shadowVisual.Properties.StopAnimation("Translation");
+            titleVisual.Properties.StopAnimation("Translation");
+            translationAnimationRunning = false;
+        }
+
         pageHostVisual.Properties.InsertVector3("Translation", pageTranslation);
-
-        shadowVisual.Properties.StopAnimation("Translation");
         shadowVisual.Properties.InsertVector3("Translation", shadowTranslation);
-
-        titleVisual.Properties.StopAnimation("Translation");
         titleVisual.Properties.InsertVector3("Translation", titleTranslation);
+        appliedTranslations = translations;
     }
 
     public void SetInteractionEnabled(bool value)

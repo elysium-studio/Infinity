@@ -18,6 +18,17 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
     private string filterText = string.Empty;
     private bool interactionEnabled;
     private bool disposed;
+    private DesktopCaptureViewport captureViewport;
+
+    public void SetCaptureViewport(DesktopCaptureViewport viewport)
+    {
+        if (captureViewport == viewport) return;
+        captureViewport = viewport;
+        foreach (DesktopWindowPreview preview in previews.Values)
+        {
+            preview.SetCaptureViewport(viewport);
+        }
+    }
 
     public event Action<nint>? WindowInvoked;
 
@@ -50,6 +61,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
             if (!previews.TryGetValue(trackedWindow.Handle, out DesktopWindowPreview? preview))
             {
                 preview = factory.Create(backgroundCanvas, canvas, focusCanvas, trackedWindow.Handle, layoutScale);
+                preview.SetCaptureViewport(captureViewport);
                 preview.Invoked += HandleWindowInvoked;
                 preview.SelectionToggled += HandleWindowSelectionToggled;
                 preview.PositionChanged += HandleWindowPositionChanged;
@@ -291,7 +303,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         return SetFocused(handle);
     }
 
-    public IReadOnlyCollection<nint> GetSelectedHandles() => selection.SelectedHandles;
+    public IReadOnlySet<nint> GetSelectedHandles() => selection.SelectedHandles;
 
     public nint GetFocusedHandle() => selection.FocusedHandle;
 

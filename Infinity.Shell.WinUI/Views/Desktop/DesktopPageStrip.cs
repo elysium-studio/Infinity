@@ -21,6 +21,8 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
     private readonly Dictionary<int, DesktopPagePreview> visiblePages = [];
     private readonly List<DesktopPagePreview> pagePool = [];
     private readonly Stack<DesktopPagePreview> availablePages = [];
+    private readonly List<int> retiredPages = [];
+    private (double ViewportWidth, double ViewportHeight, double WorkWidth, double WorkHeight, double Scale)? hostLayout;
     private readonly DesktopPageEditorLabels editorLabels = new(localizer.GetText("PageTitleEditButton"), localizer.GetText("PageTitleSaveButton"), localizer.GetText("PageTitleCancelButton"), localizer.GetText("PageLayoutEditButton"), localizer.GetText("PageLayoutArrangeButton"), localizer.GetText("PageLayoutClearButton"));
     private Canvas? host;
     private Canvas? shadowHost;
@@ -122,6 +124,8 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         visiblePages.Clear();
         availablePages.Clear();
         pagePool.Clear();
+        retiredPages.Clear();
+        hostLayout = null;
 
         host?.Children.Clear();
         shadowHost?.Children.Clear();
@@ -347,14 +351,20 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             displayState = nextDisplayState;
         }
 
-        foreach ((int page, DesktopPagePreview preview) in visiblePages.ToArray())
+        retiredPages.Clear();
+        foreach (int page in visiblePages.Keys)
         {
             if ((page < firstPage || page > lastPage) && reorderState?.SourcePage != page)
             {
-                visiblePages.Remove(page);
-                preview.Hide();
-                availablePages.Push(preview);
+                retiredPages.Add(page);
             }
+        }
+        foreach (int page in retiredPages)
+        {
+            DesktopPagePreview preview = visiblePages[page];
+            visiblePages.Remove(page);
+            preview.Hide();
+            availablePages.Push(preview);
         }
 
         for (int page = firstPage; page <= lastPage; page++)
@@ -428,17 +438,23 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             return;
         }
 
-        double unscaledViewportWidth = GetViewportWidth() / overviewScale;
+        double viewportWidth = GetViewportWidth();
+        double viewportHeight = GetViewportHeight();
+        (double, double, double, double, double) nextLayout = (viewportWidth, viewportHeight, workspace.Width, workspace.Height, overviewScale);
+        if (hostLayout == nextLayout) return;
+        hostLayout = nextLayout;
+
+        double unscaledViewportWidth = viewportWidth / overviewScale;
         leadingSpace = Math.Max(0, (unscaledViewportWidth - workspace.Width) / 2);
 
         host.Width = unscaledViewportWidth;
         host.Height = workspace.Height;
         Canvas.SetLeft(host, -leadingSpace);
 
-        shadowHost.Width = GetViewportWidth();
-        shadowHost.Height = GetViewportHeight();
-        titleHost.Width = GetViewportWidth();
-        titleHost.Height = GetViewportHeight();
+        shadowHost.Width = viewportWidth;
+        shadowHost.Height = viewportHeight;
+        titleHost.Width = viewportWidth;
+        titleHost.Height = viewportHeight;
     }
 
     private void EnsurePagePoolCapacity()

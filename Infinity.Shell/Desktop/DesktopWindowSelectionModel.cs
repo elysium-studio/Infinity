@@ -6,7 +6,7 @@ public sealed class DesktopWindowSelectionModel
 
     public nint FocusedHandle { get; private set; }
 
-    public IReadOnlyCollection<nint> SelectedHandles => selectedHandles;
+    public IReadOnlySet<nint> SelectedHandles => selectedHandles;
 
     public void Focus(nint handle) => FocusedHandle = handle;
 
