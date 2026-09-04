@@ -35,6 +35,7 @@ internal class DesktopOverlayHost
     private readonly List<(Window Window, RectInt32 Rect, SystemBackdropElement BackdropElement, Grid ContentRoot, HMONITOR Monitor)> windows = [];
     private readonly DesktopOverlayMonitorTopology monitorTopology = new();
     private readonly DesktopOverlay overlay;
+    private readonly DesktopOverlayResponsivenessMonitor responsivenessMonitor;
     private readonly HOOKPROC mouseProc;
     private readonly Dictionary<HWND, DispatcherQueueTimer> windowOpacityTimers = [];
     private readonly Dictionary<HWND, float> windowOpacities = [];
@@ -51,6 +52,8 @@ internal class DesktopOverlayHost
     private RectInt32 currentBounds;
 
     public event EventHandler? Dismissed;
+
+    internal bool IsEmergencyHidden => responsivenessMonitor.IsEmergencyHidden;
 
     internal static void RegisterExcludedHandle(HWND handle)
     {
@@ -95,6 +98,20 @@ internal class DesktopOverlayHost
         }
 
         ApplyBlurState();
+        HWND[] handles = new HWND[windows.Count];
+        for (int index = 0; index < windows.Count; index++)
+            handles[index] = new HWND(WindowNative.GetWindowHandle(windows[index].Window));
+        responsivenessMonitor = new(handles, overlay.DispatcherQueue, () =>
+        {
+            Debug.WriteLine("Overlay UI stopped responding; the native safety monitor hid it.");
+            foreach (HWND handle in handles)
+            {
+                StopWindowOpacityAnimation(handle);
+                windowOpacities[handle] = 0;
+            }
+            Hide();
+            Dismissed?.Invoke(this, EventArgs.Empty);
+        });
     }
 
     internal MonitorHandle CurrentMonitor => new MonitorHandle((nint)currentMonitor);
@@ -167,6 +184,7 @@ internal class DesktopOverlayHost
     public void Show()
     {
         isVisible = true;
+        responsivenessMonitor.Start();
         InstallMouseHook();
 
         currentMonitor = ResolveActiveMonitor();
@@ -201,6 +219,7 @@ internal class DesktopOverlayHost
 
     public void Hide()
     {
+        responsivenessMonitor.Stop();
         isVisible = false;
         isTopMost = false;
         UninstallMouseHook();
@@ -244,6 +263,7 @@ internal class DesktopOverlayHost
 
     internal Task CloseAsync()
     {
+        responsivenessMonitor.Dispose();
         lock (hookLock)
         {
             if (disposed)

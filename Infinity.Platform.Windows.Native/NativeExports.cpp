@@ -1,5 +1,4 @@
 #include "NativeExports.h"
-#include "DwmThumbnailVisual.h"
 #include <knownfolders.h>
 #include <shlobj.h>
 #include <shobjidl.h>
@@ -40,26 +39,6 @@ namespace
     {
         return _wcsicmp(left.DisplayName.c_str(), right.DisplayName.c_str()) < 0;
     }
-}
-
-extern "C" __declspec(dllexport) int __stdcall DwmThumbnailVisual_IsAvailable()
-{
-	return Infinity::Platform::Windows::Native::DwmThumbnailVisual_IsAvailable();
-}
-
-extern "C" __declspec(dllexport) int __stdcall DwmThumbnailVisual_RenderBatch(HWND ownerWindowHandle, DwmThumbnailVisualItem* items, int count)
-{
-	return Infinity::Platform::Windows::Native::DwmThumbnailVisual_RenderBatch(ownerWindowHandle, items, count);
-}
-
-extern "C" __declspec(dllexport) int __stdcall DwmThumbnailVisual_RefreshSource(unsigned long long previewId)
-{
-	return Infinity::Platform::Windows::Native::DwmThumbnailVisual_RefreshSource(previewId);
-}
-
-extern "C" __declspec(dllexport) void __stdcall DwmThumbnailVisual_Clear()
-{
-	Infinity::Platform::Windows::Native::DwmThumbnailVisual_Clear();
 }
 
 extern "C" __declspec(dllexport) int __stdcall ApplicationCatalog_Enumerate(wchar_t** buffer, int* characterCount)

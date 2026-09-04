@@ -14,3 +14,4 @@ MONITORINFO
 WindowFromPoint
 GetAncestor
 MSLLHOOKSTRUCT
+ClipCursor

@@ -8,7 +8,7 @@ using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSurface, ITrackedWindowDragController dragController, DesktopWindowDragPageNavigator windowDragPageNavigator, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, ILogger<DesktopWindowPreviewFactory> logger)
+public sealed class DesktopWindowPreviewFactory(WindowCapturePreviewSurface previewSurface, ITrackedWindowDragController dragController, DesktopWindowDragPageNavigator windowDragPageNavigator, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, ILogger<DesktopWindowPreviewFactory> logger)
 {
     internal DesktopWindowPreview Create(Canvas backgroundCanvas, Canvas canvas, Canvas focusCanvas, nint windowHandle, double layoutScale)
     {
@@ -98,6 +98,12 @@ public sealed class DesktopWindowPreviewFactory(IWindowPreviewSurface previewSur
         focusCanvas.Children.Add(focusHost);
 
         ThumbnailCompositionPreview? preview = ThumbnailCompositionPreview.Create(previewSurface, windowHandle, compositionHost, logger);
+        if (preview is null)
+        {
+            // An unavailable/protected capture must not expose the real desktop
+            // through the normal translucent card material.
+            backgroundHost.Background = new SolidColorBrush(Color.FromArgb(255, 32, 32, 32));
+        }
 
         return new DesktopWindowPreview(windowHandle, host, backgroundHost, focusHost, preview, focusVisual, selectionVisual, dragController, windowDragPageNavigator, dragPositionResolver, dragBoundaryCalculator, cursorConfinement, windowPlacementCoordinator, contextMenuBuilder, layoutScale);
     }

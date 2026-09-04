@@ -236,8 +236,6 @@ public sealed class DesktopOverviewSessionControllerTests
         {
         }
 
-        public IWindowPreview? CreatePreview(nint windowHandle) => null;
-
         public void Clear()
         {
         }

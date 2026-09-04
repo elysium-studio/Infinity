@@ -93,11 +93,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="DwmThumbnailVisual.h" />
     <ClInclude Include="NativeExports.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DwmThumbnailVisual.cpp" />
     <ClCompile Include="NativeExports.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -41,6 +41,9 @@ public partial class DesktopOverlay :
     private readonly DesktopOverlayHost host;
     private bool disposed;
 
+    // Safe for native input hooks: no XAML property or dispatcher access.
+    protected bool IsEmergencyHidden => host.IsEmergencyHidden;
+
     public DesktopOverlay()
     {
         DefaultStyleKey = typeof(DesktopOverlay);

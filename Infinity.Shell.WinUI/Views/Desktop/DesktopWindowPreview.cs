@@ -7,7 +7,6 @@ using System;
 using System.Numerics;
 using Windows.Foundation;
 using Windows.System;
-using DispatcherQueueTimer = Microsoft.UI.Dispatching.DispatcherQueueTimer;
 
 namespace Infinity.Shell.WinUI;
 
@@ -16,7 +15,6 @@ internal sealed class DesktopWindowPreview :
 {
     private const float ShadowDepth = 40;
     private const double DragThreshold = 4;
-    private static readonly TimeSpan SourceRefreshDelay = TimeSpan.FromMilliseconds(180);
     private const int DraggedZIndex = 1_000_000;
     private const int DraggedPageZIndex = 999_000;
 
@@ -34,7 +32,6 @@ internal sealed class DesktopWindowPreview :
     private readonly nint windowHandle;
     private readonly double layoutScale;
     private readonly float shadowDepth;
-    private DispatcherQueueTimer? sourceRefreshTimer;
     private uint? dragPointerId;
     private Point dragStartPoint;
     private Point dragLastPoint;
@@ -129,11 +126,6 @@ internal sealed class DesktopWindowPreview :
 
     public void RefreshSourceGeometry(TrackedWindow trackedWindow, IWindowGeometryReader geometryReader)
     {
-        double previousWidth = SourceWidth;
-        double previousHeight = SourceHeight;
-        double previousOffsetX = SourceOffsetX;
-        double previousOffsetY = SourceOffsetY;
-
         if (geometryReader.TryReadVisibleGeometry(trackedWindow.Handle,
             out int visibleX,
             out int visibleY,
@@ -170,16 +162,6 @@ internal sealed class DesktopWindowPreview :
             SourceOffsetY = 0;
         }
 
-        if (previousWidth > 0 &&
-            previousHeight > 0 &&
-            (previousWidth != SourceWidth ||
-                previousHeight != SourceHeight ||
-                previousOffsetX != SourceOffsetX ||
-                previousOffsetY != SourceOffsetY))
-        {
-            preview?.RefreshSource();
-            ScheduleSourceRefresh();
-        }
     }
 
     public void SetZIndex(int value)
@@ -354,49 +336,11 @@ internal sealed class DesktopWindowPreview :
         Host.Tapped -= HandleTapped;
         windowDragPageNavigator.PageSnapCommitted -= HandleWindowPageSnapCommitted;
 
-        if (sourceRefreshTimer is not null)
-        {
-            sourceRefreshTimer.Stop();
-            sourceRefreshTimer.Tick -= HandleSourceRefreshTimerTick;
-            sourceRefreshTimer = null;
-        }
-
         preview?.Dispose();
         GC.SuppressFinalize(this);
     }
 
     private static float ToFloat(double value) => (float)Math.Clamp(value, -float.MaxValue, float.MaxValue);
-
-    private void ScheduleSourceRefresh()
-    {
-        if (disposed || preview is null)
-        {
-            return;
-        }
-
-        sourceRefreshTimer ??= CreateSourceRefreshTimer();
-        sourceRefreshTimer.Stop();
-        sourceRefreshTimer.Start();
-    }
-
-    private DispatcherQueueTimer CreateSourceRefreshTimer()
-    {
-        DispatcherQueueTimer timer = Host.DispatcherQueue.CreateTimer();
-        timer.Interval = SourceRefreshDelay;
-        timer.IsRepeating = false;
-        timer.Tick += HandleSourceRefreshTimerTick;
-        return timer;
-    }
-
-    private void HandleSourceRefreshTimerTick(DispatcherQueueTimer sender, object args)
-    {
-        sender.Stop();
-
-        if (!disposed)
-        {
-            preview?.RefreshSource();
-        }
-    }
 
     private void HandleTapped(object sender, TappedRoutedEventArgs args)
     {

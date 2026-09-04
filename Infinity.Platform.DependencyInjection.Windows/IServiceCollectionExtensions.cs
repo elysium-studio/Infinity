@@ -60,10 +60,10 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<IWindowResizeSynchronizer, WindowResizeSynchronizer>();
             services.AddSingleton<IWindowCloser, WindowCloser>();
             services.AddSingleton<IWindowStateController, WindowStateController>();
+            services.AddSingleton(provider => new WindowCaptureSupport(provider.GetRequiredService<ILogger<WindowCaptureSupport>>()));
             services.AddSingleton<WindowConcealer>();
             services.AddSingleton<IWindowConcealer>(provider => provider.GetRequiredService<WindowConcealer>());
             services.AddSingleton<IWindowConcealmentRecovery>(provider => provider.GetRequiredService<WindowConcealer>());
-            services.AddSingleton<IWindowPreviewSurface, DwmWindowPreviewSurface>();
             services.AddSingleton<IWindowTitleReader, WindowTitleReader>();
 
             services.AddSingleton<IWindowFocusGuard, WindowFocusGuard>();

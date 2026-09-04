@@ -11,17 +11,11 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DwmThumbnailVisual.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="NativeExports.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DwmThumbnailVisual.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="NativeExports.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

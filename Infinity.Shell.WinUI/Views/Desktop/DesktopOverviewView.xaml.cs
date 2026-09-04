@@ -135,7 +135,7 @@ public sealed partial class DesktopOverviewView :
 
     private void HandleGlobalKeyDown(object? sender, KeyEventArgs args)
     {
-        if (args.Handled || !isOverlayOpen)
+        if (args.Handled || !isOverlayOpen || IsEmergencyHidden)
         {
             return;
         }
@@ -201,6 +201,11 @@ public sealed partial class DesktopOverviewView :
     {
         lock (consumedKeyUpsLock)
         {
+            if (IsEmergencyHidden)
+            {
+                consumedKeyUps.Clear();
+                return;
+            }
             args.Handled = consumedKeyUps.Remove(args.VirtualKeyCode);
         }
     }

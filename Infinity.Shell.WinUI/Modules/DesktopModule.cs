@@ -18,6 +18,9 @@ public sealed class DesktopModule :
     public void Register(IServiceCollection services)
     {
         services
+            .AddSingleton<WindowCaptureAccess>()
+            .AddSingleton<WindowCapturePreviewSurface>()
+            .AddSingleton<IWindowPreviewSurface>(provider => provider.GetRequiredService<WindowCapturePreviewSurface>())
             .AddSingleton<DesktopOverviewBackdropAnimator>()
             .AddSingleton<DesktopWallpaperSurfaceProvider>()
             .AddSingleton<DesktopWallpaperPreloader>()
