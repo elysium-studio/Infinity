@@ -71,17 +71,6 @@ public sealed class ForegroundWindowTracker : IForegroundWindowTracker
     }
 
 
-    public void NotifyForegroundWindowChanged(nint windowHandle)
-    {
-        if (windowHandle == 0)
-        {
-            return;
-        }
-
-        RaiseForegroundWindowChanged(windowHandle, false);
-    }
-
-
     private void HandleForegroundChanged(nint windowHandle)
     {
         if (windowHandle == 0)
@@ -196,11 +185,11 @@ public sealed class ForegroundWindowTracker : IForegroundWindowTracker
             return;
         }
 
-        RaiseForegroundWindowChanged(windowHandle, true);
+        RaiseForegroundWindowChanged(windowHandle);
     }
 
 
-    private void RaiseForegroundWindowChanged(nint windowHandle, bool requireStarted)
+    private void RaiseForegroundWindowChanged(nint windowHandle)
     {
         EventHandler<nint>? handler = ForegroundWindowChanged;
         if (handler is null)
@@ -208,7 +197,7 @@ public sealed class ForegroundWindowTracker : IForegroundWindowTracker
             return;
         }
 
-        Dispatch(() =>  {  if (requireStarted && !IsStarted())  {  return;  }   handler(this, windowHandle);  });
+        Dispatch(() => { if (!IsStarted()) { return; } handler(this, windowHandle); });
     }
 
 

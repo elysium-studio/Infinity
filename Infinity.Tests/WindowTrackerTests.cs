@@ -113,7 +113,7 @@ public sealed class WindowTrackerTests
     {
         TestWindowFilter filter = new();
         TestWindowEnumerator enumerator = new();
-        return new(store, geometry, filter, new TestAncestorResolver(), new TestRestoreGuard(), new TestPageTransitionGuard(), new TestMoveGuard(), new TestConcealer(), new TestDragGuard(), trackedWindowDragController ?? new TestTrackedWindowDragController(), new WindowTrackingReconciler(store, filter, enumerator, new IntPtr(99)), listener, state ?? new TestPanState(), new TestDispatcher(), NullLogger<WindowTracker>.Instance, new IntPtr(99));
+        return new(store, geometry, filter, new TestAncestorResolver(), new TestRestoreGuard(), new TestPageTransitionGuard(), new TestMoveGuard(), new TestDragGuard(), trackedWindowDragController ?? new TestTrackedWindowDragController(), new WindowTrackingReconciler(store, filter, enumerator, new IntPtr(99)), listener, state ?? new TestPanState(), new TestDispatcher(), NullLogger<WindowTracker>.Instance, new IntPtr(99));
     }
 
 
@@ -196,20 +196,6 @@ public sealed class WindowTrackerTests
         public bool IsSystemMove => false;
 
         public WindowMoveScope Begin() => new(() =>  {  });
-    }
-
-
-    private sealed class TestConcealer : IWindowConcealer
-    {
-        public bool Conceal(IntPtr windowHandle) => true;
-
-        public IReadOnlySet<IntPtr> ConcealedHandles() => new HashSet<IntPtr>();
-
-        public bool IsConcealed(IntPtr windowHandle) => false;
-
-        public void Reveal(IntPtr windowHandle)
-        {
-        }
     }
 
 

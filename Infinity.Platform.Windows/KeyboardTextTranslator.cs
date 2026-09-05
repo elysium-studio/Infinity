@@ -1,5 +1,6 @@
 using Infinity.Platform.Abstractions;
 using Windows.Win32;
+using Windows.Win32.UI.Input.KeyboardAndMouse;
 
 namespace Infinity.Platform.Windows;
 

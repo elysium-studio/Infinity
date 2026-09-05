@@ -61,8 +61,6 @@ public sealed class RecentApplicationStore : IRecentApplicationStore
     }
 
 
-    public void RecordForSession(LaunchableApplication application) => RecordCore(application);
-
     private IReadOnlyList<LaunchableApplication> RecordCore(LaunchableApplication application)
     {
         ArgumentNullException.ThrowIfNull(application);

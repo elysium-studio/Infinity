@@ -19,7 +19,6 @@ public interface IScroller : IDisposable
 
     void Reset();
 
-    void ScrollBy(double delta);
 
     void ScrollTo(double offset, bool animate = true);
 

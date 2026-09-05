@@ -110,7 +110,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         AttachApplicationDockPressHandlers(AllApplicationsButton);
         ElementCompositionPreview.SetIsTranslationEnabled(PreviewSurface, true);
         ElementCompositionPreview.SetIsTranslationEnabled(ApplicationDockSurface, true);
-        ApplicationDockSurface.Shadow = new();
+        ApplicationDockSurface.Shadow = new ThemeShadow();
         ApplicationDockSurface.Translation = new(0, 0, 64);
     }
 
@@ -142,7 +142,6 @@ public sealed partial class DesktopScrollPreviewView : UserControl
 
     public static Visibility ToApplicationIconVisibility(ApplicationIcon? icon) => icon is null ? Visibility.Collapsed : Visibility.Visible;
 
-    public static Visibility ToFallbackIconVisibility(ApplicationIcon? icon) => icon is null ? Visibility.Visible : Visibility.Collapsed;
 
     public static ImageSource? CreateApplicationIconSource(ApplicationIcon? icon)
     {

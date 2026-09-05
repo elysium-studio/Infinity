@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using Windows.System;
 
 namespace Infinity.Shell.WinUI;
@@ -25,7 +26,7 @@ public sealed partial class DesktopPageTitleEditor : UserControl, IDisposable
         InitializeComponent();
         ViewModel.PropertyChanged += HandleViewModelPropertyChanged;
         ElementCompositionPreview.SetIsTranslationEnabled(HeaderSurface, true);
-        HeaderSurface.Shadow = new();
+        HeaderSurface.Shadow = new ThemeShadow();
         HeaderSurface.Translation = new(0, 0, ShadowDepth);
     }
 

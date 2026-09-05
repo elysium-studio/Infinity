@@ -22,7 +22,6 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<ApplicationCatalog>();
             services.AddSingleton<IApplicationCatalog>(provider => provider.GetRequiredService<ApplicationCatalog>());
             services.AddSingleton<IApplicationLauncher>(provider => provider.GetRequiredService<ApplicationCatalog>());
-            services.AddSingleton<IApplicationUsageHistory, UserAssistApplicationUsageHistory>();
             services.AddSingleton<ITaskbarPinnedApplicationSource, TaskbarPinnedApplicationSource>();
             services.AddSingleton<IScrollInputSuppression, ScrollInputSuppression>();
             services.AddSingleton<InfinityGlanceBridge>();
@@ -48,9 +47,7 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<IWindowStateController, WindowStateController>();
             services.AddSingleton<IWindowSnapAppearance, WindowSnapAppearance>();
             services.AddSingleton(provider => new WindowCaptureSupport(provider.GetRequiredService<ILogger<WindowCaptureSupport>>()));
-            services.AddSingleton<WindowConcealer>();
-            services.AddSingleton<IWindowConcealer>(provider => provider.GetRequiredService<WindowConcealer>());
-            services.AddSingleton<IWindowConcealmentRecovery>(provider => provider.GetRequiredService<WindowConcealer>());
+            services.AddSingleton<IWindowConcealmentRecovery, WindowConcealmentRecovery>();
             services.AddSingleton<IWindowTitleReader, WindowTitleReader>();
             services.AddSingleton<IWindowFocusGuard, WindowFocusGuard>();
             services.AddSingleton<IWindowDragGuard, WindowDragGuard>();

@@ -293,11 +293,6 @@ public class WindowPageCoordinatorTests
         }
 
 
-        public void ScrollBy(double delta)
-        {
-        }
-
-
         public void ScrollTo(double offset, bool animate = true) => LastTargetOffset = offset;
 
         public void Start() => ScrollStarted?.Invoke(this, EventArgs.Empty);

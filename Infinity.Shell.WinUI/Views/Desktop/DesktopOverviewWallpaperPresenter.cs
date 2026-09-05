@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Numerics;
 using System.Threading.Tasks;
 using Infinity.Platform.Abstractions;
@@ -10,7 +9,6 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Media;
-using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
 
@@ -182,7 +180,7 @@ public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfacePro
 
         Visual hostVisual = ElementCompositionPreview.GetElementVisual(compositionHost);
         Compositor compositor = hostVisual.Compositor;
-        CompositionColorBrush newColourBrush = compositor.CreateColorBrush(ParseColour(requestedBackground.Colour));
+        CompositionColorBrush newColourBrush = compositor.CreateColorBrush(DesktopBackgroundColor.ParseOrDefault(requestedBackground.Colour));
         SpriteVisual newVisual = compositor.CreateSpriteVisual();
         newVisual.Brush = newColourBrush;
         newVisual.RelativeSizeAdjustment = Vector2.One;
@@ -235,13 +233,4 @@ public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfacePro
     }
 
 
-    private static Color ParseColour(string? value)
-    {
-        if (value is { Length: 7 } && value[0] == '#' && byte.TryParse(value.AsSpan(1, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out byte red) && byte.TryParse(value.AsSpan(3, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out byte green) && byte.TryParse(value.AsSpan(5, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out byte blue))
-        {
-            return Color.FromArgb(255, red, green, blue);
-        }
-
-        return Color.FromArgb(255, 32, 32, 32);
-    }
 }

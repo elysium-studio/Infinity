@@ -34,8 +34,6 @@ public sealed partial class TourDesktopPreview : UserControl
     }
 
 
-    private static CubicBezierEasingFunction CreateEasing(Compositor compositor) => compositor.CreateCubicBezierEasingFunction(new Vector2(0.16f, 1), new Vector2(0.3f, 1));
-
     private void HandleLoaded(object sender, RoutedEventArgs args)
     {
         ApplySceneClip();
@@ -108,7 +106,7 @@ public sealed partial class TourDesktopPreview : UserControl
         Visual pageVisual = GetVisual(PageWorld);
         pageVisual.CenterPoint = new(260, 112, 0);
         Compositor compositor = pageVisual.Compositor;
-        CubicBezierEasingFunction easing = CreateEasing(compositor);
+        CubicBezierEasingFunction easing = TourAnimation.CreateEasing(compositor);
         Vector3KeyFrameAnimation scale = compositor.CreateVector3KeyFrameAnimation();
         scale.InsertKeyFrame(0, new Vector3(0.96f, 0.96f, 1));
         scale.InsertKeyFrame(0.12f, new Vector3(0.96f, 0.96f, 1));
@@ -154,7 +152,7 @@ public sealed partial class TourDesktopPreview : UserControl
     {
         Visual visual = GetVisual(element);
         Compositor compositor = visual.Compositor;
-        CubicBezierEasingFunction easing = CreateEasing(compositor);
+        CubicBezierEasingFunction easing = TourAnimation.CreateEasing(compositor);
         Vector3KeyFrameAnimation movement = compositor.CreateVector3KeyFrameAnimation();
         movement.InsertKeyFrame(0, Vector3.Zero);
         movement.InsertKeyFrame(0.2f, Vector3.Zero);
@@ -171,7 +169,7 @@ public sealed partial class TourDesktopPreview : UserControl
     {
         Visual visual = GetVisual(element);
         Compositor compositor = visual.Compositor;
-        CubicBezierEasingFunction easing = CreateEasing(compositor);
+        CubicBezierEasingFunction easing = TourAnimation.CreateEasing(compositor);
         float active = invert ? 0 : 1;
         ScalarKeyFrameAnimation opacity = compositor.CreateScalarKeyFrameAnimation();
         opacity.InsertKeyFrame(0, initial);

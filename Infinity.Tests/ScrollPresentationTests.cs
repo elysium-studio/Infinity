@@ -19,7 +19,7 @@ public sealed class ScrollPresentationTests
         ScrollPresentationSession presentationSession = new();
         presentationSession.Begin();
         QueuedDeltaScrollMotion motion = new(100, 100);
-        using Scroller scroller = CreateScroller(state, store, mover, presentationSession, motion);
+        using Scroller scroller = CreateScroller(state, store, mover, presentationSession, easingMotion: motion);
         scroller.OnTick();
         Assert.Empty(mover.Moves);
         Assert.Equal(100, state.Offset);
@@ -339,7 +339,7 @@ public sealed class ScrollPresentationTests
     }
 
 
-    private static Scroller CreateScroller(PanState state, WindowStore store, TestWindowMover mover, IScrollPresentationSession? presentationSession = null, IDeltaScrollMotion? pixelMotion = null, IScrollInputSource? source = null, IDeltaScrollMotion? easingMotion = null, IDeltaScrollMotion? navigationMotion = null, IPageCenterTargetResolver? pageCenterTargetResolver = null) => new(state, presentationSession ?? new ScrollPresentationSession(), store, mover, new TestWindowConcealer(), new TestWindowMoveGuard(), new TestWindowDragGuard(), source ?? new TestScrollInputSource(), new TestDispatcher(), () => new ScrollerConfiguration { PixelsPerScrollNotch = 120 }, pixelMotion ?? new TestDeltaScrollMotion(), easingMotion ?? new AccumulatingDeltaScrollMotion(), navigationMotion ?? new TestDeltaScrollMotion(), new TestVelocityScrollMotion(), pageCenterTargetResolver ?? new TestPageCenterTargetResolver(), () =>  {  }, () =>  {  }, NullLogger<Scroller>.Instance);
+    private static Scroller CreateScroller(PanState state, WindowStore store, TestWindowMover mover, IScrollPresentationSession? presentationSession = null, IScrollInputSource? source = null, IDeltaScrollMotion? easingMotion = null, IDeltaScrollMotion? navigationMotion = null, IPageCenterTargetResolver? pageCenterTargetResolver = null) => new(state, presentationSession ?? new ScrollPresentationSession(), store, mover, new TestWindowMoveGuard(), new TestWindowDragGuard(), source ?? new TestScrollInputSource(), new TestDispatcher(), () => new ScrollerConfiguration { PixelsPerScrollNotch = 120 }, easingMotion ?? new AccumulatingDeltaScrollMotion(), navigationMotion ?? new TestDeltaScrollMotion(), new TestVelocityScrollMotion(), pageCenterTargetResolver ?? new TestPageCenterTargetResolver(), () =>  {  }, () =>  {  }, NullLogger<Scroller>.Instance);
 
     private static TrackedWindow CreateWindow(int canvasX, int handle = 1) => new()
     {
@@ -366,21 +366,6 @@ public sealed class ScrollPresentationTests
         public void EndBatch()
         {
         }
-    }
-
-
-    private sealed class TestWindowConcealer : IWindowConcealer
-    {
-        public bool Conceal(IntPtr windowHandle) => true;
-
-        public void Reveal(IntPtr windowHandle)
-        {
-        }
-
-
-        public bool IsConcealed(IntPtr windowHandle) => false;
-
-        public IReadOnlySet<IntPtr> ConcealedHandles() => new HashSet<IntPtr>();
     }
 
 

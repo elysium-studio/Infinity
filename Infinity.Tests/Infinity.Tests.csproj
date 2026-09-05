@@ -26,5 +26,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Infinity.Shell.WinUI\Strings\**\Resources.resw" Link="LocalizationResources\%(RecursiveDir)Resources.resw" CopyToOutputDirectory="PreserveNewest" />
+    <Compile Include="..\Infinity.Shell.WinUI\Views\Desktop\DesktopBackgroundColor.cs" Link="DesktopBackgroundColor.cs" />
   </ItemGroup>
 </Project>

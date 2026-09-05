@@ -128,8 +128,6 @@ public sealed class DesktopPageArrangementCoordinatorTests
         }
 
 
-        public void ScrollBy(double delta) => ScrollStarted?.Invoke(this, EventArgs.Empty);
-
         public void ScrollTo(double offset, bool animate = true) => ScrollStopped?.Invoke(this, EventArgs.Empty);
 
         public void Start()

@@ -286,11 +286,6 @@ public sealed class DesktopOverviewSessionControllerTests
         }
 
 
-        public void ScrollBy(double delta)
-        {
-        }
-
-
         public void ScrollTo(double offset, bool animate = true)
         {
         }

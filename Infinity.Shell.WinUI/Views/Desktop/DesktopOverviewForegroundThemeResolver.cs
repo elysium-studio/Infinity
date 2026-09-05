@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Threading.Tasks;
 using Infinity.Platform.Abstractions;
 using Infinity.Shell;
@@ -46,12 +45,12 @@ public sealed class DesktopOverviewForegroundThemeResolver(DesktopWallpaperColor
 
     private static ElementTheme ResolveColour(string? value, ElementTheme fallbackTheme)
     {
-        if (value is not { Length: 7 } || value[0] != '#' || !byte.TryParse(value.AsSpan(1, 2), NumberStyles.HexNumber, null, out byte red) || !byte.TryParse(value.AsSpan(3, 2), NumberStyles.HexNumber, null, out byte green) || !byte.TryParse(value.AsSpan(5, 2), NumberStyles.HexNumber, null, out byte blue))
+        if (!DesktopBackgroundColor.TryParse(value, out Color color))
         {
             return fallbackTheme;
         }
 
-        return ResolveColour(Color.FromArgb(255, red, green, blue));
+        return ResolveColour(color);
     }
 
 

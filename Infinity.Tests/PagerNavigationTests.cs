@@ -78,11 +78,6 @@ public sealed class PagerNavigationTests
         }
 
 
-        public void ScrollBy(double delta)
-        {
-        }
-
-
         public void ScrollTo(double offset, bool animate = true)
         {
             operations.Add($"ScrollTo:{offset}");

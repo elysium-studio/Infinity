@@ -36,10 +36,6 @@ internal sealed class TestScroller : IScroller
 
     public void Reset() => ResetCount++;
 
-    public void ScrollBy(double delta)
-    {
-    }
-
 
     public void ScrollTo(double offset, bool animate = true) => VisualOffset = offset;
 

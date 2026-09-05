@@ -8,5 +8,4 @@ public interface IForegroundWindowTracker
 
     void Stop();
 
-    void NotifyForegroundWindowChanged(nint windowHandle);
 }

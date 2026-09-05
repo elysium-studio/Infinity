@@ -42,7 +42,6 @@ public sealed partial class TourKeyChord : UserControl
 
     public Visibility ToInverseVisibility(bool value) => value ? Visibility.Collapsed : Visibility.Visible;
 
-    private static CubicBezierEasingFunction CreateEasing(Compositor compositor) => compositor.CreateCubicBezierEasingFunction(new Vector2(0.16f, 1), new Vector2(0.3f, 1));
 
     private void HandleLoaded(object sender, RoutedEventArgs args)
     {
@@ -80,7 +79,7 @@ public sealed partial class TourKeyChord : UserControl
         Visual keyVisual = ElementCompositionPreview.GetElementVisual(key);
         keyVisual.CenterPoint = new((float)(key.RenderSize.Width / 2), (float)(key.RenderSize.Height / 2), 0);
         Compositor compositor = keyVisual.Compositor;
-        CubicBezierEasingFunction easing = CreateEasing(compositor);
+        CubicBezierEasingFunction easing = TourAnimation.CreateEasing(compositor);
         Vector3KeyFrameAnimation scale = compositor.CreateVector3KeyFrameAnimation();
         scale.InsertKeyFrame(0, Vector3.One);
         scale.InsertKeyFrame(pressAt, Vector3.One);
@@ -110,7 +109,7 @@ public sealed partial class TourKeyChord : UserControl
         ElementCompositionPreview.SetIsTranslationEnabled(MouseWheel, true);
         Visual visual = ElementCompositionPreview.GetElementVisual(MouseWheel);
         Compositor compositor = visual.Compositor;
-        CubicBezierEasingFunction easing = CreateEasing(compositor);
+        CubicBezierEasingFunction easing = TourAnimation.CreateEasing(compositor);
         Vector3KeyFrameAnimation movement = compositor.CreateVector3KeyFrameAnimation();
         movement.InsertKeyFrame(0, Vector3.Zero);
         movement.InsertKeyFrame(0.24f, Vector3.Zero);

@@ -17,8 +17,6 @@ public sealed partial class WelcomeView : UserControl
     }
 
 
-    private static CubicBezierEasingFunction CreateEasing(Compositor compositor) => compositor.CreateCubicBezierEasingFunction(new Vector2(0.16f, 1), new Vector2(0.3f, 1));
-
     private void HandleLoaded(object sender, RoutedEventArgs args)
     {
         AnimateEntrance(HeroCard, 0);
@@ -54,7 +52,7 @@ public sealed partial class WelcomeView : UserControl
         ElementCompositionPreview.SetIsTranslationEnabled(element, true);
         Visual visual = ElementCompositionPreview.GetElementVisual(element);
         Compositor compositor = visual.Compositor;
-        CubicBezierEasingFunction easing = CreateEasing(compositor);
+        CubicBezierEasingFunction easing = TourAnimation.CreateEasing(compositor);
         visual.Properties.InsertVector3("Translation", new Vector3(0, 18, 0));
         visual.Opacity = 0;
         Vector3KeyFrameAnimation movement = compositor.CreateVector3KeyFrameAnimation();
@@ -79,7 +77,7 @@ public sealed partial class WelcomeView : UserControl
         Visual visual = ElementCompositionPreview.GetElementVisual(element);
         visual.CenterPoint = new((float)(element.RenderSize.Width / 2), (float)(element.RenderSize.Height / 2), 0);
         Compositor compositor = visual.Compositor;
-        CubicBezierEasingFunction easing = CreateEasing(compositor);
+        CubicBezierEasingFunction easing = TourAnimation.CreateEasing(compositor);
         Vector3KeyFrameAnimation scale = compositor.CreateVector3KeyFrameAnimation();
         scale.InsertKeyFrame(0, Vector3.One);
         scale.InsertKeyFrame(0.5f, new Vector3(1.12f, 1.12f, 1), easing);

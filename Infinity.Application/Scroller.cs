@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public sealed class Scroller(IPanState state, IScrollPresentationSession presentationSession, IWindowStore store, IWindowMover mover, IWindowConcealer concealer, IWindowMoveGuard moveGuard, IWindowDragGuard dragGuard, IScrollInputSource source, IDispatcher dispatcher, Func<ScrollerConfiguration> configurationFactory, IDeltaScrollMotion pixelMotion, IDeltaScrollMotion easingMotion, IDeltaScrollMotion navigationMotion, IVelocityScrollMotion momentumMotion, IPageCenterTargetResolver pageCenterTargetResolver, Action startTimer, Action stopTimer, ILogger<Scroller> logger) : IScroller
+public sealed class Scroller(IPanState state, IScrollPresentationSession presentationSession, IWindowStore store, IWindowMover mover, IWindowMoveGuard moveGuard, IWindowDragGuard dragGuard, IScrollInputSource source, IDispatcher dispatcher, Func<ScrollerConfiguration> configurationFactory, IDeltaScrollMotion easingMotion, IDeltaScrollMotion navigationMotion, IVelocityScrollMotion momentumMotion, IPageCenterTargetResolver pageCenterTargetResolver, Action startTimer, Action stopTimer, ILogger<Scroller> logger) : IScroller
 {
     private const int StandardWheelDelta = 120;
     private const double WheelScrollScale = 0.50;
@@ -73,7 +73,6 @@ public sealed class Scroller(IPanState state, IScrollPresentationSession present
 
     public void Reset()
     {
-        pixelMotion.Reset();
         easingMotion.Reset();
         navigationMotion.Reset();
         momentumMotion.Reset();
@@ -90,7 +89,6 @@ public sealed class Scroller(IPanState state, IScrollPresentationSession present
     {
         if (haltRequested)
         {
-            pixelMotion.Reset();
             easingMotion.Reset();
             navigationMotion.Reset();
             momentumMotion.Reset();
@@ -104,7 +102,7 @@ public sealed class Scroller(IPanState state, IScrollPresentationSession present
             return;
         }
 
-        double delta = pixelMotion.Drain() + easingMotion.Drain() + navigationMotion.Drain() + momentumMotion.Drain();
+        double delta = easingMotion.Drain() + navigationMotion.Drain() + momentumMotion.Drain();
         if (Math.Abs(delta) > 0.01)
         {
             double offsetBefore = state.Offset;
@@ -159,7 +157,7 @@ public sealed class Scroller(IPanState state, IScrollPresentationSession present
             RepositionWindows(intOffset);
         }
 
-        if (!pixelMotion.IsActive && !easingMotion.IsActive && !navigationMotion.IsActive && !momentumMotion.IsActive && !isSpinging)
+        if (!easingMotion.IsActive && !navigationMotion.IsActive && !momentumMotion.IsActive && !isSpinging)
         {
             if (TryStartInputCentering())
             {
@@ -169,26 +167,6 @@ public sealed class Scroller(IPanState state, IScrollPresentationSession present
             inputNavigationTarget = null;
             CompleteScroll();
         }
-    }
-
-
-    public void ScrollBy(double pixels)
-    {
-        if (pixels == 0)
-        {
-            return;
-        }
-
-        if (!IsMotionActive())
-        {
-            ScrollStarted?.Invoke(this, EventArgs.Empty);
-        }
-
-        haltRequested = false;
-        isInputCenteringPending = false;
-        inputNavigationTarget = null;
-        pixelMotion.AddDelta(pixels);
-        dispatcher.Dispatch(startTimer);
     }
 
 
@@ -209,7 +187,6 @@ public sealed class Scroller(IPanState state, IScrollPresentationSession present
                 ScrollStarted?.Invoke(this, EventArgs.Empty);
             }
 
-            pixelMotion.Reset();
             easingMotion.Reset();
             momentumMotion.Reset();
             springPosition = 0;
@@ -222,7 +199,6 @@ public sealed class Scroller(IPanState state, IScrollPresentationSession present
         }
         else
         {
-            pixelMotion.Reset();
             easingMotion.Reset();
             navigationMotion.Reset();
             momentumMotion.Reset();
@@ -294,7 +270,6 @@ public sealed class Scroller(IPanState state, IScrollPresentationSession present
     {
         activeMoveScope ??= moveGuard.Begin();
         bool anyDragging = dragGuard.IsAnyDragging;
-        IReadOnlySet<nint> concealedHandles = concealer.ConcealedHandles();
         mover.BeginBatch(store.Count);
         try
         {
@@ -306,11 +281,6 @@ public sealed class Scroller(IPanState state, IScrollPresentationSession present
                 }
 
                 int targetX = trackedWindow.CanvasX - intOffset;
-                if (concealedHandles.Contains(trackedWindow.Handle))
-                {
-                    continue;
-                }
-
                 int targetY = trackedWindow.CanvasY;
                 if (trackedWindow.LastPlacedX == targetX && trackedWindow.LastPlacedY == targetY)
                 {
@@ -338,7 +308,7 @@ public sealed class Scroller(IPanState state, IScrollPresentationSession present
     }
 
 
-    private bool IsMotionActive() => pixelMotion.IsActive || easingMotion.IsActive || navigationMotion.IsActive || momentumMotion.IsActive || isSpinging;
+    private bool IsMotionActive() => easingMotion.IsActive || navigationMotion.IsActive || momentumMotion.IsActive || isSpinging;
 
     private void ScheduleMoveGuardRelease()
     {
@@ -451,7 +421,6 @@ public sealed class Scroller(IPanState state, IScrollPresentationSession present
 
         if (!continuing)
         {
-            pixelMotion.Reset();
             easingMotion.Reset();
             momentumMotion.Reset();
             navigationMotion.Reset();
