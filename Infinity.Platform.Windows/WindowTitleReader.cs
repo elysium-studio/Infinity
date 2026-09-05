@@ -20,7 +20,21 @@ public sealed class WindowTitleReader : IWindowTitleReader
         }
 
         string childTitle = string.Empty;
-        PInvoke.EnumChildWindows(hwnd, (child, _) =>  {  Span<char> childBuffer = stackalloc char[256];  fixed (char* childBufferPtr = childBuffer)  {  int length = PInvoke.GetWindowText(child, childBufferPtr, 256);  if (length > 0)  {  childTitle = new string (childBuffer[..length]);  return false;  }  }   return true;  }, new LPARAM(0));
+        PInvoke.EnumChildWindows(hwnd, (child, _) =>
+        {
+            Span<char> childBuffer = stackalloc char[256];
+            fixed (char* childBufferPtr = childBuffer)
+            {
+                int length = PInvoke.GetWindowText(child, childBufferPtr, 256);
+                if (length > 0)
+                {
+                    childTitle = new string (childBuffer[..length]);
+                    return false;
+                }
+            }
+
+            return true;
+        }, new LPARAM(0));
         return childTitle;
     }
 }

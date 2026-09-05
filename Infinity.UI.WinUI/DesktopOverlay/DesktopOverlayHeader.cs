@@ -85,16 +85,38 @@ internal class DesktopOverlayHeader
     public void Hide()
     {
         isVisible = false;
-        window.DispatcherQueue.TryEnqueue(() =>  {  WindowStyle exStyle = (WindowStyle)PInvoke.GetWindowLong(handle, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);  PInvoke.SetWindowLong(handle, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE, (int)(exStyle | WindowStyle.NoActivate));  StopAnimation(handle);  Animate(window.DispatcherQueue, handle, from: 1f, to: 0f, durationMs: 200, completed: () =>  {  PInvoke.SetWindowPos(handle, HwndTopmost, -32000, -32000, 1, 1, SwpNoActivate | SwpHideWindow);  });  });
+        window.DispatcherQueue.TryEnqueue(() =>
+        {
+            WindowStyle exStyle = (WindowStyle)PInvoke.GetWindowLong(handle, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
+            PInvoke.SetWindowLong(handle, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE, (int)(exStyle | WindowStyle.NoActivate));
+            StopAnimation(handle);
+            Animate(window.DispatcherQueue, handle, from: 1f, to: 0f, durationMs: 200, completed: () =>
+            {
+                PInvoke.SetWindowPos(handle, HwndTopmost, -32000, -32000, 1, 1, SwpNoActivate | SwpHideWindow);
+            });
+        });
     }
 
 
-    public void SetContent(object? content) => window.DispatcherQueue.TryEnqueue(() =>  {  contentPresenter.Content = content;  if (isVisible)  {  RepositionToWorkArea();  }  });
+    public void SetContent(object? content) => window.DispatcherQueue.TryEnqueue(() =>
+    {
+        contentPresenter.Content = content;
+        if (isVisible)
+        {
+            RepositionToWorkArea();
+        }
+    });
 
     public void SetPlacement(DesktopOverlayHeaderPlacement value)
     {
         placement = value;
-        window.DispatcherQueue.TryEnqueue(() =>  {  if (isVisible)  {  RepositionToWorkArea();  }  });
+        window.DispatcherQueue.TryEnqueue(() =>
+        {
+            if (isVisible)
+            {
+                RepositionToWorkArea();
+            }
+        });
     }
 
 
@@ -102,7 +124,15 @@ internal class DesktopOverlayHeader
     {
         currentMonitor = new(monitor.Value);
         isVisible = true;
-        window.DispatcherQueue.TryEnqueue(() =>  {  RepositionToWorkArea();  StopAnimation(handle);  PInvoke.SetLayeredWindowAttributes(handle, new COLORREF(0), 0, LAYERED_WINDOW_ATTRIBUTES_FLAGS.LWA_ALPHA);  PInvoke.SetWindowPos(handle, HwndTopmost, 0, 0, 0, 0, SwpNoActivate | SwpNoSize | SwpNoMove | SwpShowWindow);  Animate(window.DispatcherQueue, handle, from: 0f, to: 1f, durationMs: 300, completed: null);  window.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, AllowActivation);  });
+        window.DispatcherQueue.TryEnqueue(() =>
+        {
+            RepositionToWorkArea();
+            StopAnimation(handle);
+            PInvoke.SetLayeredWindowAttributes(handle, new COLORREF(0), 0, LAYERED_WINDOW_ATTRIBUTES_FLAGS.LWA_ALPHA);
+            PInvoke.SetWindowPos(handle, HwndTopmost, 0, 0, 0, 0, SwpNoActivate | SwpNoSize | SwpNoMove | SwpShowWindow);
+            Animate(window.DispatcherQueue, handle, from: 0f, to: 1f, durationMs: 300, completed: null);
+            window.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, AllowActivation);
+        });
     }
 
 
@@ -113,7 +143,13 @@ internal class DesktopOverlayHeader
             return;
         }
 
-        window.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>  {  if (isVisible)  {  PInvoke.SetWindowPos(handle, HwndTopmost, 0, 0, 0, 0, SwpNoActivate | SwpNoSize | SwpNoMove);  }  });
+        window.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
+        {
+            if (isVisible)
+            {
+                PInvoke.SetWindowPos(handle, HwndTopmost, 0, 0, 0, 0, SwpNoActivate | SwpNoSize | SwpNoMove);
+            }
+        });
     }
 
 
@@ -122,7 +158,21 @@ internal class DesktopOverlayHeader
     private static unsafe RectInt32 GetPrimaryMonitorWorkArea()
     {
         RectInt32 result = new(0, 0, 1920, 40);
-        PInvoke.EnumDisplayMonitors(HDC.Null, null, (HMONITOR monitor, HDC deviceContext, RECT* rect, LPARAM data) =>  {  MONITORINFO info = new()  {  cbSize = (uint)Marshal.SizeOf<MONITORINFO>()  };  PInvoke.GetMonitorInfo(monitor, ref info);  if ((info.dwFlags & 0x1u) != 0)  {  result = new RectInt32(info.rcWork.left, info.rcWork.top, info.rcWork.right - info.rcWork.left, info.rcWork.bottom - info.rcWork.top);  return false;  }   return true;  }, new LPARAM(0));
+        PInvoke.EnumDisplayMonitors(HDC.Null, null, (HMONITOR monitor, HDC deviceContext, RECT* rect, LPARAM data) =>
+        {
+            MONITORINFO info = new()
+            {
+                cbSize = (uint)Marshal.SizeOf<MONITORINFO>()
+            };
+            PInvoke.GetMonitorInfo(monitor, ref info);
+            if ((info.dwFlags & 0x1u) != 0)
+            {
+                result = new RectInt32(info.rcWork.left, info.rcWork.top, info.rcWork.right - info.rcWork.left, info.rcWork.bottom - info.rcWork.top);
+                return false;
+            }
+
+            return true;
+        }, new LPARAM(0));
         return result;
     }
 
@@ -155,7 +205,20 @@ internal class DesktopOverlayHeader
         timer.Interval = TimeSpan.FromMilliseconds(16);
         timer.IsRepeating = true;
         activeTimers[windowHandle] = timer;
-        timer.Tick += (sender, args) =>  {  step++;  float progress = Math.Clamp((float)step / totalSteps, 0f, 1f);  float eased = EaseInOut(progress);  float alpha = from + (to - from) * eased;  PInvoke.SetLayeredWindowAttributes(windowHandle, new COLORREF(0), (byte)(255 * alpha), LAYERED_WINDOW_ATTRIBUTES_FLAGS.LWA_ALPHA);  if (step >= totalSteps)  {  timer.Stop();  activeTimers.Remove(windowHandle);  completed?.Invoke();  }  };
+        timer.Tick += (sender, args) =>
+        {
+            step++;
+            float progress = Math.Clamp((float)step / totalSteps, 0f, 1f);
+            float eased = EaseInOut(progress);
+            float alpha = from + (to - from) * eased;
+            PInvoke.SetLayeredWindowAttributes(windowHandle, new COLORREF(0), (byte)(255 * alpha), LAYERED_WINDOW_ATTRIBUTES_FLAGS.LWA_ALPHA);
+            if (step >= totalSteps)
+            {
+                timer.Stop();
+                activeTimers.Remove(windowHandle);
+                completed?.Invoke();
+            }
+        };
         timer.Start();
     }
 

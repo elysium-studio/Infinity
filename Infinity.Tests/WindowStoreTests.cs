@@ -27,11 +27,15 @@ public sealed class WindowStoreTests
         TrackedWindow original = CreateWindow(1, "Original");
         TrackedWindow replacement = CreateWindow(1, "Replacement");
         int changed = 0;
-        store.WindowChanged += (_, window) =>  {  Assert.Same(replacement, window);  changed++;  };
+        store.WindowChanged += (_, window) =>
+        {
+            Assert.Same(replacement, window);
+            changed++;
+        };
         store.Add(original);
         store.Add(CreateWindow(2, "Second"));
         store.Add(replacement);
-        TrackedWindow[] windows = [..store];
+        TrackedWindow[] windows = [.. store];
         Assert.Equal(2, windows.Length);
         Assert.Same(replacement, windows[0]);
         Assert.Equal(new IntPtr(2), windows[1].Handle);

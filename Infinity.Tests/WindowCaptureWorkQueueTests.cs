@@ -14,10 +14,19 @@ public sealed class WindowCaptureWorkQueueTests
         WindowCaptureWorkQueue queue = new(exception => finished.TrySetException(exception));
         try
         {
-            Assert.True(queue.Enqueue(() =>  {  started.TrySetResult();  release.Wait();  order.Add(1);  }));
+            Assert.True(queue.Enqueue(() =>
+            {
+                started.TrySetResult();
+                release.Wait();
+                order.Add(1);
+            }));
             await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(queue.Enqueue(() => order.Add(2)));
-            queue.Complete(() =>  {  order.Add(3);  finished.TrySetResult();  });
+            queue.Complete(() =>
+            {
+                order.Add(3);
+                finished.TrySetResult();
+            });
             Assert.False(queue.Enqueue(() => order.Add(4)));
             Assert.False(finished.Task.IsCompleted);
         }
@@ -48,7 +57,15 @@ public sealed class WindowCaptureWorkQueueTests
         TaskCompletionSource finished = new(TaskCreationOptions.RunContinuationsAsynchronously);
         bool callbackReturned = false;
         WindowCaptureWorkQueue queue = new(exception => finished.TrySetException(exception));
-        queue.Enqueue(() =>  {  queue.Complete(() =>  {  Assert.True(callbackReturned);  finished.TrySetResult();  });  callbackReturned = true;  });
+        queue.Enqueue(() =>
+        {
+            queue.Complete(() =>
+            {
+                Assert.True(callbackReturned);
+                finished.TrySetResult();
+            });
+            callbackReturned = true;
+        });
         await finished.Task.WaitAsync(TimeSpan.FromSeconds(5));
     }
 }

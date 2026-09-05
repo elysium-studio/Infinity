@@ -50,7 +50,10 @@ public sealed class WindowCapturePreview : IDisposable
     }
 
 
-    public nint WindowHandle { get; }
+    public nint WindowHandle
+    {
+        get;
+    }
 
 
     public event Action? SurfaceChanged;
@@ -105,7 +108,13 @@ public sealed class WindowCapturePreview : IDisposable
         }
 
         InvalidateFrame();
-        work.Enqueue(() =>  {  if (Volatile.Read(ref requestedVisibility) == requested)  {  SetVisibleCore(value);  }  });
+        work.Enqueue(() =>
+        {
+            if (Volatile.Read(ref requestedVisibility) == requested)
+            {
+                SetVisibleCore(value);
+            }
+        });
     }
 
 
@@ -135,7 +144,13 @@ public sealed class WindowCapturePreview : IDisposable
         int requested = value ? 1 : 0;
         Volatile.Write(ref requestedActive, requested);
         InvalidateFrame();
-        work.Enqueue(() =>  {  if (Volatile.Read(ref requestedActive) == requested)  {  SetActiveCore(value);  }  });
+        work.Enqueue(() =>
+        {
+            if (Volatile.Read(ref requestedActive) == requested)
+            {
+                SetActiveCore(value);
+            }
+        });
     }
 
 
@@ -184,7 +199,13 @@ public sealed class WindowCapturePreview : IDisposable
 
         if (surfaceChanged)
         {
-            dispatcher.TryEnqueue(() =>  {  if (Volatile.Read(ref disposeRequested) == 0)  {  SurfaceChanged?.Invoke();  }  });
+            dispatcher.TryEnqueue(() =>
+            {
+                if (Volatile.Read(ref disposeRequested) == 0)
+                {
+                    SurfaceChanged?.Invoke();
+                }
+            });
         }
 
         UpdateSession();
@@ -273,7 +294,11 @@ public sealed class WindowCapturePreview : IDisposable
             return;
         }
 
-        if (!work.Enqueue(() =>  {  Interlocked.Exchange(ref framePending, 0);  ProcessFrame(sender);  }))
+        if (!work.Enqueue(() =>
+        {
+            Interlocked.Exchange(ref framePending, 0);
+            ProcessFrame(sender);
+        }))
         {
             Interlocked.Exchange(ref framePending, 0);
         }
@@ -347,7 +372,15 @@ public sealed class WindowCapturePreview : IDisposable
     private void HandleClosed(GraphicsCaptureItem sender, object args)
     {
         InvalidateFrame();
-        work.Enqueue(() =>  {  lock (gate)  {  closed = true;  }   StopSession();  });
+        work.Enqueue(() =>
+        {
+            lock (gate)
+            {
+                closed = true;
+            }
+
+            StopSession();
+        });
     }
 
 

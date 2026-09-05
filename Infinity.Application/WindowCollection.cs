@@ -125,7 +125,11 @@ public sealed class WindowCollection(IWindowStore store, IScrollTimer timer, ISc
     {
         logger.LogInformation("Window removed: {Handle}", handle);
         foregroundCoordinator.NotifyWindowClosed(handle);
-        dispatcher.Dispatch(() =>  {  WindowRemoved?.Invoke(this, handle);  Queue(true);  });
+        dispatcher.Dispatch(() =>
+        {
+            WindowRemoved?.Invoke(this, handle);
+            Queue(true);
+        });
     }
 
 
@@ -133,7 +137,11 @@ public sealed class WindowCollection(IWindowStore store, IScrollTimer timer, ISc
 
     private void HandleScrollTick(object? sender, EventArgs args) => Queue(false);
 
-    private void HandleScrollStopped(object? sender, EventArgs args) => dispatcher.Dispatch(() =>  {  navigationCoordinator.CompleteNavigation();  ScrollStopped?.Invoke(this, EventArgs.Empty);  });
+    private void HandleScrollStopped(object? sender, EventArgs args) => dispatcher.Dispatch(() =>
+    {
+        navigationCoordinator.CompleteNavigation();
+        ScrollStopped?.Invoke(this, EventArgs.Empty);
+    });
 
     private void HandleWindowStackChanged(object? sender, EventArgs args) => QueueReorder();
 

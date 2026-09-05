@@ -1,0 +1,8 @@
+<Project>
+  <ItemGroup Condition="'$(InfinityIncludeOptionalWindowsAppSdkComponents)' != 'true'">
+    <PackageReference Include="Microsoft.WindowsAppSDK.AI" Version="2.2.3" ExcludeAssets="all" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.ML" Version="2.1.70" ExcludeAssets="all" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Windows.AI.MachineLearning" Version="2.1.70" ExcludeAssets="all" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.Widgets" Version="2.0.5" ExcludeAssets="all" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

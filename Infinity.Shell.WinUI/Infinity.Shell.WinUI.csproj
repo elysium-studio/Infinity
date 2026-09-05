@@ -28,9 +28,7 @@
 		<InvariantGlobalization>true</InvariantGlobalization>
 		<DefaultLanguage>en</DefaultLanguage>
 	</PropertyGroup>
-	<ItemGroup>
-		<TrimmerRootDescriptor Include="TrimmerRootDescriptor.xml" />
-	</ItemGroup>
+	<Import Project="..\Build\WindowsAppSdkFeatures.props" />
 	<ItemGroup>
 		<Content Include="Assets\**\*">
 			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>

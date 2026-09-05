@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,7 +35,6 @@ public sealed partial class App
         InitializeComponent();
     }
 
-
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         string applicationData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Infinity");
@@ -43,7 +43,27 @@ public sealed partial class App
         ILogger<App>? logger = null;
         try
         {
-            startingHost = Host.CreateDefaultBuilder().UseWritableContentRoot(applicationData).ConfigureServices(services => services.AddSingleton<IApplicationLifetime>(new ApplicationLifetime(ShutdownAsync)).AddInfinityApplication().AddInfinityPlatform().AddApplication().AddPresentation().AddModules(new ApplicationModule(applicationData, dispatcherQueue, flush => UnhandledException += (_, args) => flush(args.Exception)), new ConfigurationModule(), new LocalizationModule(), new NavigationModule(), new DesktopSettingsModule(), new DesktopModule(), new ShellModule(), new SettingsModule(), new TourModule(), new UpdateModule(), new WindowsSettingsModule(), new WindowingModule())).Build();
+            startingHost = Host.CreateDefaultBuilder()
+                .UseWritableContentRoot(applicationData)
+                .ConfigureServices(services => services
+                .AddSingleton<IApplicationLifetime>(new ApplicationLifetime(ShutdownAsync))
+                .AddInfinityApplication().AddInfinityPlatform()
+                .AddApplication()
+                .AddPresentation()
+                .AddModules(new ApplicationModule(applicationData, dispatcherQueue, flush => UnhandledException += (_, args) => flush(args.Exception)),
+                    new ConfigurationModule(),
+                    new LocalizationModule(),
+                    new NavigationModule(),
+                    new DesktopSettingsModule(),
+                    new DesktopModule(),
+                    new ShellModule(),
+                    new SettingsModule(),
+                    new TourModule(),
+                    new UpdateModule(),
+                    new WindowsSettingsModule(),
+                    new WindowingModule()))
+                .Build();
+
             host = startingHost;
             logger = startingHost.Services.GetRequiredService<ILogger<App>>();
             ViewExtension.DefaultProvider = startingHost.Services;
@@ -53,11 +73,22 @@ public sealed partial class App
 #if DEBUG
             if (Enum.TryParse(Environment.GetEnvironmentVariable("INFINITY_DEBUG_LEVEL"), true, out DebugLaunchLevel debugLevel))
             {
-                dispatcherQueue.TryEnqueue(() =>  {  _ = debugLevel switch  {  DebugLaunchLevel.DesktopOverview => desktopOverview.ViewModel.OpenDesktopPreviewForDebugAsync(),  DebugLaunchLevel.DesktopOverviewDark => OpenDesktopOverviewWithBackdropForDebugAsync(desktopOverview, startingHost.Services, DesktopOverviewBackdrop.Dark),  DebugLaunchLevel.DesktopOverviewLight => OpenDesktopOverviewWithBackdropForDebugAsync(desktopOverview, startingHost.Services, DesktopOverviewBackdrop.Light),  DebugLaunchLevel.DesktopApplicationPicker => OpenDesktopApplicationPickerForDebugAsync(desktopOverview),  DebugLaunchLevel.DesktopApplicationDock => OpenDesktopApplicationDockForDebugAsync(desktopOverview),  DebugLaunchLevel.Settings => startingHost.Services.GetRequiredService<INavigator>().NavigateAsync("SettingsWindow"),  _ => Task.CompletedTask  };  });
+                dispatcherQueue.TryEnqueue(() =>
+                {
+                    _ = debugLevel switch
+                    {
+                        DebugLaunchLevel.DesktopOverview => desktopOverview.ViewModel.OpenDesktopPreviewForDebugAsync(),
+                        DebugLaunchLevel.DesktopOverviewDark => OpenDesktopOverviewWithBackdropForDebugAsync(desktopOverview, startingHost.Services, DesktopOverviewBackdrop.Dark),
+                        DebugLaunchLevel.DesktopOverviewLight => OpenDesktopOverviewWithBackdropForDebugAsync(desktopOverview, startingHost.Services, DesktopOverviewBackdrop.Light),
+                        DebugLaunchLevel.DesktopApplicationPicker => OpenDesktopApplicationPickerForDebugAsync(desktopOverview),
+                        DebugLaunchLevel.DesktopApplicationDock => OpenDesktopApplicationDockForDebugAsync(desktopOverview),
+                        DebugLaunchLevel.Settings => startingHost.Services.GetRequiredService<INavigator>().NavigateAsync("SettingsWindow"), _ => Task.CompletedTask
+                    };
+                });
             }
 
 #endif
-            if (startingHost.Services.GetRequiredService<Settings>()is { ShowHintOnStartup: true })
+            if (startingHost.Services.GetRequiredService<Settings>() is { ShowHintOnStartup: true })
             {
                 startupNavigationTask = NavigateToStartupTourAsync(startingHost.Services.GetRequiredService<INavigator>(), logger);
             }
@@ -79,21 +110,19 @@ public sealed partial class App
         }
     }
 
-
 #if DEBUG
+
     private static async Task OpenDesktopApplicationPickerForDebugAsync(DesktopOverviewView desktopOverview)
     {
         await desktopOverview.ViewModel.OpenDesktopPreviewForDebugAsync();
         await desktopOverview.OpenApplicationPickerForDebugAsync();
     }
 
-
     private static Task OpenDesktopOverviewWithBackdropForDebugAsync(DesktopOverviewView desktopOverview, IServiceProvider services, DesktopOverviewBackdrop backdrop)
     {
         services.GetRequiredService<DesktopOverviewConfiguration>().Backdrop = backdrop;
         return desktopOverview.ViewModel.OpenDesktopPreviewForDebugAsync();
     }
-
 
     private static async Task OpenDesktopApplicationDockForDebugAsync(DesktopOverviewView desktopOverview) => await desktopOverview.ViewModel.OpenDesktopPreviewForDebugAsync();
 
@@ -108,8 +137,8 @@ public sealed partial class App
         Settings
     }
 
-
 #endif
+
     private Task ShutdownAsync()
     {
         lock (shutdownLock)
@@ -117,7 +146,6 @@ public sealed partial class App
             return shutdownTask ??= ShutdownCoreAsync();
         }
     }
-
 
     private async Task ShutdownCoreAsync()
     {
@@ -144,7 +172,6 @@ public sealed partial class App
         Current.Exit();
     }
 
-
     private Task CompleteShutdownAsync(IHost currentHost)
     {
         DispatcherQueue currentDispatcherQueue = dispatcherQueue ?? throw new InvalidOperationException("The application dispatcher is not available");
@@ -155,14 +182,24 @@ public sealed partial class App
         }
 
         TaskCompletionSource completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (!currentDispatcherQueue.TryEnqueue(() =>  {  try  {  CompleteShutdown(currentHost);  completion.SetResult();  }  catch (Exception exception)  {  completion.SetException(exception);  }  }))
+        if (!currentDispatcherQueue.TryEnqueue(() =>
+        {
+            try
+            {
+                CompleteShutdown(currentHost);
+                completion.SetResult();
+            }
+            catch (Exception exception)
+            {
+                completion.SetException(exception);
+            }
+        }))
         {
             completion.SetException(new InvalidOperationException("The application dispatcher rejected the shutdown request"));
         }
 
         return completion.Task;
     }
-
 
     private void CompleteShutdown(IHost currentHost)
     {
@@ -176,7 +213,6 @@ public sealed partial class App
             Current.Exit();
         }
     }
-
 
     private static async Task NavigateToStartupTourAsync(INavigator navigator, ILogger logger)
     {

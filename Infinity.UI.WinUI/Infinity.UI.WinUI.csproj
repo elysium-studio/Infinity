@@ -9,6 +9,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Platforms>AnyCPU;x64;ARM64</Platforms>
   </PropertyGroup>
+  <Import Project="..\Build\WindowsAppSdkFeatures.props" />
   <ItemGroup>
     <AdditionalFiles Include="NativeMethods.txt" />
     <PackageReference Include="Elysium.Platform.Abstractions" Version="$(ElysiumVersion)" />

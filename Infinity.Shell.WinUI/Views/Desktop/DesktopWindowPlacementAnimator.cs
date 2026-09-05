@@ -82,7 +82,13 @@ internal sealed class DesktopWindowPlacementAnimator(params UIElement[] elements
         scaleAnimation.InsertKeyFrame(1, Vector3.One, easing);
         CompositionScopedBatch current = compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
         batch = current;
-        current.Completed += (_, _) =>  {  if (ReferenceEquals(batch, current))  {  Stop();  }  };
+        current.Completed += (_, _) =>
+        {
+            if (ReferenceEquals(batch, current))
+            {
+                Stop();
+            }
+        };
         started = Stopwatch.GetTimestamp();
         foreach (UIElement element in elements)
         {

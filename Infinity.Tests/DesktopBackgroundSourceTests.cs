@@ -14,7 +14,16 @@ public sealed class DesktopBackgroundSourceTests
         TestLogger logger = new();
         Exception? failure = new InvalidOperationException();
         int reads = 0;
-        using DesktopBackgroundSource source = CreateSource(logger, () =>  {  reads++;  if (failure is not null)  {  throw failure;  }   return CreateSnapshot(0x00332211);  });
+        using DesktopBackgroundSource source = CreateSource(logger, () =>
+        {
+            reads++;
+            if (failure is not null)
+            {
+                throw failure;
+            }
+
+            return CreateSnapshot(0x00332211);
+        });
         Assert.False(source.PollForChanges());
         Assert.Equal(1, reads);
         failure = null;
@@ -29,7 +38,15 @@ public sealed class DesktopBackgroundSourceTests
     {
         TestLogger logger = new();
         Exception? failure = null;
-        using DesktopBackgroundSource source = CreateSource(logger, () =>  {  if (failure is not null)  {  throw failure;  }   return CreateSnapshot(0x00665544);  });
+        using DesktopBackgroundSource source = CreateSource(logger, () =>
+        {
+            if (failure is not null)
+            {
+                throw failure;
+            }
+
+            return CreateSnapshot(0x00665544);
+        });
         Assert.True(source.PollForChanges());
         Assert.Equal("#445566", source.GetBackground().Colour);
         failure = new InvalidOperationException();
@@ -43,7 +60,15 @@ public sealed class DesktopBackgroundSourceTests
     {
         TestLogger logger = new();
         Exception? failure = new InvalidOperationException();
-        using DesktopBackgroundSource source = CreateSource(logger, () =>  {  if (failure is not null)  {  throw failure;  }   return CreateSnapshot(0x00332211);  });
+        using DesktopBackgroundSource source = CreateSource(logger, () =>
+        {
+            if (failure is not null)
+            {
+                throw failure;
+            }
+
+            return CreateSnapshot(0x00332211);
+        });
         Assert.False(source.PollForChanges());
         Assert.Equal(1, logger.WarningCount);
         Assert.False(source.PollForChanges());
@@ -116,7 +141,12 @@ public sealed class DesktopBackgroundSourceTests
     {
         TaskCompletionSource entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
         TaskCompletionSource release = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        using DesktopBackgroundSource source = new(new TestLogger(), () =>  {  entered.TrySetResult();  release.Task.GetAwaiter().GetResult();  return CreateSnapshot(0x00332211);  }, PollingInterval, RecoveryPollingInterval, true);
+        using DesktopBackgroundSource source = new(new TestLogger(), () =>
+        {
+            entered.TrySetResult();
+            release.Task.GetAwaiter().GetResult();
+            return CreateSnapshot(0x00332211);
+        }, PollingInterval, RecoveryPollingInterval, true);
         try
         {
             await Task.Run(source.Start).WaitAsync(TimeSpan.FromSeconds(1));
@@ -147,11 +177,20 @@ public sealed class DesktopBackgroundSourceTests
 
     private sealed class TestLogger : ILogger<DesktopBackgroundSource>
     {
-        public int ErrorCount { get; private set; }
+        public int ErrorCount
+        {
+            get; private set;
+        }
 
-        public int InformationCount { get; private set; }
+        public int InformationCount
+        {
+            get; private set;
+        }
 
-        public int WarningCount { get; private set; }
+        public int WarningCount
+        {
+            get; private set;
+        }
 
 
         public IDisposable? BeginScope<TState>(TState state)

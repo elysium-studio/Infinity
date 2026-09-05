@@ -33,6 +33,10 @@ public abstract partial class TourShortcutViewModel(IServiceProvider provider, I
 
         string first = labelProvider.GetShortLabel(combinations[0][0]);
         string second = combinations.Count > 1 ? labelProvider.GetShortLabel(combinations[1][0]) : first;
-        dispatcher.Dispatch(() => { FirstModifier = first; SecondModifier = second; });
+        dispatcher.Dispatch(() =>
+        {
+            FirstModifier = first;
+            SecondModifier = second;
+        });
     }
 }

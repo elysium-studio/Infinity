@@ -37,7 +37,13 @@ public sealed class WindowTrackerTests
             Assert.Equal(1100, window.CanvasX);
             state.SetOffset(0);
             TaskCompletionSource removed = new(TaskCreationOptions.RunContinuationsAsynchronously);
-            store.WindowRemoved += (_, handle) =>  {  if (handle == new IntPtr(5))  {  removed.TrySetResult();  }  };
+            store.WindowRemoved += (_, handle) =>
+            {
+                if (handle == new IntPtr(5))
+                {
+                    removed.TrySetResult();
+                }
+            };
             geometry.IsWindowMinimised = true;
             listener.RaiseMinimizeStarted(new IntPtr(5));
             await removed.Task.WaitAsync(TimeSpan.FromSeconds(2));
@@ -121,7 +127,10 @@ public sealed class WindowTrackerTests
     {
         public bool IsWindowVisible { get; set; } = true;
 
-        public bool IsWindowMinimised { get; set; }
+        public bool IsWindowMinimised
+        {
+            get; set;
+        }
 
         public int X { get; set; } = 100;
 
@@ -195,7 +204,7 @@ public sealed class WindowTrackerTests
     {
         public bool IsSystemMove => false;
 
-        public WindowMoveScope Begin() => new(() =>  {  });
+        public WindowMoveScope Begin() => new(() => { });
     }
 
 
@@ -219,7 +228,10 @@ public sealed class WindowTrackerTests
 
     private sealed class TestTrackedWindowDragController : ITrackedWindowDragController
     {
-        public IntPtr DraggingWindow { get; set; }
+        public IntPtr DraggingWindow
+        {
+            get; set;
+        }
 
 
         public bool Begin(IntPtr windowHandle) => true;
@@ -357,7 +369,10 @@ public sealed class WindowTrackerTests
 
         public double MinOffset => 0;
 
-        public double Offset { get; private set; }
+        public double Offset
+        {
+            get; private set;
+        }
 
 
         public void ApplyDelta(double delta)

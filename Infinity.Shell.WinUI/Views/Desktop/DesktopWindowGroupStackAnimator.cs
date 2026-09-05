@@ -43,7 +43,11 @@ public sealed class DesktopWindowGroupStackAnimator
             }
         }
 
-        followers.Sort(static (left, right) =>  {  int order = right.Value.ZIndex.CompareTo(left.Value.ZIndex);  return order != 0 ? order : ((long)left.Key).CompareTo((long)right.Key);  });
+        followers.Sort(static (left, right) =>
+        {
+            int order = right.Value.ZIndex.CompareTo(left.Value.ZIndex);
+            return order != 0 ? order : ((long)left.Key).CompareTo((long)right.Key);
+        });
         for (int index = 0; index < followers.Count; index++)
         {
             int depth = index + 1;

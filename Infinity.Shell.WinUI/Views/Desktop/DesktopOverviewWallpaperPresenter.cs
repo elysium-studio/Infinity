@@ -203,7 +203,17 @@ public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfacePro
         }
 
         TaskCompletionSource<T> completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (!dispatcherQueue.TryEnqueue(() =>  {  try  {  completion.TrySetResult(action());  }  catch (Exception exception)  {  completion.TrySetException(exception);  }  }))
+        if (!dispatcherQueue.TryEnqueue(() =>
+        {
+            try
+            {
+                completion.TrySetResult(action());
+            }
+            catch (Exception exception)
+            {
+                completion.TrySetException(exception);
+            }
+        }))
         {
             completion.TrySetException(new InvalidOperationException("Desktop wallpaper dispatcher is unavailable"));
         }

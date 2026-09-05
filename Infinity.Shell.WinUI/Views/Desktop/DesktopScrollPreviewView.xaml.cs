@@ -127,13 +127,25 @@ public sealed partial class DesktopScrollPreviewView : UserControl
 
     public bool IsRunning => isRunning;
 
-    public DesktopShortcutHintsViewModel ShortcutHints { get; }
+    public DesktopShortcutHintsViewModel ShortcutHints
+    {
+        get;
+    }
 
-    public DesktopOverviewClockViewModel Clock { get; }
+    public DesktopOverviewClockViewModel Clock
+    {
+        get;
+    }
 
-    public DesktopApplicationPickerViewModel ApplicationPicker { get; }
+    public DesktopApplicationPickerViewModel ApplicationPicker
+    {
+        get;
+    }
 
-    public DesktopApplicationDockViewModel ApplicationDock { get; }
+    public DesktopApplicationDockViewModel ApplicationDock
+    {
+        get;
+    }
 
 
     public Visibility ToVisibility(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
@@ -239,12 +251,29 @@ public sealed partial class DesktopScrollPreviewView : UserControl
             pendingEntranceAnimations--;
             if (pendingEntranceAnimations == 0 && isRunning)
             {
-                DispatcherQueue.TryEnqueue(() =>  {  if (isRunning)  {  ApplicationDockChrome.UpdateLayout();  ApplicationDockList.UpdateLayout();  SetInteractionEnabled(true);  }  });
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    if (isRunning)
+                    {
+                        ApplicationDockChrome.UpdateLayout();
+                        ApplicationDockList.UpdateLayout();
+                        SetInteractionEnabled(true);
+                    }
+                });
             }
         }
 
         chromeAnimator.AnimateBottomChrome(ShortcutHintSurface, CompleteEntranceAnimation);
-        animator.AnimateInward(PreviewSurface, GetAnimationWidth(), GetAnimationHeight(), () =>  {  ClearLayoutTransitions();  if (isRunning && spacingProgress == 1)  {  pageStrip.SetHeadersVisible(overviewConfiguration.ShowPageHeaders);  }   CompleteEntranceAnimation();  });
+        animator.AnimateInward(PreviewSurface, GetAnimationWidth(), GetAnimationHeight(), () =>
+        {
+            ClearLayoutTransitions();
+            if (isRunning && spacingProgress == 1)
+            {
+                pageStrip.SetHeadersVisible(overviewConfiguration.ShowPageHeaders);
+            }
+
+            CompleteEntranceAnimation();
+        });
     }
 
 
@@ -356,7 +385,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         AllApplicationsButton.IsTabStop = dockEnabled;
         for (int index = 0; index < ApplicationDockList.Items.Count; index++)
         {
-            if (ApplicationDockList.ContainerFromIndex(index)is Control container)
+            if (ApplicationDockList.ContainerFromIndex(index) is Control container)
             {
                 container.IsHitTestVisible = dockEnabled;
             }
@@ -394,7 +423,10 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         }
 
         chromeAnimator.AnimateOutward(ApplicationDockChrome, GetApplicationDockEntranceElements(), ShortcutHintSurface, CompleteAnimation);
-        animator.AnimateOutward(PreviewSurface, GetAnimationWidth(), GetAnimationHeight(), () =>  {  CompleteAnimation();  });
+        animator.AnimateOutward(PreviewSurface, GetAnimationWidth(), GetAnimationHeight(), () =>
+        {
+            CompleteAnimation();
+        });
     }
 
 
@@ -609,7 +641,11 @@ public sealed partial class DesktopScrollPreviewView : UserControl
             return;
         }
 
-        if (!DispatcherQueue.TryEnqueue(() =>  {  Interlocked.Exchange(ref scrollRefreshQueued, 0);  RefreshScrollLayout();  }))
+        if (!DispatcherQueue.TryEnqueue(() =>
+        {
+            Interlocked.Exchange(ref scrollRefreshQueued, 0);
+            RefreshScrollLayout();
+        }))
         {
             Interlocked.Exchange(ref scrollRefreshQueued, 0);
         }
@@ -683,7 +719,16 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         try
         {
             await ApplicationPicker.LoadAsync(target);
-            DispatcherQueue.TryEnqueue(() =>  {  if (!isRunning)  {  return;  }   ApplicationPickerFlyout.ShowAt(anchor);  _ = ApplicationSearchBox.Focus(FocusState.Programmatic);  });
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                if (!isRunning)
+                {
+                    return;
+                }
+
+                ApplicationPickerFlyout.ShowAt(anchor);
+                _ = ApplicationSearchBox.Focus(FocusState.Programmatic);
+            });
         }
         catch (OperationCanceledException)
         {
@@ -758,7 +803,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
 
     private void HandleApplicationDockButtonPointerPressed(object sender, PointerRoutedEventArgs args)
     {
-        if (GetApplicationDockIcon(sender)is FrameworkElement icon && args.GetCurrentPoint(icon).Properties.IsLeftButtonPressed)
+        if (GetApplicationDockIcon(sender) is FrameworkElement icon && args.GetCurrentPoint(icon).Properties.IsLeftButtonPressed)
         {
             applicationDockPressAnimator.Press(icon);
         }
@@ -767,7 +812,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
 
     private void HandleApplicationDockButtonPointerReleased(object sender, PointerRoutedEventArgs args)
     {
-        if (GetApplicationDockIcon(sender)is FrameworkElement icon)
+        if (GetApplicationDockIcon(sender) is FrameworkElement icon)
         {
             applicationDockPressAnimator.Release(icon);
         }
@@ -822,18 +867,18 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         List<FrameworkElement> elements = [];
         for (int index = 0; index < ApplicationDockList.Items.Count; index++)
         {
-            if (ApplicationDockList.ContainerFromIndex(index)is FrameworkElement container && GetApplicationDockIcon(container)is FrameworkElement icon)
+            if (ApplicationDockList.ContainerFromIndex(index) is FrameworkElement container && GetApplicationDockIcon(container) is FrameworkElement icon)
             {
                 elements.Add(icon);
             }
         }
 
-        if (GetApplicationDockIcon(AllApplicationsButton)is FrameworkElement allApplicationsIcon)
+        if (GetApplicationDockIcon(AllApplicationsButton) is FrameworkElement allApplicationsIcon)
         {
             elements.Add(allApplicationsIcon);
         }
 
-        return[..elements];
+        return [.. elements];
     }
 
 
@@ -880,11 +925,23 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         try
         {
             await applicationLaunchCoordinator.LaunchAsync(application, target, monitorOriginX, monitorOriginY, applicationLaunchCancellation.Token);
-            DispatcherQueue.TryEnqueue(() =>  {  if (isRunning)  {  SetInteractionEnabled(true);  }  });
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                if (isRunning)
+                {
+                    SetInteractionEnabled(true);
+                }
+            });
         }
         catch (OperationCanceledException)
         {
-            DispatcherQueue.TryEnqueue(() =>  {  if (isRunning)  {  SetInteractionEnabled(true);  }  });
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                if (isRunning)
+                {
+                    SetInteractionEnabled(true);
+                }
+            });
         }
     }
 

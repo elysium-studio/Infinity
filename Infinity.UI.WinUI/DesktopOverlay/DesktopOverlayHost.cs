@@ -102,7 +102,18 @@ internal class DesktopOverlayHost
             handles[index] = new(WindowNative.GetWindowHandle(windows[index].Window));
         }
 
-        responsivenessMonitor = new(handles, overlay.DispatcherQueue, () =>  {  Debug.WriteLine("Overlay UI stopped responding; the native safety monitor hid it.");  foreach (HWND handle in handles)  {  StopWindowOpacityAnimation(handle);  windowOpacities[handle] = 0;  }   Hide();  Dismissed?.Invoke(this, EventArgs.Empty);  });
+        responsivenessMonitor = new(handles, overlay.DispatcherQueue, () =>
+        {
+            Debug.WriteLine("Overlay UI stopped responding; the native safety monitor hid it.");
+            foreach (HWND handle in handles)
+            {
+                StopWindowOpacityAnimation(handle);
+                windowOpacities[handle] = 0;
+            }
+
+            Hide();
+            Dismissed?.Invoke(this, EventArgs.Empty);
+        });
     }
 
 
@@ -114,7 +125,7 @@ internal class DesktopOverlayHost
     {
         get
         {
-            foreach ((Window window, RectInt32 rect, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR monitor)in windows)
+            foreach ((Window window, RectInt32 rect, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR monitor) in windows)
             {
                 if (monitor == currentMonitor)
                 {
@@ -131,7 +142,7 @@ internal class DesktopOverlayHost
     {
         get
         {
-            foreach ((Window window, RectInt32 rect, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR monitor)in windows)
+            foreach ((Window window, RectInt32 rect, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR monitor) in windows)
             {
                 if (monitor == currentMonitor)
                 {
@@ -156,7 +167,7 @@ internal class DesktopOverlayHost
     public void SetInputEnabled(bool enabled)
     {
         isInputEnabled = enabled;
-        foreach ((Window window, RectInt32 rect, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR monitor)in windows)
+        foreach ((Window window, RectInt32 rect, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR monitor) in windows)
         {
             window.DispatcherQueue.TryEnqueue(() => ApplyInputState(window, monitor));
         }
@@ -183,13 +194,25 @@ internal class DesktopOverlayHost
         currentBounds = monitorSpan.Bounds;
         MoveOverlayToMonitor(currentMonitor);
         ApplyBlurState();
-        foreach ((Window window, RectInt32 rect, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR monitor)in windows)
+        foreach ((Window window, RectInt32 rect, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR monitor) in windows)
         {
             HWND handle = new(WindowNative.GetWindowHandle(window));
             bool isSpanningHost = monitor == currentMonitor;
             bool isCoveredBySpan = monitorSpan.IsSpanning && !isSpanningHost && monitorSpan.Contains(monitor);
             RectInt32 targetRect = isSpanningHost && monitorSpan.IsSpanning ? monitorSpan.Bounds : rect;
-            window.DispatcherQueue.TryEnqueue(() =>  {  StopWindowOpacityAnimation(handle);  float opacity = isCoveredBySpan ? 0 : 1;  windowOpacities[handle] = opacity;  ElementCompositionPreview.GetElementVisual(backdropElement).Opacity = opacity;  PInvoke.SetLayeredWindowAttributes(handle, new COLORREF(0), isCoveredBySpan ? (byte)0 : byte.MaxValue, LAYERED_WINDOW_ATTRIBUTES_FLAGS.LWA_ALPHA);  window.AppWindow.MoveAndResize(targetRect);  WindowExtensions.SetBorderless(handle, true);  ApplyInputState(window, monitor);  contentRoot.Visibility = isCoveredBySpan ? Visibility.Collapsed : Visibility.Visible;  PInvoke.SetWindowPos(handle, isTopMost ? HwndTopmost : HwndBottom, 0, 0, 0, 0, SwpNoActivate | SwpNoSize | SwpNoMove);  });
+            window.DispatcherQueue.TryEnqueue(() =>
+            {
+                StopWindowOpacityAnimation(handle);
+                float opacity = isCoveredBySpan ? 0 : 1;
+                windowOpacities[handle] = opacity;
+                ElementCompositionPreview.GetElementVisual(backdropElement).Opacity = opacity;
+                PInvoke.SetLayeredWindowAttributes(handle, new COLORREF(0), isCoveredBySpan ? (byte)0 : byte.MaxValue, LAYERED_WINDOW_ATTRIBUTES_FLAGS.LWA_ALPHA);
+                window.AppWindow.MoveAndResize(targetRect);
+                WindowExtensions.SetBorderless(handle, true);
+                ApplyInputState(window, monitor);
+                contentRoot.Visibility = isCoveredBySpan ? Visibility.Collapsed : Visibility.Visible;
+                PInvoke.SetWindowPos(handle, isTopMost ? HwndTopmost : HwndBottom, 0, 0, 0, 0, SwpNoActivate | SwpNoSize | SwpNoMove);
+            });
         }
     }
 
@@ -200,10 +223,20 @@ internal class DesktopOverlayHost
         isVisible = false;
         isTopMost = false;
         UninstallMouseHook();
-        foreach ((Window window, RectInt32 rect, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR monitor)in windows)
+        foreach ((Window window, RectInt32 rect, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR monitor) in windows)
         {
             HWND handle = new(WindowNative.GetWindowHandle(window));
-            window.DispatcherQueue.TryEnqueue(() =>  {  StopWindowOpacityAnimation(handle);  float opacity = windowOpacities.GetValueOrDefault(handle, 1);  AnimateWindowOpacity(window.DispatcherQueue, handle, opacity, 0f, TimeSpan.FromMilliseconds(200), () =>  {  contentRoot.Visibility = Visibility.Collapsed;  ElementCompositionPreview.GetElementVisual(backdropElement).Opacity = 0;  PInvoke.SetWindowPos(handle, HwndBottom, 0, 0, 0, 0, SwpNoActivate | SwpNoSize | SwpNoMove);  });  });
+            window.DispatcherQueue.TryEnqueue(() =>
+            {
+                StopWindowOpacityAnimation(handle);
+                float opacity = windowOpacities.GetValueOrDefault(handle, 1);
+                AnimateWindowOpacity(window.DispatcherQueue, handle, opacity, 0f, TimeSpan.FromMilliseconds(200), () =>
+                {
+                    contentRoot.Visibility = Visibility.Collapsed;
+                    ElementCompositionPreview.GetElementVisual(backdropElement).Opacity = 0;
+                    PInvoke.SetWindowPos(handle, HwndBottom, 0, 0, 0, 0, SwpNoActivate | SwpNoSize | SwpNoMove);
+                });
+            });
         }
     }
 
@@ -212,7 +245,7 @@ internal class DesktopOverlayHost
     {
         isTopMost = enabled;
         HWND insertAfter = enabled ? HwndTopmost : HwndNotTopmost;
-        foreach ((Window window, _, _, _, _)in windows)
+        foreach ((Window window, _, _, _, _) in windows)
         {
             HWND handle = new(WindowNative.GetWindowHandle(window));
             PInvoke.SetWindowPos(handle, insertAfter, 0, 0, 0, 0, SwpNoActivate | SwpNoSize | SwpNoMove);
@@ -249,7 +282,18 @@ internal class DesktopOverlayHost
         }
 
         TaskCompletionSource taskCompletionSource = new();
-        bool enqueued = queue.TryEnqueue(() =>  {  try  {  CloseWindows(snapshot);  taskCompletionSource.SetResult();  }  catch (Exception ex)  {  taskCompletionSource.SetException(ex);  }  });
+        bool enqueued = queue.TryEnqueue(() =>
+        {
+            try
+            {
+                CloseWindows(snapshot);
+                taskCompletionSource.SetResult();
+            }
+            catch (Exception ex)
+            {
+                taskCompletionSource.SetException(ex);
+            }
+        });
         if (!enqueued)
         {
             taskCompletionSource.SetResult();
@@ -261,7 +305,7 @@ internal class DesktopOverlayHost
 
     private void CloseWindows((Window window, RectInt32 rect, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR monitor)[] snapshot)
     {
-        foreach ((Window window, RectInt32 rect, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR monitor)in snapshot)
+        foreach ((Window window, RectInt32 rect, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR monitor) in snapshot)
         {
             HWND handle = new(WindowNative.GetWindowHandle(window));
             StopWindowOpacityAnimation(handle);
@@ -275,7 +319,7 @@ internal class DesktopOverlayHost
 
     private void MoveOverlayToMonitor(HMONITOR monitor)
     {
-        foreach ((Window window, _, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR candidateMonitor)in windows)
+        foreach ((Window window, _, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR candidateMonitor) in windows)
         {
             if (contentRoot.Children.Contains(overlay))
             {
@@ -284,7 +328,7 @@ internal class DesktopOverlayHost
         }
 
         Grid targetContentRoot = windows[0].ContentRoot;
-        foreach ((Window window, RectInt32 rect, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR candidateMonitor)in windows)
+        foreach ((Window window, RectInt32 rect, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR candidateMonitor) in windows)
         {
             if (candidateMonitor == monitor)
             {
@@ -307,7 +351,7 @@ internal class DesktopOverlayHost
     private void ApplyBlurState()
     {
         bool requested = blurRequested;
-        foreach ((Window window, RectInt32 rect, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR monitor)in windows)
+        foreach ((Window window, RectInt32 rect, SystemBackdropElement backdropElement, Grid contentRoot, HMONITOR monitor) in windows)
         {
             void Apply()
             {
@@ -376,7 +420,10 @@ internal class DesktopOverlayHost
                 bool isExcluded = globalExcludedHandles.Contains(clickedWindow) || globalExcludedHandles.Contains(rootWindow);
                 if (!isExcluded)
                 {
-                    windows[0].Window.DispatcherQueue.TryEnqueue(() =>  {  Dismissed?.Invoke(this, EventArgs.Empty);  });
+                    windows[0].Window.DispatcherQueue.TryEnqueue(() =>
+                    {
+                        Dismissed?.Invoke(this, EventArgs.Empty);
+                    });
                 }
             }
         }
@@ -446,7 +493,22 @@ internal class DesktopOverlayHost
         timer.Interval = TimeSpan.FromMilliseconds(16);
         timer.IsRepeating = true;
         windowOpacityTimers[handle] = timer;
-        timer.Tick += (sender, args) =>  {  float progress = Math.Clamp((float)(Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds / duration.TotalMilliseconds), 0f, 1f);  float eased = progress < 0.5f ? 2f * progress * progress : 1f - MathF.Pow(-2f * progress + 2f, 2f) / 2f;  float opacity = from + (to - from) * eased;  windowOpacities[handle] = opacity;  PInvoke.SetLayeredWindowAttributes(handle, new COLORREF(0), (byte)(255 * opacity), LAYERED_WINDOW_ATTRIBUTES_FLAGS.LWA_ALPHA);  if (progress < 1f)  {  return;  }   timer.Stop();  windowOpacityTimers.Remove(handle);  completed();  };
+        timer.Tick += (sender, args) =>
+        {
+            float progress = Math.Clamp((float)(Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds / duration.TotalMilliseconds), 0f, 1f);
+            float eased = progress < 0.5f ? 2f * progress * progress : 1f - MathF.Pow(-2f * progress + 2f, 2f) / 2f;
+            float opacity = from + (to - from) * eased;
+            windowOpacities[handle] = opacity;
+            PInvoke.SetLayeredWindowAttributes(handle, new COLORREF(0), (byte)(255 * opacity), LAYERED_WINDOW_ATTRIBUTES_FLAGS.LWA_ALPHA);
+            if (progress < 1f)
+            {
+                return;
+            }
+
+            timer.Stop();
+            windowOpacityTimers.Remove(handle);
+            completed();
+        };
         timer.Start();
     }
 }

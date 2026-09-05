@@ -86,7 +86,18 @@ internal sealed class DesktopOverlayResponsivenessMonitor : IDisposable
                 if (!tripped && Environment.TickCount64 - lastResponse >= TimeoutMilliseconds)
                 {
                     tripped = true;
-                    dispatcher.TryEnqueue(() =>  {  lock (gate)  {  if (!enabled || generation != current)  {  return;  }  }   dismiss();  });
+                    dispatcher.TryEnqueue(() =>
+                    {
+                        lock (gate)
+                        {
+                            if (!enabled || generation != current)
+                            {
+                                return;
+                            }
+                        }
+
+                        dismiss();
+                    });
                 }
 
                 if (tripped)
@@ -106,7 +117,19 @@ internal sealed class DesktopOverlayResponsivenessMonitor : IDisposable
                 }
 
                 pingPending = true;
-                dispatcher.TryEnqueue(() =>  {  lock (gate)  {  if (!enabled || generation != current || tripped)  {  return;  }   lastResponse = Environment.TickCount64;  pingPending = false;  }  });
+                dispatcher.TryEnqueue(() =>
+                {
+                    lock (gate)
+                    {
+                        if (!enabled || generation != current || tripped)
+                        {
+                            return;
+                        }
+
+                        lastResponse = Environment.TickCount64;
+                        pingPending = false;
+                    }
+                });
             }
         }
     }

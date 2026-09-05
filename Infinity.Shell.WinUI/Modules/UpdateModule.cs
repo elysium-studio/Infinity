@@ -25,9 +25,49 @@ public sealed class UpdateModule : IModule
         }
 
         DispatcherQueue dispatcherQueue = DispatcherQueue.GetForCurrentThread();
-        services.AddUpdateController(configuration =>  {  configuration.FeedUrl = "https://elysiumstud.io/feeds/infinity2";  configuration.Channel = RuntimeInformation.ProcessArchitecture switch  {  Architecture.X64 => "win-x64",  Architecture.Arm64 => "win-arm64",  _ => throw new PlatformNotSupportedException($"Infinity updates are not available for {RuntimeInformation.ProcessArchitecture}.")};  });
+        services.AddUpdateController(configuration =>
+        {
+            configuration.FeedUrl = "https://elysiumstud.io/feeds/infinity2";
+            configuration.Channel = RuntimeInformation.ProcessArchitecture switch
+            {
+                Architecture.X64 => "win-x64",
+                Architecture.Arm64 => "win-arm64",
+                _ => throw new PlatformNotSupportedException($"Infinity updates are not available for {RuntimeInformation.ProcessArchitecture}.")};
+        });
         services.AddSingleton<AppToastNotifier>();
-        services.Subscribe<IUpdateController>((provider, controller) =>  {  ILogger<UpdateModule> logger = provider.GetRequiredService<ILogger<UpdateModule>>();  void HandleUpdateReady(string version)  {  bool enqueued = dispatcherQueue.TryEnqueue(() =>  {  IStringLocalizer localizer = provider.GetRequiredService<IStringLocalizer>();  ToastContent content = new ToastBuilder().AddText(localizer.GetString("UpdateReadyToastTitle")).AddText(localizer.GetString("UpdateReadyToastDownloaded", version)).AddText(localizer.GetString("UpdateReadyToastRestartRequired")).SetLaunchArgument(RestartForUpdateArgument).AddButton(localizer.GetString("UpdateReadyToastRestartButton"), RestartForUpdateArgument).AddButton(localizer.GetString("UpdateReadyToastDismissButton"), DismissUpdateArgument).Build();  provider.GetRequiredService<AppToastNotifier>().Show(content, argument =>  {  if (argument == RestartForUpdateArgument)  {  bool restartEnqueued = dispatcherQueue.TryEnqueue(() =>  {  _ = ApplyUpdateAndExitAsync(provider, controller, logger);  });  if (!restartEnqueued)  {  logger.LogWarning("Dispatcher rejected update restart request");  }  }  });  });  if (!enqueued)  {  logger.LogWarning("Dispatcher rejected update-ready notification for version {Version}", version);  }  }   controller.UpdateReady += HandleUpdateReady;  return () => controller.UpdateReady -= HandleUpdateReady;  });
+        services.Subscribe<IUpdateController>((provider, controller) =>
+        {
+            ILogger<UpdateModule> logger = provider.GetRequiredService<ILogger<UpdateModule>>();
+            void HandleUpdateReady(string version)
+            {
+                bool enqueued = dispatcherQueue.TryEnqueue(() =>
+                {
+                    IStringLocalizer localizer = provider.GetRequiredService<IStringLocalizer>();
+                    ToastContent content = new ToastBuilder().AddText(localizer.GetString("UpdateReadyToastTitle")).AddText(localizer.GetString("UpdateReadyToastDownloaded", version)).AddText(localizer.GetString("UpdateReadyToastRestartRequired")).SetLaunchArgument(RestartForUpdateArgument).AddButton(localizer.GetString("UpdateReadyToastRestartButton"), RestartForUpdateArgument).AddButton(localizer.GetString("UpdateReadyToastDismissButton"), DismissUpdateArgument).Build();
+                    provider.GetRequiredService<AppToastNotifier>().Show(content, argument =>
+                    {
+                        if (argument == RestartForUpdateArgument)
+                        {
+                            bool restartEnqueued = dispatcherQueue.TryEnqueue(() =>
+                            {
+                                _ = ApplyUpdateAndExitAsync(provider, controller, logger);
+                            });
+                            if (!restartEnqueued)
+                            {
+                                logger.LogWarning("Dispatcher rejected update restart request");
+                            }
+                        }
+                    });
+                });
+                if (!enqueued)
+                {
+                    logger.LogWarning("Dispatcher rejected update-ready notification for version {Version}", version);
+                }
+            }
+
+            controller.UpdateReady += HandleUpdateReady;
+            return () => controller.UpdateReady -= HandleUpdateReady;
+        });
     }
 
 

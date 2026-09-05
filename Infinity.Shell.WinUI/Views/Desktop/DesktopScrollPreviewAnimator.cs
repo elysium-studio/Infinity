@@ -65,7 +65,14 @@ public sealed class DesktopScrollPreviewAnimator
         }
 
         CompositionScopedBatch batch = compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
-        batch.Completed += (sender, args) =>  {  batch.Dispose();  if (generation == animationGeneration)  {  completed();  }  };
+        batch.Completed += (sender, args) =>
+        {
+            batch.Dispose();
+            if (generation == animationGeneration)
+            {
+                completed();
+            }
+        };
         visual.StartAnimation(nameof(Visual.Scale), animation);
         batch.End();
     }

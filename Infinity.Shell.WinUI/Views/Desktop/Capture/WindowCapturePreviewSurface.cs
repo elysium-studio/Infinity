@@ -70,7 +70,21 @@ public sealed class WindowCapturePreviewSurface(WindowCaptureSupport support, Wi
     private async Task RequestAccessAsync(DispatcherQueue dispatcher)
     {
         bool allowed = await access.RequestBorderlessAsync().ConfigureAwait(false);
-        dispatcher.TryEnqueue(() =>  {  if (disposed)  {  return;  }   borderless = allowed;  accessResolved = true;  foreach (WindowCapturePreview preview in Snapshot())  {  preview.SetBorderless(borderless);  preview.SetActive(active);  }  });
+        dispatcher.TryEnqueue(() =>
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            borderless = allowed;
+            accessResolved = true;
+            foreach (WindowCapturePreview preview in Snapshot())
+            {
+                preview.SetBorderless(borderless);
+                preview.SetActive(active);
+            }
+        });
     }
 
 

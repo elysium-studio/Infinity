@@ -94,8 +94,20 @@ public sealed class DesktopWindowPlacementCoordinatorTests
         TrackedWindow moving = AddWindow(1, 120, 80, 700, 500);
         TrackedWindow occupant = AddWindow(2, 1000, 0, 960, 1040);
         List<string> events = [];
-        coordinator.PlacementStarting += handles =>  {  Assert.Equal(new nint[] { 2, 1 }, handles);  Assert.Equal(120, moving.CanvasX);  Assert.Equal(1000, occupant.CanvasX);  events.Add("start");  };
-        coordinator.PlacementCompleted += handles =>  {  Assert.Equal(new nint[] { 2, 1 }, handles);  Assert.Equal(1000, moving.CanvasX);  Assert.Equal(120, occupant.CanvasX);  events.Add("complete");  };
+        coordinator.PlacementStarting += handles =>
+        {
+            Assert.Equal(new nint[] { 2, 1 }, handles);
+            Assert.Equal(120, moving.CanvasX);
+            Assert.Equal(1000, occupant.CanvasX);
+            events.Add("start");
+        };
+        coordinator.PlacementCompleted += handles =>
+        {
+            Assert.Equal(new nint[] { 2, 1 }, handles);
+            Assert.Equal(1000, moving.CanvasX);
+            Assert.Equal(120, occupant.CanvasX);
+            events.Add("complete");
+        };
         Assert.True(coordinator.TrySwapIntoSlot(1, 2, new(1000, 0, 960, 1040)));
         Assert.Equal(new[] { "start", "complete" }, events);
     }
@@ -122,8 +134,18 @@ public sealed class DesktopWindowPlacementCoordinatorTests
         DesktopWindowPlacementCoordinator coordinator = CreateCoordinator();
         TrackedWindow window = AddWindow(1, 300, 140, 800, 600);
         List<string> events = [];
-        coordinator.PlacementStarting += handles =>  {  Assert.Equal((nint)1, Assert.Single(handles));  Assert.Equal(300, window.CanvasX);  events.Add("start");  };
-        coordinator.PlacementCompleted += handles =>  {  Assert.Equal((nint)1, Assert.Single(handles));  Assert.Equal(2220, window.CanvasX);  events.Add("complete");  };
+        coordinator.PlacementStarting += handles =>
+        {
+            Assert.Equal((nint)1, Assert.Single(handles));
+            Assert.Equal(300, window.CanvasX);
+            events.Add("start");
+        };
+        coordinator.PlacementCompleted += handles =>
+        {
+            Assert.Equal((nint)1, Assert.Single(handles));
+            Assert.Equal(2220, window.CanvasX);
+            events.Add("complete");
+        };
         Assert.True(coordinator.TryMoveToPage(1, 1, false));
         Assert.Equal(new[] { "start", "complete" }, events);
     }
@@ -262,7 +284,7 @@ public sealed class DesktopWindowPlacementCoordinatorTests
         TrackedWindow second = AddWindow(2, 900, 120, 600, 400);
         List<nint[]> animationBatches = [];
         int completedBatches = 0;
-        coordinator.PlacementStarting += handles => animationBatches.Add([..handles]);
+        coordinator.PlacementStarting += handles => animationBatches.Add([.. handles]);
         coordinator.PlacementCompleted += _ => completedBatches++;
         int moved = coordinator.MoveByPages([first.Handle, second.Handle], 1, maximumPageCount: null);
         Assert.Equal(2, moved);
@@ -336,7 +358,10 @@ public sealed class DesktopWindowPlacementCoordinatorTests
 
         public double VisualOffset => 0;
 
-        public int RepositionCount { get; private set; }
+        public int RepositionCount
+        {
+            get; private set;
+        }
 
 
         public void Reposition() => RepositionCount++;
@@ -387,7 +412,10 @@ public sealed class DesktopWindowPlacementCoordinatorTests
 
     private sealed class TestWindowCloser : IWindowCloser
     {
-        public nint ClosedHandle { get; private set; }
+        public nint ClosedHandle
+        {
+            get; private set;
+        }
 
 
         public bool TryClose(nint windowHandle)
@@ -447,9 +475,15 @@ public sealed class DesktopWindowPlacementCoordinatorTests
 
     private sealed class TestWindowPageTransitionGuard : IWindowPageTransitionGuard
     {
-        public nint WindowHandle { get; private set; }
+        public nint WindowHandle
+        {
+            get; private set;
+        }
 
-        public int Page { get; private set; }
+        public int Page
+        {
+            get; private set;
+        }
 
 
         public void PreservePage(nint windowHandle, int page, int workspaceWidth, int workAreaX)

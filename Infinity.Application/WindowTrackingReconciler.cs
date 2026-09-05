@@ -8,7 +8,7 @@ public sealed class WindowTrackingReconciler(IWindowStore repository, IWindowFil
     public void Reconcile(Action<nint, IReadOnlyDictionary<nint, int>> register, Action<nint> unregister)
     {
         List<nint> liveWindows = EnumerateTopLevelWindows();
-        HashSet<nint> liveWindowSet = [..liveWindows];
+        HashSet<nint> liveWindowSet = [.. liveWindows];
         List<nint> staleHandles = [];
         foreach (TrackedWindow trackedWindow in repository)
         {
@@ -66,7 +66,11 @@ public sealed class WindowTrackingReconciler(IWindowStore repository, IWindowFil
     {
         Dictionary<nint, int> windowStackIndices = [];
         int index = 0;
-        enumerator.EnumerateVisible(windowHandle =>  {  windowStackIndices[windowHandle] = index;  index++;  });
+        enumerator.EnumerateVisible(windowHandle =>
+        {
+            windowStackIndices[windowHandle] = index;
+            index++;
+        });
         return windowStackIndices;
     }
 }

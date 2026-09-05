@@ -207,9 +207,26 @@ public sealed class DesktopOverviewSessionController
     }
 
 
-    public void NotifyNavigationCompleted() => dispatcher.Dispatch(() =>  {  isWindowSelectionNavigationPending = false;  TryMarkReadyToClose();  if (!isPreviewActive)  {  isOpen = false;  }   PublishState();  });
+    public void NotifyNavigationCompleted() => dispatcher.Dispatch(() =>
+    {
+        isWindowSelectionNavigationPending = false;
+        TryMarkReadyToClose();
+        if (!isPreviewActive)
+        {
+            isOpen = false;
+        }
 
-    public void NotifyWindowActivationRequested() => dispatcher.Dispatch(() =>  {  if (!isPreviewActive)  {  isOpen = false;  PublishState();  }  });
+        PublishState();
+    });
+
+    public void NotifyWindowActivationRequested() => dispatcher.Dispatch(() =>
+    {
+        if (!isPreviewActive)
+        {
+            isOpen = false;
+            PublishState();
+        }
+    });
 
     public void NotifyExitAnimationCompleted()
     {
@@ -235,7 +252,18 @@ public sealed class DesktopOverviewSessionController
             return;
         }
 
-        dispatcher.Dispatch(() =>  {  if (isCompletionRequested)  {  ResumePreview();  }  else  {  isOpen = true;  PublishState();  }  });
+        dispatcher.Dispatch(() =>
+        {
+            if (isCompletionRequested)
+            {
+                ResumePreview();
+            }
+            else
+            {
+                isOpen = true;
+                PublishState();
+            }
+        });
     }
 
 
@@ -257,7 +285,17 @@ public sealed class DesktopOverviewSessionController
     }
 
 
-    private void HandleScrollerScrollStopped(object? sender, EventArgs args) => dispatcher.Dispatch(() =>  {  if (!isPageSelectionNavigationPending)  {  return;  }   isPageSelectionNavigationPending = false;  TryMarkReadyToClose();  PublishState();  });
+    private void HandleScrollerScrollStopped(object? sender, EventArgs args) => dispatcher.Dispatch(() =>
+    {
+        if (!isPageSelectionNavigationPending)
+        {
+            return;
+        }
+
+        isPageSelectionNavigationPending = false;
+        TryMarkReadyToClose();
+        PublishState();
+    });
 
     private void BeginPreview()
     {
@@ -279,7 +317,15 @@ public sealed class DesktopOverviewSessionController
         }
 
         scrollPresentationSession.Begin();
-        dispatcher.Dispatch(() =>  {  navigateToSettingsAfterClose = false;  isCompletionRequested = false;  isPreviewActive = true;  staysOpen = true;  isOpen = true;  PublishState();  });
+        dispatcher.Dispatch(() =>
+        {
+            navigateToSettingsAfterClose = false;
+            isCompletionRequested = false;
+            isPreviewActive = true;
+            staysOpen = true;
+            isOpen = true;
+            PublishState();
+        });
     }
 
 

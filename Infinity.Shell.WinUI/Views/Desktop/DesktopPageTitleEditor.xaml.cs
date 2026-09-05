@@ -31,7 +31,10 @@ public sealed partial class DesktopPageTitleEditor : UserControl, IDisposable
     }
 
 
-    public DesktopPageTitleViewModel ViewModel { get; }
+    public DesktopPageTitleViewModel ViewModel
+    {
+        get;
+    }
 
 
     public Visibility ToVisibility(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
@@ -70,7 +73,11 @@ public sealed partial class DesktopPageTitleEditor : UserControl, IDisposable
             return;
         }
 
-        DispatcherQueue.TryEnqueue(() =>  {  _ = TitleTextBox.Focus(FocusState.Programmatic);  TitleTextBox.SelectAll();  });
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            _ = TitleTextBox.Focus(FocusState.Programmatic);
+            TitleTextBox.SelectAll();
+        });
     }
 
 

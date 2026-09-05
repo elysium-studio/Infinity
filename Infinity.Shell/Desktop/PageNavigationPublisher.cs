@@ -64,7 +64,13 @@ public sealed class PageNavigationPublisher(IDispatcher dispatcher, IPager pager
     }
 
 
-    private void HandlePageTitleChanged(int page, string title) => dispatcher.Dispatch(() =>  {  if (pager.CurrentPage == page)  {  PublishPageNavigation(page, title);  }  });
+    private void HandlePageTitleChanged(int page, string title) => dispatcher.Dispatch(() =>
+    {
+        if (pager.CurrentPage == page)
+        {
+            PublishPageNavigation(page, title);
+        }
+    });
 
     private void PublishPageNavigation() => PublishPageNavigation(pager.CurrentPage);
 

@@ -30,7 +30,12 @@ public sealed class GlanceBridgeProtocolTests
         InfinityPageNavigationState state = new(2, 3, "Page 3");
         Assert.True(bridge.TrySetLatestState(state));
         Assert.False(bridge.TrySetLatestState(state));
-        Assert.True(bridge.TrySetLatestState(state with { PageIndex = 3, PageNumber = 4, PageTitle = "Page 4" }));
+        Assert.True(bridge.TrySetLatestState(state with
+        {
+            PageIndex = 3,
+            PageNumber = 4,
+            PageTitle = "Page 4"
+        }));
     }
 
 
@@ -62,7 +67,11 @@ public sealed class GlanceBridgeProtocolTests
     public void ConcurrentUpdatesAreSafelyCoalesced()
     {
         using InfinityGlanceBridge bridge = new(NullLogger<InfinityGlanceBridge>.Instance);
-        Parallel.For(0, 1000, index =>  {  bridge.PublishPageNavigation(new InfinityPageNavigationState(index, index + 1, $"Page {index + 1}"));  bridge.SetPageNavigationSurfaceVisible(InfinityPageNavigationSurface.DesktopOverview, index % 2 == 0);  });
+        Parallel.For(0, 1000, index =>
+        {
+            bridge.PublishPageNavigation(new InfinityPageNavigationState(index, index + 1, $"Page {index + 1}"));
+            bridge.SetPageNavigationSurfaceVisible(InfinityPageNavigationSurface.DesktopOverview, index % 2 == 0);
+        });
         (InfinityPageNavigationState? page, bool? visibility) = bridge.TakePendingUpdates();
         Assert.NotNull(page);
         Assert.NotNull(visibility);

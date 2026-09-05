@@ -16,10 +16,26 @@ public sealed class DesktopModule : IModule
     public void Register(IServiceCollection services)
     {
         services.AddSingleton<WindowCaptureAccess>().AddSingleton<WindowCapturePreviewSurface>().AddSingleton<IWindowPreviewSurface>(provider => provider.GetRequiredService<WindowCapturePreviewSurface>()).AddSingleton<DesktopOverviewBackdropAnimator>().AddSingleton<DesktopWallpaperSurfaceProvider>().AddSingleton<DesktopWallpaperPreloader>().AddSingleton<DesktopWallpaperBrushFactory>().AddSingleton<DesktopWallpaperColorSampler>().AddSingleton<DesktopOverviewForegroundThemeResolver>().AddSingleton<DesktopOverviewWallpaperPresenter>().AddSingleton<DesktopScrollPreviewAnimator>().AddSingleton<DesktopOverviewChromeAnimator>().AddSingleton<DesktopOverviewClockViewModel>().AddSingleton<DesktopOverviewClockFormatter>().AddSingleton<DesktopOverviewClockController>().AddSingleton<DesktopPageLayoutCalculator>().AddSingleton<DesktopWallpaperPlacementCalculator>().AddSingleton<DesktopSnapLayoutCatalog>().AddSingleton<DesktopSnapPlacementResolver>().AddSingleton<DesktopSnapAppearanceCoordinator>().AddSingleton<DesktopWindowFrameGeometry>().AddSingleton<DesktopSnapSlotOccupancyResolver>().AddSingleton<DesktopWindowPlacementCoordinator>().AddSingleton<DesktopWindowDropNavigationCoordinator>().AddSingleton<DesktopWindowGroupDragCoordinator>().AddSingleton<DesktopWindowSelectionModel>().AddSingleton<DesktopPageArrangementCoordinator>().AddSingleton<DesktopApplicationPlacementResolver>().AddSingleton<DesktopApplicationLaunchCoordinator>().AddSingleton<DesktopApplicationDockContextMenuBuilder>().AddSingleton<DesktopApplicationDockPressAnimator>().AddSingleton<IDesktopApplicationPickerCatalog, DesktopApplicationPickerCatalog>().AddSingleton<IRecentApplicationStore, RecentApplicationStore>().AddSingleton<IDesktopApplicationPinStore, DesktopApplicationPinStore>().AddSingleton<IDesktopApplicationDockOrderStore, DesktopApplicationDockOrderStore>().AddSingleton<IDesktopApplicationDockCatalog, DesktopApplicationDockCatalog>().AddSingleton<DesktopDragBoundaryCalculator>().AddSingleton<DesktopPageReorderController>().AddSingleton<DesktopPageBackgroundFactory>().AddSingleton<DesktopPageStrip>().AddSingleton<DesktopOverviewDragScroller>().AddSingleton<DesktopWindowDragPageNavigator>().AddSingleton<DesktopDragCursorConfinement>().AddSingleton<DesktopWindowDragPositionResolver>().AddSingleton<DesktopWindowContextMenuBuilder>().AddSingleton<DesktopWindowPreviewFactory>().AddSingleton<DesktopWindowPreviewCollection>().AddSingleton<DesktopWindowGroupStackAnimator>().AddSingleton<DesktopOverviewInputController>().AddSingleton<DesktopWindowSnapInteractionCoordinator>().AddSingleton<DesktopOverviewLayoutPresenter>().AddSingleton<IDesktopOverviewSettingsNavigator, DesktopOverviewSettingsNavigator>().AddSingleton<DesktopOverviewSessionController>().AddSingleton<WindowInputTransparencyController>().AddSingleton(provider => new DesktopShortcutHintsViewModel(provider.GetRequiredService<IMessenger>(), provider.GetRequiredService<IDispatcher>(), provider.GetRequiredService<Settings>(), provider.GetRequiredService<IKeyLabelProvider>())).AddSingleton<DesktopApplicationPickerViewModel>().AddSingleton<DesktopApplicationDockViewModel>().AddSingleton<PageTitleStore>().AddSingleton<PageLayoutStore>().AddSingleton<PageNavigationPublisher>().AddSingleton(provider => CreateDesktopScrollPreviewView(provider)).AddViewFor(ServiceLifetime.Singleton, provider => CreateDesktopOverviewView(provider), provider => CreateDesktopOverviewViewModel(provider)).AddView(ServiceLifetime.Singleton, provider => new ScrollTriggerView());
-        services.Subscribe<PageNavigationPublisher>((provider, publisher) =>  {  publisher.Start();  return publisher.Stop;  });
-        services.Subscribe<IDesktopBackgroundSource>((provider, backgroundSource) =>  {  backgroundSource.Start();  return backgroundSource.Stop;  });
-        services.Subscribe<DesktopSnapAppearanceCoordinator>((provider, coordinator) =>  {  coordinator.Start();  return coordinator.Stop;  });
-        services.Subscribe<DesktopWallpaperPreloader>((provider, preloader) =>  {  preloader.Start();  return preloader.Stop;  });
+        services.Subscribe<PageNavigationPublisher>((provider, publisher) =>
+        {
+            publisher.Start();
+            return publisher.Stop;
+        });
+        services.Subscribe<IDesktopBackgroundSource>((provider, backgroundSource) =>
+        {
+            backgroundSource.Start();
+            return backgroundSource.Stop;
+        });
+        services.Subscribe<DesktopSnapAppearanceCoordinator>((provider, coordinator) =>
+        {
+            coordinator.Start();
+            return coordinator.Stop;
+        });
+        services.Subscribe<DesktopWallpaperPreloader>((provider, preloader) =>
+        {
+            preloader.Start();
+            return preloader.Stop;
+        });
     }
 
 

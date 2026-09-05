@@ -39,7 +39,14 @@ public sealed class DesktopOverviewChromeAnimator
         int generation = ++bottomAnimationGeneration;
         Visual visual = ElementCompositionPreview.GetElementVisual(surface);
         CompositionScopedBatch batch = visual.Compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
-        batch.Completed += (sender, args) =>  {  batch.Dispose();  if (generation == bottomAnimationGeneration)  {  completed();  }  };
+        batch.Completed += (sender, args) =>
+        {
+            batch.Dispose();
+            if (generation == bottomAnimationGeneration)
+            {
+                completed();
+            }
+        };
         AnimateEntrance(surface, new Vector3(0, DockEntranceDistance, 0), 1, PaneDuration, TimeSpan.Zero);
         batch.End();
     }
@@ -57,7 +64,14 @@ public sealed class DesktopOverviewChromeAnimator
         int generation = ++topAnimationGeneration;
         Visual visual = ElementCompositionPreview.GetElementVisual(surface);
         CompositionScopedBatch batch = visual.Compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
-        batch.Completed += (sender, args) =>  {  batch.Dispose();  if (generation == topAnimationGeneration)  {  completed();  }  };
+        batch.Completed += (sender, args) =>
+        {
+            batch.Dispose();
+            if (generation == topAnimationGeneration)
+            {
+                completed();
+            }
+        };
         AnimateExit(surface, new Vector3(0, -16, 0), 1, TopChromeExitDuration, TimeSpan.Zero, animateScale: false, animateOpacity: true);
         batch.End();
     }
@@ -76,7 +90,14 @@ public sealed class DesktopOverviewChromeAnimator
         int generation = ++exitAnimationGeneration;
         Visual dockVisual = ElementCompositionPreview.GetElementVisual(dockSurface);
         CompositionScopedBatch batch = dockVisual.Compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
-        batch.Completed += (sender, args) =>  {  batch.Dispose();  if (generation == exitAnimationGeneration)  {  completed();  }  };
+        batch.Completed += (sender, args) =>
+        {
+            batch.Dispose();
+            if (generation == exitAnimationGeneration)
+            {
+                completed();
+            }
+        };
         AnimateExit(dockSurface, new Vector3(0, DockEntranceDistance, 0), 1, PaneExitDuration, TimeSpan.Zero);
         AnimateExit(shortcutSurface, new Vector3(0, DockEntranceDistance, 0), 1, PaneExitDuration, TimeSpan.Zero);
         for (int index = icons.Count - 1; index >= 0; index--)

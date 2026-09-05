@@ -11,6 +11,10 @@ public sealed class LocalizationModule : IModule
     {
         services.AddSingleton<IStringLocalizer, ResourceStringLocalizer>();
         services.AddSingleton<ITextLocalizer, ResourceTextLocalizer>();
-        services.Subscribe<IStringLocalizer>((provider, localizer) =>  {  LocalizeExtension.SetLocalizer(localizer);  return () => LocalizeExtension.SetLocalizer(null);  });
+        services.Subscribe<IStringLocalizer>((provider, localizer) =>
+        {
+            LocalizeExtension.SetLocalizer(localizer);
+            return () => LocalizeExtension.SetLocalizer(null);
+        });
     }
 }

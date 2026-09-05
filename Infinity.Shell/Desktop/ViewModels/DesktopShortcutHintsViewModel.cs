@@ -34,6 +34,10 @@ public sealed partial class DesktopShortcutHintsViewModel : ObservableObject, IR
         int secondKey = keys.Count > 1 ? keys[1] : DefaultSecondModifier;
         string first = labelProvider.GetShortLabel(firstKey);
         string second = labelProvider.GetShortLabel(secondKey);
-        dispatcher.Dispatch(() =>  {  FirstModifier = first;  SecondModifier = second;  });
+        dispatcher.Dispatch(() =>
+        {
+            FirstModifier = first;
+            SecondModifier = second;
+        });
     }
 }

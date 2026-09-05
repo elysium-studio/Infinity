@@ -339,7 +339,7 @@ public sealed class ScrollPresentationTests
     }
 
 
-    private static Scroller CreateScroller(PanState state, WindowStore store, TestWindowMover mover, IScrollPresentationSession? presentationSession = null, IScrollInputSource? source = null, IDeltaScrollMotion? easingMotion = null, IDeltaScrollMotion? navigationMotion = null, IPageCenterTargetResolver? pageCenterTargetResolver = null) => new(state, presentationSession ?? new ScrollPresentationSession(), store, mover, new TestWindowMoveGuard(), new TestWindowDragGuard(), source ?? new TestScrollInputSource(), new TestDispatcher(), () => new ScrollerConfiguration { PixelsPerScrollNotch = 120 }, easingMotion ?? new AccumulatingDeltaScrollMotion(), navigationMotion ?? new TestDeltaScrollMotion(), new TestVelocityScrollMotion(), pageCenterTargetResolver ?? new TestPageCenterTargetResolver(), () =>  {  }, () =>  {  }, NullLogger<Scroller>.Instance);
+    private static Scroller CreateScroller(PanState state, WindowStore store, TestWindowMover mover, IScrollPresentationSession? presentationSession = null, IScrollInputSource? source = null, IDeltaScrollMotion? easingMotion = null, IDeltaScrollMotion? navigationMotion = null, IPageCenterTargetResolver? pageCenterTargetResolver = null) => new(state, presentationSession ?? new ScrollPresentationSession(), store, mover, new TestWindowMoveGuard(), new TestWindowDragGuard(), source ?? new TestScrollInputSource(), new TestDispatcher(), () => new ScrollerConfiguration { PixelsPerScrollNotch = 120 }, easingMotion ?? new AccumulatingDeltaScrollMotion(), navigationMotion ?? new TestDeltaScrollMotion(), new TestVelocityScrollMotion(), pageCenterTargetResolver ?? new TestPageCenterTargetResolver(), () => { }, () => { }, NullLogger<Scroller>.Instance);
 
     private static TrackedWindow CreateWindow(int canvasX, int handle = 1) => new()
     {
@@ -373,7 +373,7 @@ public sealed class ScrollPresentationTests
     {
         public bool IsSystemMove => false;
 
-        public WindowMoveScope Begin() => new(() =>  {  });
+        public WindowMoveScope Begin() => new(() => { });
     }
 
 

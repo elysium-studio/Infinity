@@ -1,6 +1,8 @@
 param(
     [string]$Version = "",
     [string]$Bump = "",
+    [ValidateSet("Balanced", "Size", "Speed")]
+    [string]$AotOptimization = "Balanced",
     [string]$ConfigurationPath = "",
     [string]$AzureSigningEndpoint = "",
     [string]$AzureSigningAccountName = "",
@@ -29,6 +31,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+
+$compilerOptimizationPreference = if ($AotOptimization -eq "Balanced") { "" } else { $AotOptimization }
 
 if ([string]::IsNullOrWhiteSpace($ConfigurationPath))
 {
@@ -943,11 +947,13 @@ foreach ($architecture in $Architectures)
 
     Write-Host ""
     Write-Host "Publishing Infinity v$Version ($($architecture.Name))" -ForegroundColor Cyan
+    Write-Host "AOT optimisation: $AotOptimization" -ForegroundColor DarkGray
 
     & dotnet publish $ProjectPath -c Release -r $architecture.Runtime -o $outputPath `
         "-p:Platform=$($architecture.Platform)" `
         "-p:SelfContained=true" `
         "-p:PublishAot=true" `
+        "-p:OptimizationPreference=$compilerOptimizationPreference" `
         "-p:TrimmerSingleWarn=false" `
         "-p:DebugType=None" `
         "-p:DebugSymbols=false" `
@@ -971,6 +977,10 @@ foreach ($architecture in $Architectures)
         Write-Host "Executable : $($exePath.FullName)" -ForegroundColor Green
         Write-Host "Size       : $fileSize MB" -ForegroundColor Green
     }
+
+    $publishedFiles = @(Get-ChildItem -LiteralPath $outputPath -File -Recurse)
+    $publishedSize = [math]::Round(($publishedFiles | Measure-Object -Property Length -Sum).Sum / 1MB, 2)
+    Write-Host "Payload    : $publishedSize MB across $($publishedFiles.Count) files" -ForegroundColor Green
 
     Write-Host "Packaging $($architecture.Name) with Velopack..." -ForegroundColor Cyan
 

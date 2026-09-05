@@ -197,7 +197,15 @@ public sealed class ForegroundWindowTracker : IForegroundWindowTracker
             return;
         }
 
-        Dispatch(() => { if (!IsStarted()) { return; } handler(this, windowHandle); });
+        Dispatch(() =>
+        {
+            if (!IsStarted())
+            {
+                return;
+            }
+
+            handler(this, windowHandle);
+        });
     }
 
 

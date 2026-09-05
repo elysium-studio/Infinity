@@ -19,7 +19,10 @@ public sealed partial class DesktopApplicationPickerViewModel(IDesktopApplicatio
 
     public bool ShowEmptyState => !IsLoading && !HasResults;
 
-    public DesktopApplicationTarget Target { get; private set; }
+    public DesktopApplicationTarget Target
+    {
+        get; private set;
+    }
 
 
     public bool TryGetApplication(string identifier, out LaunchableApplication? application)
@@ -33,13 +36,22 @@ public sealed partial class DesktopApplicationPickerViewModel(IDesktopApplicatio
     public async Task LoadAsync(DesktopApplicationTarget requestedTarget, CancellationToken cancellationToken = default)
     {
         bool loadApplications = false;
-        await DispatchAsync(() =>  {  Target = new DesktopApplicationTarget(requestedTarget.Page);  SearchText = string.Empty;  loadApplications = applications.Count == 0;  if (loadApplications)  {  IsLoading = true;  }  });
+        await DispatchAsync(() =>
+        {
+            Target = new DesktopApplicationTarget(requestedTarget.Page);
+            SearchText = string.Empty;
+            loadApplications = applications.Count == 0;
+            if (loadApplications)
+            {
+                IsLoading = true;
+            }
+        });
         if (loadApplications)
         {
             try
             {
                 IReadOnlyList<LaunchableApplication> loadedApplications = await applicationCatalog.GetApplicationsAsync(cancellationToken);
-                await DispatchAsync(() => applications = [..loadedApplications.Select(application => new DesktopApplicationPickerItemViewModel(application))]);
+                await DispatchAsync(() => applications = [.. loadedApplications.Select(application => new DesktopApplicationPickerItemViewModel(application))]);
             }
             finally
             {
@@ -101,7 +113,18 @@ public sealed partial class DesktopApplicationPickerViewModel(IDesktopApplicatio
     private Task DispatchAsync(Action action)
     {
         TaskCompletionSource completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        dispatcher.Dispatch(() =>  {  try  {  action();  completion.SetResult();  }  catch (Exception exception)  {  completion.SetException(exception);  }  });
+        dispatcher.Dispatch(() =>
+        {
+            try
+            {
+                action();
+                completion.SetResult();
+            }
+            catch (Exception exception)
+            {
+                completion.SetException(exception);
+            }
+        });
         return completion.Task;
     }
 }

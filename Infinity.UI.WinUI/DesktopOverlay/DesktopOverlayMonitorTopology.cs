@@ -29,7 +29,7 @@ internal sealed class DesktopOverlayMonitorTopology
             return CreateSpan([activeDisplay]);
         }
 
-        List<DesktopOverlayMonitor> compatible = [..monitors.Where(monitor => IsCompatible(activeDisplay, monitor)).OrderBy(monitor => monitor.Bounds.X)];
+        List<DesktopOverlayMonitor> compatible = [.. monitors.Where(monitor => IsCompatible(activeDisplay, monitor)).OrderBy(monitor => monitor.Bounds.X)];
         int activeIndex = compatible.FindIndex(monitor => monitor.Handle == activeMonitor);
         if (activeIndex < 0)
         {
@@ -62,7 +62,7 @@ internal sealed class DesktopOverlayMonitorTopology
         RectInt32 first = monitors[0].Bounds;
         RectInt32 last = monitors[^1].Bounds;
         RectInt32 bounds = new(first.X, first.Y, Right(last) - first.X, first.Height);
-        HashSet<nint> handles = [..monitors.Select(monitor => (nint)monitor.Handle)];
+        HashSet<nint> handles = [.. monitors.Select(monitor => (nint)monitor.Handle)];
         return new(bounds, handles);
     }
 
@@ -74,7 +74,30 @@ internal sealed class DesktopOverlayMonitorTopology
     private static unsafe List<DesktopOverlayMonitor> EnumerateMonitors()
     {
         List<DesktopOverlayMonitor> results = [];
-        PInvoke.EnumDisplayMonitors(HDC.Null, null, (monitor, deviceContext, rect, data) =>  {  MONITORINFO info = new()  {  cbSize = (uint)Marshal.SizeOf<MONITORINFO>()  };  if (!PInvoke.GetMonitorInfo(monitor, ref info))  {  return true;  }   uint dpiX = 96;  uint dpiY = 96;  _ = PInvoke.GetDpiForMonitor(monitor, MONITOR_DPI_TYPE.MDT_EFFECTIVE_DPI, out dpiX, out dpiY);  if (dpiX == 0 || dpiY == 0)  {  dpiX = 96;  dpiY = 96;  }   RectInt32 bounds = new(info.rcMonitor.left, info.rcMonitor.top, info.rcMonitor.right - info.rcMonitor.left, info.rcMonitor.bottom - info.rcMonitor.top);  results.Add(new DesktopOverlayMonitor(monitor, bounds, dpiX, dpiY));  return true;  }, new LPARAM(0));
+        PInvoke.EnumDisplayMonitors(HDC.Null, null, (monitor, deviceContext, rect, data) =>
+        {
+            MONITORINFO info = new()
+            {
+                cbSize = (uint)Marshal.SizeOf<MONITORINFO>()
+            };
+            if (!PInvoke.GetMonitorInfo(monitor, ref info))
+            {
+                return true;
+            }
+
+            uint dpiX = 96;
+            uint dpiY = 96;
+            _ = PInvoke.GetDpiForMonitor(monitor, MONITOR_DPI_TYPE.MDT_EFFECTIVE_DPI, out dpiX, out dpiY);
+            if (dpiX == 0 || dpiY == 0)
+            {
+                dpiX = 96;
+                dpiY = 96;
+            }
+
+            RectInt32 bounds = new(info.rcMonitor.left, info.rcMonitor.top, info.rcMonitor.right - info.rcMonitor.left, info.rcMonitor.bottom - info.rcMonitor.top);
+            results.Add(new DesktopOverlayMonitor(monitor, bounds, dpiX, dpiY));
+            return true;
+        }, new LPARAM(0));
         return results;
     }
 }

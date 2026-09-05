@@ -176,7 +176,14 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
             return;
         }
 
-        if (!dispatcherQueue.TryEnqueue(() =>  {  Interlocked.Exchange(ref globalDismissQueued, 0);  if (isOverlayOpen)  {  desktopScrollPreview.Dismiss();  }  }))
+        if (!dispatcherQueue.TryEnqueue(() =>
+        {
+            Interlocked.Exchange(ref globalDismissQueued, 0);
+            if (isOverlayOpen)
+            {
+                desktopScrollPreview.Dismiss();
+            }
+        }))
         {
             Interlocked.Exchange(ref globalDismissQueued, 0);
         }
@@ -226,7 +233,13 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
         }
 
         isScreenshotCapturePending = false;
-        dispatcherQueue.TryEnqueue(() =>  {  if (isOverlayOpen && IsOpen)  {  topMostCoordinator.Resume();  }  });
+        dispatcherQueue.TryEnqueue(() =>
+        {
+            if (isOverlayOpen && IsOpen)
+            {
+                topMostCoordinator.Resume();
+            }
+        });
     }
 
 
@@ -261,7 +274,13 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
             }
             else
             {
-                dispatcherQueue.TryEnqueue(() =>  {  if (!ViewModel.IsDesktopPreviewActive && IsOpen)  {  ClearDesktopPreview();  }  });
+                dispatcherQueue.TryEnqueue(() =>
+                {
+                    if (!ViewModel.IsDesktopPreviewActive && IsOpen)
+                    {
+                        ClearDesktopPreview();
+                    }
+                });
             }
         }
 
@@ -326,7 +345,13 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
         bool prepared = await wallpaperPresenter.PrepareAsync(BackgroundSurface, background);
         if (prepared)
         {
-            dispatcherQueue.TryEnqueue(() =>  {  if (IsOpen)  {  wallpaperPresenter.Attach(BackgroundSurface);  }  });
+            dispatcherQueue.TryEnqueue(() =>
+            {
+                if (IsOpen)
+                {
+                    wallpaperPresenter.Attach(BackgroundSurface);
+                }
+            });
         }
     }
 
@@ -397,7 +422,18 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
         }
 
         isDesktopPreviewAnimationStarted = true;
-        dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>  {  if (desktopScrollPreview.IsRunning && IsOpen && ViewModel.IsDesktopPreviewActive && !ViewModel.IsDesktopPreviewCompletionRequested)  {  desktopScrollPreview.AnimateInward();  topMostCoordinator.PromoteNow();  }  else  {  isDesktopPreviewAnimationStarted = false;  }  });
+        dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+        {
+            if (desktopScrollPreview.IsRunning && IsOpen && ViewModel.IsDesktopPreviewActive && !ViewModel.IsDesktopPreviewCompletionRequested)
+            {
+                desktopScrollPreview.AnimateInward();
+                topMostCoordinator.PromoteNow();
+            }
+            else
+            {
+                isDesktopPreviewAnimationStarted = false;
+            }
+        });
     }
 
 
@@ -409,7 +445,22 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
         }
 
         isCompletingDesktopPreview = true;
-        desktopScrollPreview.AnimateOutward(() =>  {  if (!isCompletingDesktopPreview)  {  return;  }   if (ViewModel.IsDesktopPreviewCompletionRequested)  {  ViewModel.NotifyDesktopPreviewExitAnimationCompleted();  }  else  {  isCompletingDesktopPreview = false;  }  });
+        desktopScrollPreview.AnimateOutward(() =>
+        {
+            if (!isCompletingDesktopPreview)
+            {
+                return;
+            }
+
+            if (ViewModel.IsDesktopPreviewCompletionRequested)
+            {
+                ViewModel.NotifyDesktopPreviewExitAnimationCompleted();
+            }
+            else
+            {
+                isCompletingDesktopPreview = false;
+            }
+        });
     }
 
 

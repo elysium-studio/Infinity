@@ -19,7 +19,10 @@ public sealed class TourViewModelTests
     public void ShortcutStepsShareModifierUpdatesAndKeepNavigationRules(Type viewModelType, bool canGoNext)
     {
         StrongReferenceMessenger messenger = new();
-        Settings settings = new() { ScrollModifierKeys = [[0x5B], [0xA2]] };
+        Settings settings = new()
+        {
+            ScrollModifierKeys = [[0x5B], [0xA2]]
+        };
         using TourShortcutViewModel viewModel = (TourShortcutViewModel)Activator.CreateInstance(viewModelType, new TestServiceProvider(), new TestServiceFactory(), messenger, new TestDisposer(), new TestDispatcher(), settings, new TestKeyLabelProvider())!;
         viewModel.Activate();
         Assert.Equal("Key 91", viewModel.FirstModifier);
@@ -75,7 +78,11 @@ public sealed class TourViewModelTests
         using TourViewModel viewModel = CreateViewModel(writer);
         TaskCompletionSource<bool> finished = new(TaskCreationOptions.RunContinuationsAsynchronously);
         int finishedCount = 0;
-        viewModel.Finished += (_, _) =>  {  finishedCount++;  finished.TrySetResult(true);  };
+        viewModel.Finished += (_, _) =>
+        {
+            finishedCount++;
+            finished.TrySetResult(true);
+        };
         viewModel.Finish();
         viewModel.Finish();
         await finished.Task.WaitAsync(TimeSpan.FromSeconds(1));
@@ -92,7 +99,10 @@ public sealed class TourViewModelTests
 
         public Settings Value { get; } = new();
 
-        public int WriteCount { get; private set; }
+        public int WriteCount
+        {
+            get; private set;
+        }
 
 
         public Task<Settings?> ReadAsync(CancellationToken cancellationToken = default) => Task.FromResult<Settings?>(Value);
@@ -121,13 +131,13 @@ public sealed class TourViewModelTests
 
     private sealed class TestServiceFactory : IServiceFactory
     {
-        public object Create(Type type, Action<object> serviceDelegate, params object? []? parameters) => throw new NotSupportedException();
+        public object Create(Type type, Action<object> serviceDelegate, params object?[]? parameters) => throw new NotSupportedException();
 
-        public object Create(Type type, params object? []? parameters) => throw new NotSupportedException();
+        public object Create(Type type, params object?[]? parameters) => throw new NotSupportedException();
 
-        public TService Create<TService>(Action<TService> serviceDelegate, params object? []? parameters) => throw new NotSupportedException();
+        public TService Create<TService>(Action<TService> serviceDelegate, params object?[]? parameters) => throw new NotSupportedException();
 
-        public TService Create<TService>(params object? []? parameters) => throw new NotSupportedException();
+        public TService Create<TService>(params object?[]? parameters) => throw new NotSupportedException();
     }
 
 
