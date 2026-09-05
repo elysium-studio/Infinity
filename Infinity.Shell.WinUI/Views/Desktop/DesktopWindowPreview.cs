@@ -433,11 +433,37 @@ internal sealed class DesktopWindowPreview :
                 return;
             }
 
+            Point grabPoint = args.GetCurrentPoint(Host).Position;
+            double grabX = width > 0 ? Math.Clamp(grabPoint.X / width, 0, 1) : 0.5;
+            double grabY = height > 0 ? Math.Clamp(grabPoint.Y / height, 0, 1) : 0.5;
+            double previousX = x;
+            double previousY = y;
             isDragging = true;
+            if (!windowPlacementCoordinator.TryPrepareForMove(windowHandle, out DesktopSnapPlacement restored, out DesktopSnapPlacement original))
+            {
+                isDragging = false;
+                suppressNextTap = true;
+                dragController.End(windowHandle);
+                CompleteDrag();
+                Host.ReleasePointerCapture(args.Pointer);
+                return;
+            }
             isControlClick = false;
             suppressNextTap = true;
             dragHorizontalDelta = horizontalDelta / layoutScale;
             dragVerticalDelta = verticalDelta / layoutScale;
+            if (restored != original)
+            {
+                // Preserve the point held by the pointer as the maximised
+                // thumbnail shrinks, including a drop before the next layout.
+                x = previousX + restored.CanvasX - original.CanvasX;
+                y = previousY + restored.CanvasY - original.CanvasY;
+                dragHorizontalDelta += original.CanvasX - restored.CanvasX + (original.Width - restored.Width) * grabX;
+                dragVerticalDelta += original.CanvasY - restored.CanvasY + (original.Height - restored.Height) * grabY;
+                width = restored.Width;
+                height = restored.Height;
+                ApplySize(width, height);
+            }
             dragLastPoint = currentPoint;
             ClearTranslationTransition();
             ApplyIndicatorVisibility();
@@ -546,6 +572,7 @@ internal sealed class DesktopWindowPreview :
             dragVerticalDelta = 0;
             SetPromoted(false);
 
+            windowPlacementCoordinator.CompleteMove(windowHandle);
             bool moved = completedSnapTarget is { OccupantHandle: not 0 } swapTarget
                 ? windowPlacementCoordinator.TrySwapIntoSlot(windowHandle, swapTarget.OccupantHandle, swapTarget.Placement)
                 : completedSnapTarget.HasValue

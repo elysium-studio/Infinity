@@ -8,5 +8,7 @@ public interface IWindowStateController
 
     bool TryRestore(nint windowHandle);
 
+    bool TryRestoreForMove(nint windowHandle, out WindowRestoreBounds bounds);
+
     bool TryMinimize(nint windowHandle);
 }

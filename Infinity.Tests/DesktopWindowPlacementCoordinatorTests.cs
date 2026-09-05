@@ -63,6 +63,72 @@ public sealed class DesktopWindowPlacementCoordinatorTests
     }
 
     [Fact]
+    public void PreparingMaximisedWindowRestoresNormalBoundsOnItsExistingPage()
+    {
+        DesktopWindowPlacementCoordinator coordinator = CreateCoordinator();
+        TrackedWindow window = AddWindow(1, 3940, 40, 1920, 1040);
+        windowStateController.State = new(true, false, true);
+
+        Assert.True(coordinator.TryPrepareForMove(1, out DesktopSnapPlacement restored, out DesktopSnapPlacement original));
+
+        Assert.Equal(new DesktopSnapPlacement(3940, 40, 1920, 1040), original);
+        Assert.Equal(new DesktopSnapPlacement(4140, 140, 800, 600), restored);
+        Assert.Equal((4140, 140, 800, 600), (window.CanvasX, window.CanvasY, window.Width, window.Height));
+        Assert.Equal(2, pageTransitionGuard.Page);
+        Assert.Equal(((nint)1, "RestoreForMove"), Assert.Single(windowStateController.Commands));
+    }
+
+    [Fact]
+    public void PreparingNormalWindowDoesNotRestoreOrRepositionIt()
+    {
+        DesktopWindowPlacementCoordinator coordinator = CreateCoordinator();
+        AddWindow(1, 300, 140, 800, 600);
+
+        Assert.True(coordinator.TryPrepareForMove(1, out DesktopSnapPlacement restored, out DesktopSnapPlacement original));
+        Assert.Equal(original, restored);
+        Assert.Empty(windowStateController.Commands);
+        Assert.Equal(0, scroller.RepositionCount);
+    }
+
+    [Fact]
+    public void SnappingMaximisedWindowRestoresThenAppliesSlotBounds()
+    {
+        DesktopWindowPlacementCoordinator coordinator = CreateCoordinator();
+        TrackedWindow window = AddWindow(1, 100, 40, 1920, 1040);
+        windowStateController.State = new(true, false, true);
+
+        Assert.True(coordinator.TryMoveToSlot(1, 2, DesktopSnapLayoutKind.Halves, 1, 40, 0));
+        Assert.Equal(((nint)1, "RestoreForMove"), Assert.Single(windowStateController.Commands));
+        Assert.Equal((4846, 6, 948, 1028), (window.CanvasX, window.CanvasY, window.Width, window.Height));
+        Assert.Equal(2, pageTransitionGuard.Page);
+    }
+
+    [Fact]
+    public void FailedRestoreDoesNotApplySnapBounds()
+    {
+        DesktopWindowPlacementCoordinator coordinator = CreateCoordinator();
+        TrackedWindow window = AddWindow(1, 100, 40, 1920, 1040);
+        windowStateController.State = new(true, false, true);
+        windowStateController.RestoreSucceeds = false;
+
+        Assert.False(coordinator.TryMoveToSlot(1, 0, DesktopSnapLayoutKind.Halves, 1, 40, 0));
+        Assert.Equal((100, 40, 1920, 1040), (window.CanvasX, window.CanvasY, window.Width, window.Height));
+        Assert.Equal(0, scroller.RepositionCount);
+    }
+
+    [Fact]
+    public void RepeatedMovePreparationRestoresOnlyOnce()
+    {
+        DesktopWindowPlacementCoordinator coordinator = CreateCoordinator();
+        AddWindow(1, 100, 40, 1920, 1040);
+        windowStateController.State = new(true, false, true);
+
+        Assert.True(coordinator.TryPrepareForMove(1, out _));
+        Assert.True(coordinator.TryPrepareForMove(1, out _));
+        Assert.Single(windowStateController.Commands);
+    }
+
+    [Fact]
     public void WindowStateCommandsDelegateToPlatformController()
     {
         DesktopWindowPlacementCoordinator coordinator = CreateCoordinator();
@@ -195,7 +261,17 @@ public sealed class DesktopWindowPlacementCoordinatorTests
 
     private sealed class TestWindowStateController : IWindowStateController
     {
-        public WindowCommandState State { get; } = new(true, true, false);
+        public WindowCommandState State { get; set; } = new(true, true, false);
+        public WindowRestoreBounds RestoreBounds { get; set; } = new(300, 140, 800, 600);
+        public bool RestoreSucceeds { get; set; } = true;
+
+        public bool TryRestoreForMove(nint windowHandle, out WindowRestoreBounds bounds)
+        {
+            Commands.Add((windowHandle, "RestoreForMove"));
+            bounds = RestoreBounds;
+            if (RestoreSucceeds) State = new(true, true, false);
+            return RestoreSucceeds;
+        }
 
         public List<(nint Handle, string Command)> Commands { get; } = [];
 

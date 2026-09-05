@@ -26,6 +26,11 @@ public sealed class DesktopWindowGroupDragCoordinator(
         {
             if (windowStore.TryGet(handle, out TrackedWindow? window))
             {
+                if (!placementCoordinator.TryPrepareForMove(handle, out _))
+                {
+                    Cancel();
+                    return false;
+                }
                 sourcePlacements.Add(handle, GetPlacement(window));
             }
         }
@@ -112,8 +117,7 @@ public sealed class DesktopWindowGroupDragCoordinator(
                 return false;
             }
 
-            placementCoordinator.ApplyPlacements(placements);
-            return true;
+            return placementCoordinator.ApplyPlacements(placements);
         }
         finally
         {

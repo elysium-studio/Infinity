@@ -39,11 +39,13 @@ public sealed class DesktopOverviewForegroundThemeResolver(
 
         try
         {
+            // Snapshot thread-affine XAML values before the asynchronous load.
+            SurfaceColors surface = SnapshotSurface(surfaceBrush);
             Color? color = await colorSampler.SampleAsync(background.Wallpaper,
                 monitorWidth,
                 monitorHeight,
                 monitorPoint);
-            return color.HasValue ? ResolveColour(EstimateSurface(color.Value, surfaceBrush)) : fallbackTheme;
+            return color.HasValue ? ResolveColour(surface.Apply(color.Value)) : fallbackTheme;
         }
         catch (Exception exception)
         {
@@ -75,24 +77,17 @@ public sealed class DesktopOverviewForegroundThemeResolver(
         return whiteContrast >= blackContrast ? ElementTheme.Dark : ElementTheme.Light;
     }
 
-    private static Color EstimateSurface(Color background, Brush? surfaceBrush) => surfaceBrush switch
+    private static SurfaceColors SnapshotSurface(Brush? surfaceBrush) => surfaceBrush switch
     {
-        AcrylicBrush acrylic => EstimateAcrylicSurface(background, acrylic),
-        SolidColorBrush solid => Blend(background,
-            solid.Color,
-            (solid.Color.A / 255d) * solid.Opacity),
-        _ => background
+        AcrylicBrush acrylic => new(acrylic.FallbackColor, acrylic.TintLuminosityOpacity ?? 1,
+            acrylic.TintColor, acrylic.TintOpacity * acrylic.Opacity),
+        SolidColorBrush solid => new(default, 0, solid.Color, (solid.Color.A / 255d) * solid.Opacity),
+        _ => default
     };
 
-    private static Color EstimateAcrylicSurface(Color background, AcrylicBrush acrylic)
+    private readonly record struct SurfaceColors(Color Luminosity, double LuminosityOpacity, Color Tint, double TintOpacity)
     {
-        double luminosityOpacity = acrylic.TintLuminosityOpacity ?? 1;
-        Color luminositySurface = Blend(background,
-            acrylic.FallbackColor,
-            luminosityOpacity);
-        return Blend(luminositySurface,
-            acrylic.TintColor,
-            acrylic.TintOpacity * acrylic.Opacity);
+        public Color Apply(Color background) => Blend(Blend(background, Luminosity, LuminosityOpacity), Tint, TintOpacity);
     }
 
     private static Color Blend(Color background, Color foreground, double opacity)

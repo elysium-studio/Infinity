@@ -230,6 +230,7 @@ public sealed class DesktopWindowGroupDragCoordinatorTests
         public WindowCommandState GetState(nint windowHandle) => WindowCommandState.Unavailable;
         public bool TryMaximize(nint windowHandle) => true;
         public bool TryRestore(nint windowHandle) => true;
+        public bool TryRestoreForMove(nint windowHandle, out WindowRestoreBounds bounds) { bounds = default; return false; }
         public bool TryMinimize(nint windowHandle) => true;
     }
 }

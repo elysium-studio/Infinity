@@ -43,7 +43,7 @@ public sealed class DesktopPageArrangementCoordinator(IWindowStore windowStore,
         }
 
         TrackedWindow[] windowsToPlace = [.. pageWindows.Where(window => !placedHandles.Contains(window.Handle)).Take(emptySlots.Count)];
-        windowPlacementCoordinator.ApplyPlacements(windowsToPlace.Select((window, index) => (window, emptySlots[index])));
-        return windowsToPlace.Length;
+        return windowPlacementCoordinator.ApplyPlacements(windowsToPlace.Select((window, index) => (window, emptySlots[index])))
+            ? windowsToPlace.Length : 0;
     }
 }

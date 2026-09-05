@@ -1,4 +1,7 @@
+using Infinity.Shell;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Graphics.Imaging;
@@ -10,81 +13,71 @@ namespace Infinity.Shell.WinUI;
 
 public sealed class DesktopWallpaperColorSampler
 {
-    private const double SampleRadius = 64;
+    private const int MaximumSampleDimension = 256;
+    private readonly object cacheGate = new();
+    private readonly Dictionary<(string Path, long Length, long Modified), Task<DesktopWallpaperSample?>> samples = [];
 
-    public async Task<Color?> SampleAsync(string wallpaperPath,
-        int monitorWidth,
-        int monitorHeight,
-        Point monitorPoint)
+    public async Task<Color?> SampleAsync(string wallpaperPath, int monitorWidth, int monitorHeight, Point monitorPoint)
     {
-        if (string.IsNullOrWhiteSpace(wallpaperPath) ||
-            monitorWidth <= 0 ||
-            monitorHeight <= 0)
+        if (string.IsNullOrWhiteSpace(wallpaperPath) || monitorWidth <= 0 || monitorHeight <= 0 ||
+            !double.IsFinite(monitorPoint.X) || !double.IsFinite(monitorPoint.Y)) return null;
+
+        FileInfo file = new(wallpaperPath);
+        if (!file.Exists) return null;
+        var key = (file.FullName.ToUpperInvariant(), file.Length, file.LastWriteTimeUtc.Ticks);
+        Task<DesktopWallpaperSample?> pending;
+        lock (cacheGate)
         {
-            return null;
+            if (!samples.TryGetValue(key, out pending!))
+            {
+                // Bound retained memory; simultaneous requests share the same decode.
+                if (samples.Count >= 4) samples.Clear();
+                pending = DecodeAsync(file.FullName);
+                samples.Add(key, pending);
+            }
         }
 
-        StorageFile file = await StorageFile.GetFileFromPathAsync(wallpaperPath);
+        DesktopWallpaperSample? sample;
+        try { sample = await pending; }
+        catch
+        {
+            // A transient read failure must not poison the cache permanently.
+            lock (cacheGate)
+            {
+                if (samples.TryGetValue(key, out var current) && ReferenceEquals(current, pending)) samples.Remove(key);
+            }
+            throw;
+        }
 
+        uint? color = sample?.Sample(monitorWidth, monitorHeight, monitorPoint.X, monitorPoint.Y,
+            DesktopWallpaperBrushFactory.WindowsFillVerticalAlignment);
+        return color is uint argb ? Color.FromArgb((byte)(argb >> 24), (byte)(argb >> 16),
+            (byte)(argb >> 8), (byte)argb) : null;
+    }
+
+    private static async Task<DesktopWallpaperSample?> DecodeAsync(string path)
+    {
+        StorageFile file = await StorageFile.GetFileFromPathAsync(path);
         using IRandomAccessStream stream = await file.OpenAsync(FileAccessMode.Read);
         BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
+        if (decoder.PixelWidth == 0 || decoder.PixelHeight == 0) return null;
 
-        if (decoder.PixelWidth == 0 || decoder.PixelHeight == 0)
-        {
-            return null;
-        }
-
-        double scale = Math.Max(monitorWidth / (double)decoder.PixelWidth,
-            monitorHeight / (double)decoder.PixelHeight);
-
-        if (!double.IsFinite(scale) || scale <= 0)
-        {
-            return null;
-        }
-
-        double scaledWidth = decoder.PixelWidth * scale;
-        double scaledHeight = decoder.PixelHeight * scale;
-        double sourceX = (monitorPoint.X + ((scaledWidth - monitorWidth) * 0.5)) / scale;
-        double sourceY = (monitorPoint.Y + ((scaledHeight - monitorHeight) * DesktopWallpaperBrushFactory.WindowsFillVerticalAlignment)) / scale;
-        double sourceRadius = SampleRadius / scale;
-        BitmapBounds bounds = CreateBounds(sourceX,
-            sourceY,
-            sourceRadius,
-            decoder.PixelWidth,
-            decoder.PixelHeight);
+        double scale = Math.Min(1, MaximumSampleDimension / (double)Math.Max(decoder.PixelWidth, decoder.PixelHeight));
+        uint width = Math.Max(1u, (uint)Math.Round(decoder.PixelWidth * scale));
+        uint height = Math.Max(1u, (uint)Math.Round(decoder.PixelHeight * scale));
+        // BitmapTransform scales BEFORE cropping. Decode the complete small image;
+        // never apply native-resolution crop bounds to a scaled decoder output.
         BitmapTransform transform = new()
         {
-            Bounds = bounds,
-            ScaledWidth = 1,
-            ScaledHeight = 1,
+            ScaledWidth = width,
+            ScaledHeight = height,
             InterpolationMode = BitmapInterpolationMode.Fant
         };
         PixelDataProvider provider = await decoder.GetPixelDataAsync(BitmapPixelFormat.Bgra8,
-            BitmapAlphaMode.Straight,
-            transform,
-            ExifOrientationMode.RespectExifOrientation,
+            BitmapAlphaMode.Straight, transform, ExifOrientationMode.RespectExifOrientation,
             ColorManagementMode.ColorManageToSRgb);
-        byte[] pixels = provider.DetachPixelData();
-
-        return pixels.Length < 4 ? null : Color.FromArgb(pixels[3], pixels[2], pixels[1], pixels[0]);
-    }
-
-    private static BitmapBounds CreateBounds(double centerX,
-        double centerY,
-        double radius,
-        uint imageWidth,
-        uint imageHeight)
-    {
-        uint left = (uint)Math.Clamp(Math.Floor(centerX - radius), 0d, imageWidth - 1d);
-        uint top = (uint)Math.Clamp(Math.Floor(centerY - radius), 0d, imageHeight - 1d);
-        uint right = (uint)Math.Clamp(Math.Ceiling(centerX + radius), left + 1d, imageWidth);
-        uint bottom = (uint)Math.Clamp(Math.Ceiling(centerY + radius), top + 1d, imageHeight);
-        return new BitmapBounds
-        {
-            X = left,
-            Y = top,
-            Width = right - left,
-            Height = bottom - top
-        };
+        bool rotated = decoder.OrientedPixelWidth != decoder.PixelWidth;
+        return new DesktopWallpaperSample((int)(rotated ? height : width), (int)(rotated ? width : height),
+            provider.DetachPixelData());
     }
 }
