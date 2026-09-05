@@ -51,7 +51,9 @@ public sealed partial class DesktopScrollPreviewView : UserControl
     private readonly DesktopApplicationLaunchCoordinator applicationLaunchCoordinator;
     private readonly DesktopOverviewInputController inputController;
     private readonly DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator;
+    private readonly DesktopOverlayBoundaryResizeController boundaryResize;
     private readonly ILogger<DesktopScrollPreviewView> logger;
+    private readonly DesktopOverviewRefreshQueue refreshQueue;
     private CancellationTokenSource? applicationLaunchCancellation;
     private IDisposable? applicationPickerScrollSuppression;
     private bool eventsSubscribed;
@@ -69,7 +71,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
     private int foregroundGeneration;
     private (int X, int Y, int OffsetX, int OffsetY, int ScreenWidth, int ScreenHeight, double Width, double Height)? appliedViewport;
 
-    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IPanState panState, IPager pager, IScroller scroller, IWorkspace workspace, IScrollInputSuppression scrollInputSuppression, IDesktopBackgroundSource backgroundSource, DesktopOverviewConfiguration overviewConfiguration, DesktopOverviewForegroundThemeResolver foregroundThemeResolver, DesktopScrollPreviewAnimator animator, DesktopOverviewChromeAnimator chromeAnimator, DesktopOverviewClockController clockController, DesktopOverviewLayoutPresenter layoutPresenter, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationDockViewModel applicationDock, DesktopApplicationDockContextMenuBuilder applicationDockContextMenuBuilder, DesktopApplicationDockPressAnimator applicationDockPressAnimator, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator, DesktopOverviewInputController inputController, DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator, ILogger<DesktopScrollPreviewView> logger)
+    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IPanState panState, IPager pager, IScroller scroller, IWorkspace workspace, IScrollInputSuppression scrollInputSuppression, IDesktopBackgroundSource backgroundSource, DesktopOverviewConfiguration overviewConfiguration, DesktopOverviewForegroundThemeResolver foregroundThemeResolver, DesktopScrollPreviewAnimator animator, DesktopOverviewChromeAnimator chromeAnimator, DesktopOverviewClockController clockController, DesktopOverviewLayoutPresenter layoutPresenter, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationDockViewModel applicationDock, DesktopApplicationDockContextMenuBuilder applicationDockContextMenuBuilder, DesktopApplicationDockPressAnimator applicationDockPressAnimator, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator, DesktopOverviewInputController inputController, DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator, DesktopOverlayBoundaryResizeController boundaryResize, ILogger<DesktopScrollPreviewView> logger)
     {
         InitializeComponent();
         this.windowPreviewSurface = windowPreviewSurface;
@@ -92,7 +94,11 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         this.applicationLaunchCoordinator = applicationLaunchCoordinator;
         this.inputController = inputController;
         this.snapInteractionCoordinator = snapInteractionCoordinator;
+        this.boundaryResize = boundaryResize;
+        boundaryResize.Attach(SharedBoundaryCanvas, animator.Scale);
+        boundaryResize.Completed += HandleBoundaryResizeCompleted;
         this.logger = logger;
+        refreshQueue = new(action => DispatcherQueue.TryEnqueue(action.Invoke), ApplyQueuedRefresh);
         ShortcutHints = shortcutHints;
         Clock = clockController.ViewModel;
         ApplicationPicker = applicationPicker;
@@ -203,6 +209,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         if (!isRunning)
         {
             isRunning = true;
+            refreshQueue.Start();
             spacingProgress = 1;
             SubscribeEvents();
             pageStrip.Start(PageCanvas, PageShadowCanvas, PageTitleCanvas, PreviewSurface, animator.Scale);
@@ -306,6 +313,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         }
 
         isRunning = false;
+        refreshQueue.Stop();
         clockController.Stop();
         foregroundGeneration++;
         cursorConfinement.Release();
@@ -344,6 +352,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
 
         RefreshMonitorOrigin();
         layoutPresenter.Synchronise(PreviewBackgroundCanvas, PreviewCanvas, FocusCanvas, animator.Scale, monitorOriginX, monitorOriginY, spacingProgress);
+        boundaryResize.Refresh();
     }
 
 
@@ -357,6 +366,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         RefreshMonitorOrigin();
         layoutPresenter.Refresh(monitorOriginX, monitorOriginY, spacingProgress, transitionDuration);
         snapInteractionCoordinator.Refresh();
+        boundaryResize.Refresh();
     }
 
 
@@ -395,6 +405,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         SettingsButton.IsTabStop = value;
         pageStrip.SetInteractionEnabled(value);
         previews.SetInteractionEnabled(value);
+        boundaryResize.SetEnabled(value);
         if (searchEnabled)
         {
             _ = WindowSearchBox.Focus(FocusState.Programmatic);
@@ -703,6 +714,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         if (isRunning)
         {
             layoutPresenter.RefreshWindow(handle, monitorOriginX, monitorOriginY, spacingProgress);
+            boundaryResize.Refresh();
         }
     }
 
@@ -987,6 +999,16 @@ public sealed partial class DesktopScrollPreviewView : UserControl
 
     internal bool TryHandleGlobalKeyDown(int virtualKeyCode, bool controlDown, bool shiftDown, bool menuDown, bool windowsDown)
     {
+        if (boundaryResize.IsResizing)
+        {
+            if (virtualKeyCode == 0x1B)
+            {
+                boundaryResize.Cancel();
+            }
+
+            return true;
+        }
+
         if (!isRunning || ApplicationPickerFlyout.IsOpen || pageStrip.IsEditorActive)
         {
             return false;
@@ -1055,6 +1077,17 @@ public sealed partial class DesktopScrollPreviewView : UserControl
 
     public bool TryCancelEditor() => pageStrip.TryCancelEditor();
 
+    public bool TryCancelBoundaryResize()
+    {
+        if (!boundaryResize.IsResizing)
+        {
+            return false;
+        }
+
+        boundaryResize.Cancel();
+        return true;
+    }
+
     public bool TryClearWindowSelection() => previews.TryClearMultiSelection();
 
     private void ResetFilter()
@@ -1067,51 +1100,42 @@ public sealed partial class DesktopScrollPreviewView : UserControl
     }
 
 
-    private void QueueSynchronise()
+    private void QueueSynchronise() => refreshQueue.RequestSynchronise();
+
+    private void HandleBoundaryResizeCompleted()
     {
-        if (DispatcherQueue.HasThreadAccess)
+        Synchronise();
+        RefreshLayout();
+    }
+
+
+    private void QueueLayoutRefresh() => refreshQueue.RequestLayout();
+
+
+    private void QueueWindowRefresh(TrackedWindow trackedWindow) => refreshQueue.RequestWindow(trackedWindow.Handle);
+
+    private void ApplyQueuedRefresh(DesktopOverviewRefreshBatch batch)
+    {
+        if (!isRunning)
+        {
+            return;
+        }
+
+        if (batch.Synchronise)
         {
             Synchronise();
-        }
-        else
-        {
-            DispatcherQueue.TryEnqueue(Synchronise);
-        }
-    }
-
-
-    private void QueueLayoutRefresh()
-    {
-        if (DispatcherQueue.HasThreadAccess)
-        {
-            RefreshLayout();
-        }
-        else
-        {
-            DispatcherQueue.TryEnqueue(() => RefreshLayout());
-        }
-    }
-
-
-    private void QueueWindowRefresh(TrackedWindow trackedWindow)
-    {
-        void RefreshWindow()
-        {
-            if (isRunning && previews.TryGet(trackedWindow.Handle, out _))
+            if (batch.Layout)
             {
-                previews.Refresh(trackedWindow);
-                previews.RefreshSelection(windowCollection.AllTrackedWindows);
                 RefreshLayout();
             }
         }
-
-        if (DispatcherQueue.HasThreadAccess)
-        {
-            RefreshWindow();
-        }
         else
         {
-            DispatcherQueue.TryEnqueue(RefreshWindow);
+            bool originChanged = RefreshMonitorOrigin();
+            layoutPresenter.RefreshWindows(batch.Windows, monitorOriginX, monitorOriginY, spacingProgress, batch.Layout || originChanged);
         }
+
+        snapInteractionCoordinator.Refresh();
+        boundaryResize.Refresh();
     }
 }

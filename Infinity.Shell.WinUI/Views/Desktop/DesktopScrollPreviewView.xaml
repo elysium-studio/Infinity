@@ -155,6 +155,7 @@
             <Canvas x:Name="PreviewBackgroundCanvas" IsHitTestVisible="False" />
             <Canvas x:Name="PreviewCanvas" />
             <Canvas x:Name="FocusCanvas" IsHitTestVisible="False" />
+            <Canvas x:Name="SharedBoundaryCanvas" />
         </Grid>
         <Canvas x:Name="PageTitleCanvas" />
         <Grid

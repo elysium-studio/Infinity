@@ -44,6 +44,36 @@ public sealed class DesktopOverviewLayoutPresenter(IWindowCollection windowColle
         }
     }
 
+    public void RefreshWindows(IReadOnlyList<nint> handles, int monitorOriginX, int monitorOriginY, double spacingProgress, bool refreshLayout)
+    {
+        foreach (nint handle in handles)
+        {
+            if (windowCollection.TryGetTrackedWindow(handle, out TrackedWindow? window) && window is not null)
+            {
+                previews.Refresh(window);
+                if (!refreshLayout)
+                {
+                    UpdateWindow(window, monitorOriginX, monitorOriginY, spacingProgress, null);
+                }
+            }
+        }
+
+        if (handles.Count > 0)
+        {
+            previews.RefreshSelection(windowCollection.AllTrackedWindows);
+        }
+
+        if (refreshLayout)
+        {
+            Refresh(monitorOriginX, monitorOriginY, spacingProgress);
+        }
+        else
+        {
+            pageStrip.RefreshLayout(scroller.VisualOffset, spacingProgress);
+            previews.RefreshGroupStack();
+        }
+    }
+
 
     public void SetPageReorderState(DesktopPageReorderPreviewState? state, int monitorOriginX, int monitorOriginY, double spacingProgress, TimeSpan? transitionDuration)
     {

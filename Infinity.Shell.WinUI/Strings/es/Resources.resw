@@ -482,4 +482,7 @@
   <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>Agregar o quitar una ventana de la selección</value></data>
   <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>Abrir la ventana seleccionada</value></data>
   <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>Buscar ventanas</value></data>
+  <data name="DesktopSharedBoundaryResize" xml:space="preserve">
+    <value>Cambiar el tamaño de las ventanas adyacentes</value>
+  </data>
 </root>

@@ -514,4 +514,7 @@
   <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>Add or remove a window from the selection</value></data>
   <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>Open selected window</value></data>
   <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>Search windows</value></data>
+  <data name="DesktopSharedBoundaryResize" xml:space="preserve">
+    <value>Resize neighbouring windows</value>
+  </data>
 </root>

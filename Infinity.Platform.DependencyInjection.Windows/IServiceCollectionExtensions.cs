@@ -43,6 +43,7 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<IWindowGeometryReader, WindowGeometryReader>();
             services.AddSingleton<IWindowMover, WindowMover>();
             services.AddSingleton<IWindowResizeSynchronizer, WindowResizeSynchronizer>();
+            services.AddSingleton<IWindowBoundaryResizer, WindowBoundaryResizer>();
             services.AddSingleton<IWindowCloser, WindowCloser>();
             services.AddSingleton<IWindowStateController, WindowStateController>();
             services.AddSingleton<IWindowSnapAppearance, WindowSnapAppearance>();

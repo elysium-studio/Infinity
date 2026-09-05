@@ -482,4 +482,7 @@
   <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>선택 항목에 창 추가 또는 제거</value></data>
   <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>선택한 창 열기</value></data>
   <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>창 검색</value></data>
+  <data name="DesktopSharedBoundaryResize" xml:space="preserve">
+    <value>인접한 창 크기 조정</value>
+  </data>
 </root>

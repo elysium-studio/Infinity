@@ -80,10 +80,10 @@
 	<Target Name="CopyPriAndXbfToPublish" AfterTargets="Publish">
 		<ItemGroup>
 			<PriFiles Include="$(OutDir)*.pri" />
-			<XbfFiles Include="$(OutDir)*.xbf" />
+			<XbfFiles Include="$(OutDir)**\*.xbf;$(OutDir)**\*.xaml" />
 		</ItemGroup>
 		<Copy SourceFiles="@(PriFiles)" DestinationFolder="$(PublishDir)" />
-		<Copy SourceFiles="@(XbfFiles)" DestinationFolder="$(PublishDir)" />
+		<Copy SourceFiles="@(XbfFiles)" DestinationFiles="@(XbfFiles->'$(PublishDir)%(RecursiveDir)%(Filename)%(Extension)')" />
 	</Target>
 	<UsingTask TaskName="ExtractWindowsAppRuntimeInsightsResource" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
 		<ParameterGroup>

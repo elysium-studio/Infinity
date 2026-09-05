@@ -20,6 +20,8 @@ public sealed class WindowCapturePreview : IDisposable
     private readonly WindowCaptureWorkQueue work;
     private readonly DispatcherQueue dispatcher;
     private readonly WindowCaptureFrameState frameState = new();
+    private readonly Action processPendingFrame;
+    private Direct3D11CaptureFramePool? pendingFramePool;
     private long sessionGeneration;
     private int requestedVisibility;
     private int requestedActive;
@@ -42,6 +44,7 @@ public sealed class WindowCapturePreview : IDisposable
         WindowHandle = windowHandle;
         this.logger = logger;
         this.onDisposed = onDisposed;
+        processPendingFrame = ProcessPendingFrame;
         dispatcher = DispatcherQueue.GetForCurrentThread();
         work = new(exception => logger.LogError(exception, "Capture worker failed for HWND {WindowHandle}", windowHandle));
         item = WindowCaptureItemFactory.Create(windowHandle);
@@ -294,13 +297,21 @@ public sealed class WindowCapturePreview : IDisposable
             return;
         }
 
-        if (!work.Enqueue(() =>
+        Volatile.Write(ref pendingFramePool, sender);
+        if (!work.Enqueue(processPendingFrame))
         {
+            Interlocked.Exchange(ref pendingFramePool, null);
             Interlocked.Exchange(ref framePending, 0);
+        }
+    }
+
+    private void ProcessPendingFrame()
+    {
+        Direct3D11CaptureFramePool? sender = Interlocked.Exchange(ref pendingFramePool, null);
+        Interlocked.Exchange(ref framePending, 0);
+        if (sender is not null)
+        {
             ProcessFrame(sender);
-        }))
-        {
-            Interlocked.Exchange(ref framePending, 0);
         }
     }
 

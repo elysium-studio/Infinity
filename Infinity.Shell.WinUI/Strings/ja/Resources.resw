@@ -482,4 +482,7 @@
   <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>選択にウィンドウを追加または削除</value></data>
   <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>選択したウィンドウを開く</value></data>
   <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>ウィンドウを検索</value></data>
+  <data name="DesktopSharedBoundaryResize" xml:space="preserve">
+    <value>隣接するウィンドウのサイズを変更</value>
+  </data>
 </root>

@@ -47,7 +47,7 @@ public sealed class WindowCaptureWorkQueue(Action<Exception> reportFailure)
         }
 
         running = true;
-        _ = Task.Run(Drain);
+        ThreadPool.QueueUserWorkItem(static queue => queue.Drain(), this, false);
     }
 
 

@@ -482,4 +482,7 @@
   <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>Adicionar ou remover uma janela da seleção</value></data>
   <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>Abrir janela selecionada</value></data>
   <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>Pesquisar janelas</value></data>
+  <data name="DesktopSharedBoundaryResize" xml:space="preserve">
+    <value>Redimensionar janelas vizinhas</value>
+  </data>
 </root>

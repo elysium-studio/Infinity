@@ -5,6 +5,45 @@ namespace Infinity.Tests;
 public sealed class WindowCaptureWorkQueueTests
 {
     [Fact]
+    public async Task WorkerPreservesExecutionContext()
+    {
+        AsyncLocal<string?> context = new();
+        context.Value = "Capture";
+        TaskCompletionSource<string?> observed = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        WindowCaptureWorkQueue queue = new(exception => observed.TrySetException(exception));
+        queue.Enqueue(() => observed.TrySetResult(context.Value));
+        Assert.Equal("Capture", await observed.Task.WaitAsync(TimeSpan.FromSeconds(5)));
+    }
+
+    [Fact]
+    public async Task ConcurrentProducersNeverRunCallbacksInParallelAndCleanupRunsLast()
+    {
+        TaskCompletionSource finished = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        int running = 0;
+        int processed = 0;
+        WindowCaptureWorkQueue queue = new(exception => finished.TrySetException(exception));
+        Task[] producers = Enumerable.Range(0, 8).Select(_ => Task.Run(() =>
+        {
+            for (int index = 0; index < 100; index++)
+            {
+                Assert.True(queue.Enqueue(() =>
+                {
+                    Assert.Equal(1, Interlocked.Increment(ref running));
+                    processed++;
+                    Assert.Equal(0, Interlocked.Decrement(ref running));
+                }));
+            }
+        })).ToArray();
+        await Task.WhenAll(producers).WaitAsync(TimeSpan.FromSeconds(5));
+        queue.Complete(() =>
+        {
+            Assert.Equal(800, processed);
+            finished.TrySetResult();
+        });
+        await finished.Task.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
     public async Task ABlockedCaptureDoesNotBlockTheCallerAndCleanupRunsLast()
     {
         using ManualResetEventSlim release = new();

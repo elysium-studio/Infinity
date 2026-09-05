@@ -161,6 +161,11 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
 
         args.Handled = true;
         TrackConsumedKeyUp(args.VirtualKeyCode);
+        if (desktopScrollPreview.TryCancelBoundaryResize())
+        {
+            return;
+        }
+
         if (desktopScrollPreview.TryCancelEditor())
         {
             return;

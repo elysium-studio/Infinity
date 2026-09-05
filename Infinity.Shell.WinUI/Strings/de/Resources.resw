@@ -482,4 +482,7 @@
   <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>Fenster zur Auswahl hinzufügen oder entfernen</value></data>
   <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>Ausgewähltes Fenster öffnen</value></data>
   <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>Fenster suchen</value></data>
+  <data name="DesktopSharedBoundaryResize" xml:space="preserve">
+    <value>Benachbarte Fenster gemeinsam skalieren</value>
+  </data>
 </root>

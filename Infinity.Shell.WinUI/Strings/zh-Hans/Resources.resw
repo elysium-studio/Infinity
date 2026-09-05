@@ -482,4 +482,7 @@
   <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>在所选内容中添加或移除窗口</value></data>
   <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>打开所选窗口</value></data>
   <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>搜索窗口</value></data>
+  <data name="DesktopSharedBoundaryResize" xml:space="preserve">
+    <value>调整相邻窗口大小</value>
+  </data>
 </root>

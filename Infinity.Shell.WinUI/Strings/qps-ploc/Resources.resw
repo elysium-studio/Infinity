@@ -482,4 +482,7 @@
   <data name="DesktopShortcutOverviewMultiSelect.Text" xml:space="preserve"><value>[Åðð ör rémövé å wîñðöw fröm ţhé šéléçţîöñ]</value></data>
   <data name="DesktopShortcutOverviewOpenSelected.Text" xml:space="preserve"><value>[Öpéñ šéléçţéð wîñðöw]</value></data>
   <data name="DesktopShortcutOverviewSearch.Text" xml:space="preserve"><value>[Šéårçh wîñðöwš]</value></data>
+  <data name="DesktopSharedBoundaryResize" xml:space="preserve">
+    <value>[Ŕéšîžé ñéîĝĥƀöûŕîñĝ ŵîñðöŵš]</value>
+  </data>
 </root>

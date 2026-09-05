@@ -22,7 +22,9 @@ internal sealed class DesktopWindowPreview : IDisposable
     private readonly DesktopWindowPlacementAnimator placementAnimator;
     private DesktopWindowPlacementAnimator.Bounds? placementAnimationSource;
     private bool placementInProgress;
+    private bool boundaryResizePreview;
     private readonly Border backgroundHost;
+    private readonly Border[] presentationElements;
     private readonly Border focusHost;
     private readonly Grid focusVisual;
     private readonly Grid selectionVisual;
@@ -78,6 +80,7 @@ internal sealed class DesktopWindowPreview : IDisposable
         floatingCornerRadius = host.CornerRadius;
         this.backgroundHost = backgroundHost;
         this.focusHost = focusHost;
+        presentationElements = [host, backgroundHost, focusHost];
         placementAnimator = new(host, backgroundHost, focusHost);
         this.preview = preview;
         captureVisibility = new(preview, host.DispatcherQueue);
@@ -135,6 +138,46 @@ internal sealed class DesktopWindowPreview : IDisposable
     public double VisualY => y + dragVerticalDelta;
 
     public double LayoutScale => layoutScale;
+
+    public bool IsDragging => isDragging || isGroupDragLeader || isGroupStacked;
+
+    public void SetBoundaryResizePreview(double deltaX, double deltaY, double targetWidth, double targetHeight)
+    {
+        if (width <= 0 || height <= 0)
+        {
+            return;
+        }
+
+        boundaryResizePreview = true;
+        placementAnimator.Stop();
+        SetGroupTransitions(null);
+        Vector3 scale = new((float)(targetWidth / width), (float)(targetHeight / height), 1);
+        Vector3 translation = new(ToFloat(x + deltaX), ToFloat(y + deltaY), shadowDepth);
+        foreach (Border element in presentationElements)
+        {
+            element.CenterPoint = Vector3.Zero;
+            element.Scale = scale;
+            element.Translation = translation;
+        }
+    }
+
+    public void ClearBoundaryResizePreview()
+    {
+        if (!boundaryResizePreview)
+        {
+            return;
+        }
+
+        boundaryResizePreview = false;
+        foreach (Border element in presentationElements)
+        {
+            element.Scale = Vector3.One;
+            element.CenterPoint = new(ToFloat(width / 2), ToFloat(height / 2), 0);
+        }
+
+        appliedTranslation = null;
+        ApplyTranslation();
+    }
 
     public void SetCaptureViewport(DesktopCaptureViewport viewport) => captureVisibility.SetViewport(viewport);
 
@@ -355,7 +398,7 @@ internal sealed class DesktopWindowPreview : IDisposable
 
     public void Update(double x, double y, double width, double height, TimeSpan? transitionDuration = null)
     {
-        if (placementInProgress)
+        if (placementInProgress || boundaryResizePreview)
         {
             return;
         }
