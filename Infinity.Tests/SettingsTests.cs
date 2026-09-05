@@ -8,7 +8,6 @@ public sealed class SettingsTests
     public void DesktopOverviewFeaturesAreEnabledByDefault()
     {
         Settings settings = new();
-
         Assert.True(settings.EnableOverviewEdgeScrolling);
         Assert.True(settings.EnableSnapAssistance);
         Assert.True(settings.ShowOverviewApplicationDock);

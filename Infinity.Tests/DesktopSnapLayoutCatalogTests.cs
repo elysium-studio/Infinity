@@ -23,10 +23,10 @@ public sealed class DesktopSnapLayoutCatalogTests
     public void PresetsExposeExpectedSlots(DesktopSnapLayoutKind layout, int expectedSlots)
     {
         DesktopSnapLayoutDefinition? definition = catalog.Get(layout);
-
         Assert.NotNull(definition);
         Assert.Equal(expectedSlots, definition.Slots.Count);
     }
+
 
     [Theory]
     [InlineData(DesktopSnapLayoutKind.Halves, 0.25, 0.5, 0)]
@@ -35,10 +35,7 @@ public sealed class DesktopSnapLayoutCatalogTests
     [InlineData(DesktopSnapLayoutKind.MainAndStack, 0.9, 0.75, 2)]
     [InlineData(DesktopSnapLayoutKind.PrimaryAndSide, 0.8, 0.5, 1)]
     [InlineData(DesktopSnapLayoutKind.PriorityColumns, 0.5, 0.5, 1)]
-    public void HitTestFindsSlotAtPointerPosition(DesktopSnapLayoutKind layout, double x, double y, int expectedSlot)
-    {
-        Assert.Equal(expectedSlot, catalog.HitTest(layout, x, y));
-    }
+    public void HitTestFindsSlotAtPointerPosition(DesktopSnapLayoutKind layout, double x, double y, int expectedSlot) => Assert.Equal(expectedSlot, catalog.HitTest(layout, x, y));
 
     [Fact]
     public void NoLayoutHasNoDefinitionOrHitTarget()
@@ -47,6 +44,7 @@ public sealed class DesktopSnapLayoutCatalogTests
         Assert.Equal(-1, catalog.HitTest(DesktopSnapLayoutKind.None, 0.5, 0.5));
     }
 
+
     [Theory]
     [InlineData(1024, 768, 1, 2)]
     [InlineData(1366, 768, 1, 4)]
@@ -54,10 +52,7 @@ public sealed class DesktopSnapLayoutCatalogTests
     [InlineData(3440, 1440, 1, 9)]
     [InlineData(3840, 1600, 2, 6)]
     [InlineData(1080, 1920, 1, 4)]
-    public void AvailableLayoutsFollowEffectiveDisplayGeometry(double width, double height, double scale, int expectedLayouts)
-    {
-        Assert.Equal(expectedLayouts, catalog.GetAvailable(width, height, scale).Count);
-    }
+    public void AvailableLayoutsFollowEffectiveDisplayGeometry(double width, double height, double scale, int expectedLayouts) => Assert.Equal(expectedLayouts, catalog.GetAvailable(width, height, scale).Count);
 
     [Fact]
     public void ThreeColumnLayoutsRequire1920EffectivePixels()

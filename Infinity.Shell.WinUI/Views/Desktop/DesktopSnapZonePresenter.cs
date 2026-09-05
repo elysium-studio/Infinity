@@ -1,20 +1,16 @@
-using Infinity.Shell;
-using Microsoft.UI.Composition;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Microsoft.UI.Composition;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Hosting;
 using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
 
-internal sealed class DesktopSnapZonePresenter :
-    IDisposable
+internal sealed class DesktopSnapZonePresenter : IDisposable
 {
     private static readonly TimeSpan RevealDuration = TimeSpan.FromMilliseconds(167);
-
     private readonly List<Border> zones = [];
     private readonly DesktopSnapLayoutCatalog catalog;
     private readonly double visualScale;
@@ -39,6 +35,7 @@ internal sealed class DesktopSnapZonePresenter :
         visual.Opacity = 0;
     }
 
+
     public void Bind(double requestedWidth, double requestedHeight)
     {
         if (width == requestedWidth && height == requestedHeight)
@@ -53,10 +50,10 @@ internal sealed class DesktopSnapZonePresenter :
         ArrangeZones();
     }
 
+
     public void Show(DesktopSnapLayoutKind requestedLayout, int highlightedSlot = -1, bool animate = true)
     {
         bool layoutChanged = layout != requestedLayout;
-
         if (layoutChanged)
         {
             layout = requestedLayout;
@@ -84,6 +81,7 @@ internal sealed class DesktopSnapZonePresenter :
         AnimateOpacity(1, animate);
     }
 
+
     public void Hide(bool animate = true)
     {
         if (!isVisible && animate)
@@ -94,6 +92,7 @@ internal sealed class DesktopSnapZonePresenter :
         isVisible = false;
         AnimateOpacity(0, animate);
     }
+
 
     public void Dispose()
     {
@@ -109,13 +108,12 @@ internal sealed class DesktopSnapZonePresenter :
         GC.SuppressFinalize(this);
     }
 
+
     private void CreateZones()
     {
         Host.Children.Clear();
         zones.Clear();
-
         DesktopSnapLayoutDefinition? definition = catalog.Get(layout);
-
         if (definition is null)
         {
             return;
@@ -125,12 +123,11 @@ internal sealed class DesktopSnapZonePresenter :
         {
             Border zone = new()
             {
-                BorderThickness = new Thickness(2 / visualScale),
-                CornerRadius = new CornerRadius(8 / visualScale),
+                BorderThickness = new(2 / visualScale),
+                CornerRadius = new(8 / visualScale),
                 IsHitTestVisible = false,
                 Tag = slot
             };
-
             zones.Add(zone);
             Host.Children.Add(zone);
         }
@@ -138,11 +135,11 @@ internal sealed class DesktopSnapZonePresenter :
         ArrangeZones();
     }
 
+
     private void ArrangeZones()
     {
-        const double gap = 12;
+        const double gap = DesktopSnapPlacementResolver.SlotGap;
         double halfGap = gap / 2;
-
         foreach (Border zone in zones)
         {
             if (zone.Tag is not DesktopSnapSlot slot)
@@ -157,24 +154,21 @@ internal sealed class DesktopSnapZonePresenter :
         }
     }
 
+
     private void UpdateHighlight(int highlightedSlot)
     {
         for (int index = 0; index < zones.Count; index++)
         {
             bool highlighted = index == highlightedSlot;
-            zones[index].Background = highlighted
-                ? FluentVisualResources.GetBrush("AccentFillColorTertiaryBrush", Color.FromArgb(96, 0, 120, 212))
-                : FluentVisualResources.GetBrush("SubtleFillColorSecondaryBrush", Color.FromArgb(40, 255, 255, 255));
-            zones[index].BorderBrush = highlighted
-                ? FluentVisualResources.GetBrush("AccentFillColorDefaultBrush", Color.FromArgb(255, 0, 120, 212))
-                : FluentVisualResources.GetBrush("SurfaceStrokeColorDefaultBrush", Color.FromArgb(96, 255, 255, 255));
+            zones[index].Background = highlighted ? FluentVisualResources.GetBrush("AccentFillColorTertiaryBrush", Color.FromArgb(96, 0, 120, 212)) : FluentVisualResources.GetBrush("SubtleFillColorSecondaryBrush", Color.FromArgb(40, 255, 255, 255));
+            zones[index].BorderBrush = highlighted ? FluentVisualResources.GetBrush("AccentFillColorDefaultBrush", Color.FromArgb(255, 0, 120, 212)) : FluentVisualResources.GetBrush("SurfaceStrokeColorDefaultBrush", Color.FromArgb(96, 255, 255, 255));
         }
     }
+
 
     private void AnimateOpacity(float target, bool animate)
     {
         visual.StopAnimation(nameof(Visual.Opacity));
-
         if (!animate)
         {
             visual.Opacity = target;
@@ -184,7 +178,6 @@ internal sealed class DesktopSnapZonePresenter :
         Compositor compositor = visual.Compositor;
         ScalarKeyFrameAnimation animation = compositor.CreateScalarKeyFrameAnimation();
         CubicBezierEasingFunction easing = target > 0 ? compositor.CreateCubicBezierEasingFunction(new Vector2(0.1f, 0.9f), new Vector2(0.2f, 1)) : compositor.CreateCubicBezierEasingFunction(new Vector2(0.55f, 0.55f), new Vector2(0, 1));
-
         animation.Duration = RevealDuration;
         animation.InsertExpressionKeyFrame(0, "this.StartingValue");
         animation.InsertKeyFrame(1, target, easing);

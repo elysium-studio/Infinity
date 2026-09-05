@@ -1,4 +1,4 @@
-﻿namespace Infinity.Application.Abstractions;
+namespace Infinity.Application.Abstractions;
 
 public interface IPager
 {
@@ -6,9 +6,12 @@ public interface IPager
 
     int CurrentPage { get; }
 
+
     int PageCount { get; }
 
+
     int? MaxPages { get; }
+
 
     bool IsPageCentered(int page);
 

@@ -1,42 +1,21 @@
+using System.Runtime.InteropServices;
 using Elysium.Application.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
-using System.Runtime.InteropServices;
 
 namespace Infinity.Application;
 
-public sealed class Scroller(IPanState state,
-    IScrollPresentationSession presentationSession,
-    IWindowStore store,
-    IWindowMover mover,
-    IWindowConcealer concealer,
-    IWindowMoveGuard moveGuard,
-    IWindowDragGuard dragGuard,
-    IScrollInputSource source,
-    IDispatcher dispatcher,
-    Func<ScrollerConfiguration> configurationFactory,
-    IDeltaScrollMotion pixelMotion,
-    IDeltaScrollMotion easingMotion,
-    IDeltaScrollMotion navigationMotion,
-    IVelocityScrollMotion momentumMotion,
-    IPageCenterTargetResolver pageCenterTargetResolver,
-    Action startTimer,
-    Action stopTimer,
-    ILogger<Scroller> logger) :
-    IScroller
+public sealed class Scroller(IPanState state, IScrollPresentationSession presentationSession, IWindowStore store, IWindowMover mover, IWindowConcealer concealer, IWindowMoveGuard moveGuard, IWindowDragGuard dragGuard, IScrollInputSource source, IDispatcher dispatcher, Func<ScrollerConfiguration> configurationFactory, IDeltaScrollMotion pixelMotion, IDeltaScrollMotion easingMotion, IDeltaScrollMotion navigationMotion, IVelocityScrollMotion momentumMotion, IPageCenterTargetResolver pageCenterTargetResolver, Action startTimer, Action stopTimer, ILogger<Scroller> logger) : IScroller
 {
     private const int StandardWheelDelta = 120;
     private const double WheelScrollScale = 0.50;
-
     private const double SpringStiffness = 0.35;
     private const double SpringDamping = 0.60;
     private const double SpringStopThreshold = 0.1;
     private const double SpringImpulseScale = 0.18;
     private const double SpringMaxVelocity = 25.0;
-
     private const int SystemMoveGraceMilliseconds = 250;
-
     private volatile bool haltRequested;
     private double springPosition;
     private double springVelocity;
@@ -45,7 +24,6 @@ public sealed class Scroller(IPanState state,
     private bool isInputCenteringPending;
     private double? inputNavigationTarget;
     private int wheelDirection;
-
     private WindowMoveScope? activeMoveScope;
     private Timer? moveGuardReleaseTimer;
 
@@ -62,15 +40,18 @@ public sealed class Scroller(IPanState state,
         {
             easingMotion.Reset();
         }
+
         isInputCenteringPending = false;
         inputNavigationTarget = null;
     }
+
 
     public void Dispose()
     {
         Stop();
         GC.SuppressFinalize(this);
     }
+
 
     public void CommitPresentation()
     {
@@ -89,6 +70,7 @@ public sealed class Scroller(IPanState state,
         }
     }
 
+
     public void Reset()
     {
         pixelMotion.Reset();
@@ -102,6 +84,7 @@ public sealed class Scroller(IPanState state,
         inputNavigationTarget = null;
         haltRequested = false;
     }
+
 
     public void OnTick()
     {
@@ -122,16 +105,13 @@ public sealed class Scroller(IPanState state,
         }
 
         double delta = pixelMotion.Drain() + easingMotion.Drain() + navigationMotion.Drain() + momentumMotion.Drain();
-
         if (Math.Abs(delta) > 0.01)
         {
             double offsetBefore = state.Offset;
             state.ApplyDelta(delta);
-
             if (state.Offset == offsetBefore)
             {
                 double impulse = Math.Clamp(delta * SpringImpulseScale, -SpringMaxVelocity, SpringMaxVelocity);
-
                 if (!isSpinging)
                 {
                     isSpinging = true;
@@ -155,7 +135,6 @@ public sealed class Scroller(IPanState state,
             double springForce = -SpringStiffness * springPosition;
             springVelocity = (springVelocity + springForce) * SpringDamping;
             springPosition += springVelocity;
-
             if (state.Offset <= state.MinOffset)
             {
                 springPosition = Math.Min(springPosition, 0);
@@ -175,7 +154,6 @@ public sealed class Scroller(IPanState state,
 
         double exactOffset = state.Offset + springPosition;
         int intOffset = (int)Math.Round(exactOffset);
-
         if (!presentationSession.IsActive)
         {
             RepositionWindows(intOffset);
@@ -192,6 +170,7 @@ public sealed class Scroller(IPanState state,
             CompleteScroll();
         }
     }
+
 
     public void ScrollBy(double pixels)
     {
@@ -212,12 +191,12 @@ public sealed class Scroller(IPanState state,
         dispatcher.Dispatch(startTimer);
     }
 
+
     public void ScrollTo(double offset, bool animate = true)
     {
         isInputCenteringPending = false;
         inputNavigationTarget = null;
         double target = Math.Clamp(offset, state.MinOffset, state.MaxOffset);
-
         if (animate)
         {
             if (Math.Abs(target - state.Offset) < 0.01)
@@ -259,10 +238,8 @@ public sealed class Scroller(IPanState state,
         }
     }
 
-    public void Reposition()
-    {
-        RepositionWindows((int)Math.Round(VisualOffset));
-    }
+
+    public void Reposition() => RepositionWindows((int)Math.Round(VisualOffset));
 
     public void Start()
     {
@@ -277,6 +254,7 @@ public sealed class Scroller(IPanState state,
         dragGuard.HoldStarted += HandleHoldStarted;
     }
 
+
     public void Stop()
     {
         if (!isStarted)
@@ -288,9 +266,7 @@ public sealed class Scroller(IPanState state,
         source.ScrollDeltaReceived -= HandleScrollDeltaReceived;
         source.ScrollVelocityIdle -= HandleScrollVelocityIdle;
         dragGuard.HoldStarted -= HandleHoldStarted;
-
         stopTimer();
-
         if (presentationSession.IsActive)
         {
             try
@@ -309,20 +285,17 @@ public sealed class Scroller(IPanState state,
 
         moveGuardReleaseTimer?.Dispose();
         moveGuardReleaseTimer = null;
-
         activeMoveScope?.Dispose();
         activeMoveScope = null;
     }
 
+
     private void RepositionWindows(int intOffset)
     {
         activeMoveScope ??= moveGuard.Begin();
-
         bool anyDragging = dragGuard.IsAnyDragging;
         IReadOnlySet<nint> concealedHandles = concealer.ConcealedHandles();
-
         mover.BeginBatch(store.Count);
-
         try
         {
             foreach (TrackedWindow trackedWindow in store)
@@ -333,16 +306,13 @@ public sealed class Scroller(IPanState state,
                 }
 
                 int targetX = trackedWindow.CanvasX - intOffset;
-
                 if (concealedHandles.Contains(trackedWindow.Handle))
                 {
                     continue;
                 }
 
                 int targetY = trackedWindow.CanvasY;
-
-                if (trackedWindow.LastPlacedX == targetX &&
-                    trackedWindow.LastPlacedY == targetY)
+                if (trackedWindow.LastPlacedX == targetX && trackedWindow.LastPlacedY == targetY)
                 {
                     continue;
                 }
@@ -360,20 +330,21 @@ public sealed class Scroller(IPanState state,
         ScheduleMoveGuardRelease();
     }
 
+
     private void CompleteScroll()
     {
         stopTimer();
         ScrollStopped?.Invoke(this, EventArgs.Empty);
     }
 
-    private bool IsMotionActive() =>
-        pixelMotion.IsActive || easingMotion.IsActive || navigationMotion.IsActive || momentumMotion.IsActive || isSpinging;
+
+    private bool IsMotionActive() => pixelMotion.IsActive || easingMotion.IsActive || navigationMotion.IsActive || momentumMotion.IsActive || isSpinging;
 
     private void ScheduleMoveGuardRelease()
     {
         if (moveGuardReleaseTimer is null)
         {
-            moveGuardReleaseTimer = new Timer(HandleMoveGuardReleaseTick, null, SystemMoveGraceMilliseconds, Timeout.Infinite);
+            moveGuardReleaseTimer = new(HandleMoveGuardReleaseTick, null, SystemMoveGraceMilliseconds, Timeout.Infinite);
         }
         else
         {
@@ -381,14 +352,15 @@ public sealed class Scroller(IPanState state,
         }
     }
 
-    private void HandleMoveGuardReleaseTick(object? timerState) =>
-        DispatchInputCallback(ReleaseMoveGuard, "move guard release");
+
+    private void HandleMoveGuardReleaseTick(object? timerState) => DispatchInputCallback(ReleaseMoveGuard, "move guard release");
 
     private void ReleaseMoveGuard()
     {
         activeMoveScope?.Dispose();
         activeMoveScope = null;
     }
+
 
     private void HandleScrollDeltaReceived(int nativeScrollDelta)
     {
@@ -398,7 +370,6 @@ public sealed class Scroller(IPanState state,
         }
 
         bool wasPresentationActive = presentationSession.IsActive;
-
         if (!IsMotionActive())
         {
             ScrollStarted?.Invoke(this, EventArgs.Empty);
@@ -419,13 +390,12 @@ public sealed class Scroller(IPanState state,
         navigationMotion.Reset();
         inputNavigationTarget = null;
         isInputCenteringPending = true;
-
         double pixelsPerNotch = configurationFactory().PixelsPerScrollNotch;
         double pixels = (-nativeScrollDelta / 120.0) * pixelsPerNotch * WheelScrollScale;
-
         easingMotion.AddDelta(pixels);
         DispatchInputCallback(startTimer, "scroll input");
     }
+
 
     private void HandleScrollVelocityIdle(double velocity)
     {
@@ -445,17 +415,19 @@ public sealed class Scroller(IPanState state,
         DispatchInputCallback(startTimer, "scroll momentum");
     }
 
+
     private void DispatchInputCallback(Action action, string operation)
     {
         try
         {
             dispatcher.Dispatch(action);
         }
-        catch (Exception exception) when (exception is InvalidOperationException or COMException)
+        catch (Exception exception)when (exception is InvalidOperationException or COMException)
         {
             logger.LogDebug(exception, "The dispatcher rejected {Operation}", operation);
         }
     }
+
 
     private void HandleHoldStarted()
     {
@@ -464,18 +436,15 @@ public sealed class Scroller(IPanState state,
         haltRequested = true;
     }
 
+
     private void NavigateByWheelDelta(int nativeScrollDelta)
     {
         int pageDelta = -Math.Sign(nativeScrollDelta) * Math.Max(1, Math.Abs(nativeScrollDelta) / StandardWheelDelta);
         int direction = Math.Sign(pageDelta);
         bool continuing = inputNavigationTarget.HasValue;
         double previousTarget = inputNavigationTarget ?? state.Offset;
-        // A reversal must come back from the visible page, not work through a
-        // backlog of destinations accumulated by earlier wheel events.
         double origin = continuing && direction == wheelDirection ? previousTarget : state.Offset;
-
-        if (!pageCenterTargetResolver.TryResolveAdjacent(origin, pageDelta, state.MinOffset, state.MaxOffset, out double targetOffset) &&
-            (!continuing || direction == wheelDirection))
+        if (!pageCenterTargetResolver.TryResolveAdjacent(origin, pageDelta, state.MinOffset, state.MaxOffset, out double targetOffset) && (!continuing || direction == wheelDirection))
         {
             return;
         }
@@ -495,11 +464,10 @@ public sealed class Scroller(IPanState state,
         inputNavigationTarget = targetOffset;
         wheelDirection = direction;
         haltRequested = false;
-        // Keep the known-good spring's velocity and elapsed time. Only change
-        // its destination; restarting it on every notch starves rapid motion.
         easingMotion.AddDelta(targetOffset - previousTarget);
         DispatchInputCallback(startTimer, "wheel page navigation");
     }
+
 
     private bool TryStartInputCentering()
     {
@@ -509,7 +477,6 @@ public sealed class Scroller(IPanState state,
         }
 
         isInputCenteringPending = false;
-
         if (!pageCenterTargetResolver.TryResolve(state.Offset, state.MinOffset, state.MaxOffset, out double targetOffset))
         {
             return false;
@@ -517,7 +484,6 @@ public sealed class Scroller(IPanState state,
 
         navigationMotion.Reset();
         navigationMotion.AddDelta(targetOffset - state.Offset);
-
         if (!navigationMotion.IsActive)
         {
             return false;

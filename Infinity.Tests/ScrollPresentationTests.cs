@@ -1,5 +1,4 @@
 using Elysium.Application.Abstractions;
-using Elysium.Platform.Abstractions;
 using Infinity.Application;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
@@ -21,23 +20,17 @@ public sealed class ScrollPresentationTests
         presentationSession.Begin();
         QueuedDeltaScrollMotion motion = new(100, 100);
         using Scroller scroller = CreateScroller(state, store, mover, presentationSession, motion);
-
         scroller.OnTick();
-
         Assert.Empty(mover.Moves);
         Assert.Equal(100, state.Offset);
-
         scroller.OnTick();
-
         Assert.Empty(mover.Moves);
         Assert.Equal(200, state.Offset);
         Assert.True(presentationSession.IsActive);
-
         scroller.CommitPresentation();
-
-        Assert.Collection(mover.Moves,
-            move => Assert.Equal((window.Handle, 300), (move.Handle, move.X)));
+        Assert.Collection(mover.Moves, move => Assert.Equal((window.Handle, 300), (move.Handle, move.X)));
     }
+
 
     [Fact]
     public void FirstWheelInputOpensPresentationWithoutChangingOffset()
@@ -50,28 +43,18 @@ public sealed class ScrollPresentationTests
         TestScrollInputSource source = new();
         QueuedDeltaScrollMotion easingMotion = new();
         QueuedDeltaScrollMotion navigationMotion = new();
-        using Scroller scroller = CreateScroller(state,
-            store,
-            mover,
-            presentationSession,
-            source: source,
-            easingMotion: easingMotion,
-            navigationMotion: navigationMotion,
-            pageCenterTargetResolver: new TestPageCenterTargetResolver(pageWidth: 1000));
+        using Scroller scroller = CreateScroller(state, store, mover, presentationSession, source: source, easingMotion: easingMotion, navigationMotion: navigationMotion, pageCenterTargetResolver: new TestPageCenterTargetResolver(pageWidth: 1000));
         scroller.ScrollStarted += (_, _) => presentationSession.Begin();
         scroller.Start();
-
         source.RaiseScroll(-120);
         scroller.OnTick();
-
         Assert.True(presentationSession.IsActive);
         Assert.Equal(0, state.Offset);
-
         source.RaiseScroll(-120);
         scroller.OnTick();
-
         Assert.Equal(1000, state.Offset);
     }
+
 
     [Fact]
     public void ExplicitRepositionCommitsWindowDuringPresentation()
@@ -85,11 +68,10 @@ public sealed class ScrollPresentationTests
         ScrollPresentationSession presentationSession = new();
         presentationSession.Begin();
         using Scroller scroller = CreateScroller(state, store, mover, presentationSession);
-
         scroller.Reposition();
-
         Assert.Collection(mover.Moves, move => Assert.Equal((window.Handle, 300), (move.Handle, move.X)));
     }
+
 
     [Fact]
     public void StandardWheelInputRetargetsProgrammaticNavigationToTheAdjacentPage()
@@ -102,24 +84,16 @@ public sealed class ScrollPresentationTests
         TestScrollInputSource source = new();
         QueuedDeltaScrollMotion easingMotion = new();
         QueuedDeltaScrollMotion navigationMotion = new();
-        using Scroller scroller = CreateScroller(state,
-            store,
-            mover,
-            presentationSession,
-            source: source,
-            easingMotion: easingMotion,
-            navigationMotion: navigationMotion,
-            pageCenterTargetResolver: new TestPageCenterTargetResolver(pageWidth: 1000));
+        using Scroller scroller = CreateScroller(state, store, mover, presentationSession, source: source, easingMotion: easingMotion, navigationMotion: navigationMotion, pageCenterTargetResolver: new TestPageCenterTargetResolver(pageWidth: 1000));
         presentationSession.Begin();
         scroller.Start();
         scroller.ScrollTo(500);
-
         source.RaiseScroll(-120);
         scroller.OnTick();
-
         Assert.False(navigationMotion.IsActive);
         Assert.Equal(1000, state.Offset);
     }
+
 
     [Fact]
     public void StandardWheelDeltaNavigatesDirectlyToTheAdjacentPageCentre()
@@ -132,24 +106,17 @@ public sealed class ScrollPresentationTests
         presentationSession.Begin();
         TestScrollInputSource source = new();
         QueuedDeltaScrollMotion navigationMotion = new();
-        using Scroller scroller = CreateScroller(state,
-            store,
-            mover,
-            presentationSession,
-            source: source,
-            navigationMotion: navigationMotion,
-            pageCenterTargetResolver: new TestPageCenterTargetResolver(pageWidth: 1000));
+        using Scroller scroller = CreateScroller(state, store, mover, presentationSession, source: source, navigationMotion: navigationMotion, pageCenterTargetResolver: new TestPageCenterTargetResolver(pageWidth: 1000));
         int stoppedCount = 0;
         scroller.ScrollStopped += (_, _) => stoppedCount++;
         scroller.Start();
-
         source.RaiseScroll(-120);
         scroller.OnTick();
-
         Assert.Equal(1000, state.Offset);
         Assert.False(navigationMotion.IsActive);
         Assert.Equal(1, stoppedCount);
     }
+
 
     [Fact]
     public void ReversingWheelDirectionTargetsThePreviousItemDuringAnimation()
@@ -162,21 +129,14 @@ public sealed class ScrollPresentationTests
         presentationSession.Begin();
         TestScrollInputSource source = new();
         QueuedDeltaScrollMotion navigationMotion = new();
-        using Scroller scroller = CreateScroller(state,
-            store,
-            mover,
-            presentationSession,
-            source: source,
-            navigationMotion: navigationMotion,
-            pageCenterTargetResolver: new TestPageCenterTargetResolver(pageWidth: 1000));
+        using Scroller scroller = CreateScroller(state, store, mover, presentationSession, source: source, navigationMotion: navigationMotion, pageCenterTargetResolver: new TestPageCenterTargetResolver(pageWidth: 1000));
         scroller.Start();
-
         source.RaiseScroll(-120);
         source.RaiseScroll(120);
         scroller.OnTick();
-
         Assert.Equal(0, state.Offset);
     }
+
 
     [Fact]
     public void RepeatedWheelInputDoesNotResetTheRunningSpring()
@@ -187,20 +147,17 @@ public sealed class ScrollPresentationTests
         session.Begin();
         TestScrollInputSource source = new();
         AccumulatingDeltaScrollMotion motion = new();
-        using Scroller scroller = CreateScroller(state, new WindowStore(), new TestWindowMover(), session,
-            source: source, easingMotion: motion,
-            pageCenterTargetResolver: new TestPageCenterTargetResolver(1000));
+        using Scroller scroller = CreateScroller(state, new WindowStore(), new TestWindowMover(), session, source: source, easingMotion: motion, pageCenterTargetResolver: new TestPageCenterTargetResolver(1000));
         scroller.Start();
-
         source.RaiseScroll(-120);
         int initialResets = motion.ResetCount;
         source.RaiseScroll(-120);
         source.RaiseScroll(-120);
-
         Assert.Equal(initialResets, motion.ResetCount);
         scroller.OnTick();
         Assert.Equal(3000, state.Offset);
     }
+
 
     [Fact]
     public void RapidWheelInputMovesOnEveryFrameAndSettlesAtThePageCentre()
@@ -212,11 +169,8 @@ public sealed class ScrollPresentationTests
         TestScrollInputSource source = new();
         ManualScrollTimeProvider time = new();
         EasingScrollMotion motion = new(time);
-        using Scroller scroller = CreateScroller(state, new WindowStore(), new TestWindowMover(), session,
-            source: source, easingMotion: motion,
-            pageCenterTargetResolver: new TestPageCenterTargetResolver(1000));
+        using Scroller scroller = CreateScroller(state, new WindowStore(), new TestWindowMover(), session, source: source, easingMotion: motion, pageCenterTargetResolver: new TestPageCenterTargetResolver(1000));
         scroller.Start();
-
         for (int frame = 0; frame < 12; frame++)
         {
             double previousOffset = state.Offset;
@@ -234,6 +188,7 @@ public sealed class ScrollPresentationTests
         Assert.InRange(state.Offset, 96_000 - 0.5, 96_000 + 0.5);
     }
 
+
     [Fact]
     public void ReversalDropsQueuedForwardDestinationsAndMovesBack()
     {
@@ -245,11 +200,8 @@ public sealed class ScrollPresentationTests
         TestScrollInputSource source = new();
         ManualScrollTimeProvider time = new();
         EasingScrollMotion motion = new(time);
-        using Scroller scroller = CreateScroller(state, new WindowStore(), new TestWindowMover(), session,
-            source: source, easingMotion: motion,
-            pageCenterTargetResolver: new TestPageCenterTargetResolver(1000));
+        using Scroller scroller = CreateScroller(state, new WindowStore(), new TestWindowMover(), session, source: source, easingMotion: motion, pageCenterTargetResolver: new TestPageCenterTargetResolver(1000));
         scroller.Start();
-
         for (int notch = 0; notch < 5; notch++)
         {
             source.RaiseScroll(-120);
@@ -262,10 +214,10 @@ public sealed class ScrollPresentationTests
         time.Advance(TimeSpan.FromMilliseconds(16));
         scroller.OnTick();
         Assert.True(state.Offset < reversalOffset);
-
         Settle(scroller, motion, time);
         Assert.InRange(state.Offset, expectedTarget - 0.5, expectedTarget + 0.5);
     }
+
 
     [Fact]
     public void CancelNavigationAlsoCancelsWheelMotionBeforeActivation()
@@ -276,18 +228,15 @@ public sealed class ScrollPresentationTests
         session.Begin();
         TestScrollInputSource source = new();
         AccumulatingDeltaScrollMotion motion = new();
-        using Scroller scroller = CreateScroller(state, new WindowStore(), new TestWindowMover(), session,
-            source: source, easingMotion: motion,
-            pageCenterTargetResolver: new TestPageCenterTargetResolver(1000));
+        using Scroller scroller = CreateScroller(state, new WindowStore(), new TestWindowMover(), session, source: source, easingMotion: motion, pageCenterTargetResolver: new TestPageCenterTargetResolver(1000));
         scroller.Start();
-
         source.RaiseScroll(-120);
         scroller.CancelNavigation();
         scroller.OnTick();
-
         Assert.False(motion.IsActive);
         Assert.Equal(0, state.Offset);
     }
+
 
     [Fact]
     public void WheelTargetsAreClampedWithoutAddingAnInvisibleBacklog()
@@ -298,11 +247,8 @@ public sealed class ScrollPresentationTests
         session.Begin();
         TestScrollInputSource source = new();
         AccumulatingDeltaScrollMotion motion = new();
-        using Scroller scroller = CreateScroller(state, new WindowStore(), new TestWindowMover(), session,
-            source: source, easingMotion: motion,
-            pageCenterTargetResolver: new TestPageCenterTargetResolver(1000));
+        using Scroller scroller = CreateScroller(state, new WindowStore(), new TestWindowMover(), session, source: source, easingMotion: motion, pageCenterTargetResolver: new TestPageCenterTargetResolver(1000));
         scroller.Start();
-
         for (int notch = 0; notch < 20; notch++)
         {
             source.RaiseScroll(-120);
@@ -310,11 +256,11 @@ public sealed class ScrollPresentationTests
 
         scroller.OnTick();
         Assert.Equal(2000, state.Offset);
-
         source.RaiseScroll(120);
         scroller.OnTick();
         Assert.Equal(1000, state.Offset);
     }
+
 
     [Fact]
     public void ExplicitNavigationReplacesWheelMotionWithoutAFollowUpSnap()
@@ -326,21 +272,18 @@ public sealed class ScrollPresentationTests
         TestScrollInputSource source = new();
         AccumulatingDeltaScrollMotion wheelMotion = new();
         QueuedDeltaScrollMotion navigationMotion = new();
-        using Scroller scroller = CreateScroller(state, new WindowStore(), new TestWindowMover(), session,
-            source: source, easingMotion: wheelMotion, navigationMotion: navigationMotion,
-            pageCenterTargetResolver: new TestPageCenterTargetResolver(1000));
+        using Scroller scroller = CreateScroller(state, new WindowStore(), new TestWindowMover(), session, source: source, easingMotion: wheelMotion, navigationMotion: navigationMotion, pageCenterTargetResolver: new TestPageCenterTargetResolver(1000));
         scroller.Start();
-
         source.RaiseScroll(-120);
         source.RaiseScroll(-120);
         scroller.ScrollTo(600);
         scroller.OnTick();
         scroller.OnTick();
-
         Assert.Equal(600, state.Offset);
         Assert.False(wheelMotion.IsActive);
         Assert.False(navigationMotion.IsActive);
     }
+
 
     private static void Settle(Scroller scroller, EasingScrollMotion motion, ManualScrollTimeProvider time)
     {
@@ -352,6 +295,7 @@ public sealed class ScrollPresentationTests
 
         Assert.False(motion.IsActive);
     }
+
 
     [Fact]
     public void PrecisionGestureCentersAfterItsPixelMotionCompletes()
@@ -365,26 +309,16 @@ public sealed class ScrollPresentationTests
         TestScrollInputSource source = new();
         QueuedDeltaScrollMotion easingMotion = new();
         QueuedDeltaScrollMotion navigationMotion = new();
-        using Scroller scroller = CreateScroller(state,
-            store,
-            mover,
-            presentationSession,
-            source: source,
-            easingMotion: easingMotion,
-            navigationMotion: navigationMotion,
-            pageCenterTargetResolver: new FixedPageCenterTargetResolver(1000));
+        using Scroller scroller = CreateScroller(state, store, mover, presentationSession, source: source, easingMotion: easingMotion, navigationMotion: navigationMotion, pageCenterTargetResolver: new FixedPageCenterTargetResolver(1000));
         scroller.Start();
-
         source.RaiseScroll(-60);
         scroller.OnTick();
-
         Assert.Equal(30, state.Offset);
         Assert.True(navigationMotion.IsActive);
-
         scroller.OnTick();
-
         Assert.Equal(1000, state.Offset);
     }
+
 
     [Fact]
     public void ProgrammaticNavigationDoesNotStartFollowUpCentering()
@@ -394,53 +328,22 @@ public sealed class ScrollPresentationTests
         state.SetMaxOffset(2000);
         TestWindowMover mover = new();
         QueuedDeltaScrollMotion navigationMotion = new();
-        using Scroller scroller = CreateScroller(state,
-            store,
-            mover,
-            navigationMotion: navigationMotion,
-            pageCenterTargetResolver: new FixedPageCenterTargetResolver(1000));
+        using Scroller scroller = CreateScroller(state, store, mover, navigationMotion: navigationMotion, pageCenterTargetResolver: new FixedPageCenterTargetResolver(1000));
         int stoppedCount = 0;
         scroller.ScrollStopped += (_, _) => stoppedCount++;
-
         scroller.ScrollTo(600);
         scroller.OnTick();
-
         Assert.Equal(600, state.Offset);
         Assert.False(navigationMotion.IsActive);
         Assert.Equal(1, stoppedCount);
     }
 
-    private static Scroller CreateScroller(PanState state,
-        WindowStore store,
-        TestWindowMover mover,
-        IScrollPresentationSession? presentationSession = null,
-        IDeltaScrollMotion? pixelMotion = null,
-        IScrollInputSource? source = null,
-        IDeltaScrollMotion? easingMotion = null,
-        IDeltaScrollMotion? navigationMotion = null,
-        IPageCenterTargetResolver? pageCenterTargetResolver = null) =>
-        new(state,
-            presentationSession ?? new ScrollPresentationSession(),
-            store,
-            mover,
-            new TestWindowConcealer(),
-            new TestWindowMoveGuard(),
-            new TestWindowDragGuard(),
-            source ?? new TestScrollInputSource(),
-            new TestDispatcher(),
-            () => new ScrollerConfiguration { PixelsPerScrollNotch = 120 },
-            pixelMotion ?? new TestDeltaScrollMotion(),
-            easingMotion ?? new AccumulatingDeltaScrollMotion(),
-            navigationMotion ?? new TestDeltaScrollMotion(),
-            new TestVelocityScrollMotion(),
-            pageCenterTargetResolver ?? new TestPageCenterTargetResolver(),
-            () => { },
-            () => { },
-            NullLogger<Scroller>.Instance);
+
+    private static Scroller CreateScroller(PanState state, WindowStore store, TestWindowMover mover, IScrollPresentationSession? presentationSession = null, IDeltaScrollMotion? pixelMotion = null, IScrollInputSource? source = null, IDeltaScrollMotion? easingMotion = null, IDeltaScrollMotion? navigationMotion = null, IPageCenterTargetResolver? pageCenterTargetResolver = null) => new(state, presentationSession ?? new ScrollPresentationSession(), store, mover, new TestWindowConcealer(), new TestWindowMoveGuard(), new TestWindowDragGuard(), source ?? new TestScrollInputSource(), new TestDispatcher(), () => new ScrollerConfiguration { PixelsPerScrollNotch = 120 }, pixelMotion ?? new TestDeltaScrollMotion(), easingMotion ?? new AccumulatingDeltaScrollMotion(), navigationMotion ?? new TestDeltaScrollMotion(), new TestVelocityScrollMotion(), pageCenterTargetResolver ?? new TestPageCenterTargetResolver(), () =>  {  }, () =>  {  }, NullLogger<Scroller>.Instance);
 
     private static TrackedWindow CreateWindow(int canvasX, int handle = 1) => new()
     {
-        Handle = new IntPtr(handle),
+        Handle = new(handle),
         CanvasX = canvasX,
         CanvasY = 100,
         Width = 800,
@@ -449,8 +352,7 @@ public sealed class ScrollPresentationTests
         LastPlacedY = int.MinValue
     };
 
-    private sealed class TestWindowMover :
-        IWindowMover
+    private sealed class TestWindowMover : IWindowMover
     {
         public List<(IntPtr Handle, int X)> Moves { get; } = [];
 
@@ -458,16 +360,16 @@ public sealed class ScrollPresentationTests
         {
         }
 
-        public void MoveTo(IntPtr windowHandle, int x, int y, int width, int height) =>
-            Moves.Add((windowHandle, x));
+
+        public void MoveTo(IntPtr windowHandle, int x, int y, int width, int height) => Moves.Add((windowHandle, x));
 
         public void EndBatch()
         {
         }
     }
 
-    private sealed class TestWindowConcealer :
-        IWindowConcealer
+
+    private sealed class TestWindowConcealer : IWindowConcealer
     {
         public bool Conceal(IntPtr windowHandle) => true;
 
@@ -475,21 +377,22 @@ public sealed class ScrollPresentationTests
         {
         }
 
+
         public bool IsConcealed(IntPtr windowHandle) => false;
 
         public IReadOnlySet<IntPtr> ConcealedHandles() => new HashSet<IntPtr>();
     }
 
-    private sealed class TestWindowMoveGuard :
-        IWindowMoveGuard
+
+    private sealed class TestWindowMoveGuard : IWindowMoveGuard
     {
         public bool IsSystemMove => false;
 
-        public WindowMoveScope Begin() => new(() => { });
+        public WindowMoveScope Begin() => new(() =>  {  });
     }
 
-    private sealed class TestWindowDragGuard :
-        IWindowDragGuard
+
+    private sealed class TestWindowDragGuard : IWindowDragGuard
     {
         public event Action? HoldStarted;
 
@@ -506,8 +409,8 @@ public sealed class ScrollPresentationTests
         }
     }
 
-    private sealed class TestScrollInputSource :
-        IScrollInputSource
+
+    private sealed class TestScrollInputSource : IScrollInputSource
     {
         public event Action<int>? ScrollDeltaReceived;
 
@@ -525,25 +428,27 @@ public sealed class ScrollPresentationTests
         {
         }
 
+
         public void Stop()
         {
         }
     }
 
-    private sealed class TestDispatcher :
-        IDispatcher
+
+    private sealed class TestDispatcher : IDispatcher
     {
         public void Dispatch(Action action) => action();
     }
 
-    private sealed class TestDeltaScrollMotion :
-        IDeltaScrollMotion
+
+    private sealed class TestDeltaScrollMotion : IDeltaScrollMotion
     {
         public bool IsActive => false;
 
         public void AddDelta(double pixels)
         {
         }
+
 
         public double Drain() => 0;
 
@@ -552,8 +457,8 @@ public sealed class ScrollPresentationTests
         }
     }
 
-    private sealed class QueuedDeltaScrollMotion(params double[] deltas) :
-        IDeltaScrollMotion
+
+    private sealed class QueuedDeltaScrollMotion(params double[] deltas) : IDeltaScrollMotion
     {
         private readonly Queue<double> deltas = new(deltas);
 
@@ -566,14 +471,15 @@ public sealed class ScrollPresentationTests
         public void Reset() => deltas.Clear();
     }
 
-    private sealed class TestVelocityScrollMotion :
-        IVelocityScrollMotion
+
+    private sealed class TestVelocityScrollMotion : IVelocityScrollMotion
     {
         public bool IsActive => false;
 
         public void AddVelocity(double pixelsPerTick)
         {
         }
+
 
         public double Drain() => 0;
 
@@ -582,8 +488,8 @@ public sealed class ScrollPresentationTests
         }
     }
 
-    private sealed class TestPageCenterTargetResolver(double pageWidth = 0) :
-        IPageCenterTargetResolver
+
+    private sealed class TestPageCenterTargetResolver(double pageWidth = 0) : IPageCenterTargetResolver
     {
         public bool TryResolve(double offset, double minimumOffset, double maximumOffset, out double targetOffset)
         {
@@ -591,23 +497,23 @@ public sealed class ScrollPresentationTests
             return false;
         }
 
+
         public bool TryResolveAdjacent(double offset, int pageDelta, double minimumOffset, double maximumOffset, out double targetOffset)
         {
-            targetOffset = pageWidth > 0
-                ? Math.Clamp((Math.Round(offset / pageWidth, MidpointRounding.AwayFromZero) + pageDelta) * pageWidth, minimumOffset, maximumOffset)
-                : offset;
+            targetOffset = pageWidth > 0 ? Math.Clamp((Math.Round(offset / pageWidth, MidpointRounding.AwayFromZero) + pageDelta) * pageWidth, minimumOffset, maximumOffset) : offset;
             return pageWidth > 0 && Math.Abs(targetOffset - offset) >= 0.5;
         }
     }
 
-    private sealed class FixedPageCenterTargetResolver(double target) :
-        IPageCenterTargetResolver
+
+    private sealed class FixedPageCenterTargetResolver(double target) : IPageCenterTargetResolver
     {
         public bool TryResolve(double offset, double minimumOffset, double maximumOffset, out double targetOffset)
         {
             targetOffset = Math.Clamp(target, minimumOffset, maximumOffset);
             return Math.Abs(targetOffset - offset) >= 0.5;
         }
+
 
         public bool TryResolveAdjacent(double offset, int pageDelta, double minimumOffset, double maximumOffset, out double targetOffset)
         {

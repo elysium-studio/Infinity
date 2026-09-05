@@ -1,13 +1,3 @@
-using Elysium.Platform.Abstractions;
-using Infinity.Application.Abstractions;
-using Infinity.Platform.Abstractions;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Hosting;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Media.Imaging;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -16,20 +6,29 @@ using System.Numerics;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
+using Elysium.Platform.Abstractions;
+using Infinity.Application.Abstractions;
+using Infinity.Platform.Abstractions;
+using Microsoft.Extensions.Logging;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Hosting;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Foundation;
 using Windows.Graphics;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed partial class DesktopScrollPreviewView :
-    UserControl
+public sealed partial class DesktopScrollPreviewView : UserControl
 {
     private const string ApplicationPickerDragProperty = "Infinity.ApplicationPin.Identifier";
     private const double TopCommandMargin = 32;
     private const double ClockTopMargin = 32;
     private const double SearchWithClockTopMargin = 144;
     private const double SettingsTopMargin = 24;
-
     private readonly IWindowPreviewSurface windowPreviewSurface;
     private readonly IWindowCollection windowCollection;
     private readonly IPanState panState;
@@ -73,7 +72,6 @@ public sealed partial class DesktopScrollPreviewView :
     public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IPanState panState, IPager pager, IScroller scroller, IWorkspace workspace, IScrollInputSuppression scrollInputSuppression, IDesktopBackgroundSource backgroundSource, DesktopOverviewConfiguration overviewConfiguration, DesktopOverviewForegroundThemeResolver foregroundThemeResolver, DesktopScrollPreviewAnimator animator, DesktopOverviewChromeAnimator chromeAnimator, DesktopOverviewClockController clockController, DesktopOverviewLayoutPresenter layoutPresenter, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationDockViewModel applicationDock, DesktopApplicationDockContextMenuBuilder applicationDockContextMenuBuilder, DesktopApplicationDockPressAnimator applicationDockPressAnimator, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator, DesktopOverviewInputController inputController, DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator, ILogger<DesktopScrollPreviewView> logger)
     {
         InitializeComponent();
-
         this.windowPreviewSurface = windowPreviewSurface;
         this.windowCollection = windowCollection;
         this.panState = panState;
@@ -101,7 +99,6 @@ public sealed partial class DesktopScrollPreviewView :
         ApplicationDock = applicationDock;
         this.applicationDockContextMenuBuilder = applicationDockContextMenuBuilder;
         this.applicationDockPressAnimator = applicationDockPressAnimator;
-
         this.pageStrip.PageInvoked += HandlePageInvoked;
         this.pageStrip.ReorderPreviewChanged += HandlePageReorderPreviewChanged;
         this.previews.WindowInvoked += HandleWindowInvoked;
@@ -109,16 +106,14 @@ public sealed partial class DesktopScrollPreviewView :
         this.inputController.WindowInvoked += HandleWindowInvoked;
         ApplicationPickerFlyout.Opened += HandleApplicationPickerOpened;
         ApplicationPickerFlyout.Closed += HandleApplicationPickerClosed;
-        ApplicationResultsList.AddHandler(PointerWheelChangedEvent,
-            new PointerEventHandler(HandleApplicationResultsPointerWheelChanged),
-            true);
+        ApplicationResultsList.AddHandler(PointerWheelChangedEvent, new PointerEventHandler(HandleApplicationResultsPointerWheelChanged), true);
         AttachApplicationDockPressHandlers(AllApplicationsButton);
-
         ElementCompositionPreview.SetIsTranslationEnabled(PreviewSurface, true);
         ElementCompositionPreview.SetIsTranslationEnabled(ApplicationDockSurface, true);
-        ApplicationDockSurface.Shadow = new ThemeShadow();
-        ApplicationDockSurface.Translation = new Vector3(0, 0, 64);
+        ApplicationDockSurface.Shadow = new();
+        ApplicationDockSurface.Translation = new(0, 0, 64);
     }
+
 
     public event EventHandler? BackgroundInvoked;
 
@@ -140,6 +135,7 @@ public sealed partial class DesktopScrollPreviewView :
 
     public DesktopApplicationDockViewModel ApplicationDock { get; }
 
+
     public Visibility ToVisibility(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
 
     public static Visibility ToStaticVisibility(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
@@ -156,16 +152,16 @@ public sealed partial class DesktopScrollPreviewView :
         }
 
         WriteableBitmap bitmap = new(icon.Width, icon.Height);
-
         using Stream stream = bitmap.PixelBuffer.AsStream();
         stream.Write(icon.Pixels);
         return bitmap;
     }
 
+
 #if DEBUG
     internal void OpenApplicationPickerForDebug() => _ = OpenApplicationPickerAsync(ApplicationDockSurface, new DesktopApplicationTarget(pager.CurrentPage));
-#endif
 
+#endif
     public void Prepare(nint ownerWindowHandle, RectInt32 overlayBounds, RectInt32 monitorBounds)
     {
         if (!DispatcherQueue.HasThreadAccess)
@@ -181,7 +177,6 @@ public sealed partial class DesktopScrollPreviewView :
         pageStrip.SetMonitorBounds(monitorBounds.X, monitorBounds.Y, monitorBounds.Width, monitorBounds.Height);
         bool originChanged = RefreshMonitorOrigin();
         ApplyChromeSettings();
-
         if (overviewConfiguration.ShowClock)
         {
             clockController.Start(DispatcherQueue);
@@ -190,21 +185,19 @@ public sealed partial class DesktopScrollPreviewView :
         {
             clockController.Stop();
         }
+
         cursorConfinement.SetOwner(ownerWindowHandle);
         TopChromeSurface.UpdateLayout();
         chromeAnimator.ResetTopChrome(TopChromeSurface);
-
         if (!isRunning)
         {
             isRunning = true;
             spacingProgress = 1;
-
             SubscribeEvents();
             pageStrip.Start(PageCanvas, PageShadowCanvas, PageTitleCanvas, PreviewSurface, animator.Scale);
             snapInteractionCoordinator.Start(monitorOriginX, monitorOriginY);
             Synchronise();
             QueueAdaptiveForegroundRefresh();
-
             SetInteractionEnabled(false);
             Opacity = 1;
         }
@@ -214,10 +207,9 @@ public sealed partial class DesktopScrollPreviewView :
             QueueAdaptiveForegroundRefresh();
         }
 
-        // Refresh eligibility before resuming sessions, including after the
-        // desktop has moved to a different page while the overlay was closed.
         windowPreviewSurface.Initialize(ownerWindowHandle);
     }
+
 
     public void AnimateInward()
     {
@@ -242,38 +234,20 @@ public sealed partial class DesktopScrollPreviewView :
         ApplicationDockChrome.UpdateLayout();
         ApplicationDockList.UpdateLayout();
         chromeAnimator.AnimateDock(ApplicationDockChrome, GetApplicationDockEntranceElements());
-
         int pendingEntranceAnimations = 2;
         void CompleteEntranceAnimation()
         {
             pendingEntranceAnimations--;
-
             if (pendingEntranceAnimations == 0 && isRunning)
             {
-                DispatcherQueue.TryEnqueue(() =>
-                {
-                    if (isRunning)
-                    {
-                        ApplicationDockChrome.UpdateLayout();
-                        ApplicationDockList.UpdateLayout();
-                        SetInteractionEnabled(true);
-                    }
-                });
+                DispatcherQueue.TryEnqueue(() =>  {  if (isRunning)  {  ApplicationDockChrome.UpdateLayout();  ApplicationDockList.UpdateLayout();  SetInteractionEnabled(true);  }  });
             }
         }
 
         chromeAnimator.AnimateBottomChrome(ShortcutHintSurface, CompleteEntranceAnimation);
-
-        animator.AnimateInward(PreviewSurface, GetAnimationWidth(), GetAnimationHeight(), () =>
-        {
-            ClearLayoutTransitions();
-            if (isRunning && spacingProgress == 1)
-            {
-                pageStrip.SetHeadersVisible(overviewConfiguration.ShowPageHeaders);
-            }
-            CompleteEntranceAnimation();
-        });
+        animator.AnimateInward(PreviewSurface, GetAnimationWidth(), GetAnimationHeight(), () =>  {  ClearLayoutTransitions();  if (isRunning && spacingProgress == 1)  {  pageStrip.SetHeadersVisible(overviewConfiguration.ShowPageHeaders);  }   CompleteEntranceAnimation();  });
     }
+
 
     public void AnimateOutward(Action completed)
     {
@@ -294,6 +268,7 @@ public sealed partial class DesktopScrollPreviewView :
         pageStrip.SetHeadersVisible(false);
         chromeAnimator.AnimateTopChromeOutward(TopChromeSurface, () => BeginAnimateOutward(completed));
     }
+
 
     public void Deactivate()
     {
@@ -320,7 +295,6 @@ public sealed partial class DesktopScrollPreviewView :
         ClockSurface.RequestedTheme = ElementTheme.Default;
         ShortcutHintSurface.RequestedTheme = ElementTheme.Default;
         snapInteractionCoordinator.Stop();
-
         animator.Reset(PreviewSurface, GetAnimationWidth(), GetAnimationHeight());
         chromeAnimator.Reset(ApplicationDockChrome);
         chromeAnimator.Reset(GetApplicationDockEntranceElements());
@@ -329,9 +303,9 @@ public sealed partial class DesktopScrollPreviewView :
         UnsubscribeEvents();
         pageStrip.Stop();
         windowPreviewSurface.Clear();
-
         Opacity = 0;
     }
+
 
     private void Synchronise()
     {
@@ -344,6 +318,7 @@ public sealed partial class DesktopScrollPreviewView :
         layoutPresenter.Synchronise(PreviewBackgroundCanvas, PreviewCanvas, FocusCanvas, animator.Scale, monitorOriginX, monitorOriginY, spacingProgress);
     }
 
+
     private void RefreshLayout(TimeSpan? transitionDuration = null)
     {
         if (!isRunning)
@@ -353,15 +328,16 @@ public sealed partial class DesktopScrollPreviewView :
 
         RefreshMonitorOrigin();
         layoutPresenter.Refresh(monitorOriginX, monitorOriginY, spacingProgress, transitionDuration);
-
         snapInteractionCoordinator.Refresh();
     }
+
 
     private void ClearLayoutTransitions()
     {
         pageStrip.ClearTranslationTransitions();
         previews.ClearTranslationTransitions();
     }
+
 
     private void SetInteractionEnabled(bool value)
     {
@@ -379,10 +355,9 @@ public sealed partial class DesktopScrollPreviewView :
         ApplicationDockList.IsItemClickEnabled = dockEnabled;
         AllApplicationsButton.IsHitTestVisible = dockEnabled;
         AllApplicationsButton.IsTabStop = dockEnabled;
-
         for (int index = 0; index < ApplicationDockList.Items.Count; index++)
         {
-            if (ApplicationDockList.ContainerFromIndex(index) is Control container)
+            if (ApplicationDockList.ContainerFromIndex(index)is Control container)
             {
                 container.IsHitTestVisible = dockEnabled;
             }
@@ -392,12 +367,12 @@ public sealed partial class DesktopScrollPreviewView :
         SettingsButton.IsTabStop = value;
         pageStrip.SetInteractionEnabled(value);
         previews.SetInteractionEnabled(value);
-
         if (searchEnabled)
         {
-            _ = WindowSearchBox.Focus(Microsoft.UI.Xaml.FocusState.Programmatic);
+            _ = WindowSearchBox.Focus(FocusState.Programmatic);
         }
     }
+
 
     private void BeginAnimateOutward(Action completed)
     {
@@ -408,12 +383,10 @@ public sealed partial class DesktopScrollPreviewView :
         }
 
         RefreshLayout(animator.ExitDuration);
-
         int pendingAnimations = 2;
         void CompleteAnimation()
         {
             pendingAnimations--;
-
             if (pendingAnimations == 0)
             {
                 ClearLayoutTransitions();
@@ -421,17 +394,10 @@ public sealed partial class DesktopScrollPreviewView :
             }
         }
 
-        chromeAnimator.AnimateOutward(
-            ApplicationDockChrome,
-            GetApplicationDockEntranceElements(),
-            ShortcutHintSurface,
-            CompleteAnimation);
-
-        animator.AnimateOutward(PreviewSurface, GetAnimationWidth(), GetAnimationHeight(), () =>
-        {
-            CompleteAnimation();
-        });
+        chromeAnimator.AnimateOutward(ApplicationDockChrome, GetApplicationDockEntranceElements(), ShortcutHintSurface, CompleteAnimation);
+        animator.AnimateOutward(PreviewSurface, GetAnimationWidth(), GetAnimationHeight(), () =>  {  CompleteAnimation();  });
     }
+
 
     private double GetAnimationWidth() => workspace.Width > 0 ? workspace.Width : ActualWidth > 0 ? ActualWidth : XamlRoot?.Size.Width ?? 0;
 
@@ -443,9 +409,7 @@ public sealed partial class DesktopScrollPreviewView :
         int y = workspace.WorkAreaY;
         int offsetX = Math.Max(0, x - overlayScreenOriginX);
         int offsetY = Math.Max(0, y - overlayScreenOriginY);
-        var viewport = (x, y, offsetX, offsetY, monitorWidth, monitorHeight, GetAnimationWidth(), GetAnimationHeight());
-        // Scrolling changes window positions, not chrome geometry. Avoid XAML
-        // layout writes and native cursor-confinement updates on every tick.
+        (int X, int Y, int OffsetX, int OffsetY, int MonitorWidth, int MonitorHeight, double Width, double Height) viewport = (x, y, offsetX, offsetY, monitorWidth, monitorHeight, GetAnimationWidth(), GetAnimationHeight());
         if (appliedViewport == viewport)
         {
             return false;
@@ -457,34 +421,24 @@ public sealed partial class DesktopScrollPreviewView :
         monitorOriginY = y;
         workAreaOffsetX = offsetX;
         workAreaOffsetY = offsetY;
-        PreviewSurface.Translation = new Vector3(workAreaOffsetX, workAreaOffsetY, 0);
-        previews.SetCaptureViewport(DesktopCaptureViewport.Create(
-            monitorWidth, monitorHeight, GetAnimationWidth(), GetAnimationHeight(),
-            workAreaOffsetX, workAreaOffsetY, animator.Scale));
+        PreviewSurface.Translation = new(workAreaOffsetX, workAreaOffsetY, 0);
+        previews.SetCaptureViewport(DesktopCaptureViewport.Create(monitorWidth, monitorHeight, GetAnimationWidth(), GetAnimationHeight(), workAreaOffsetX, workAreaOffsetY, animator.Scale));
         UpdateTopCommandSurfaceLayout();
-        ShortcutHintSurface.Margin = new Thickness(0, Math.Max(0, workAreaOffsetY + workspace.Height - 60), 24, 0);
-        ApplicationDockChrome.Margin = new Thickness(0, Math.Max(0, workAreaOffsetY + workspace.Height - 88), 0, 0);
+        ShortcutHintSurface.Margin = new(0, Math.Max(0, workAreaOffsetY + workspace.Height - 60), 24, 0);
+        ApplicationDockChrome.Margin = new(0, Math.Max(0, workAreaOffsetY + workspace.Height - 88), 0, 0);
         pageStrip.SetWorkAreaOffset(workAreaOffsetX, workAreaOffsetY);
         cursorConfinement.SetWorkAreaOffsetY(workAreaOffsetY);
         snapInteractionCoordinator.UpdateMonitorOrigin(monitorOriginX, monitorOriginY);
         return changed;
     }
 
+
     private void ApplyChromeSettings()
     {
-        ApplicationDockChrome.Visibility = overviewConfiguration.ShowApplicationDock
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-        ShortcutHintSurface.Visibility = overviewConfiguration.ShowKeyboardShortcutButton
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-        ClockSurface.Visibility = overviewConfiguration.ShowClock
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-        SearchSurface.Visibility = overviewConfiguration.ShowSearchBox
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-
+        ApplicationDockChrome.Visibility = overviewConfiguration.ShowApplicationDock ? Visibility.Visible : Visibility.Collapsed;
+        ShortcutHintSurface.Visibility = overviewConfiguration.ShowKeyboardShortcutButton ? Visibility.Visible : Visibility.Collapsed;
+        ClockSurface.Visibility = overviewConfiguration.ShowClock ? Visibility.Visible : Visibility.Collapsed;
+        SearchSurface.Visibility = overviewConfiguration.ShowSearchBox ? Visibility.Visible : Visibility.Collapsed;
         if (!overviewConfiguration.ShowSearchBox && WindowSearchBox.Text.Length > 0)
         {
             WindowSearchBox.Text = string.Empty;
@@ -493,15 +447,15 @@ public sealed partial class DesktopScrollPreviewView :
         UpdateTopCommandSurfaceLayout();
     }
 
+
     private void UpdateTopCommandSurfaceLayout()
     {
-        ClockSurface.Margin = new Thickness(0, workAreaOffsetY + ClockTopMargin, 0, 0);
-        double searchTopMargin = overviewConfiguration.ShowClock
-            ? SearchWithClockTopMargin
-            : TopCommandMargin;
-        TopCommandSurface.Margin = new Thickness(0, workAreaOffsetY + searchTopMargin, 0, 0);
-        SettingsButton.Margin = new Thickness(0, workAreaOffsetY + SettingsTopMargin, 24, 0);
+        ClockSurface.Margin = new(0, workAreaOffsetY + ClockTopMargin, 0, 0);
+        double searchTopMargin = overviewConfiguration.ShowClock ? SearchWithClockTopMargin : TopCommandMargin;
+        TopCommandSurface.Margin = new(0, workAreaOffsetY + searchTopMargin, 0, 0);
+        SettingsButton.Margin = new(0, workAreaOffsetY + SettingsTopMargin, 24, 0);
     }
+
 
     private void SubscribeEvents()
     {
@@ -521,6 +475,7 @@ public sealed partial class DesktopScrollPreviewView :
         backgroundSource.BackgroundChanged += HandleDesktopBackgroundChanged;
     }
 
+
     private void UnsubscribeEvents()
     {
         if (!eventsSubscribed)
@@ -538,6 +493,7 @@ public sealed partial class DesktopScrollPreviewView :
         windowCollection.RefreshRequested -= HandleLayoutRefreshRequested;
         backgroundSource.BackgroundChanged -= HandleDesktopBackgroundChanged;
     }
+
 
     private void HandleCollectionChanged(object? sender, TrackedWindow trackedWindow) => QueueSynchronise();
 
@@ -570,37 +526,24 @@ public sealed partial class DesktopScrollPreviewView :
         _ = ResolveAdaptiveForegroundsAsync(generation);
     }
 
+
     private async Task ResolveAdaptiveForegroundsAsync(int generation)
     {
         ElementTheme settingsTheme;
         ElementTheme clockTheme;
         ElementTheme shortcutTheme;
-
         try
         {
             double rasterizationScale = XamlRoot?.RasterizationScale ?? 1;
             DesktopBackground background = backgroundSource.GetBackground();
-            Windows.Foundation.Point settingsPoint = GetMonitorPoint(SettingsButton, rasterizationScale);
-            Task<ElementTheme> settingsThemeTask = foregroundThemeResolver.ResolveAsync(overviewConfiguration.Backdrop,
-                background,
-                monitorWidth,
-                monitorHeight,
-                settingsPoint,
-                WallpaperContrastTint.Background,
-                ActualTheme);
+            Point settingsPoint = GetMonitorPoint(SettingsButton, rasterizationScale);
+            Task<ElementTheme> settingsThemeTask = foregroundThemeResolver.ResolveAsync(overviewConfiguration.Backdrop, background, monitorWidth, monitorHeight, settingsPoint, WallpaperContrastTint.Background, ActualTheme);
             Task<ElementTheme> shortcutThemeTask;
             Task<ElementTheme> clockThemeTask;
-
             if (overviewConfiguration.ShowClock)
             {
-                Windows.Foundation.Point clockPoint = GetMonitorPoint(ClockSurface, rasterizationScale);
-                clockThemeTask = foregroundThemeResolver.ResolveAsync(overviewConfiguration.Backdrop,
-                    background,
-                    monitorWidth,
-                    monitorHeight,
-                    clockPoint,
-                    WallpaperContrastTint.Background,
-                    ActualTheme);
+                Point clockPoint = GetMonitorPoint(ClockSurface, rasterizationScale);
+                clockThemeTask = foregroundThemeResolver.ResolveAsync(overviewConfiguration.Backdrop, background, monitorWidth, monitorHeight, clockPoint, WallpaperContrastTint.Background, ActualTheme);
             }
             else
             {
@@ -609,19 +552,14 @@ public sealed partial class DesktopScrollPreviewView :
 
             if (overviewConfiguration.ShowKeyboardShortcutButton)
             {
-                Windows.Foundation.Point shortcutPoint = GetMonitorPoint(ShortcutHintSurface, rasterizationScale);
-                shortcutThemeTask = foregroundThemeResolver.ResolveAsync(overviewConfiguration.Backdrop,
-                    background,
-                    monitorWidth,
-                    monitorHeight,
-                    shortcutPoint,
-                    WallpaperContrastTint.Background,
-                    ActualTheme);
+                Point shortcutPoint = GetMonitorPoint(ShortcutHintSurface, rasterizationScale);
+                shortcutThemeTask = foregroundThemeResolver.ResolveAsync(overviewConfiguration.Backdrop, background, monitorWidth, monitorHeight, shortcutPoint, WallpaperContrastTint.Background, ActualTheme);
             }
             else
             {
                 shortcutThemeTask = Task.FromResult(ActualTheme);
             }
+
             settingsTheme = await settingsThemeTask;
             clockTheme = await clockThemeTask;
             shortcutTheme = await shortcutThemeTask;
@@ -640,12 +578,13 @@ public sealed partial class DesktopScrollPreviewView :
         ApplyAdaptiveForegrounds(generation, settingsTheme, clockTheme, shortcutTheme);
     }
 
-    private Windows.Foundation.Point GetMonitorPoint(FrameworkElement element, double rasterizationScale)
+
+    private Point GetMonitorPoint(FrameworkElement element, double rasterizationScale)
     {
-        Windows.Foundation.Point center = element.TransformToVisual(this).TransformPoint(
-            new Windows.Foundation.Point(element.ActualWidth / 2, element.ActualHeight / 2));
-        return new Windows.Foundation.Point(center.X * rasterizationScale, center.Y * rasterizationScale);
+        Point center = element.TransformToVisual(this).TransformPoint(new Point(element.ActualWidth / 2, element.ActualHeight / 2));
+        return new(center.X * rasterizationScale, center.Y * rasterizationScale);
     }
+
 
     private void ApplyAdaptiveForegrounds(int generation, ElementTheme settingsTheme, ElementTheme clockTheme, ElementTheme shortcutTheme)
     {
@@ -657,6 +596,7 @@ public sealed partial class DesktopScrollPreviewView :
         }
     }
 
+
     private void HandleOffsetChanged()
     {
         if (DispatcherQueue.HasThreadAccess)
@@ -665,22 +605,17 @@ public sealed partial class DesktopScrollPreviewView :
             return;
         }
 
-        // The scroll worker can advance faster than XAML can render. Keep one
-        // pending refresh of the latest offset instead of building a backlog.
         if (Interlocked.Exchange(ref scrollRefreshQueued, 1) != 0)
         {
             return;
         }
 
-        if (!DispatcherQueue.TryEnqueue(() =>
-        {
-            Interlocked.Exchange(ref scrollRefreshQueued, 0);
-            RefreshScrollLayout();
-        }))
+        if (!DispatcherQueue.TryEnqueue(() =>  {  Interlocked.Exchange(ref scrollRefreshQueued, 0);  RefreshScrollLayout();  }))
         {
             Interlocked.Exchange(ref scrollRefreshQueued, 0);
         }
     }
+
 
     private void RefreshScrollLayout()
     {
@@ -693,42 +628,40 @@ public sealed partial class DesktopScrollPreviewView :
         RefreshLayout();
     }
 
+
     private void HandleDismissSurfaceTapped(object sender, TappedRoutedEventArgs args)
     {
         args.Handled = true;
-
         Dismiss();
     }
 
-    private void HandleSettingsButtonClicked(object sender, Microsoft.UI.Xaml.RoutedEventArgs args)
+
+    private void HandleSettingsButtonClicked(object sender, RoutedEventArgs args)
     {
         ResetFilter();
         SetInteractionEnabled(false);
-
         SettingsInvoked?.Invoke(this, EventArgs.Empty);
     }
+
 
     private void HandlePageInvoked(int page)
     {
         ResetFilter();
         SetInteractionEnabled(false);
-
         PageInvoked?.Invoke(page);
     }
 
-    private void HandlePageReorderPreviewChanged(DesktopPageReorderPreviewState? state, TimeSpan? transitionDuration)
-    {
-        layoutPresenter.SetPageReorderState(state, monitorOriginX, monitorOriginY, spacingProgress, transitionDuration);
-    }
+
+    private void HandlePageReorderPreviewChanged(DesktopPageReorderPreviewState? state, TimeSpan? transitionDuration) => layoutPresenter.SetPageReorderState(state, monitorOriginX, monitorOriginY, spacingProgress, transitionDuration);
 
     private void HandleWindowInvoked(nint handle)
     {
         ResetFilter();
         previews.ClearSelection();
         SetInteractionEnabled(false);
-
         WindowInvoked?.Invoke(handle);
     }
+
 
     private void HandleWindowPositionChanged(nint handle)
     {
@@ -738,8 +671,8 @@ public sealed partial class DesktopScrollPreviewView :
         }
     }
 
-    private async void HandleAllApplicationsClicked(object sender, RoutedEventArgs args)
-        => await OpenApplicationPickerAsync(ApplicationDockSurface, new DesktopApplicationTarget(pager.CurrentPage));
+
+    private async void HandleAllApplicationsClicked(object sender, RoutedEventArgs args) => await OpenApplicationPickerAsync(ApplicationDockSurface, new DesktopApplicationTarget(pager.CurrentPage));
 
     private async Task OpenApplicationPickerAsync(FrameworkElement anchor, DesktopApplicationTarget target)
     {
@@ -751,21 +684,13 @@ public sealed partial class DesktopScrollPreviewView :
         try
         {
             await ApplicationPicker.LoadAsync(target);
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                if (!isRunning)
-                {
-                    return;
-                }
-
-                ApplicationPickerFlyout.ShowAt(anchor);
-                _ = ApplicationSearchBox.Focus(FocusState.Programmatic);
-            });
+            DispatcherQueue.TryEnqueue(() =>  {  if (!isRunning)  {  return;  }   ApplicationPickerFlyout.ShowAt(anchor);  _ = ApplicationSearchBox.Focus(FocusState.Programmatic);  });
         }
         catch (OperationCanceledException)
         {
         }
     }
+
 
     private async void HandleDockApplicationClicked(object sender, ItemClickEventArgs args)
     {
@@ -774,6 +699,7 @@ public sealed partial class DesktopScrollPreviewView :
             await LaunchApplicationAsync(item.Application, new DesktopApplicationTarget(pager.CurrentPage), hidePicker: false);
         }
     }
+
 
     private void HandleApplicationDragItemsStarting(object sender, DragItemsStartingEventArgs args)
     {
@@ -787,6 +713,7 @@ public sealed partial class DesktopScrollPreviewView :
         args.Data.Properties[ApplicationPickerDragProperty] = item.Application.Id;
     }
 
+
     private void HandleApplicationDockDragOver(object sender, DragEventArgs args)
     {
         if (!args.DataView.Properties.ContainsKey(ApplicationPickerDragProperty))
@@ -798,12 +725,10 @@ public sealed partial class DesktopScrollPreviewView :
         args.Handled = true;
     }
 
+
     private void HandleApplicationDockDrop(object sender, DragEventArgs args)
     {
-        if (!args.DataView.Properties.TryGetValue(
-                ApplicationPickerDragProperty,
-                out object? value) ||
-            value is not string applicationIdentifier)
+        if (!args.DataView.Properties.TryGetValue(ApplicationPickerDragProperty, out object? value) || value is not string applicationIdentifier)
         {
             return;
         }
@@ -813,14 +738,12 @@ public sealed partial class DesktopScrollPreviewView :
         _ = PinDroppedApplicationAsync(applicationIdentifier);
     }
 
+
     private async Task PinDroppedApplicationAsync(string applicationIdentifier)
     {
         try
         {
-            if (ApplicationPicker.TryGetApplication(
-                    applicationIdentifier,
-                    out LaunchableApplication? application) &&
-                application is not null)
+            if (ApplicationPicker.TryGetApplication(applicationIdentifier, out LaunchableApplication? application) && application is not null)
             {
                 await ApplicationDock.PinAsync(application);
             }
@@ -831,35 +754,28 @@ public sealed partial class DesktopScrollPreviewView :
         }
     }
 
-    private async void HandleApplicationDockDragItemsCompleted(
-        ListViewBase sender,
-        DragItemsCompletedEventArgs args)
-    {
-        await ApplicationDock.SaveOrderAsync();
-    }
+
+    private async void HandleApplicationDockDragItemsCompleted(ListViewBase sender, DragItemsCompletedEventArgs args) => await ApplicationDock.SaveOrderAsync();
 
     private void HandleApplicationDockButtonPointerPressed(object sender, PointerRoutedEventArgs args)
     {
-        if (GetApplicationDockIcon(sender) is FrameworkElement icon &&
-            args.GetCurrentPoint(icon).Properties.IsLeftButtonPressed)
+        if (GetApplicationDockIcon(sender)is FrameworkElement icon && args.GetCurrentPoint(icon).Properties.IsLeftButtonPressed)
         {
             applicationDockPressAnimator.Press(icon);
         }
-
     }
+
 
     private void HandleApplicationDockButtonPointerReleased(object sender, PointerRoutedEventArgs args)
     {
-        if (GetApplicationDockIcon(sender) is FrameworkElement icon)
+        if (GetApplicationDockIcon(sender)is FrameworkElement icon)
         {
             applicationDockPressAnimator.Release(icon);
         }
-
     }
 
-    private void HandleApplicationDockContainerContentChanging(
-        ListViewBase sender,
-        ContainerContentChangingEventArgs args)
+
+    private void HandleApplicationDockContainerContentChanging(ListViewBase sender, ContainerContentChangingEventArgs args)
     {
         if (args.InRecycleQueue)
         {
@@ -870,85 +786,70 @@ public sealed partial class DesktopScrollPreviewView :
 
         DetachApplicationDockPressHandlers(args.ItemContainer);
         AttachApplicationDockPressHandlers(args.ItemContainer);
-
         if (args.Item is DesktopApplicationDockItemViewModel item)
         {
             args.ItemContainer.ContextFlyout = applicationDockContextMenuBuilder.CreateUnpin(item);
         }
     }
 
+
     private void AttachApplicationDockPressHandlers(Control control)
     {
-        control.AddHandler(PointerPressedEvent,
-            new PointerEventHandler(HandleApplicationDockButtonPointerPressed),
-            true);
-        control.AddHandler(PointerReleasedEvent,
-            new PointerEventHandler(HandleApplicationDockButtonPointerReleased),
-            true);
-        control.AddHandler(PointerCanceledEvent,
-            new PointerEventHandler(HandleApplicationDockButtonPointerReleased),
-            true);
-        control.AddHandler(PointerCaptureLostEvent,
-            new PointerEventHandler(HandleApplicationDockButtonPointerReleased),
-            true);
+        control.AddHandler(PointerPressedEvent, new PointerEventHandler(HandleApplicationDockButtonPointerPressed), true);
+        control.AddHandler(PointerReleasedEvent, new PointerEventHandler(HandleApplicationDockButtonPointerReleased), true);
+        control.AddHandler(PointerCanceledEvent, new PointerEventHandler(HandleApplicationDockButtonPointerReleased), true);
+        control.AddHandler(PointerCaptureLostEvent, new PointerEventHandler(HandleApplicationDockButtonPointerReleased), true);
     }
+
 
     private void DetachApplicationDockPressHandlers(Control control)
     {
-        control.RemoveHandler(PointerPressedEvent,
-            new PointerEventHandler(HandleApplicationDockButtonPointerPressed));
-        control.RemoveHandler(PointerReleasedEvent,
-            new PointerEventHandler(HandleApplicationDockButtonPointerReleased));
-        control.RemoveHandler(PointerCanceledEvent,
-            new PointerEventHandler(HandleApplicationDockButtonPointerReleased));
-        control.RemoveHandler(PointerCaptureLostEvent,
-            new PointerEventHandler(HandleApplicationDockButtonPointerReleased));
+        control.RemoveHandler(PointerPressedEvent, new PointerEventHandler(HandleApplicationDockButtonPointerPressed));
+        control.RemoveHandler(PointerReleasedEvent, new PointerEventHandler(HandleApplicationDockButtonPointerReleased));
+        control.RemoveHandler(PointerCanceledEvent, new PointerEventHandler(HandleApplicationDockButtonPointerReleased));
+        control.RemoveHandler(PointerCaptureLostEvent, new PointerEventHandler(HandleApplicationDockButtonPointerReleased));
     }
 
-    private static FrameworkElement? GetApplicationDockIcon(object sender) =>
-        sender switch
-        {
-            ContentControl { ContentTemplateRoot: FrameworkElement icon } => icon,
-            ContentControl { Content: FrameworkElement icon } => icon,
-            _ => null
-        };
+
+    private static FrameworkElement? GetApplicationDockIcon(object sender) => sender switch
+    {
+        ContentControl { ContentTemplateRoot: FrameworkElement icon } => icon,
+        ContentControl { Content: FrameworkElement icon } => icon,
+        _ => null
+    };
 
     private FrameworkElement[] GetApplicationDockEntranceElements()
     {
         List<FrameworkElement> elements = [];
-
         for (int index = 0; index < ApplicationDockList.Items.Count; index++)
         {
-            if (ApplicationDockList.ContainerFromIndex(index) is FrameworkElement container &&
-                GetApplicationDockIcon(container) is FrameworkElement icon)
+            if (ApplicationDockList.ContainerFromIndex(index)is FrameworkElement container && GetApplicationDockIcon(container)is FrameworkElement icon)
             {
                 elements.Add(icon);
             }
         }
 
-        if (GetApplicationDockIcon(AllApplicationsButton) is FrameworkElement allApplicationsIcon)
+        if (GetApplicationDockIcon(AllApplicationsButton)is FrameworkElement allApplicationsIcon)
         {
             elements.Add(allApplicationsIcon);
         }
 
-        return [.. elements];
+        return[..elements];
     }
 
-    private void HandleApplicationPickerOpened(object? sender, object args)
-        => applicationPickerScrollSuppression ??= scrollInputSuppression.Suppress();
 
-    private void HandleApplicationPickerClosed(object? sender, object args)
-        => ReleaseApplicationPickerScrollSuppression();
+    private void HandleApplicationPickerOpened(object? sender, object args) => applicationPickerScrollSuppression ??= scrollInputSuppression.Suppress();
 
-    private static void HandleApplicationResultsPointerWheelChanged(
-        object sender,
-        PointerRoutedEventArgs args) => args.Handled = true;
+    private void HandleApplicationPickerClosed(object? sender, object args) => ReleaseApplicationPickerScrollSuppression();
+
+    private static void HandleApplicationResultsPointerWheelChanged(object sender, PointerRoutedEventArgs args) => args.Handled = true;
 
     private void ReleaseApplicationPickerScrollSuppression()
     {
         applicationPickerScrollSuppression?.Dispose();
         applicationPickerScrollSuppression = null;
     }
+
 
     private async void HandleApplicationClicked(object sender, ItemClickEventArgs args)
     {
@@ -959,6 +860,7 @@ public sealed partial class DesktopScrollPreviewView :
 
         await LaunchApplicationAsync(item.Application, ApplicationPicker.Target, hidePicker: true);
     }
+
 
     private async Task LaunchApplicationAsync(LaunchableApplication application, DesktopApplicationTarget target, bool hidePicker)
     {
@@ -974,31 +876,19 @@ public sealed partial class DesktopScrollPreviewView :
 
         applicationLaunchCancellation?.Cancel();
         applicationLaunchCancellation?.Dispose();
-        applicationLaunchCancellation = new CancellationTokenSource();
+        applicationLaunchCancellation = new();
         SetInteractionEnabled(false);
-
         try
         {
             await applicationLaunchCoordinator.LaunchAsync(application, target, monitorOriginX, monitorOriginY, applicationLaunchCancellation.Token);
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                if (isRunning)
-                {
-                    SetInteractionEnabled(true);
-                }
-            });
+            DispatcherQueue.TryEnqueue(() =>  {  if (isRunning)  {  SetInteractionEnabled(true);  }  });
         }
         catch (OperationCanceledException)
         {
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                if (isRunning)
-                {
-                    SetInteractionEnabled(true);
-                }
-            });
+            DispatcherQueue.TryEnqueue(() =>  {  if (isRunning)  {  SetInteractionEnabled(true);  }  });
         }
     }
+
 
     private async void HandleApplicationContainerContentChanging(ListViewBase sender, ContainerContentChangingEventArgs args)
     {
@@ -1015,17 +905,14 @@ public sealed partial class DesktopScrollPreviewView :
         }
     }
 
-    private void HandleWindowSearchBoxTextChanged(object sender, TextChangedEventArgs args)
-        => inputController.ApplyFilter(WindowSearchBox.Text, isRunning);
 
-    private void HandleWindowSearchBoxKeyDown(object sender, KeyRoutedEventArgs args)
-        => args.Handled = inputController.HandleKeyDown(args.Key);
+    private void HandleWindowSearchBoxTextChanged(object sender, TextChangedEventArgs args) => inputController.ApplyFilter(WindowSearchBox.Text, isRunning);
 
-    private void HandleWindowSearchBoxKeyUp(object sender, KeyRoutedEventArgs args)
-        => inputController.HandleKeyUp(args.Key);
+    private void HandleWindowSearchBoxKeyDown(object sender, KeyRoutedEventArgs args) => args.Handled = inputController.HandleKeyDown(args.Key);
 
-    private void HandleWindowSearchBoxLostFocus(object sender, RoutedEventArgs args)
-        => inputController.ResetModifiers();
+    private void HandleWindowSearchBoxKeyUp(object sender, KeyRoutedEventArgs args) => inputController.HandleKeyUp(args.Key);
+
+    private void HandleWindowSearchBoxLostFocus(object sender, RoutedEventArgs args) => inputController.ResetModifiers();
 
     private void HandleCharacterReceived(UIElement sender, CharacterReceivedRoutedEventArgs args)
     {
@@ -1041,17 +928,17 @@ public sealed partial class DesktopScrollPreviewView :
         args.Handled = true;
     }
 
+
     internal bool TryHandleGlobalKeyDown(int virtualKeyCode, bool controlDown, bool shiftDown, bool menuDown, bool windowsDown)
     {
-        if (!isRunning ||
-            ApplicationPickerFlyout.IsOpen ||
-            pageStrip.IsEditorActive)
+        if (!isRunning || ApplicationPickerFlyout.IsOpen || pageStrip.IsEditorActive)
         {
             return false;
         }
 
         return inputController.TryHandleGlobalKeyDown(virtualKeyCode, controlDown, shiftDown, menuDown, windowsDown, RemoveLastFilterCharacter, AppendFilterText, FocusWindowSearchBox);
     }
+
 
     private void FocusWindowSearchBox()
     {
@@ -1063,6 +950,7 @@ public sealed partial class DesktopScrollPreviewView :
         InputFocusRequested?.Invoke(this, EventArgs.Empty);
         _ = WindowSearchBox.Focus(FocusState.Programmatic);
     }
+
 
     private void RemoveLastFilterCharacter()
     {
@@ -1076,6 +964,7 @@ public sealed partial class DesktopScrollPreviewView :
         WindowSearchBox.SelectionStart = WindowSearchBox.Text.Length;
     }
 
+
     private void AppendFilterText(string text)
     {
         if (!overviewConfiguration.ShowSearchBox)
@@ -1087,13 +976,14 @@ public sealed partial class DesktopScrollPreviewView :
         WindowSearchBox.SelectionStart = WindowSearchBox.Text.Length;
     }
 
+
     public void Dismiss()
     {
         ResetFilter();
         SetInteractionEnabled(false);
-
         BackgroundInvoked?.Invoke(this, EventArgs.Empty);
     }
+
 
     private void HandleShortcutHintsInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
@@ -1106,6 +996,7 @@ public sealed partial class DesktopScrollPreviewView :
         args.Handled = true;
     }
 
+
     public bool TryCancelEditor() => pageStrip.TryCancelEditor();
 
     public bool TryClearWindowSelection() => previews.TryClearMultiSelection();
@@ -1113,12 +1004,12 @@ public sealed partial class DesktopScrollPreviewView :
     private void ResetFilter()
     {
         inputController.Reset();
-
         if (WindowSearchBox.Text.Length > 0)
         {
             WindowSearchBox.Text = string.Empty;
         }
     }
+
 
     private void QueueSynchronise()
     {
@@ -1132,6 +1023,7 @@ public sealed partial class DesktopScrollPreviewView :
         }
     }
 
+
     private void QueueLayoutRefresh()
     {
         if (DispatcherQueue.HasThreadAccess)
@@ -1143,6 +1035,7 @@ public sealed partial class DesktopScrollPreviewView :
             DispatcherQueue.TryEnqueue(() => RefreshLayout());
         }
     }
+
 
     private void QueueWindowRefresh(TrackedWindow trackedWindow)
     {
@@ -1165,5 +1058,4 @@ public sealed partial class DesktopScrollPreviewView :
             DispatcherQueue.TryEnqueue(RefreshWindow);
         }
     }
-
 }

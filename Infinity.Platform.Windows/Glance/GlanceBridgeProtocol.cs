@@ -1,4 +1,5 @@
 using Infinity.Application.Abstractions;
+
 namespace Infinity.Platform.Windows;
 
 internal static class GlanceBridgeProtocol

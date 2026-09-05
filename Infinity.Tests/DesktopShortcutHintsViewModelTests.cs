@@ -16,27 +16,21 @@ public sealed class DesktopShortcutHintsViewModelTests
             ScrollModifierKeys = [[0x5B], [0xA2]]
         };
         DesktopShortcutHintsViewModel viewModel = new(messenger, new TestDispatcher(), settings, new TestKeyLabelProvider());
-
         Assert.Equal("Key 91", viewModel.FirstModifier);
         Assert.Equal("Key 162", viewModel.SecondModifier);
-
-        messenger.Send(new OptionsChangedEventArgs<Settings>(new Settings
-        {
-            ScrollModifierKeys = [[0xA4], [0xA0]]
-        }));
-
+        messenger.Send(new OptionsChangedEventArgs<Settings>(new Settings { ScrollModifierKeys = [[0xA4], [0xA0]] }));
         Assert.Equal("Key 164", viewModel.FirstModifier);
         Assert.Equal("Key 160", viewModel.SecondModifier);
     }
 
-    private sealed class TestDispatcher :
-        IDispatcher
+
+    private sealed class TestDispatcher : IDispatcher
     {
         public void Dispatch(Action action) => action();
     }
 
-    private sealed class TestKeyLabelProvider :
-        IKeyLabelProvider
+
+    private sealed class TestKeyLabelProvider : IKeyLabelProvider
     {
         public string GetFullLabel(int keyCode) => $"Key {keyCode}";
 

@@ -1,17 +1,15 @@
+using System;
+using System.Numerics;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
-using System;
-using System.Numerics;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed partial class TourKeyChord :
-    UserControl
+public sealed partial class TourKeyChord : UserControl
 {
     private const float CycleDuration = 4400;
-
     public static readonly DependencyProperty FirstModifierProperty = DependencyProperty.Register(nameof(FirstModifier), typeof(string), typeof(TourKeyChord), new PropertyMetadata(string.Empty));
     public static readonly DependencyProperty SecondModifierProperty = DependencyProperty.Register(nameof(SecondModifier), typeof(string), typeof(TourKeyChord), new PropertyMetadata(string.Empty));
     public static readonly DependencyProperty ActionLabelProperty = DependencyProperty.Register(nameof(ActionLabel), typeof(string), typeof(TourKeyChord), new PropertyMetadata(string.Empty));
@@ -26,41 +24,19 @@ public sealed partial class TourKeyChord :
         Unloaded += HandleUnloaded;
     }
 
-    public string FirstModifier
-    {
-        get => (string)GetValue(FirstModifierProperty);
-        set => SetValue(FirstModifierProperty, value);
-    }
 
-    public string SecondModifier
-    {
-        get => (string)GetValue(SecondModifierProperty);
-        set => SetValue(SecondModifierProperty, value);
-    }
+    public string FirstModifier { get => (string)GetValue(FirstModifierProperty); set => SetValue(FirstModifierProperty, value); }
 
-    public string ActionLabel
-    {
-        get => (string)GetValue(ActionLabelProperty);
-        set => SetValue(ActionLabelProperty, value);
-    }
+    public string SecondModifier { get => (string)GetValue(SecondModifierProperty); set => SetValue(SecondModifierProperty, value); }
 
-    public string Caption
-    {
-        get => (string)GetValue(CaptionProperty);
-        set => SetValue(CaptionProperty, value);
-    }
+    public string ActionLabel { get => (string)GetValue(ActionLabelProperty); set => SetValue(ActionLabelProperty, value); }
 
-    public bool ShowShift
-    {
-        get => (bool)GetValue(ShowShiftProperty);
-        set => SetValue(ShowShiftProperty, value);
-    }
+    public string Caption { get => (string)GetValue(CaptionProperty); set => SetValue(CaptionProperty, value); }
 
-    public bool UseMouseWheel
-    {
-        get => (bool)GetValue(UseMouseWheelProperty);
-        set => SetValue(UseMouseWheelProperty, value);
-    }
+    public bool ShowShift { get => (bool)GetValue(ShowShiftProperty); set => SetValue(ShowShiftProperty, value); }
+
+    public bool UseMouseWheel { get => (bool)GetValue(UseMouseWheelProperty); set => SetValue(UseMouseWheelProperty, value); }
+
 
     public Visibility ToVisibility(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
 
@@ -72,7 +48,6 @@ public sealed partial class TourKeyChord :
     {
         StartKeyAnimation(FirstKey, FirstAccent, 0.03f, 0.72f);
         StartKeyAnimation(SecondKey, SecondAccent, 0.08f, 0.72f);
-
         if (ShowShift)
         {
             StartKeyAnimation(ShiftKey, ShiftAccent, 0.13f, 0.72f);
@@ -89,23 +64,23 @@ public sealed partial class TourKeyChord :
         }
     }
 
+
     private void HandleUnloaded(object sender, RoutedEventArgs args)
     {
         StopAnimations(FirstKey, FirstAccent, SecondKey, SecondAccent, ShiftKey, ShiftAccent, ActionKey, ActionAccent, MouseKey, MouseAccent, MouseWheel);
-
         if (UseMouseWheel)
         {
             ElementCompositionPreview.GetElementVisual(MouseWheel).Properties.StopAnimation("Translation");
         }
     }
 
+
     private static void StartKeyAnimation(UIElement key, UIElement accent, float pressAt, float releaseAt)
     {
         Visual keyVisual = ElementCompositionPreview.GetElementVisual(key);
-        keyVisual.CenterPoint = new Vector3((float)(key.RenderSize.Width / 2), (float)(key.RenderSize.Height / 2), 0);
+        keyVisual.CenterPoint = new((float)(key.RenderSize.Width / 2), (float)(key.RenderSize.Height / 2), 0);
         Compositor compositor = keyVisual.Compositor;
         CubicBezierEasingFunction easing = CreateEasing(compositor);
-
         Vector3KeyFrameAnimation scale = compositor.CreateVector3KeyFrameAnimation();
         scale.InsertKeyFrame(0, Vector3.One);
         scale.InsertKeyFrame(pressAt, Vector3.One);
@@ -116,7 +91,6 @@ public sealed partial class TourKeyChord :
         scale.Duration = TimeSpan.FromMilliseconds(CycleDuration);
         scale.IterationBehavior = AnimationIterationBehavior.Forever;
         keyVisual.StartAnimation(nameof(Visual.Scale), scale);
-
         Visual accentVisual = ElementCompositionPreview.GetElementVisual(accent);
         ScalarKeyFrameAnimation opacity = compositor.CreateScalarKeyFrameAnimation();
         opacity.InsertKeyFrame(0, 0);
@@ -129,6 +103,7 @@ public sealed partial class TourKeyChord :
         opacity.IterationBehavior = AnimationIterationBehavior.Forever;
         accentVisual.StartAnimation(nameof(Visual.Opacity), opacity);
     }
+
 
     private void StartWheelAnimation()
     {
@@ -148,6 +123,7 @@ public sealed partial class TourKeyChord :
         movement.IterationBehavior = AnimationIterationBehavior.Forever;
         visual.Properties.StartAnimation("Translation", movement);
     }
+
 
     private static void StopAnimations(params UIElement[] elements)
     {

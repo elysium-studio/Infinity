@@ -4,6 +4,7 @@ public interface IScrollPresentationSession
 {
     bool IsActive { get; }
 
+
     void Begin();
 
     void End();

@@ -4,9 +4,7 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Application;
 
-public sealed class ModifiedScrollInput(IPointerInputSource pointer,
-    IModifierKeyState modifierKeyState) :
-    IScrollInputSource
+public sealed class ModifiedScrollInput(IPointerInputSource pointer, IModifierKeyState modifierKeyState) : IScrollInputSource
 {
     private bool isStarted;
 
@@ -29,6 +27,7 @@ public sealed class ModifiedScrollInput(IPointerInputSource pointer,
         pointer.MiddleButtonClicked += HandleMiddleButtonClicked;
     }
 
+
     public void Stop()
     {
         if (!isStarted)
@@ -41,6 +40,7 @@ public sealed class ModifiedScrollInput(IPointerInputSource pointer,
         pointer.ScrollVelocityIdle -= HandleScrollVelocityIdle;
         pointer.MiddleButtonClicked -= HandleMiddleButtonClicked;
     }
+
 
     private void HandleScrollDelta(int delta) => ScrollDeltaReceived?.Invoke(delta);
 

@@ -3,10 +3,7 @@ using System.ComponentModel;
 
 namespace Infinity.Shell;
 
-public interface ISettingViewModel :
-    IEnumerable,
-    IDisposable,
-    INotifyPropertyChanged
+public interface ISettingViewModel : IEnumerable, IDisposable, INotifyPropertyChanged
 {
     IReadOnlyList<ISettingViewModel> Children => [];
 

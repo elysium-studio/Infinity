@@ -10,16 +10,18 @@ public sealed class PointerInputSourceTests
     public void ModifiedMiddleButtonIsHandledBeforeRaisingTrigger()
     {
         TestMouseInputSource mouse = new();
-        TestModifierKeyState modifiers = new() { IsActive = true };
+        TestModifierKeyState modifiers = new()
+        {
+            IsActive = true
+        };
         using PointerInputSource pointer = new(mouse, modifiers, new ScrollPresentationSession(), new ScrollInputSuppression());
         int triggers = 0;
         pointer.MiddleButtonClicked += () => triggers++;
-
         MouseButtonEventArgs args = mouse.RaiseMiddleButtonPressed();
-
         Assert.True(args.Handled);
         Assert.Equal(1, triggers);
     }
+
 
     [Fact]
     public void UnmodifiedMiddleButtonRemainsAvailableToWindows()
@@ -29,12 +31,11 @@ public sealed class PointerInputSourceTests
         using PointerInputSource pointer = new(mouse, modifiers, new ScrollPresentationSession(), new ScrollInputSuppression());
         int triggers = 0;
         pointer.MiddleButtonClicked += () => triggers++;
-
         MouseButtonEventArgs args = mouse.RaiseMiddleButtonPressed();
-
         Assert.False(args.Handled);
         Assert.Equal(0, triggers);
     }
+
 
     [Fact]
     public void UnmodifiedWheelIsCapturedWhilePresentationIsActive()
@@ -46,12 +47,11 @@ public sealed class PointerInputSourceTests
         int receivedDelta = 0;
         pointer.ScrollDeltaReceived += delta => receivedDelta = delta;
         presentation.Begin();
-
         MouseWheelEventArgs args = mouse.RaiseWheelScrolled(120);
-
         Assert.True(args.Handled);
         Assert.Equal(120, receivedDelta);
     }
+
 
     [Fact]
     public void UnmodifiedWheelRemainsAvailableWhenPresentationIsInactive()
@@ -61,12 +61,11 @@ public sealed class PointerInputSourceTests
         using PointerInputSource pointer = new(mouse, modifiers, new ScrollPresentationSession(), new ScrollInputSuppression());
         int triggers = 0;
         pointer.ScrollDeltaReceived += _ => triggers++;
-
         MouseWheelEventArgs args = mouse.RaiseWheelScrolled(120);
-
         Assert.False(args.Handled);
         Assert.Equal(0, triggers);
     }
+
 
     [Fact]
     public void SuppressedWheelRemainsAvailableWhilePresentationIsActive()
@@ -80,36 +79,53 @@ public sealed class PointerInputSourceTests
         int triggers = 0;
         pointer.ScrollDeltaReceived += _ => triggers++;
         presentation.Begin();
-
         MouseWheelEventArgs args = mouse.RaiseWheelScrolled(120);
-
         Assert.False(args.Handled);
         Assert.Equal(0, triggers);
     }
 
-    private sealed class TestMouseInputSource :
-        IMouseInputSource
+
+    private sealed class TestMouseInputSource : IMouseInputSource
     {
         public event Action? MiddleButtonDown;
+
         public event EventHandler<MouseButtonEventArgs>? MiddleButtonPressed;
 
         event Action? IMouseInputSource.LeftButtonDown
         {
-            add { }
-            remove { }
+            add
+            {
+            }
+
+            remove
+            {
+            }
         }
+
 
         event Action? IMouseInputSource.RightButtonDown
         {
-            add { }
-            remove { }
+            add
+            {
+            }
+
+            remove
+            {
+            }
         }
+
 
         event EventHandler<MouseMoveEventArgs>? IMouseInputSource.MouseMoved
         {
-            add { }
-            remove { }
+            add
+            {
+            }
+
+            remove
+            {
+            }
         }
+
 
         public event EventHandler<MouseWheelEventArgs>? WheelScrolled;
 
@@ -117,7 +133,6 @@ public sealed class PointerInputSourceTests
         {
             MouseButtonEventArgs args = new();
             MiddleButtonPressed?.Invoke(this, args);
-
             if (!args.Handled)
             {
                 MiddleButtonDown?.Invoke();
@@ -126,6 +141,7 @@ public sealed class PointerInputSourceTests
             return args;
         }
 
+
         public MouseWheelEventArgs RaiseWheelScrolled(int delta)
         {
             MouseWheelEventArgs args = new(delta);
@@ -133,23 +149,32 @@ public sealed class PointerInputSourceTests
             return args;
         }
 
+
         public void Dispose() => GC.SuppressFinalize(this);
     }
 
-    private sealed class TestModifierKeyState :
-        IModifierKeyState
+
+    private sealed class TestModifierKeyState : IModifierKeyState
     {
         event Action<bool>? IModifierKeyState.StateChanged
         {
-            add { }
-            remove { }
+            add
+            {
+            }
+
+            remove
+            {
+            }
         }
 
+
         public bool IsActive { get; set; }
+
 
         public void SetKeys(List<List<int>> combinations)
         {
         }
+
 
         public void Dispose() => GC.SuppressFinalize(this);
     }

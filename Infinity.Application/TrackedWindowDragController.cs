@@ -4,11 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public sealed class TrackedWindowDragController(IWindowStore store,
-    IScroller scroller,
-    IWindowResizeSynchronizer resizeSynchronizer,
-    ILogger<TrackedWindowDragController> logger) :
-    ITrackedWindowDragController
+public sealed class TrackedWindowDragController(IWindowStore store, IScroller scroller, IWindowResizeSynchronizer resizeSynchronizer, ILogger<TrackedWindowDragController> logger) : ITrackedWindowDragController
 {
     private readonly Lock syncRoot = new();
     private DragSession? session;
@@ -23,6 +19,7 @@ public sealed class TrackedWindowDragController(IWindowStore store,
             }
         }
     }
+
 
     public bool Begin(IntPtr windowHandle)
     {
@@ -46,6 +43,7 @@ public sealed class TrackedWindowDragController(IWindowStore store,
         return true;
     }
 
+
     public bool MoveTo(IntPtr windowHandle, double canvasX, double canvasY)
     {
         if (!TryGetDragWindow(windowHandle, out TrackedWindow? trackedWindow) || trackedWindow is null || !TryRound(canvasX, out int roundedCanvasX) || !TryRound(canvasY, out int roundedCanvasY))
@@ -55,10 +53,10 @@ public sealed class TrackedWindowDragController(IWindowStore store,
 
         trackedWindow.CanvasX = roundedCanvasX;
         trackedWindow.CanvasY = roundedCanvasY;
-
         scroller.Reposition();
         return true;
     }
+
 
     public bool MoveAndResize(IntPtr windowHandle, double canvasX, double canvasY, double width, double height)
     {
@@ -68,16 +66,15 @@ public sealed class TrackedWindowDragController(IWindowStore store,
         }
 
         resizeSynchronizer.TrySynchronize(windowHandle, roundedWidth, roundedHeight);
-
         trackedWindow.CanvasX = roundedCanvasX;
         trackedWindow.CanvasY = roundedCanvasY;
         trackedWindow.Width = roundedWidth;
         trackedWindow.Height = roundedHeight;
         trackedWindow.InvalidatePlacement();
-
         scroller.Reposition();
         return true;
     }
+
 
     private bool TryGetDragWindow(IntPtr windowHandle, out TrackedWindow? trackedWindow)
     {
@@ -99,14 +96,13 @@ public sealed class TrackedWindowDragController(IWindowStore store,
         return true;
     }
 
+
     public void End(IntPtr windowHandle)
     {
         bool ended;
-
         lock (syncRoot)
         {
             ended = session is DragSession currentSession && currentSession.WindowHandle == windowHandle;
-
             if (ended)
             {
                 session = null;
@@ -122,10 +118,10 @@ public sealed class TrackedWindowDragController(IWindowStore store,
         logger.LogDebug("Tracked window drag ended for {Handle}", windowHandle);
     }
 
+
     private static bool TryRound(double value, out int roundedValue)
     {
         double rounded = Math.Round(value);
-
         if (!double.IsFinite(rounded) || rounded is < int.MinValue or > int.MaxValue)
         {
             roundedValue = 0;
@@ -135,6 +131,7 @@ public sealed class TrackedWindowDragController(IWindowStore store,
         roundedValue = (int)rounded;
         return true;
     }
+
 
     private readonly record struct DragSession(IntPtr WindowHandle);
 }

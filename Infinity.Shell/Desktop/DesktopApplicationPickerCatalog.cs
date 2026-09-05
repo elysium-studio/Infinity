@@ -15,10 +15,9 @@ public sealed class DesktopApplicationPickerCatalog(IApplicationCatalog applicat
         }
 
         await loadGate.WaitAsync(cancellationToken);
-
         try
         {
-            applications ??= [.. await applicationCatalog.GetApplicationsAsync(cancellationToken)];
+            applications ??= [..await applicationCatalog.GetApplicationsAsync(cancellationToken)];
             return applications;
         }
         finally
@@ -27,6 +26,6 @@ public sealed class DesktopApplicationPickerCatalog(IApplicationCatalog applicat
         }
     }
 
-    public Task<ApplicationIcon?> GetIconAsync(LaunchableApplication application, CancellationToken cancellationToken = default) =>
-        applicationCatalog.GetIconAsync(application, cancellationToken);
+
+    public Task<ApplicationIcon?> GetIconAsync(LaunchableApplication application, CancellationToken cancellationToken = default) => applicationCatalog.GetIconAsync(application, cancellationToken);
 }

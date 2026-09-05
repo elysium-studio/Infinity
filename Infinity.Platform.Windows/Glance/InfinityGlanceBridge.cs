@@ -1,16 +1,14 @@
-using Infinity.Application.Abstractions;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using System.IO.Pipes;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using Infinity.Application.Abstractions;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Infinity.Platform.Windows;
 
-public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
-    BackgroundService,
-    IInfinityGlanceBridge
+public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) : BackgroundService, IInfinityGlanceBridge
 {
     private readonly Lock synchronization = new();
     private readonly SemaphoreSlim updateSignal = new(0, 1);
@@ -34,6 +32,7 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
         }
     }
 
+
     public event EventHandler<InfinityGlanceAvailabilityChangedEventArgs>? AvailabilityChanged;
 
     public event EventHandler<InfinityGlanceMessageReceivedEventArgs>? MessageReceived;
@@ -48,26 +47,25 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
         SignalUpdate();
     }
 
+
     public void SetPageNavigationSurfaceVisible(InfinityPageNavigationSurface surface, bool isVisible)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(surface, InfinityPageNavigationSurface.None);
-
         if (TrySetPageNavigationSurfaceVisibility(surface, isVisible))
         {
             SignalUpdate();
         }
     }
 
+
     internal bool TrySetPageNavigationSurfaceVisibility(InfinityPageNavigationSurface surface, bool isVisible)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(surface, InfinityPageNavigationSurface.None);
-
         lock (synchronization)
         {
             bool wasVisible = visibleSurfaces != InfinityPageNavigationSurface.None;
             visibleSurfaces = isVisible ? visibleSurfaces | surface : visibleSurfaces & ~surface;
             bool isNavigationVisible = visibleSurfaces != InfinityPageNavigationSurface.None;
-
             if (wasVisible == isNavigationVisible)
             {
                 return false;
@@ -79,6 +77,7 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
             return true;
         }
     }
+
 
     internal bool TrySetLatestState(InfinityPageNavigationState state)
     {
@@ -95,6 +94,7 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
         }
     }
 
+
     internal (InfinityPageNavigationState? State, bool? Visibility) TakePendingUpdates()
     {
         lock (synchronization)
@@ -107,6 +107,7 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
         }
     }
 
+
     public override void Dispose()
     {
         if (Interlocked.Exchange(ref disposed, 1) != 0)
@@ -118,6 +119,7 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
         updateSignal.Dispose();
     }
 
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
@@ -125,11 +127,10 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
             try
             {
                 using NamedPipeClientStream pipe = new(".", GlanceBridgeProtocol.PipeName, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
-
                 await pipe.ConnectAsync(stoppingToken);
                 await RunConnectionAsync(pipe, stoppingToken);
             }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            catch (OperationCanceledException)when (stoppingToken.IsCancellationRequested)
             {
                 break;
             }
@@ -149,18 +150,18 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
             {
                 await Task.Delay(300, stoppingToken);
             }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            catch (OperationCanceledException)when (stoppingToken.IsCancellationRequested)
             {
                 break;
             }
         }
     }
 
+
     private async Task RunConnectionAsync(NamedPipeClientStream pipe, CancellationToken cancellationToken)
     {
         using StreamReader reader = new(pipe, Encoding.UTF8, false, leaveOpen: true);
         using StreamWriter writer = new(pipe, new UTF8Encoding(false), leaveOpen: true);
-
         GlanceBridgeWireMessage hello = new()
         {
             Kind = "hello",
@@ -168,57 +169,50 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
             ApplicationId = GlanceBridgeProtocol.ApplicationId,
             ApplicationVersion = Assembly.GetEntryAssembly()?.GetName().Version?.ToString()
         };
-
         await WriteAsync(writer, hello, cancellationToken);
-
         using CancellationTokenSource connectionCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         Task readerTask = ReadMessagesAsync(reader, connectionCancellation.Token);
         Task writerTask = WriteUpdatesAsync(writer, connectionCancellation.Token);
         await Task.WhenAny(readerTask, writerTask);
         connectionCancellation.Cancel();
-
         try
         {
             await Task.WhenAll(readerTask, writerTask);
         }
-        catch (OperationCanceledException) when (connectionCancellation.IsCancellationRequested)
+        catch (OperationCanceledException)when (connectionCancellation.IsCancellationRequested)
         {
         }
     }
+
 
     private async Task ReadMessagesAsync(StreamReader reader, CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
         {
             string? json = await reader.ReadLineAsync(cancellationToken);
-
             if (json is null)
             {
                 return;
             }
 
             GlanceBridgeWireMessage? message = JsonSerializer.Deserialize(json, GlanceBridgeJsonContext.Default.GlanceBridgeWireMessage);
-
             if (message is { Kind: "capabilities", ProtocolVersion: GlanceBridgeProtocol.Version })
             {
                 bool available = message.Capabilities?.Contains(GlanceBridgeProtocol.PagesCapability, StringComparer.OrdinalIgnoreCase) == true;
                 UpdateAvailability(available);
-
                 if (available)
                 {
                     QueueLatestUpdates();
                 }
             }
 
-            if (message is { Kind: "event", ProtocolVersion: GlanceBridgeProtocol.Version } &&
-                !string.IsNullOrWhiteSpace(message.Capability) &&
-                !string.IsNullOrWhiteSpace(message.Topic) &&
-                message.Payload.ValueKind != JsonValueKind.Undefined)
+            if (message is { Kind: "event", ProtocolVersion: GlanceBridgeProtocol.Version } && !string.IsNullOrWhiteSpace(message.Capability) && !string.IsNullOrWhiteSpace(message.Topic) && message.Payload.ValueKind != JsonValueKind.Undefined)
             {
                 MessageReceived?.Invoke(this, new InfinityGlanceMessageReceivedEventArgs(message.Capability, message.Topic, message.Payload.GetRawText()));
             }
         }
     }
+
 
     private async Task WriteUpdatesAsync(StreamWriter writer, CancellationToken cancellationToken)
     {
@@ -226,14 +220,12 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
         {
             await updateSignal.WaitAsync(cancellationToken);
             Volatile.Write(ref updateQueued, 0);
-
             if (!IsPageNavigationAvailable)
             {
                 continue;
             }
 
             (InfinityPageNavigationState? state, bool? visibility) = TakePendingUpdates();
-
             if (visibility.HasValue)
             {
                 GlanceBridgeWireMessage visibilityMessage = new()
@@ -244,7 +236,6 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
                     Topic = GlanceBridgeProtocol.PageNavigationVisibilityTopic,
                     Payload = JsonSerializer.SerializeToElement(new InfinityPageNavigationVisibility(visibility.Value), GlanceBridgeJsonContext.Default.InfinityPageNavigationVisibility)
                 };
-
                 await WriteAsync(writer, visibilityMessage, cancellationToken);
             }
 
@@ -258,11 +249,11 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
                     Topic = GlanceBridgeProtocol.PageNavigationTopic,
                     Payload = JsonSerializer.SerializeToElement(state, GlanceBridgeJsonContext.Default.InfinityPageNavigationState)
                 };
-
                 await WriteAsync(writer, pageMessage, cancellationToken);
             }
         }
     }
+
 
     private void QueueLatestUpdates()
     {
@@ -274,6 +265,7 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
 
         SignalUpdate();
     }
+
 
     private void SignalUpdate()
     {
@@ -292,12 +284,14 @@ public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) :
         }
     }
 
+
     private static async Task WriteAsync(StreamWriter writer, GlanceBridgeWireMessage message, CancellationToken cancellationToken)
     {
         string json = JsonSerializer.Serialize(message, GlanceBridgeJsonContext.Default.GlanceBridgeWireMessage);
         await writer.WriteLineAsync(json.AsMemory(), cancellationToken);
         await writer.FlushAsync(cancellationToken);
     }
+
 
     private void UpdateAvailability(bool value)
     {

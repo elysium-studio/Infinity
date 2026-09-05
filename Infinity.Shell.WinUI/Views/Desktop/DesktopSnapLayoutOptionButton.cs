@@ -15,7 +15,6 @@ public sealed partial class DesktopSnapLayoutOptionButton : ToggleButton
         AddHandler(PointerReleasedEvent, new PointerEventHandler(HandlePointerReleased), true);
         AddHandler(PointerCanceledEvent, new PointerEventHandler(HandlePointerReleased), true);
         AddHandler(PointerCaptureLostEvent, new PointerEventHandler(HandlePointerReleased), true);
-
         PointerEntered += HandlePointerInteractionChanged;
         PointerExited += HandlePointerExited;
         Checked += HandleSelectionChanged;
@@ -24,20 +23,10 @@ public sealed partial class DesktopSnapLayoutOptionButton : ToggleButton
         KeyUp += HandleKeyUp;
     }
 
+
     public event RoutedEventHandler? InteractionStateChanged;
 
-    public DesktopSnapLayoutOptionInteractionState InteractionState =>
-        IsChecked == true
-            ? isPressed
-                ? DesktopSnapLayoutOptionInteractionState.SelectedPressed
-                : IsPointerOver
-                    ? DesktopSnapLayoutOptionInteractionState.SelectedPointerOver
-                    : DesktopSnapLayoutOptionInteractionState.Selected
-            : isPressed
-                ? DesktopSnapLayoutOptionInteractionState.Pressed
-                : IsPointerOver
-                    ? DesktopSnapLayoutOptionInteractionState.PointerOver
-                    : DesktopSnapLayoutOptionInteractionState.Normal;
+    public DesktopSnapLayoutOptionInteractionState InteractionState => IsChecked == true ? isPressed ? DesktopSnapLayoutOptionInteractionState.SelectedPressed : IsPointerOver ? DesktopSnapLayoutOptionInteractionState.SelectedPointerOver : DesktopSnapLayoutOptionInteractionState.Selected : isPressed ? DesktopSnapLayoutOptionInteractionState.Pressed : IsPointerOver ? DesktopSnapLayoutOptionInteractionState.PointerOver : DesktopSnapLayoutOptionInteractionState.Normal;
 
     private void NotifyInteractionStateChanged() => InteractionStateChanged?.Invoke(this, new RoutedEventArgs());
 
@@ -47,20 +36,22 @@ public sealed partial class DesktopSnapLayoutOptionButton : ToggleButton
         NotifyInteractionStateChanged();
     }
 
+
     private void HandlePointerReleased(object sender, PointerRoutedEventArgs args)
     {
         isPressed = false;
         NotifyInteractionStateChanged();
     }
 
-    private void HandlePointerInteractionChanged(object sender, PointerRoutedEventArgs args) =>
-        NotifyInteractionStateChanged();
+
+    private void HandlePointerInteractionChanged(object sender, PointerRoutedEventArgs args) => NotifyInteractionStateChanged();
 
     private void HandlePointerExited(object sender, PointerRoutedEventArgs args)
     {
         isPressed = false;
         NotifyInteractionStateChanged();
     }
+
 
     private void HandleSelectionChanged(object sender, RoutedEventArgs args) => NotifyInteractionStateChanged();
 
@@ -72,6 +63,7 @@ public sealed partial class DesktopSnapLayoutOptionButton : ToggleButton
             NotifyInteractionStateChanged();
         }
     }
+
 
     private void HandleKeyUp(object sender, KeyRoutedEventArgs args)
     {

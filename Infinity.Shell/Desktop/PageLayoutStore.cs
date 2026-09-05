@@ -13,7 +13,6 @@ public sealed class PageLayoutStore(IOptionsMonitor<Settings> settings, IWritabl
     {
         Settings updated = await writer.ReadAsync() ?? new Settings();
         updated.PageLayouts ??= [];
-
         if (layout == DesktopSnapLayoutKind.None)
         {
             updated.PageLayouts.Remove(page);
@@ -28,6 +27,7 @@ public sealed class PageLayoutStore(IOptionsMonitor<Settings> settings, IWritabl
         return layout;
     }
 
+
     public async Task ReorderAsync(int sourcePage, int targetPage)
     {
         if (sourcePage == targetPage)
@@ -37,18 +37,15 @@ public sealed class PageLayoutStore(IOptionsMonitor<Settings> settings, IWritabl
 
         Settings updated = await writer.ReadAsync() ?? new Settings();
         Dictionary<int, DesktopSnapLayoutKind> reorderedLayouts = [];
-
-        foreach ((int page, DesktopSnapLayoutKind layout) in updated.PageLayouts ?? [])
+        foreach ((int page, DesktopSnapLayoutKind layout)in updated.PageLayouts ?? [])
         {
             reorderedLayouts[PageReorderMapping.Map(page, sourcePage, targetPage)] = layout;
         }
 
         updated.PageLayouts = reorderedLayouts;
         await writer.WriteAsync(updated);
-
         int firstPage = Math.Min(sourcePage, targetPage);
         int lastPage = Math.Max(sourcePage, targetPage);
-
         for (int page = firstPage; page <= lastPage; page++)
         {
             LayoutChanged?.Invoke(page, reorderedLayouts.GetValueOrDefault(page));

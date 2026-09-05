@@ -1,29 +1,26 @@
+using System;
+using System.Linq;
+using System.Numerics;
 using Microsoft.UI.Composition;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using System;
-using System.Linq;
-using System.Numerics;
 using Windows.Foundation;
 using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed partial class DesktopPagePreview :
-    Button,
-    IDisposable
+public sealed partial class DesktopPagePreview : Button, IDisposable
 {
     private const float VisibleCornerRadius = 8;
     private const float ShadowDepth = 64;
     private const double DragThreshold = 4;
     private const int DraggedZIndex = 1_000_000;
-
     private static readonly TimeSpan HoverAnimationDuration = TimeSpan.FromMilliseconds(167);
-
     private readonly Border shadowHost;
     private readonly ThemeShadow pageShadow;
     private readonly Canvas wallpaperHost;
@@ -62,18 +59,17 @@ public sealed partial class DesktopPagePreview :
         this.wallpaperBrushFactory = wallpaperBrushFactory;
         visualScale = double.IsFinite(overviewScale) && overviewScale > 0 ? overviewScale : 1;
         SolidColorBrush transparentBrush = new(Color.FromArgb(0, 0, 0, 0));
-        pageShadow = new ThemeShadow();
-        shadowHost = new Border
+        pageShadow = new();
+        shadowHost = new()
         {
             Background = FluentVisualResources.GetBrush("CardBackgroundFillColorDefaultBrush", Color.FromArgb(255, 32, 32, 32)),
-            CornerRadius = new CornerRadius(VisibleCornerRadius),
+            CornerRadius = new(VisibleCornerRadius),
             IsHitTestVisible = false
         };
-
-        Padding = new Thickness(0);
+        Padding = new(0);
         Background = transparentBrush;
-        BorderThickness = new Thickness(0);
-        CornerRadius = new CornerRadius(0);
+        BorderThickness = new(0);
+        CornerRadius = new(0);
         HorizontalContentAlignment = HorizontalAlignment.Stretch;
         VerticalContentAlignment = VerticalAlignment.Stretch;
         Resources["ButtonBackgroundPointerOver"] = transparentBrush;
@@ -82,28 +78,24 @@ public sealed partial class DesktopPagePreview :
         Resources["ButtonBorderBrushPointerOver"] = transparentBrush;
         Resources["ButtonBorderBrushPressed"] = transparentBrush;
         Resources["ButtonBorderBrushDisabled"] = transparentBrush;
-
-        wallpaperHost = new Canvas
+        wallpaperHost = new()
         {
             IsHitTestVisible = false
         };
-        interactionLayer = new Border
+        interactionLayer = new()
         {
             IsHitTestVisible = false,
             Opacity = 0
         };
-        snapZones = new DesktopSnapZonePresenter(snapLayoutCatalog, visualScale);
-        TitleEditor = new DesktopPageTitleEditor(labels, snapLayoutCatalog);
-
+        snapZones = new(snapLayoutCatalog, visualScale);
+        TitleEditor = new(labels, snapLayoutCatalog);
         Grid content = new();
         content.Children.Add(wallpaperHost);
         content.Children.Add(snapZones.Host);
         content.Children.Add(interactionLayer);
         Content = content;
-
-        PageHost = new Grid();
+        PageHost = new();
         PageHost.Children.Add(this);
-
         PointerEntered += HandlePointerEntered;
         PointerExited += HandlePointerExited;
         PageHost.AddHandler(PointerPressedEvent, new PointerEventHandler(HandlePointerPressed), true);
@@ -111,7 +103,6 @@ public sealed partial class DesktopPagePreview :
         PageHost.AddHandler(PointerReleasedEvent, new PointerEventHandler(HandlePointerReleased), true);
         PageHost.AddHandler(PointerCanceledEvent, new PointerEventHandler(HandlePointerCanceled), true);
         PageHost.AddHandler(PointerCaptureLostEvent, new PointerEventHandler(HandlePointerCaptureLost), true);
-
         TitleEditor.PointerPressed += HandlePointerPressed;
         TitleEditor.PointerMoved += HandlePointerMoved;
         TitleEditor.PointerReleased += HandlePointerReleased;
@@ -121,25 +112,19 @@ public sealed partial class DesktopPagePreview :
         pageHostVisual = ElementCompositionPreview.GetElementVisual(PageHost);
         Compositor compositor = pageHostVisual.Compositor;
         pageHostVisual.Properties.InsertVector3("Translation", Vector3.Zero);
-
         wallpaperVisual = compositor.CreateSpriteVisual();
         ElementCompositionPreview.SetElementChildVisual(wallpaperHost, wallpaperVisual);
-
         ElementCompositionPreview.SetIsTranslationEnabled(shadowHost, true);
         shadowVisual = ElementCompositionPreview.GetElementVisual(shadowHost);
         shadowVisual.Properties.InsertVector3("Translation", Vector3.Zero);
-
         ElementCompositionPreview.SetIsTranslationEnabled(TitleEditor, true);
         titleVisual = ElementCompositionPreview.GetElementVisual(TitleEditor);
         titleVisual.Properties.InsertVector3("Translation", Vector3.Zero);
-
-        shadowHost.Translation = new Vector3(0, 0, ShadowDepth);
+        shadowHost.Translation = new(0, 0, ShadowDepth);
         pageVisual = ElementCompositionPreview.GetElementVisual(this);
         interactionVisual = ElementCompositionPreview.GetElementVisual(interactionLayer);
-
         ActualThemeChanged += HandleActualThemeChanged;
         ApplyInteractionState(false, false);
-
         clipGeometry = compositor.CreateRoundedRectangleGeometry();
         clip = compositor.CreateGeometricClip(clipGeometry);
         cornerRadiusExpression = compositor.CreateExpressionAnimation("Vector2(radius / scaleVisual.Scale.X, radius / scaleVisual.Scale.Y)");
@@ -148,6 +133,7 @@ public sealed partial class DesktopPagePreview :
         clipGeometry.StartAnimation(nameof(CompositionRoundedRectangleGeometry.CornerRadius), cornerRadiusExpression);
         pageVisual.Clip = clip;
     }
+
 
     public Grid PageHost { get; }
 
@@ -182,35 +168,27 @@ public sealed partial class DesktopPagePreview :
         PageHost.Height = height;
         Width = width;
         Height = height;
-
         shadowHost.Width = width * visualScale;
         shadowHost.Height = height * visualScale;
-
         wallpaperHost.Width = width;
         wallpaperHost.Height = height;
         wallpaperHost.Background = background.Fill;
-
         if (background.Wallpaper is not null)
         {
             SetWallpaperSurface(background.Wallpaper);
-            wallpaperVisual.Size = new Vector2(
-                ToFloat(wallpaperPlacement.IsValid ? wallpaperPlacement.Width : width),
-                ToFloat(wallpaperPlacement.IsValid ? wallpaperPlacement.Height : height));
-            wallpaperVisual.Offset = new Vector3(
-                ToFloat(wallpaperPlacement.IsValid ? wallpaperPlacement.X : 0),
-                ToFloat(wallpaperPlacement.IsValid ? wallpaperPlacement.Y : 0),
-                0);
+            wallpaperVisual.Size = new(ToFloat(wallpaperPlacement.IsValid ? wallpaperPlacement.Width : width), ToFloat(wallpaperPlacement.IsValid ? wallpaperPlacement.Height : height));
+            wallpaperVisual.Offset = new(ToFloat(wallpaperPlacement.IsValid ? wallpaperPlacement.X : 0), ToFloat(wallpaperPlacement.IsValid ? wallpaperPlacement.Y : 0), 0);
             wallpaperVisual.Opacity = 1;
         }
         else
         {
             wallpaperVisual.Opacity = 0;
         }
+
         snapZones.Bind(width, height);
         TitleEditor.ViewModel.ConfigureDisplay(width, height, rasterizationScale);
         TitleEditor.ViewModel.Bind(page, title, layout);
-        clipGeometry.Size = new Vector2(ToFloat(width), ToFloat(height));
-
+        clipGeometry.Size = new(ToFloat(width), ToFloat(height));
         PageHost.Opacity = 1;
         shadowHost.Opacity = 1;
         titleVisual.Opacity = 1;
@@ -220,6 +198,7 @@ public sealed partial class DesktopPagePreview :
         Opacity = 1;
     }
 
+
     public void SetScreenBounds(double x, double y, double width, double height)
     {
         ScreenX = x;
@@ -227,6 +206,7 @@ public sealed partial class DesktopPagePreview :
         ScreenWidth = width;
         ScreenHeight = height;
     }
+
 
     public void ShowSnapZones(DesktopSnapLayoutKind layout, int highlightedSlot = -1, bool animate = true) => snapZones.Show(layout, highlightedSlot, animate);
 
@@ -241,20 +221,18 @@ public sealed partial class DesktopPagePreview :
         titleVisual.Opacity = 0;
         TitleEditor.IsHitTestVisible = false;
         TitleEditor.IsEnabled = false;
-
         PageHost.IsHitTestVisible = false;
         IsHitTestVisible = false;
         Opacity = 0;
-
         ApplyInteractionState(false, false);
     }
 
+
     public void Update(double pageTranslationX, double titleTranslationX, TimeSpan? transitionDuration = null)
     {
-        pageTranslation = new Vector3(ToFloat(pageTranslationX), 0, 0);
-        shadowTranslation = new Vector3(ToFloat(titleTranslationX), 0, ShadowDepth);
-        titleTranslation = new Vector3(ToFloat(titleTranslationX), 0, 0);
-
+        pageTranslation = new(ToFloat(pageTranslationX), 0, 0);
+        shadowTranslation = new(ToFloat(titleTranslationX), 0, ShadowDepth);
+        titleTranslation = new(ToFloat(titleTranslationX), 0, 0);
         if (!transitionDuration.HasValue)
         {
             ClearTranslationTransition();
@@ -267,12 +245,14 @@ public sealed partial class DesktopPagePreview :
         StartTranslationAnimation(titleVisual, titleTranslation, transitionDuration.Value);
     }
 
+
     public void ClearTranslationTransition()
     {
-        var translations = (pageTranslation, shadowTranslation, titleTranslation);
-        // Ordinary scrolling often moves the page's canvas position only.
-        // Do not repeatedly stop/rewrite its unchanged Composition translation.
-        if (!translationAnimationRunning && appliedTranslations == translations) return;
+        (Vector3 Page, Vector3 Shadow, Vector3 Title) translations = (pageTranslation, shadowTranslation, titleTranslation);
+        if (!translationAnimationRunning && appliedTranslations == translations)
+        {
+            return;
+        }
 
         if (translationAnimationRunning)
         {
@@ -288,10 +268,10 @@ public sealed partial class DesktopPagePreview :
         appliedTranslations = translations;
     }
 
+
     public void SetInteractionEnabled(bool value)
     {
         interactionEnabled = value;
-
         if (!value)
         {
             CancelPointerOperation(true);
@@ -299,31 +279,30 @@ public sealed partial class DesktopPagePreview :
 
         PageHost.IsHitTestVisible = value;
         IsHitTestVisible = value;
-
         shadowHost.Shadow = value ? pageShadow : null;
         TitleEditor.SetInteractionEnabled(value);
-
         if (!value)
         {
             ApplyInteractionState(false, false);
         }
     }
 
+
     public void Reset()
     {
         Page = 0;
         pageTranslation = Vector3.Zero;
-        shadowTranslation = new Vector3(0, 0, ShadowDepth);
+        shadowTranslation = new(0, 0, ShadowDepth);
         titleTranslation = Vector3.Zero;
         ScreenX = 0;
         ScreenY = 0;
         ScreenWidth = 0;
         ScreenHeight = 0;
-
         TitleEditor.ViewModel.Reset();
         ClearTranslationTransition();
         Hide();
     }
+
 
     public void Dispose()
     {
@@ -333,45 +312,38 @@ public sealed partial class DesktopPagePreview :
         }
 
         disposed = true;
-
         pageHostVisual.Properties.StopAnimation("Translation");
         shadowVisual.Properties.StopAnimation("Translation");
         titleVisual.Properties.StopAnimation("Translation");
         interactionVisual.StopAnimation(nameof(Visual.Opacity));
         snapZones.Dispose();
-
         ElementCompositionPreview.SetElementChildVisual(wallpaperHost, null);
         wallpaperVisual.Brush = null;
         wallpaperBrush?.Dispose();
         wallpaperBrush = null;
         wallpaperSurface = null;
         wallpaperVisual.Dispose();
-
         CancelPointerOperation(false);
-
         PageHost.RemoveHandler(PointerPressedEvent, new PointerEventHandler(HandlePointerPressed));
         PageHost.RemoveHandler(PointerMovedEvent, new PointerEventHandler(HandlePointerMoved));
         PageHost.RemoveHandler(PointerReleasedEvent, new PointerEventHandler(HandlePointerReleased));
         PageHost.RemoveHandler(PointerCanceledEvent, new PointerEventHandler(HandlePointerCanceled));
         PageHost.RemoveHandler(PointerCaptureLostEvent, new PointerEventHandler(HandlePointerCaptureLost));
-
         TitleEditor.PointerPressed -= HandlePointerPressed;
         TitleEditor.PointerMoved -= HandlePointerMoved;
         TitleEditor.PointerReleased -= HandlePointerReleased;
         TitleEditor.PointerCanceled -= HandlePointerCanceled;
         TitleEditor.PointerCaptureLost -= HandlePointerCaptureLost;
-
         clipGeometry.StopAnimation(nameof(CompositionRoundedRectangleGeometry.CornerRadius));
         pageVisual.Clip = null;
         shadowHost.Shadow = null;
-
         TitleEditor.Dispose();
         cornerRadiusExpression.Dispose();
         clip.Dispose();
         clipGeometry.Dispose();
-
         GC.SuppressFinalize(this);
     }
+
 
     private void SetWallpaperSurface(LoadedImageSurface surface)
     {
@@ -387,25 +359,24 @@ public sealed partial class DesktopPagePreview :
         wallpaperVisual.Brush = wallpaperBrush;
     }
 
+
     private static void StartTranslationAnimation(Visual visual, Vector3 target, TimeSpan duration)
     {
         Compositor compositor = visual.Compositor;
         Vector3KeyFrameAnimation animation = compositor.CreateVector3KeyFrameAnimation();
         CubicBezierEasingFunction easing = compositor.CreateCubicBezierEasingFunction(new Vector2(0.1f, 0.9f), new Vector2(0.2f, 1));
-
         animation.Duration = duration;
         animation.InsertExpressionKeyFrame(0, "this.StartingValue");
         animation.InsertKeyFrame(1, target, easing);
-
         visual.Properties.StartAnimation("Translation", animation);
     }
+
 
     private void ApplyInteractionState(bool hovered, bool pressed, bool animate = false)
     {
         isHovered = hovered;
         isPressed = pressed;
         float targetOpacity = hovered || pressed ? 1 : 0;
-
         if (targetOpacity > 0)
         {
             string resourceKey = pressed ? "SubtleFillColorTertiaryBrush" : "SubtleFillColorSecondaryBrush";
@@ -423,12 +394,12 @@ public sealed partial class DesktopPagePreview :
         Compositor compositor = interactionVisual.Compositor;
         ScalarKeyFrameAnimation animation = compositor.CreateScalarKeyFrameAnimation();
         CubicBezierEasingFunction easing = targetOpacity > 0 ? compositor.CreateCubicBezierEasingFunction(new Vector2(0.1f, 0.9f), new Vector2(0.2f, 1)) : compositor.CreateCubicBezierEasingFunction(new Vector2(0.55f, 0.55f), new Vector2(0, 1));
-
         animation.Duration = HoverAnimationDuration;
         animation.InsertExpressionKeyFrame(0, "this.StartingValue");
         animation.InsertKeyFrame(1, targetOpacity, easing);
         interactionVisual.StartAnimation(nameof(Visual.Opacity), animation);
     }
+
 
     private void HandlePointerEntered(object sender, PointerRoutedEventArgs args) => ApplyInteractionState(true, false, true);
 
@@ -446,8 +417,7 @@ public sealed partial class DesktopPagePreview :
             return;
         }
 
-        var point = args.GetCurrentPoint(inputSource);
-
+        PointerPoint point = args.GetCurrentPoint(inputSource);
         if (!interactionEnabled || !point.Properties.IsLeftButtonPressed)
         {
             return;
@@ -460,6 +430,7 @@ public sealed partial class DesktopPagePreview :
         ApplyInteractionState(true, true, true);
     }
 
+
     private void HandlePointerMoved(object sender, PointerRoutedEventArgs args)
     {
         if (dragPointerId != args.Pointer.PointerId || dragCoordinateRoot is null)
@@ -469,19 +440,16 @@ public sealed partial class DesktopPagePreview :
 
         Point currentPoint = args.GetCurrentPoint(dragCoordinateRoot).Position;
         double horizontalDelta = currentPoint.X - dragStartPoint.X;
-
         if (!isDragging)
         {
             double verticalDelta = currentPoint.Y - dragStartPoint.Y;
             double distance = Math.Sqrt(horizontalDelta * horizontalDelta + verticalDelta * verticalDelta);
-
             if (distance < DragThreshold)
             {
                 return;
             }
 
             bool alreadyCaptured = dragCaptureElement?.PointerCaptures.Any(pointer => pointer.PointerId == args.Pointer.PointerId) == true;
-
             if (dragCaptureElement is null || (!alreadyCaptured && !dragCaptureElement.CapturePointer(args.Pointer)))
             {
                 ResetPointerOperation();
@@ -489,17 +457,16 @@ public sealed partial class DesktopPagePreview :
             }
 
             isDragging = true;
-
             Canvas.SetZIndex(PageHost, DraggedZIndex);
             Canvas.SetZIndex(ShadowHost, DraggedZIndex);
             Canvas.SetZIndex(TitleEditor, DraggedZIndex);
-
             DragStarted?.Invoke(this);
         }
 
         DragMoved?.Invoke(this, horizontalDelta, currentPoint.X);
         args.Handled = true;
     }
+
 
     private void HandlePointerReleased(object sender, PointerRoutedEventArgs args)
     {
@@ -510,7 +477,6 @@ public sealed partial class DesktopPagePreview :
 
         bool completedDrag = isDragging;
         UIElement? captureElement = dragCaptureElement;
-
         if (completedDrag)
         {
             DragCompleted?.Invoke(this);
@@ -519,12 +485,12 @@ public sealed partial class DesktopPagePreview :
         ResetPointerOperation();
         captureElement?.ReleasePointerCapture(args.Pointer);
         ApplyInteractionState(true, false, true);
-
         if (completedDrag)
         {
             args.Handled = true;
         }
     }
+
 
     private void HandlePointerCanceled(object sender, PointerRoutedEventArgs args)
     {
@@ -534,23 +500,20 @@ public sealed partial class DesktopPagePreview :
         }
 
         UIElement? captureElement = dragCaptureElement;
-
         CancelPointerOperation(true);
         captureElement?.ReleasePointerCapture(args.Pointer);
-
         args.Handled = true;
     }
+
 
     private void HandlePointerCaptureLost(object sender, PointerRoutedEventArgs args)
     {
         if (dragPointerId == args.Pointer.PointerId && ReferenceEquals(args.OriginalSource, dragCaptureElement))
         {
             bool completedDrag = isDragging && !args.GetCurrentPoint(dragCoordinateRoot ?? this).Properties.IsLeftButtonPressed;
-
             if (completedDrag)
             {
                 DragCompleted?.Invoke(this);
-
                 ResetPointerOperation();
                 ApplyInteractionState(false, false, true);
             }
@@ -561,19 +524,19 @@ public sealed partial class DesktopPagePreview :
         }
     }
 
+
     private void CancelPointerOperation(bool notify)
     {
         bool canceledDrag = isDragging;
         UIElement? captureElement = dragCaptureElement;
-
         ResetPointerOperation();
         captureElement?.ReleasePointerCaptures();
-
         if (notify && canceledDrag)
         {
             DragCanceled?.Invoke(this);
         }
     }
+
 
     private void ResetPointerOperation()
     {
@@ -581,11 +544,11 @@ public sealed partial class DesktopPagePreview :
         dragCaptureElement = null;
         dragCoordinateRoot = null;
         isDragging = false;
-
         Canvas.SetZIndex(PageHost, 0);
         Canvas.SetZIndex(ShadowHost, 0);
         Canvas.SetZIndex(TitleEditor, 0);
     }
+
 
     private bool IsTitleEditorControl(DependencyObject? source)
     {
@@ -599,6 +562,7 @@ public sealed partial class DesktopPagePreview :
 
         return false;
     }
+
 
     private void HandleActualThemeChanged(FrameworkElement sender, object args) => ApplyInteractionState(isHovered, isPressed);
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using Velopack;
 
@@ -11,7 +11,6 @@ public static class UninstallCleanup
         try
         {
             string applicationData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Infinity");
-
             if (Directory.Exists(applicationData))
             {
                 Directory.Delete(applicationData, recursive: true);

@@ -1,8 +1,8 @@
+using System;
+using System.Numerics;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Hosting;
-using System;
-using System.Numerics;
 
 namespace Infinity.Shell.WinUI;
 
@@ -19,13 +19,13 @@ public sealed class DesktopOverviewBackdropAnimator
         visual.Opacity = 0;
     }
 
+
     private static void Animate(FrameworkElement element, float target, TimeSpan duration, Vector2 firstControlPoint, Vector2 secondControlPoint)
     {
         Visual visual = ElementCompositionPreview.GetElementVisual(element);
         Compositor compositor = visual.Compositor;
         ScalarKeyFrameAnimation animation = compositor.CreateScalarKeyFrameAnimation();
         CubicBezierEasingFunction easing = compositor.CreateCubicBezierEasingFunction(firstControlPoint, secondControlPoint);
-
         animation.Duration = duration;
         animation.InsertExpressionKeyFrame(0, "this.StartingValue");
         animation.InsertKeyFrame(1, target, easing);

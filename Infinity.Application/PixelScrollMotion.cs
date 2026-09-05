@@ -2,13 +2,10 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Application;
 
-public sealed class PixelScrollMotion :
-    IDeltaScrollMotion
+public sealed class PixelScrollMotion : IDeltaScrollMotion
 {
     private const double StopThreshold = 0.02;
-
     private readonly Lock syncLock = new();
-
     private double pending;
 
     public bool IsActive
@@ -21,6 +18,7 @@ public sealed class PixelScrollMotion :
             }
         }
     }
+
 
     public void AddDelta(double pixels)
     {
@@ -35,16 +33,17 @@ public sealed class PixelScrollMotion :
         }
     }
 
+
     public double Drain()
     {
         lock (syncLock)
         {
             double step = pending;
             pending = 0;
-
             return step;
         }
     }
+
 
     public void Reset()
     {

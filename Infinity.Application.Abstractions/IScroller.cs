@@ -1,13 +1,13 @@
-﻿namespace Infinity.Application.Abstractions;
+namespace Infinity.Application.Abstractions;
 
-public interface IScroller :
-    IDisposable
+public interface IScroller : IDisposable
 {
     event EventHandler? ScrollStarted;
 
     event EventHandler? ScrollStopped;
 
     double VisualOffset { get; }
+
 
     void CancelNavigation();
 

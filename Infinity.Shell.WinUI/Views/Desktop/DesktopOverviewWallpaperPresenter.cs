@@ -1,3 +1,7 @@
+using System;
+using System.Globalization;
+using System.Numerics;
+using System.Threading.Tasks;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Graphics.Canvas.Effects;
@@ -6,16 +10,11 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Media;
-using System;
-using System.Globalization;
-using System.Numerics;
-using System.Threading.Tasks;
 using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfaceProvider wallpaperSurfaceProvider, DesktopWallpaperBrushFactory wallpaperBrushFactory, ILogger<DesktopOverviewWallpaperPresenter> logger) :
-    IDisposable
+public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfaceProvider wallpaperSurfaceProvider, DesktopWallpaperBrushFactory wallpaperBrushFactory, ILogger<DesktopOverviewWallpaperPresenter> logger) : IDisposable
 {
     private readonly DispatcherQueue dispatcherQueue = DispatcherQueue.GetForCurrentThread();
     private DesktopBackground? background;
@@ -33,7 +32,6 @@ public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfacePro
     public Task<bool> PrepareAsync(FrameworkElement compositionHost, DesktopBackground requestedBackground)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
-
         if (background == requestedBackground && visual is not null)
         {
             return Task.FromResult(true);
@@ -50,10 +48,10 @@ public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfacePro
         return pendingPreparation;
     }
 
+
     public bool Attach(FrameworkElement element)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
-
         if (visual is null)
         {
             return false;
@@ -69,6 +67,7 @@ public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfacePro
         return true;
     }
 
+
     public void Detach()
     {
         if (host is null)
@@ -79,6 +78,7 @@ public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfacePro
         ElementCompositionPreview.SetElementChildVisual(host, null);
         host = null;
     }
+
 
     public void Dispose()
     {
@@ -94,9 +94,8 @@ public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfacePro
         GC.SuppressFinalize(this);
     }
 
-    private async Task<bool> PrepareCoreAsync(FrameworkElement compositionHost,
-        DesktopBackground requestedBackground,
-        int generation)
+
+    private async Task<bool> PrepareCoreAsync(FrameworkElement compositionHost, DesktopBackground requestedBackground, int generation)
     {
         try
         {
@@ -107,25 +106,17 @@ public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfacePro
 
             LoadedImageSurface surface = await DispatchAsync(() => wallpaperSurfaceProvider.GetOrCreate(requestedBackground));
             LoadedImageSourceLoadStatus status = await wallpaperSurfaceProvider.WaitForLoadAsync(surface);
-
             if (status != LoadedImageSourceLoadStatus.Success)
             {
-                logger.LogWarning("Failed to decode desktop wallpaper {Wallpaper}: {Status}",
-                    requestedBackground.Wallpaper,
-                    status);
+                logger.LogWarning("Failed to decode desktop wallpaper {Wallpaper}: {Status}", requestedBackground.Wallpaper, status);
                 return await CommitColourAsync(compositionHost, requestedBackground, generation);
             }
 
-            return await DispatchAsync(() => CommitWallpaper(compositionHost,
-                requestedBackground,
-                generation,
-                surface));
+            return await DispatchAsync(() => CommitWallpaper(compositionHost, requestedBackground, generation, surface));
         }
         catch (Exception exception)
         {
-            logger.LogWarning(exception, "Failed to prepare desktop wallpaper {Wallpaper}",
-                requestedBackground.Wallpaper);
-
+            logger.LogWarning(exception, "Failed to prepare desktop wallpaper {Wallpaper}", requestedBackground.Wallpaper);
             try
             {
                 return await CommitColourAsync(compositionHost, requestedBackground, generation);
@@ -146,15 +137,10 @@ public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfacePro
         }
     }
 
-    private Task<bool> CommitColourAsync(FrameworkElement compositionHost,
-        DesktopBackground requestedBackground,
-        int generation) =>
-        DispatchAsync(() => CommitColour(compositionHost, requestedBackground, generation));
 
-    private bool CommitWallpaper(FrameworkElement compositionHost,
-        DesktopBackground requestedBackground,
-        int generation,
-        LoadedImageSurface surface)
+    private Task<bool> CommitColourAsync(FrameworkElement compositionHost, DesktopBackground requestedBackground, int generation) => DispatchAsync(() => CommitColour(compositionHost, requestedBackground, generation));
+
+    private bool CommitWallpaper(FrameworkElement compositionHost, DesktopBackground requestedBackground, int generation, LoadedImageSurface surface)
     {
         if (!CanCommit(generation))
         {
@@ -164,7 +150,6 @@ public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfacePro
         Visual hostVisual = ElementCompositionPreview.GetElementVisual(compositionHost);
         Compositor compositor = hostVisual.Compositor;
         CompositionSurfaceBrush newImageBrush = wallpaperBrushFactory.Create(compositor, surface);
-
         GaussianBlurEffect blurEffect = new()
         {
             BlurAmount = 30,
@@ -177,7 +162,6 @@ public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfacePro
         SpriteVisual newVisual = compositor.CreateSpriteVisual();
         newVisual.Brush = newEffectBrush;
         newVisual.RelativeSizeAdjustment = Vector2.One;
-
         Detach();
         ReleaseResources();
         imageBrush = newImageBrush;
@@ -188,9 +172,8 @@ public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfacePro
         return true;
     }
 
-    private bool CommitColour(FrameworkElement compositionHost,
-        DesktopBackground requestedBackground,
-        int generation)
+
+    private bool CommitColour(FrameworkElement compositionHost, DesktopBackground requestedBackground, int generation)
     {
         if (!CanCommit(generation))
         {
@@ -203,7 +186,6 @@ public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfacePro
         SpriteVisual newVisual = compositor.CreateSpriteVisual();
         newVisual.Brush = newColourBrush;
         newVisual.RelativeSizeAdjustment = Vector2.One;
-
         Detach();
         ReleaseResources();
         colourBrush = newColourBrush;
@@ -211,6 +193,7 @@ public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfacePro
         background = requestedBackground;
         return true;
     }
+
 
     private bool CanCommit(int generation) => !disposed && generation == preparationGeneration;
 
@@ -222,24 +205,14 @@ public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfacePro
         }
 
         TaskCompletionSource<T> completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        if (!dispatcherQueue.TryEnqueue(() =>
-        {
-            try
-            {
-                completion.TrySetResult(action());
-            }
-            catch (Exception exception)
-            {
-                completion.TrySetException(exception);
-            }
-        }))
+        if (!dispatcherQueue.TryEnqueue(() =>  {  try  {  completion.TrySetResult(action());  }  catch (Exception exception)  {  completion.TrySetException(exception);  }  }))
         {
             completion.TrySetException(new InvalidOperationException("Desktop wallpaper dispatcher is unavailable"));
         }
 
         return completion.Task;
     }
+
 
     private void ReleaseResources()
     {
@@ -261,12 +234,10 @@ public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfacePro
         background = null;
     }
 
+
     private static Color ParseColour(string? value)
     {
-        if (value is { Length: 7 } && value[0] == '#' &&
-            byte.TryParse(value.AsSpan(1, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out byte red) &&
-            byte.TryParse(value.AsSpan(3, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out byte green) &&
-            byte.TryParse(value.AsSpan(5, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out byte blue))
+        if (value is { Length: 7 } && value[0] == '#' && byte.TryParse(value.AsSpan(1, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out byte red) && byte.TryParse(value.AsSpan(3, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out byte green) && byte.TryParse(value.AsSpan(5, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out byte blue))
         {
             return Color.FromArgb(255, red, green, blue);
         }

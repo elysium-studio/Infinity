@@ -8,6 +8,7 @@ public interface IDesktopApplicationPinStore
 
     IReadOnlyList<LaunchableApplication> Applications { get; }
 
+
     Task PinAsync(LaunchableApplication application, CancellationToken cancellationToken = default);
 
     Task UnpinAsync(LaunchableApplication application, CancellationToken cancellationToken = default);

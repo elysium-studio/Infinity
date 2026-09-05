@@ -1,11 +1,9 @@
-using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
 using Infinity.Platform.Abstractions;
 
 namespace Infinity.Platform.Windows;
 
-public sealed class WindowDragGuard(IWindowEventListener listener) :
-    IWindowDragGuard
+public sealed class WindowDragGuard(IWindowEventListener listener) : IWindowDragGuard
 {
     private readonly Lock syncRoot = new();
     private readonly HashSet<nint> draggingWindows = [];
@@ -21,6 +19,7 @@ public sealed class WindowDragGuard(IWindowEventListener listener) :
         }
     }
 
+
     public bool IsAnyDragging
     {
         get
@@ -32,6 +31,7 @@ public sealed class WindowDragGuard(IWindowEventListener listener) :
         }
     }
 
+
     public nint DraggingWindow
     {
         get
@@ -42,6 +42,7 @@ public sealed class WindowDragGuard(IWindowEventListener listener) :
             }
         }
     }
+
 
     public void Start()
     {
@@ -58,6 +59,7 @@ public sealed class WindowDragGuard(IWindowEventListener listener) :
         listener.DragStarted += HandleDragStarted;
         listener.DragEnded += HandleDragEnded;
     }
+
 
     public void Stop()
     {
@@ -76,10 +78,10 @@ public sealed class WindowDragGuard(IWindowEventListener listener) :
         listener.DragEnded -= HandleDragEnded;
     }
 
+
     private void HandleDragStarted(nint windowHandle)
     {
         bool started;
-
         lock (syncRoot)
         {
             started = isStarted && draggingWindows.Add(windowHandle);
@@ -90,6 +92,7 @@ public sealed class WindowDragGuard(IWindowEventListener listener) :
             HoldStarted?.Invoke();
         }
     }
+
 
     private void HandleDragEnded(nint windowHandle)
     {

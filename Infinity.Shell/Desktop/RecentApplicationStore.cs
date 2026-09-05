@@ -5,25 +5,22 @@ using Microsoft.Extensions.Options;
 
 namespace Infinity.Shell;
 
-public sealed class RecentApplicationStore :
-    IRecentApplicationStore
+public sealed class RecentApplicationStore : IRecentApplicationStore
 {
     private const int MaximumApplications = 6;
-
     private readonly Lock syncRoot = new();
     private readonly SemaphoreSlim writeGate = new(1, 1);
     private readonly List<LaunchableApplication> applications;
     private readonly IWritableOptions<Settings> writer;
     private readonly ILogger<RecentApplicationStore> logger;
 
-    public RecentApplicationStore(IOptionsMonitor<Settings> settings,
-        IWritableOptions<Settings> writer,
-        ILogger<RecentApplicationStore> logger)
+    public RecentApplicationStore(IOptionsMonitor<Settings> settings, IWritableOptions<Settings> writer, ILogger<RecentApplicationStore> logger)
     {
-        applications = [.. (settings.CurrentValue.RecentApplications ?? []).Take(MaximumApplications)];
+        applications = [..(settings.CurrentValue.RecentApplications ?? []).Take(MaximumApplications)];
         this.writer = writer;
         this.logger = logger;
     }
+
 
     public event Action<LaunchableApplication>? ApplicationRecorded;
 
@@ -33,24 +30,23 @@ public sealed class RecentApplicationStore :
         {
             lock (syncRoot)
             {
-                return [.. applications];
+                return[..applications];
             }
         }
     }
 
+
     public async Task RecordAsync(LaunchableApplication application, CancellationToken cancellationToken = default)
     {
         IReadOnlyList<LaunchableApplication> snapshot = RecordCore(application);
-
         await writeGate.WaitAsync(cancellationToken);
-
         try
         {
             Settings updated = await writer.ReadAsync(cancellationToken) ?? new Settings();
-            updated.RecentApplications = [.. snapshot];
+            updated.RecentApplications = [..snapshot];
             await writer.WriteAsync(updated, cancellationToken);
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException)when (cancellationToken.IsCancellationRequested)
         {
             throw;
         }
@@ -64,25 +60,23 @@ public sealed class RecentApplicationStore :
         }
     }
 
+
     public void RecordForSession(LaunchableApplication application) => RecordCore(application);
 
     private IReadOnlyList<LaunchableApplication> RecordCore(LaunchableApplication application)
     {
         ArgumentNullException.ThrowIfNull(application);
-
         IReadOnlyList<LaunchableApplication> snapshot;
-
         lock (syncRoot)
         {
             applications.RemoveAll(candidate => string.Equals(candidate.Id, application.Id, StringComparison.Ordinal));
             applications.Insert(0, application);
-
             if (applications.Count > MaximumApplications)
             {
                 applications.RemoveRange(MaximumApplications, applications.Count - MaximumApplications);
             }
 
-            snapshot = [.. applications];
+            snapshot = [..applications];
         }
 
         ApplicationRecorded?.Invoke(application);

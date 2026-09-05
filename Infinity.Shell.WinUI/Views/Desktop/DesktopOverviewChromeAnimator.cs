@@ -1,9 +1,9 @@
-using Microsoft.UI.Composition;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Microsoft.UI.Composition;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Hosting;
 
 namespace Infinity.Shell.WinUI;
 
@@ -16,9 +16,7 @@ public sealed class DesktopOverviewChromeAnimator
     private static readonly TimeSpan ItemExitDuration = TimeSpan.FromMilliseconds(167);
     private static readonly TimeSpan IconInitialDelay = TimeSpan.FromMilliseconds(72);
     private static readonly TimeSpan IconStagger = TimeSpan.FromMilliseconds(20);
-
     private const float DockEntranceDistance = 96;
-
     private readonly Dictionary<FrameworkElement, Vector3> exitRestingOffsets = [];
     private int exitAnimationGeneration;
     private int topAnimationGeneration;
@@ -28,7 +26,6 @@ public sealed class DesktopOverviewChromeAnimator
     {
         exitAnimationGeneration++;
         AnimateEntrance(surface, new Vector3(0, DockEntranceDistance, 0), 1, PaneDuration, TimeSpan.Zero);
-
         for (int index = 0; index < icons.Count; index++)
         {
             TimeSpan delay = IconInitialDelay + (IconStagger * index);
@@ -36,24 +33,17 @@ public sealed class DesktopOverviewChromeAnimator
         }
     }
 
+
     public void AnimateBottomChrome(FrameworkElement surface, Action completed)
     {
         int generation = ++bottomAnimationGeneration;
         Visual visual = ElementCompositionPreview.GetElementVisual(surface);
         CompositionScopedBatch batch = visual.Compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
-        batch.Completed += (sender, args) =>
-        {
-            batch.Dispose();
-
-            if (generation == bottomAnimationGeneration)
-            {
-                completed();
-            }
-        };
-
+        batch.Completed += (sender, args) =>  {  batch.Dispose();  if (generation == bottomAnimationGeneration)  {  completed();  }  };
         AnimateEntrance(surface, new Vector3(0, DockEntranceDistance, 0), 1, PaneDuration, TimeSpan.Zero);
         batch.End();
     }
+
 
     public void ResetBottomChrome(FrameworkElement surface)
     {
@@ -61,31 +51,17 @@ public sealed class DesktopOverviewChromeAnimator
         Reset(surface);
     }
 
+
     public void AnimateTopChromeOutward(FrameworkElement surface, Action completed)
     {
         int generation = ++topAnimationGeneration;
         Visual visual = ElementCompositionPreview.GetElementVisual(surface);
         CompositionScopedBatch batch = visual.Compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
-        batch.Completed += (sender, args) =>
-        {
-            batch.Dispose();
-
-            if (generation == topAnimationGeneration)
-            {
-                completed();
-            }
-        };
-
-        AnimateExit(
-            surface,
-            new Vector3(0, -16, 0),
-            1,
-            TopChromeExitDuration,
-            TimeSpan.Zero,
-            animateScale: false,
-            animateOpacity: true);
+        batch.Completed += (sender, args) =>  {  batch.Dispose();  if (generation == topAnimationGeneration)  {  completed();  }  };
+        AnimateExit(surface, new Vector3(0, -16, 0), 1, TopChromeExitDuration, TimeSpan.Zero, animateScale: false, animateOpacity: true);
         batch.End();
     }
+
 
     public void ResetTopChrome(FrameworkElement surface)
     {
@@ -93,42 +69,25 @@ public sealed class DesktopOverviewChromeAnimator
         Reset(surface);
     }
 
-    public void AnimateOutward(
-        FrameworkElement dockSurface,
-        IReadOnlyList<FrameworkElement> icons,
-        FrameworkElement shortcutSurface,
-        Action completed)
+
+    public void AnimateOutward(FrameworkElement dockSurface, IReadOnlyList<FrameworkElement> icons, FrameworkElement shortcutSurface, Action completed)
     {
         bottomAnimationGeneration++;
         int generation = ++exitAnimationGeneration;
         Visual dockVisual = ElementCompositionPreview.GetElementVisual(dockSurface);
         CompositionScopedBatch batch = dockVisual.Compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
-        batch.Completed += (sender, args) =>
-        {
-            batch.Dispose();
-
-            if (generation == exitAnimationGeneration)
-            {
-                completed();
-            }
-        };
-
+        batch.Completed += (sender, args) =>  {  batch.Dispose();  if (generation == exitAnimationGeneration)  {  completed();  }  };
         AnimateExit(dockSurface, new Vector3(0, DockEntranceDistance, 0), 1, PaneExitDuration, TimeSpan.Zero);
         AnimateExit(shortcutSurface, new Vector3(0, DockEntranceDistance, 0), 1, PaneExitDuration, TimeSpan.Zero);
-
         for (int index = icons.Count - 1; index >= 0; index--)
         {
             int reverseIndex = icons.Count - 1 - index;
-            AnimateExit(
-                icons[index],
-                new Vector3(0, 28, 0),
-                0.72f,
-                ItemExitDuration,
-                TimeSpan.FromMilliseconds(6 * reverseIndex));
+            AnimateExit(icons[index], new Vector3(0, 28, 0), 0.72f, ItemExitDuration, TimeSpan.FromMilliseconds(6 * reverseIndex));
         }
 
         batch.End();
     }
+
 
     public void Reset(FrameworkElement element)
     {
@@ -137,7 +96,6 @@ public sealed class DesktopOverviewChromeAnimator
         visual.StopAnimation(nameof(Visual.Offset));
         visual.StopAnimation(nameof(Visual.Scale));
         visual.StopAnimation(nameof(Visual.Opacity));
-
         if (exitRestingOffsets.Remove(element, out Vector3 restingOffset))
         {
             visual.Offset = restingOffset;
@@ -147,6 +105,7 @@ public sealed class DesktopOverviewChromeAnimator
         visual.Opacity = 1;
     }
 
+
     public void Reset(IEnumerable<FrameworkElement> elements)
     {
         foreach (FrameworkElement element in elements)
@@ -155,18 +114,11 @@ public sealed class DesktopOverviewChromeAnimator
         }
     }
 
-    private void AnimateEntrance(
-        FrameworkElement element,
-        Vector3 initialOffset,
-        float initialScale,
-        TimeSpan duration,
-        TimeSpan delay,
-        bool animateScale = true,
-        bool animateOpacity = true)
+
+    private void AnimateEntrance(FrameworkElement element, Vector3 initialOffset, float initialScale, TimeSpan duration, TimeSpan delay, bool animateScale = true, bool animateOpacity = true)
     {
         Visual visual = ElementCompositionPreview.GetElementVisual(element);
         visual.StopAnimation(nameof(Visual.Offset));
-
         if (animateScale)
         {
             visual.StopAnimation(nameof(Visual.Scale));
@@ -185,11 +137,9 @@ public sealed class DesktopOverviewChromeAnimator
 
         float width = ToFloat(element.ActualWidth > 0 ? element.ActualWidth : element.Width);
         float height = ToFloat(element.ActualHeight > 0 ? element.ActualHeight : element.Height);
-        visual.CenterPoint = new Vector3(width / 2, height / 2, 0);
-
+        visual.CenterPoint = new(width / 2, height / 2, 0);
         Compositor compositor = visual.Compositor;
         CubicBezierEasingFunction easing = compositor.CreateCubicBezierEasingFunction(Vector2.Zero, new Vector2(0, 1));
-
         Vector3KeyFrameAnimation offset = compositor.CreateVector3KeyFrameAnimation();
         offset.Duration = duration;
         offset.DelayTime = delay;
@@ -197,9 +147,7 @@ public sealed class DesktopOverviewChromeAnimator
         Vector3 restingOffset = visual.Offset;
         offset.InsertKeyFrame(0, restingOffset + initialOffset);
         offset.InsertKeyFrame(1, restingOffset, easing);
-
         visual.StartAnimation(nameof(Visual.Offset), offset);
-
         if (animateScale)
         {
             Vector3KeyFrameAnimation scale = compositor.CreateVector3KeyFrameAnimation();
@@ -228,18 +176,11 @@ public sealed class DesktopOverviewChromeAnimator
         easing.Dispose();
     }
 
-    private void AnimateExit(
-        FrameworkElement element,
-        Vector3 targetOffset,
-        float targetScale,
-        TimeSpan duration,
-        TimeSpan delay,
-        bool animateScale = true,
-        bool animateOpacity = true)
+
+    private void AnimateExit(FrameworkElement element, Vector3 targetOffset, float targetScale, TimeSpan duration, TimeSpan delay, bool animateScale = true, bool animateOpacity = true)
     {
         Visual visual = ElementCompositionPreview.GetElementVisual(element);
         visual.StopAnimation(nameof(Visual.Offset));
-
         if (animateScale)
         {
             visual.StopAnimation(nameof(Visual.Scale));
@@ -252,24 +193,17 @@ public sealed class DesktopOverviewChromeAnimator
 
         Vector3 restingOffset = visual.Offset;
         exitRestingOffsets[element] = restingOffset;
-
         float width = ToFloat(element.ActualWidth > 0 ? element.ActualWidth : element.Width);
         float height = ToFloat(element.ActualHeight > 0 ? element.ActualHeight : element.Height);
-        visual.CenterPoint = new Vector3(width / 2, height / 2, 0);
-
+        visual.CenterPoint = new(width / 2, height / 2, 0);
         Compositor compositor = visual.Compositor;
-        CubicBezierEasingFunction easing = compositor.CreateCubicBezierEasingFunction(
-            new Vector2(0.55f, 0.55f),
-            new Vector2(0, 1));
-
+        CubicBezierEasingFunction easing = compositor.CreateCubicBezierEasingFunction(new Vector2(0.55f, 0.55f), new Vector2(0, 1));
         Vector3KeyFrameAnimation offset = compositor.CreateVector3KeyFrameAnimation();
         offset.Duration = duration;
         offset.DelayTime = delay;
         offset.InsertExpressionKeyFrame(0, "this.StartingValue");
         offset.InsertKeyFrame(1, restingOffset + targetOffset, easing);
-
         visual.StartAnimation(nameof(Visual.Offset), offset);
-
         if (animateScale)
         {
             Vector3KeyFrameAnimation scale = compositor.CreateVector3KeyFrameAnimation();
@@ -295,6 +229,7 @@ public sealed class DesktopOverviewChromeAnimator
         offset.Dispose();
         easing.Dispose();
     }
+
 
     private static float ToFloat(double value) => double.IsFinite(value) ? (float)Math.Clamp(value, 0, float.MaxValue) : 0;
 }

@@ -1,3 +1,7 @@
+using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using Elysium.Application;
 using Elysium.Application.Abstractions;
 using Elysium.Application.DependencyInjection;
@@ -10,11 +14,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using IApplicationLifetime = Elysium.Application.Abstractions.IApplicationLifetime;
 
 namespace Infinity.Shell.WinUI;
@@ -22,7 +21,6 @@ namespace Infinity.Shell.WinUI;
 public sealed partial class App
 {
     private readonly Lock shutdownLock = new();
-
     private DispatcherQueue? dispatcherQueue;
     private IHost? host;
     private Task? shutdownTask;
@@ -33,81 +31,40 @@ public sealed partial class App
 #if DEBUG
         UnhandledException += (_, args) => Debug.WriteLine($"Unhandled WinUI exception:{Environment.NewLine}{args.Exception}");
 #endif
-
         InitializeComponent();
     }
+
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         string applicationData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Infinity");
-
         dispatcherQueue = DispatcherQueue.GetForCurrentThread();
         IHost? startingHost = null;
         ILogger<App>? logger = null;
-
         try
         {
-            startingHost = Host.CreateDefaultBuilder()
-                .UseWritableContentRoot(applicationData)
-                .ConfigureServices(services => services
-                    .AddSingleton<IApplicationLifetime>(new ApplicationLifetime(ShutdownAsync))
-                    .AddInfinityApplication()
-                    .AddInfinityPlatform()
-                    .AddApplication()
-                    .AddPresentation()
-                    .AddModules(new ApplicationModule(applicationData, dispatcherQueue,
-                                    flush => UnhandledException += (_, args) => flush(args.Exception)),
-                                new ConfigurationModule(),
-                                new LocalizationModule(),
-                                new NavigationModule(),
-                                new DesktopSettingsModule(),
-                                new DesktopModule(),
-                                new ShellModule(),
-                                new SettingsModule(),
-                                new TourModule(),
-                                new UpdateModule(),
-                                new WindowsSettingsModule(),
-                                new WindowingModule()))
-                .Build();
-
+            startingHost = Host.CreateDefaultBuilder().UseWritableContentRoot(applicationData).ConfigureServices(services => services.AddSingleton<IApplicationLifetime>(new ApplicationLifetime(ShutdownAsync)).AddInfinityApplication().AddInfinityPlatform().AddApplication().AddPresentation().AddModules(new ApplicationModule(applicationData, dispatcherQueue, flush => UnhandledException += (_, args) => flush(args.Exception)), new ConfigurationModule(), new LocalizationModule(), new NavigationModule(), new DesktopSettingsModule(), new DesktopModule(), new ShellModule(), new SettingsModule(), new TourModule(), new UpdateModule(), new WindowsSettingsModule(), new WindowingModule())).Build();
             host = startingHost;
             logger = startingHost.Services.GetRequiredService<ILogger<App>>();
             ViewExtension.DefaultProvider = startingHost.Services;
             ViewModelExtension.DefaultProvider = startingHost.Services;
-
             DesktopOverviewView desktopOverview = startingHost.Services.GetRequiredKeyedService<DesktopOverviewView>("DesktopOverviewView");
-
             startingHost.Start();
-
 #if DEBUG
             if (Enum.TryParse(Environment.GetEnvironmentVariable("INFINITY_DEBUG_LEVEL"), true, out DebugLaunchLevel debugLevel))
             {
-                dispatcherQueue.TryEnqueue(() =>
-                {
-                    _ = debugLevel switch
-                    {
-                        DebugLaunchLevel.DesktopOverview => desktopOverview.ViewModel.OpenDesktopPreviewForDebugAsync(),
-                        DebugLaunchLevel.DesktopOverviewDark => OpenDesktopOverviewWithBackdropForDebugAsync(desktopOverview, startingHost.Services, DesktopOverviewBackdrop.Dark),
-                        DebugLaunchLevel.DesktopOverviewLight => OpenDesktopOverviewWithBackdropForDebugAsync(desktopOverview, startingHost.Services, DesktopOverviewBackdrop.Light),
-                        DebugLaunchLevel.DesktopApplicationPicker => OpenDesktopApplicationPickerForDebugAsync(desktopOverview),
-                        DebugLaunchLevel.DesktopApplicationDock => OpenDesktopApplicationDockForDebugAsync(desktopOverview),
-                        DebugLaunchLevel.Settings => startingHost.Services.GetRequiredService<INavigator>().NavigateAsync("SettingsWindow"),
-                        _ => Task.CompletedTask
-                    };
-                });
+                dispatcherQueue.TryEnqueue(() =>  {  _ = debugLevel switch  {  DebugLaunchLevel.DesktopOverview => desktopOverview.ViewModel.OpenDesktopPreviewForDebugAsync(),  DebugLaunchLevel.DesktopOverviewDark => OpenDesktopOverviewWithBackdropForDebugAsync(desktopOverview, startingHost.Services, DesktopOverviewBackdrop.Dark),  DebugLaunchLevel.DesktopOverviewLight => OpenDesktopOverviewWithBackdropForDebugAsync(desktopOverview, startingHost.Services, DesktopOverviewBackdrop.Light),  DebugLaunchLevel.DesktopApplicationPicker => OpenDesktopApplicationPickerForDebugAsync(desktopOverview),  DebugLaunchLevel.DesktopApplicationDock => OpenDesktopApplicationDockForDebugAsync(desktopOverview),  DebugLaunchLevel.Settings => startingHost.Services.GetRequiredService<INavigator>().NavigateAsync("SettingsWindow"),  _ => Task.CompletedTask  };  });
             }
-#endif
 
-            if (startingHost.Services.GetRequiredService<Settings>() is { ShowHintOnStartup: true })
+#endif
+            if (startingHost.Services.GetRequiredService<Settings>()is { ShowHintOnStartup: true })
             {
-                startupNavigationTask = NavigateToStartupTourAsync(startingHost.Services.GetRequiredService<INavigator>(),
-                    logger);
+                startupNavigationTask = NavigateToStartupTourAsync(startingHost.Services.GetRequiredService<INavigator>(), logger);
             }
         }
         catch (Exception exception)
         {
             logger?.LogCritical(exception, "Infinity failed to start");
-
             try
             {
                 startingHost?.Dispose();
@@ -122,6 +79,7 @@ public sealed partial class App
         }
     }
 
+
 #if DEBUG
     private static async Task OpenDesktopApplicationPickerForDebugAsync(DesktopOverviewView desktopOverview)
     {
@@ -129,18 +87,15 @@ public sealed partial class App
         await desktopOverview.OpenApplicationPickerForDebugAsync();
     }
 
-    private static Task OpenDesktopOverviewWithBackdropForDebugAsync(DesktopOverviewView desktopOverview,
-        IServiceProvider services,
-        DesktopOverviewBackdrop backdrop)
+
+    private static Task OpenDesktopOverviewWithBackdropForDebugAsync(DesktopOverviewView desktopOverview, IServiceProvider services, DesktopOverviewBackdrop backdrop)
     {
         services.GetRequiredService<DesktopOverviewConfiguration>().Backdrop = backdrop;
         return desktopOverview.ViewModel.OpenDesktopPreviewForDebugAsync();
     }
 
-    private static async Task OpenDesktopApplicationDockForDebugAsync(DesktopOverviewView desktopOverview)
-    {
-        await desktopOverview.ViewModel.OpenDesktopPreviewForDebugAsync();
-    }
+
+    private static async Task OpenDesktopApplicationDockForDebugAsync(DesktopOverviewView desktopOverview) => await desktopOverview.ViewModel.OpenDesktopPreviewForDebugAsync();
 
     private enum DebugLaunchLevel
     {
@@ -152,8 +107,9 @@ public sealed partial class App
         DesktopApplicationDock,
         Settings
     }
-#endif
 
+
+#endif
     private Task ShutdownAsync()
     {
         lock (shutdownLock)
@@ -162,10 +118,10 @@ public sealed partial class App
         }
     }
 
+
     private async Task ShutdownCoreAsync()
     {
         IHost? currentHost = host;
-
         if (currentHost is not null)
         {
             try
@@ -188,11 +144,10 @@ public sealed partial class App
         Current.Exit();
     }
 
+
     private Task CompleteShutdownAsync(IHost currentHost)
     {
-        DispatcherQueue currentDispatcherQueue = dispatcherQueue
-            ?? throw new InvalidOperationException("The application dispatcher is not available");
-
+        DispatcherQueue currentDispatcherQueue = dispatcherQueue ?? throw new InvalidOperationException("The application dispatcher is not available");
         if (currentDispatcherQueue.HasThreadAccess)
         {
             CompleteShutdown(currentHost);
@@ -200,25 +155,14 @@ public sealed partial class App
         }
 
         TaskCompletionSource completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        if (!currentDispatcherQueue.TryEnqueue(() =>
-        {
-            try
-            {
-                CompleteShutdown(currentHost);
-                completion.SetResult();
-            }
-            catch (Exception exception)
-            {
-                completion.SetException(exception);
-            }
-        }))
+        if (!currentDispatcherQueue.TryEnqueue(() =>  {  try  {  CompleteShutdown(currentHost);  completion.SetResult();  }  catch (Exception exception)  {  completion.SetException(exception);  }  }))
         {
             completion.SetException(new InvalidOperationException("The application dispatcher rejected the shutdown request"));
         }
 
         return completion.Task;
     }
+
 
     private void CompleteShutdown(IHost currentHost)
     {
@@ -232,6 +176,7 @@ public sealed partial class App
             Current.Exit();
         }
     }
+
 
     private static async Task NavigateToStartupTourAsync(INavigator navigator, ILogger logger)
     {

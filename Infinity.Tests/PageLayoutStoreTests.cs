@@ -14,24 +14,21 @@ public sealed class PageLayoutStoreTests
         PageLayoutStore store = new(new TestOptionsMonitor(settings), writer);
         List<(int Page, DesktopSnapLayoutKind Layout)> changes = [];
         store.LayoutChanged += (page, layout) => changes.Add((page, layout));
-
         await store.UpdateAsync(3, DesktopSnapLayoutKind.Quarters);
-
         Assert.Equal(DesktopSnapLayoutKind.Quarters, settings.PageLayouts![3]);
         Assert.Equal((3, DesktopSnapLayoutKind.Quarters), changes[^1]);
-
         await store.UpdateAsync(3, DesktopSnapLayoutKind.None);
-
         Assert.DoesNotContain(3, settings.PageLayouts);
         Assert.Equal((3, DesktopSnapLayoutKind.None), changes[^1]);
     }
+
 
     [Fact]
     public async Task ReorderMovesLayoutsWithTheirPages()
     {
         Settings settings = new()
         {
-            PageLayouts = new Dictionary<int, DesktopSnapLayoutKind>
+            PageLayouts = new()
             {
                 [0] = DesktopSnapLayoutKind.Halves,
                 [1] = DesktopSnapLayoutKind.Thirds,
@@ -39,16 +36,14 @@ public sealed class PageLayoutStoreTests
             }
         };
         PageLayoutStore store = new(new TestOptionsMonitor(settings), new TestWritableOptions(settings));
-
         await store.ReorderAsync(0, 2);
-
         Assert.Equal(DesktopSnapLayoutKind.Thirds, settings.PageLayouts![0]);
         Assert.Equal(DesktopSnapLayoutKind.Quarters, settings.PageLayouts[1]);
         Assert.Equal(DesktopSnapLayoutKind.Halves, settings.PageLayouts[2]);
     }
 
-    private sealed class TestWritableOptions(Settings settings) :
-        IWritableOptions<Settings>
+
+    private sealed class TestWritableOptions(Settings settings) : IWritableOptions<Settings>
     {
         public Task<Settings?> ReadAsync(CancellationToken cancellationToken = default) => Task.FromResult<Settings?>(settings);
 
@@ -58,11 +53,12 @@ public sealed class PageLayoutStoreTests
             return Task.CompletedTask;
         }
 
+
         public Task WriteAsync(Settings value, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
-    private sealed class TestOptionsMonitor(Settings settings) :
-        IOptionsMonitor<Settings>
+
+    private sealed class TestOptionsMonitor(Settings settings) : IOptionsMonitor<Settings>
     {
         public Settings CurrentValue => settings;
 

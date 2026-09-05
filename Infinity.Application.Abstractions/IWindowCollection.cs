@@ -1,4 +1,4 @@
-﻿namespace Infinity.Application.Abstractions;
+namespace Infinity.Application.Abstractions;
 
 public interface IWindowCollection
 {
@@ -17,6 +17,7 @@ public interface IWindowCollection
     event EventHandler RefreshRequested;
 
     IEnumerable<TrackedWindow> AllTrackedWindows { get; }
+
 
     bool TryGetTrackedWindow(IntPtr handle, out TrackedWindow? trackedWindow);
 

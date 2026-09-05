@@ -5,11 +5,7 @@ using Elysium.Presentation.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed class WelcomeViewModel(IServiceProvider provider,
-    IServiceFactory factory,
-    IMessenger messenger,
-    IDisposer disposer) : ObservableViewModel(provider, factory, messenger, disposer),
-    ITourViewModel
+public sealed class WelcomeViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer) : ObservableViewModel(provider, factory, messenger, disposer), ITourViewModel
 {
     public bool CanGoBack => false;
 

@@ -1,18 +1,16 @@
+using System;
+using System.Numerics;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Hosting;
-using System;
-using System.Numerics;
 using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class ThumbnailCompositionPreview :
-    IDisposable
+public sealed class ThumbnailCompositionPreview : IDisposable
 {
     private const float CornerRadius = 8.0f;
-
     private readonly FrameworkElement host;
     private readonly WindowCapturePreview preview;
     private readonly SpriteVisual imageVisual;
@@ -33,6 +31,7 @@ public sealed class ThumbnailCompositionPreview :
     private bool isVisible;
     private float width;
     private float height;
+    private bool squareCorners;
 
     private ThumbnailCompositionPreview(FrameworkElement host, WindowCapturePreview preview, SpriteVisual imageVisual, CompositionSurfaceBrush imageBrush, ContainerVisual rootVisual, SpriteVisual shadowVisual, CompositionColorBrush shadowSurfaceBrush, ShapeVisual shadowMaskVisual, CompositionSpriteShape shadowMaskShape, CompositionVisualSurface shadowMaskSurface, CompositionSurfaceBrush shadowMaskBrush, DropShadow shadow, CompositionRoundedRectangleGeometry shadowGeometry, CompositionRoundedRectangleGeometry roundedGeometry, CompositionGeometricClip roundedClip, ILogger logger)
     {
@@ -56,6 +55,7 @@ public sealed class ThumbnailCompositionPreview :
         preview.FrameAvailabilityChanged += HandleFrameAvailabilityChanged;
     }
 
+
     public static ThumbnailCompositionPreview? Create(WindowCapturePreviewSurface previewSurface, nint windowHandle, FrameworkElement host, ILogger logger)
     {
         if (!previewSurface.IsAvailable)
@@ -64,7 +64,6 @@ public sealed class ThumbnailCompositionPreview :
         }
 
         WindowCapturePreview? preview = previewSurface.CreatePreview(windowHandle);
-
         if (preview is null)
         {
             return null;
@@ -107,7 +106,7 @@ public sealed class ThumbnailCompositionPreview :
             shadow = compositor.CreateDropShadow();
             shadow.BlurRadius = 24;
             shadow.Color = Color.FromArgb(255, 0, 0, 0);
-            shadow.Offset = new Vector3(0, 6, 0);
+            shadow.Offset = new(0, 6, 0);
             shadow.Opacity = 0.45f;
             shadow.Mask = shadowMaskBrush;
             shadowVisual.Brush = shadowMaskBrush;
@@ -117,7 +116,6 @@ public sealed class ThumbnailCompositionPreview :
             imageVisual.Clip = roundedClip;
             rootVisual.Children.InsertAtBottom(shadowVisual);
             rootVisual.Children.InsertAtTop(imageVisual);
-
             ThumbnailCompositionPreview result = new(host, preview, imageVisual, imageBrush, rootVisual, shadowVisual, shadowSurfaceBrush, shadowMaskVisual, shadowMaskShape, shadowMaskSurface, shadowMaskBrush, shadow, shadowGeometry, roundedGeometry, roundedClip, logger);
             ElementCompositionPreview.SetElementChildVisual(host, rootVisual);
             return result;
@@ -145,6 +143,19 @@ public sealed class ThumbnailCompositionPreview :
         }
     }
 
+
+    public void SetSquareCorners(bool value)
+    {
+        if (isDisposed || squareCorners == value)
+        {
+            return;
+        }
+
+        squareCorners = value;
+        ApplyPresentation();
+    }
+
+
     public void Update(double width, double height, bool isVisible)
     {
         if (isDisposed)
@@ -155,10 +166,7 @@ public sealed class ThumbnailCompositionPreview :
         float normalizedWidth = NormalizeLength(width);
         float normalizedHeight = NormalizeLength(height);
         bool normalizedVisibility = isVisible && normalizedWidth > 0.0f && normalizedHeight > 0.0f;
-
-        if (this.width == normalizedWidth &&
-            this.height == normalizedHeight &&
-            this.isVisible == normalizedVisibility)
+        if (this.width == normalizedWidth && this.height == normalizedHeight && this.isVisible == normalizedVisibility)
         {
             return;
         }
@@ -169,9 +177,14 @@ public sealed class ThumbnailCompositionPreview :
         ApplyPresentation();
     }
 
+
     private void HandleSurfaceChanged()
     {
-        if (isDisposed) return;
+        if (isDisposed)
+        {
+            return;
+        }
+
         try
         {
             imageBrush.Surface = preview.CreateSurface(imageVisual.Compositor);
@@ -183,11 +196,17 @@ public sealed class ThumbnailCompositionPreview :
         }
     }
 
+
     private void HandleFrameAvailabilityChanged()
     {
-        if (isDisposed) return;
+        if (isDisposed)
+        {
+            return;
+        }
+
         imageVisual.IsVisible = isVisible && width > 0 && height > 0 && preview.HasCurrentFrame;
     }
+
 
     public void Dispose()
     {
@@ -228,6 +247,7 @@ public sealed class ThumbnailCompositionPreview :
         GC.SuppressFinalize(this);
     }
 
+
     private void ApplyPresentation()
     {
         if (width <= 0.0f || height <= 0.0f)
@@ -238,25 +258,28 @@ public sealed class ThumbnailCompositionPreview :
         }
 
         preview.SetVisible(isVisible);
-        imageVisual.Size = new Vector2(width, height);
+        imageVisual.Size = new(width, height);
         imageVisual.IsVisible = isVisible && preview.HasCurrentFrame;
-        shadowVisual.Size = new Vector2(width, height);
+        shadowVisual.Size = new(width, height);
         shadowVisual.IsVisible = isVisible;
-        shadowMaskVisual.Size = new Vector2(width, height);
-        shadowMaskSurface.SourceSize = new Vector2(width, height);
-        shadowGeometry.Size = new Vector2(width, height);
-        shadowGeometry.CornerRadius = new Vector2(MathF.Min(CornerRadius, width / 2), MathF.Min(CornerRadius, height / 2));
+        shadowMaskVisual.Size = new(width, height);
+        shadowMaskSurface.SourceSize = new(width, height);
+        shadowGeometry.Size = new(width, height);
+        float radius = squareCorners ? 0 : CornerRadius;
+        shadowGeometry.CornerRadius = new(MathF.Min(radius, width / 2), MathF.Min(radius, height / 2));
         UpdateClip(width, height);
     }
 
+
     private void UpdateClip(float width, float height)
     {
-        float horizontalRadius = MathF.Min(CornerRadius, width / 2.0f);
-        float verticalRadius = MathF.Min(CornerRadius, height / 2.0f);
-
-        roundedGeometry.Size = new Vector2(width, height);
-        roundedGeometry.CornerRadius = new Vector2(horizontalRadius, verticalRadius);
+        float radius = squareCorners ? 0 : CornerRadius;
+        float horizontalRadius = MathF.Min(radius, width / 2.0f);
+        float verticalRadius = MathF.Min(radius, height / 2.0f);
+        roundedGeometry.Size = new(width, height);
+        roundedGeometry.CornerRadius = new(horizontalRadius, verticalRadius);
     }
+
 
     private static void TryDetach(FrameworkElement host, Visual? visual, ILogger logger)
     {
@@ -278,6 +301,7 @@ public sealed class ThumbnailCompositionPreview :
         }
     }
 
+
     private static void TryRemove(Visual? visual, ILogger logger)
     {
         if (visual is null)
@@ -298,6 +322,7 @@ public sealed class ThumbnailCompositionPreview :
         }
     }
 
+
     private static float NormalizeLength(double value)
     {
         if (!double.IsFinite(value) || value <= 0.0)
@@ -307,5 +332,4 @@ public sealed class ThumbnailCompositionPreview :
 
         return (float)Math.Min(value, float.MaxValue);
     }
-
 }

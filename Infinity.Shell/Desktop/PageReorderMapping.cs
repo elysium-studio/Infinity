@@ -15,6 +15,7 @@ public static class PageReorderMapping
         return Math.Max(0, (int)Math.Clamp(Math.Floor(center / workspaceWidth), 0, int.MaxValue));
     }
 
+
     public static int Map(int page, int sourcePage, int targetPage)
     {
         if (page == sourcePage)

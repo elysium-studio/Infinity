@@ -14,34 +14,31 @@ public sealed class PageCenterTargetResolverTests
     public void ResolvesThePageNearestTheViewportCentre(double offset, double expectedTarget)
     {
         PageCenterTargetResolver resolver = new(new TestWorkspace(width: 1000));
-
         bool resolved = resolver.TryResolve(offset, 0, 3000, out double target);
-
         Assert.Equal(expectedTarget != offset, resolved);
         Assert.Equal(expectedTarget, target);
     }
+
 
     [Fact]
     public void TargetHonoursTheConfiguredPageLimit()
     {
         PageCenterTargetResolver resolver = new(new TestWorkspace(width: 1000));
-
         bool resolved = resolver.TryResolve(2800, 0, 2000, out double target);
-
         Assert.True(resolved);
         Assert.Equal(2000, target);
     }
+
 
     [Fact]
     public void InvalidWorkspaceDoesNotRequestCentering()
     {
         PageCenterTargetResolver resolver = new(new TestWorkspace(width: 0));
-
         bool resolved = resolver.TryResolve(400, 0, 2000, out double target);
-
         Assert.False(resolved);
         Assert.Equal(400, target);
     }
+
 
     [Theory]
     [InlineData(0, 1, 1000)]
@@ -51,15 +48,13 @@ public sealed class PageCenterTargetResolverTests
     public void ResolvesAdjacentPageFromTheCurrentDestination(double offset, int pageDelta, double expectedTarget)
     {
         PageCenterTargetResolver resolver = new(new TestWorkspace(width: 1000));
-
         bool resolved = resolver.TryResolveAdjacent(offset, pageDelta, 0, 3000, out double target);
-
         Assert.True(resolved);
         Assert.Equal(expectedTarget, target);
     }
 
-    private sealed class TestWorkspace(int width) :
-        IWorkspace
+
+    private sealed class TestWorkspace(int width) : IWorkspace
     {
         public event EventHandler? WorkspaceLayoutChanged;
 

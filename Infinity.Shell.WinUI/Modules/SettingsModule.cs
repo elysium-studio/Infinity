@@ -1,47 +1,14 @@
+using System.Collections.Generic;
 using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Application.DependencyInjection;
 using Elysium.Presentation.Abstractions;
 using Infinity.Application.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
-using System.Collections.Generic;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class SettingsModule :
-    IModule
+public sealed class SettingsModule : IModule
 {
-    public void Register(IServiceCollection services)
-    {
-        services
-            .AddTransient<AboutViewModel>()
-            .AddTransient<SettingsNavigationPathResolver>()
-            .AddViewFor(ServiceLifetime.Transient,
-                provider => new SettingsWindow(provider.GetRequiredService<ITextLocalizer>(),
-                    provider.GetRequiredService<IApplicationLifetime>(),
-                    provider.GetRequiredService<INavigator>(),
-                    provider.GetRequiredService<AboutViewModel>(),
-                    provider.GetRequiredService<SettingsNavigationPathResolver>()),
-                provider => new SettingsViewModel(provider,
-                    provider.GetRequiredService<IServiceFactory>(),
-                    provider.GetRequiredService<IMessenger>(),
-                    provider.GetRequiredService<IDisposer>(),
-                    provider.GetRequiredService<IEnumerable<ISettingViewModel>>()))
-            .AddViewFor<DesktopView, ISettingViewModel, DesktopViewModel>(ServiceLifetime.Transient,
-                provider => new DesktopView(),
-                provider => new DesktopViewModel(provider,
-                    provider.GetRequiredService<IServiceFactory>(),
-                    provider.GetRequiredService<IMessenger>(),
-                    provider.GetRequiredService<IDisposer>(),
-                    provider.GetRequiredService<ITextLocalizer>(),
-                    provider.GetRequiredService<IEnumerable<IDesktopViewModel>>()))
-            .AddViewFor<WindowsView, ISettingViewModel, WindowsViewModel>(ServiceLifetime.Transient,
-                provider => new WindowsView(),
-                provider => new WindowsViewModel(provider,
-                    provider.GetRequiredService<IServiceFactory>(),
-                    provider.GetRequiredService<IMessenger>(),
-                    provider.GetRequiredService<IDisposer>(),
-                    provider.GetRequiredService<ITextLocalizer>(),
-                    provider.GetRequiredService<IEnumerable<IWindowsViewModel>>()));
-    }
+    public void Register(IServiceCollection services) => services.AddTransient<AboutViewModel>().AddTransient<SettingsNavigationPathResolver>().AddViewFor(ServiceLifetime.Transient, provider => new SettingsWindow(provider.GetRequiredService<ITextLocalizer>(), provider.GetRequiredService<IApplicationLifetime>(), provider.GetRequiredService<INavigator>(), provider.GetRequiredService<AboutViewModel>(), provider.GetRequiredService<SettingsNavigationPathResolver>()), provider => new SettingsViewModel(provider, provider.GetRequiredService<IServiceFactory>(), provider.GetRequiredService<IMessenger>(), provider.GetRequiredService<IDisposer>(), provider.GetRequiredService<IEnumerable<ISettingViewModel>>())).AddViewFor<DesktopView, ISettingViewModel, DesktopViewModel>(ServiceLifetime.Transient, provider => new DesktopView(), provider => new DesktopViewModel(provider, provider.GetRequiredService<IServiceFactory>(), provider.GetRequiredService<IMessenger>(), provider.GetRequiredService<IDisposer>(), provider.GetRequiredService<ITextLocalizer>(), provider.GetRequiredService<IEnumerable<IDesktopViewModel>>())).AddViewFor<WindowsView, ISettingViewModel, WindowsViewModel>(ServiceLifetime.Transient, provider => new WindowsView(), provider => new WindowsViewModel(provider, provider.GetRequiredService<IServiceFactory>(), provider.GetRequiredService<IMessenger>(), provider.GetRequiredService<IDisposer>(), provider.GetRequiredService<ITextLocalizer>(), provider.GetRequiredService<IEnumerable<IWindowsViewModel>>()));
 }

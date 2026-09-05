@@ -1,12 +1,11 @@
-using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Infinity.Shell;
 
 public sealed partial class DesktopSnapLayoutOptionViewModel : ObservableObject
 {
     private const double SlotSpacing = 4;
-
     [ObservableProperty]
     private bool isSelected;
 
@@ -15,8 +14,9 @@ public sealed partial class DesktopSnapLayoutOptionViewModel : ObservableObject
         Kind = definition.Kind;
         PreviewWidth = previewWidth;
         PreviewHeight = previewHeight;
-        Slots = new ObservableCollection<DesktopSnapLayoutSlotViewModel>(definition.Slots.Select(slot => CreateSlot(slot, previewWidth, previewHeight)));
+        Slots = new(definition.Slots.Select(slot => CreateSlot(slot, previewWidth, previewHeight)));
     }
+
 
     public DesktopSnapLayoutKind Kind { get; }
 
@@ -28,6 +28,7 @@ public sealed partial class DesktopSnapLayoutOptionViewModel : ObservableObject
 
     public ObservableCollection<DesktopSnapLayoutSlotViewModel> Slots { get; }
 
+
     public void SetInteractionState(DesktopSnapLayoutOptionInteractionState state)
     {
         foreach (DesktopSnapLayoutSlotViewModel slot in Slots)
@@ -36,6 +37,7 @@ public sealed partial class DesktopSnapLayoutOptionViewModel : ObservableObject
         }
     }
 
+
     private static DesktopSnapLayoutSlotViewModel CreateSlot(DesktopSnapSlot slot, double previewWidth, double previewHeight)
     {
         double halfSpacing = SlotSpacing / 2;
@@ -43,7 +45,6 @@ public sealed partial class DesktopSnapLayoutOptionViewModel : ObservableObject
         double top = (slot.Y * previewHeight) + (slot.Y > 0 ? halfSpacing : 0);
         double right = ((slot.X + slot.Width) * previewWidth) - (slot.X + slot.Width < 1 ? halfSpacing : 0);
         double bottom = ((slot.Y + slot.Height) * previewHeight) - (slot.Y + slot.Height < 1 ? halfSpacing : 0);
-
-        return new DesktopSnapLayoutSlotViewModel(left, top, Math.Max(0, right - left), Math.Max(0, bottom - top));
+        return new(left, top, Math.Max(0, right - left), Math.Max(0, bottom - top));
     }
 }

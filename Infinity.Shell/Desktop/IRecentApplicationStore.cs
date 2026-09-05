@@ -8,6 +8,7 @@ public interface IRecentApplicationStore
 
     IReadOnlyList<LaunchableApplication> Applications { get; }
 
+
     void RecordForSession(LaunchableApplication application);
 
     Task RecordAsync(LaunchableApplication application, CancellationToken cancellationToken = default);

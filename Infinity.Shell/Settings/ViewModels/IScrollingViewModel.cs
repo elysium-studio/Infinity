@@ -1,4 +1,3 @@
 namespace Infinity.Shell;
 
-public interface IScrollingViewModel :
-    IDisposable;
+public interface IScrollingViewModel : IDisposable;

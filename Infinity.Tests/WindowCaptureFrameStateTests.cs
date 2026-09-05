@@ -14,20 +14,22 @@ public sealed class WindowCaptureFrameStateTests
         Assert.False(state.TryMarkPresented(state.Generation));
     }
 
+
     [Fact]
     public void ReopeningCannotReuseThePreviousSessionsImage()
     {
         WindowCaptureFrameState state = new();
         long first = state.Generation;
         state.TryMarkPresented(first);
-        state.Invalidate(); // close
+        state.Invalidate();
         Assert.False(state.HasCurrentFrame);
-        state.Invalidate(); // reopen before queued close has completed
+        state.Invalidate();
         Assert.False(state.TryMarkPresented(first));
         Assert.False(state.HasCurrentFrame);
         Assert.True(state.TryMarkPresented(state.Generation));
         Assert.True(state.HasCurrentFrame);
     }
+
 
     [Fact]
     public void AFrameFinishingAfterInvalidationCannotRevealAnOldImage()
@@ -38,6 +40,7 @@ public sealed class WindowCaptureFrameStateTests
         Assert.False(state.TryMarkPresented(renderingGeneration));
         Assert.False(state.HasCurrentFrame);
     }
+
 
     [Fact]
     public void LateOldSessionCompletionDoesNotInvalidateAFreshFrame()

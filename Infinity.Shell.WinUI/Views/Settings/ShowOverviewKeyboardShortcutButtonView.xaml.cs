@@ -2,8 +2,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed partial class ShowOverviewKeyboardShortcutButtonView :
-    UserControl
+public sealed partial class ShowOverviewKeyboardShortcutButtonView : UserControl
 {
     public ShowOverviewKeyboardShortcutButtonView() => InitializeComponent();
 

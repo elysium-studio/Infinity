@@ -1,4 +1,3 @@
 namespace Infinity.Shell;
 
-public interface IPagesViewModel :
-    IDisposable;
+public interface IPagesViewModel : IDisposable;

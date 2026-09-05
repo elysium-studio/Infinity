@@ -1,42 +1,37 @@
+using System;
+using System.ComponentModel;
+using System.Numerics;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using System;
-using System.ComponentModel;
-using System.Numerics;
 using Windows.System;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed partial class DesktopPageTitleEditor :
-    UserControl,
-    IDisposable
+public sealed partial class DesktopPageTitleEditor : UserControl, IDisposable
 {
     private const float ShadowDepth = 64;
-
     private bool disposed;
 
     public DesktopPageTitleEditor() : this(new DesktopPageEditorLabels(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty), new DesktopSnapLayoutCatalog())
     {
     }
 
+
     public DesktopPageTitleEditor(DesktopPageEditorLabels labels, DesktopSnapLayoutCatalog layoutCatalog)
     {
-        ViewModel = new DesktopPageTitleViewModel(labels, layoutCatalog);
-
+        ViewModel = new(labels, layoutCatalog);
         InitializeComponent();
-
         ViewModel.PropertyChanged += HandleViewModelPropertyChanged;
-
         ElementCompositionPreview.SetIsTranslationEnabled(HeaderSurface, true);
-        HeaderSurface.Shadow = new ThemeShadow();
-        HeaderSurface.Translation = new Vector3(0, 0, ShadowDepth);
-
+        HeaderSurface.Shadow = new();
+        HeaderSurface.Translation = new(0, 0, ShadowDepth);
     }
 
+
     public DesktopPageTitleViewModel ViewModel { get; }
+
 
     public Visibility ToVisibility(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
 
@@ -45,12 +40,12 @@ public sealed partial class DesktopPageTitleEditor :
     public void SetInteractionEnabled(bool value)
     {
         IsHitTestVisible = value;
-
         if (!value)
         {
             CloseLayoutFlyout();
         }
     }
+
 
     public void CloseLayoutFlyout() => LayoutFlyout.Hide();
 
@@ -62,11 +57,10 @@ public sealed partial class DesktopPageTitleEditor :
         }
 
         disposed = true;
-
         ViewModel.PropertyChanged -= HandleViewModelPropertyChanged;
-
         GC.SuppressFinalize(this);
     }
+
 
     private void HandleViewModelPropertyChanged(object? sender, PropertyChangedEventArgs args)
     {
@@ -75,12 +69,9 @@ public sealed partial class DesktopPageTitleEditor :
             return;
         }
 
-        DispatcherQueue.TryEnqueue(() =>
-        {
-            _ = TitleTextBox.Focus(FocusState.Programmatic);
-            TitleTextBox.SelectAll();
-        });
+        DispatcherQueue.TryEnqueue(() =>  {  _ = TitleTextBox.Focus(FocusState.Programmatic);  TitleTextBox.SelectAll();  });
     }
+
 
     private void HandleEditorKeyDown(object sender, KeyRoutedEventArgs args)
     {
@@ -96,6 +87,7 @@ public sealed partial class DesktopPageTitleEditor :
         }
     }
 
+
     private void HandleLayoutClicked(object sender, RoutedEventArgs args)
     {
         if (sender is FrameworkElement { Tag: DesktopSnapLayoutOptionViewModel option })
@@ -105,14 +97,15 @@ public sealed partial class DesktopPageTitleEditor :
         }
     }
 
+
     private void HandleClearLayoutClicked(object sender, RoutedEventArgs args)
     {
         ViewModel.ClearLayout();
         LayoutFlyout.Hide();
     }
 
-    private void HandleTitleEditButtonInteractionChanged(object sender, RoutedEventArgs args) =>
-        TitleEditIcon.Opacity = TitleEditButton.IsPointerOver || TitleEditButton.FocusState != FocusState.Unfocused ? 1 : 0;
+
+    private void HandleTitleEditButtonInteractionChanged(object sender, RoutedEventArgs args) => TitleEditIcon.Opacity = TitleEditButton.IsPointerOver || TitleEditButton.FocusState != FocusState.Unfocused ? 1 : 0;
 
     private void HandleLayoutInteractionStateChanged(object sender, RoutedEventArgs args)
     {
@@ -121,5 +114,4 @@ public sealed partial class DesktopPageTitleEditor :
             option.SetInteractionState(button.InteractionState);
         }
     }
-
 }

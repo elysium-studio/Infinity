@@ -1,11 +1,10 @@
+using System;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
-using System;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopDragCursorConfinement :
-    IDisposable
+public sealed class DesktopDragCursorConfinement : IDisposable
 {
     private readonly IPointerConfinement pointerConfinement;
     private readonly IPanState panState;
@@ -27,26 +26,25 @@ public sealed class DesktopDragCursorConfinement :
         this.pointerConfinement = pointerConfinement;
         this.panState = panState;
         this.boundaryCalculator = boundaryCalculator;
-
         panState.OffsetChanged += HandleOffsetChanged;
     }
+
 
     public void SetOwner(nint windowHandle) => ownerWindowHandle = windowHandle;
 
     public void SetWorkAreaOffsetY(double value)
     {
         boundaryCalculator.SetWorkAreaOffsetY(value);
-
         if (active)
         {
             Apply();
         }
     }
 
+
     public void Begin(double width, double height, double scale, double rasterScale, bool constrainVertical, bool constrainToCenteredPage = false)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
-
         viewportWidth = width;
         viewportHeight = height;
         overviewScale = scale;
@@ -54,9 +52,9 @@ public sealed class DesktopDragCursorConfinement :
         constrainVertically = constrainVertical;
         this.constrainToCenteredPage = constrainToCenteredPage;
         active = true;
-
         Apply();
     }
+
 
     public void Update(double width, double height, double scale, double rasterScale)
     {
@@ -69,9 +67,9 @@ public sealed class DesktopDragCursorConfinement :
         viewportHeight = height;
         overviewScale = scale;
         rasterizationScale = rasterScale;
-
         Apply();
     }
+
 
     public void UseCenteredPageBounds()
     {
@@ -84,6 +82,7 @@ public sealed class DesktopDragCursorConfinement :
         Apply();
     }
 
+
     public void Release()
     {
         if (!active)
@@ -94,6 +93,7 @@ public sealed class DesktopDragCursorConfinement :
         active = false;
         pointerConfinement.Release();
     }
+
 
     public void Dispose()
     {
@@ -108,6 +108,7 @@ public sealed class DesktopDragCursorConfinement :
         GC.SuppressFinalize(this);
     }
 
+
     private void HandleOffsetChanged() => Apply();
 
     private void Apply()
@@ -117,10 +118,7 @@ public sealed class DesktopDragCursorConfinement :
             return;
         }
 
-        DesktopDragBounds bounds = constrainToCenteredPage
-            ? boundaryCalculator.GetCenteredPageBounds(viewportWidth, viewportHeight, overviewScale)
-            : boundaryCalculator.GetBounds(viewportWidth, viewportHeight, overviewScale);
-
+        DesktopDragBounds bounds = constrainToCenteredPage ? boundaryCalculator.GetCenteredPageBounds(viewportWidth, viewportHeight, overviewScale) : boundaryCalculator.GetBounds(viewportWidth, viewportHeight, overviewScale);
         if (!bounds.IsValid)
         {
             pointerConfinement.Release();

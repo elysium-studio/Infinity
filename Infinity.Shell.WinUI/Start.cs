@@ -1,6 +1,7 @@
-﻿using Elysium.Platform.Windows;
 using System;
+using Elysium.Platform.Windows;
 using Velopack;
+using XamlApplication = Microsoft.UI.Xaml.Application;
 
 namespace Infinity.Shell.WinUI;
 
@@ -10,7 +11,6 @@ public static class Start
     public static void Main()
     {
         using SingleInstanceGuard? instanceGuard = SingleInstanceGuard.TryAcquire($"{Environment.UserName}.Infinity");
-
         if (instanceGuard is null)
         {
             return;
@@ -18,13 +18,11 @@ public static class Start
 
         if (!PackageIdentity.IsPackaged)
         {
-            VelopackApp.Build()
-                .OnBeforeUninstallFastCallback(UninstallCleanup.Run)
-                .Run();
+            VelopackApp.Build().OnBeforeUninstallFastCallback(UninstallCleanup.Run).Run();
         }
 
 #pragma warning disable CA1806
-        Microsoft.UI.Xaml.Application.Start(args => new App());
+        XamlApplication.Start(args => new App());
 #pragma warning restore CA1806
     }
 }

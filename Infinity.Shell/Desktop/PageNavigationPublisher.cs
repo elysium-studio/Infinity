@@ -1,7 +1,7 @@
+using System.Text.Json;
 using Elysium.Application.Abstractions;
 using Infinity.Application.Abstractions;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace Infinity.Shell;
 
@@ -23,6 +23,7 @@ public sealed class PageNavigationPublisher(IDispatcher dispatcher, IPager pager
         PublishPageNavigation();
     }
 
+
     public void Stop()
     {
         if (!started)
@@ -36,6 +37,7 @@ public sealed class PageNavigationPublisher(IDispatcher dispatcher, IPager pager
         glanceBridge.MessageReceived -= HandleGlanceMessageReceived;
     }
 
+
     private void HandlePageChanged(int page) => dispatcher.Dispatch(() => PublishPageNavigation(page));
 
     private async void HandleGlanceMessageReceived(object? sender, InfinityGlanceMessageReceivedEventArgs args)
@@ -48,7 +50,6 @@ public sealed class PageNavigationPublisher(IDispatcher dispatcher, IPager pager
         try
         {
             InfinityPageTitleUpdate? update = JsonSerializer.Deserialize(args.Payload, InfinityGlanceJsonContext.Default.InfinityPageTitleUpdate);
-
             if (update is null || update.PageIndex < 0 || update.PageIndex >= pager.PageCount)
             {
                 return;
@@ -62,13 +63,8 @@ public sealed class PageNavigationPublisher(IDispatcher dispatcher, IPager pager
         }
     }
 
-    private void HandlePageTitleChanged(int page, string title) => dispatcher.Dispatch(() =>
-    {
-        if (pager.CurrentPage == page)
-        {
-            PublishPageNavigation(page, title);
-        }
-    });
+
+    private void HandlePageTitleChanged(int page, string title) => dispatcher.Dispatch(() =>  {  if (pager.CurrentPage == page)  {  PublishPageNavigation(page, title);  }  });
 
     private void PublishPageNavigation() => PublishPageNavigation(pager.CurrentPage);
 

@@ -1,3 +1,5 @@
+using System;
+using System.Text.Json;
 using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Application.DependencyInjection;
@@ -7,116 +9,15 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.UI.Windowing;
-using System;
-using System.Text.Json;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class ConfigurationModule :
-    IModule
+public sealed class ConfigurationModule : IModule
 {
     public void Register(IServiceCollection services)
     {
         WritableOptionsBuilder<Settings> builder = new(services, "Settings", "settings.dat");
-
-        builder.WithJsonOptions(new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            PropertyNameCaseInsensitive = true,
-            TypeInfoResolverChain = { InfinityJsonContext.Default }
-        })
-            .UseJson()
-            .WithChangeHandler((provider, options, name) =>
-                provider.GetRequiredService<IMessenger>()
-                    .Send(new OptionsChangedEventArgs<Settings>(options)))
-            .WithChangeHandler((provider, options, _) =>
-                provider.GetRequiredService<ScrollerConfiguration>()
-                    .PixelsPerScrollNotch = options.ScrollSpeed.ToPixelsPerNotch())
-            .WithChangeHandler((provider, options, _) =>
-                provider.GetRequiredService<IModifierKeyState>()
-                    .SetKeys(options.ScrollModifierKeys))
-            .WithAsyncChangeHandler(async (provider, options, _) =>
-            {
-                IStartupManager startupManager = provider.GetRequiredService<IStartupManager>();
-
-                if (options.StartWithWindows)
-                {
-                    await startupManager.EnableAsync();
-                }
-                else
-                {
-                    await startupManager.DisableAsync();
-                }
-            })
-            .WithChangeHandler((provider, options, _) =>
-            {
-                int? maxPages = options.VirtualPagesMode == VirtualPagesMode.Fixed
-                    ? (int?)options.VirtualPagesCount
-                    : null;
-
-                provider.GetRequiredService<IPager>()
-                    .SetMaxPages(maxPages);
-
-                provider.GetRequiredService<IPanState>()
-                    .SetMaxOffset(maxPages.HasValue ? (maxPages.Value - 1) * (double)DisplayArea.Primary.WorkArea.Width : double.MaxValue);
-            })
-            .WithChangeHandler((provider, options, _) =>
-                provider.GetRequiredService<DesktopOverviewDragScrollerConfiguration>()
-                    .SpeedLevel = options.DragScrollSpeed)
-            .WithChangeHandler((provider, options, _) =>
-            {
-                DesktopOverviewConfiguration configuration = provider.GetRequiredService<DesktopOverviewConfiguration>();
-
-                configuration.Backdrop = options.OverviewBackdrop;
-                configuration.IsEdgeScrollingEnabled = options.EnableOverviewEdgeScrolling;
-                configuration.IsMonitorSpanningEnabled = options.SpanCompatibleDisplays;
-                configuration.IsSnapAssistanceEnabled = options.EnableSnapAssistance;
-                configuration.ShowApplicationDock = options.ShowOverviewApplicationDock;
-                configuration.ShowKeyboardShortcutButton = options.ShowOverviewKeyboardShortcutButton;
-                configuration.ShowClock = options.ShowOverviewClock;
-                configuration.ShowPageHeaders = options.ShowOverviewPageHeaders;
-                configuration.ShowSearchBox = options.ShowOverviewSearchBox;
-            });
-
-        services
-            .AddSingleton(provider =>
-                new ScrollerConfiguration
-                {
-                    PixelsPerScrollNotch = provider.GetRequiredService<Settings>().ScrollSpeed.ToPixelsPerNotch()
-                })
-            .AddSingleton(provider =>
-                new DesktopOverviewDragScrollerConfiguration
-                {
-                    SpeedLevel = provider.GetRequiredService<Settings>().DragScrollSpeed
-                })
-            .AddSingleton(provider =>
-            {
-                Settings settings = provider.GetRequiredService<Settings>();
-
-                return new DesktopOverviewConfiguration
-                {
-                    Backdrop = settings.OverviewBackdrop,
-                    IsEdgeScrollingEnabled = settings.EnableOverviewEdgeScrolling,
-                    IsMonitorSpanningEnabled = settings.SpanCompatibleDisplays,
-                    IsSnapAssistanceEnabled = settings.EnableSnapAssistance,
-                    ShowApplicationDock = settings.ShowOverviewApplicationDock,
-                    ShowKeyboardShortcutButton = settings.ShowOverviewKeyboardShortcutButton,
-                    ShowClock = settings.ShowOverviewClock,
-                    ShowPageHeaders = settings.ShowOverviewPageHeaders,
-                    ShowSearchBox = settings.ShowOverviewSearchBox
-                };
-            })
-            .AddSingleton<Func<ScrollerConfiguration>>(provider =>
-                () => provider.GetRequiredService<ScrollerConfiguration>())
-            .AddSingleton<Func<DesktopOverviewDragScrollerConfiguration>>(provider =>
-                () => provider.GetRequiredService<DesktopOverviewDragScrollerConfiguration>())
-            .AddSingleton<IConfiguration>(provider =>
-            {
-                IConfigurationBuilder configBuilder = new ConfigurationBuilder()
-                    .SetBasePath(provider.GetRequiredService<IHostEnvironment>().ContentRootPath)
-                    .AddJsonFile("settings.dat", optional: true, reloadOnChange: true);
-
-                return configBuilder.Build();
-            });
+        builder.WithJsonOptions(new JsonSerializerOptions { WriteIndented = true, PropertyNameCaseInsensitive = true, TypeInfoResolverChain = { InfinityJsonContext.Default } }).UseJson().WithChangeHandler((provider, options, name) => provider.GetRequiredService<IMessenger>().Send(new OptionsChangedEventArgs<Settings>(options))).WithChangeHandler((provider, options, _) => provider.GetRequiredService<ScrollerConfiguration>().PixelsPerScrollNotch = options.ScrollSpeed.ToPixelsPerNotch()).WithChangeHandler((provider, options, _) => provider.GetRequiredService<IModifierKeyState>().SetKeys(options.ScrollModifierKeys)).WithAsyncChangeHandler(async (provider, options, _) =>  {  IStartupManager startupManager = provider.GetRequiredService<IStartupManager>();  if (options.StartWithWindows)  {  await startupManager.EnableAsync();  }  else  {  await startupManager.DisableAsync();  }  }).WithChangeHandler((provider, options, _) =>  {  int? maxPages = options.VirtualPagesMode == VirtualPagesMode.Fixed ? (int? )options.VirtualPagesCount : null;  provider.GetRequiredService<IPager>().SetMaxPages(maxPages);  provider.GetRequiredService<IPanState>().SetMaxOffset(maxPages.HasValue ? (maxPages.Value - 1) * (double)DisplayArea.Primary.WorkArea.Width : double.MaxValue);  }).WithChangeHandler((provider, options, _) => provider.GetRequiredService<DesktopOverviewDragScrollerConfiguration>().SpeedLevel = options.DragScrollSpeed).WithChangeHandler((provider, options, _) =>  {  DesktopOverviewConfiguration configuration = provider.GetRequiredService<DesktopOverviewConfiguration>();  configuration.Backdrop = options.OverviewBackdrop;  configuration.IsEdgeScrollingEnabled = options.EnableOverviewEdgeScrolling;  configuration.IsMonitorSpanningEnabled = options.SpanCompatibleDisplays;  configuration.IsSnapAssistanceEnabled = options.EnableSnapAssistance;  configuration.ShowApplicationDock = options.ShowOverviewApplicationDock;  configuration.ShowKeyboardShortcutButton = options.ShowOverviewKeyboardShortcutButton;  configuration.ShowClock = options.ShowOverviewClock;  configuration.ShowPageHeaders = options.ShowOverviewPageHeaders;  configuration.ShowSearchBox = options.ShowOverviewSearchBox;  });
+        services.AddSingleton(provider => new ScrollerConfiguration { PixelsPerScrollNotch = provider.GetRequiredService<Settings>().ScrollSpeed.ToPixelsPerNotch() }).AddSingleton(provider => new DesktopOverviewDragScrollerConfiguration { SpeedLevel = provider.GetRequiredService<Settings>().DragScrollSpeed }).AddSingleton(provider =>  {  Settings settings = provider.GetRequiredService<Settings>();  return new DesktopOverviewConfiguration  {  Backdrop = settings.OverviewBackdrop,  IsEdgeScrollingEnabled = settings.EnableOverviewEdgeScrolling,  IsMonitorSpanningEnabled = settings.SpanCompatibleDisplays,  IsSnapAssistanceEnabled = settings.EnableSnapAssistance,  ShowApplicationDock = settings.ShowOverviewApplicationDock,  ShowKeyboardShortcutButton = settings.ShowOverviewKeyboardShortcutButton,  ShowClock = settings.ShowOverviewClock,  ShowPageHeaders = settings.ShowOverviewPageHeaders,  ShowSearchBox = settings.ShowOverviewSearchBox  };  }).AddSingleton<Func<ScrollerConfiguration>>(provider => () => provider.GetRequiredService<ScrollerConfiguration>()).AddSingleton<Func<DesktopOverviewDragScrollerConfiguration>>(provider => () => provider.GetRequiredService<DesktopOverviewDragScrollerConfiguration>()).AddSingleton<IConfiguration>(provider =>  {  IConfigurationBuilder configBuilder = new ConfigurationBuilder().SetBasePath(provider.GetRequiredService<IHostEnvironment>().ContentRootPath).AddJsonFile("settings.dat", optional: true, reloadOnChange: true);  return configBuilder.Build();  });
     }
 }

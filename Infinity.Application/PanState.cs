@@ -2,8 +2,7 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Application;
 
-public sealed class PanState :
-    IPanState
+public sealed class PanState : IPanState
 {
     public event Action? OffsetChanged;
 
@@ -20,6 +19,7 @@ public sealed class PanState :
         Offset = value;
         OffsetChanged?.Invoke();
     }
+
 
     public void ApplyDelta(double delta)
     {

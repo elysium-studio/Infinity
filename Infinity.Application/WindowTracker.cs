@@ -1,38 +1,19 @@
+using System.Runtime.InteropServices;
 using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
-using System.Runtime.InteropServices;
 
 namespace Infinity.Application;
 
-public sealed class WindowTracker(IWindowStore repository,
-    IWindowGeometryReader reader,
-    IWindowFilter filter,
-    IWindowAncestorResolver ancestorResolver,
-    IWindowRestoreGuard restoreGuard,
-    IWindowPageTransitionGuard pageTransitionGuard,
-    IWindowMoveGuard moveGuard,
-    IWindowConcealer concealer,
-    IWindowDragGuard dragGuard,
-    ITrackedWindowDragController trackedWindowDragController,
-    WindowTrackingReconciler reconciler,
-    IWindowEventListener listener,
-    IPanState state,
-    IDispatcher dispatcher,
-    ILogger<WindowTracker> logger,
-    IntPtr handle) :
-    IWindowTracker
+public sealed class WindowTracker(IWindowStore repository, IWindowGeometryReader reader, IWindowFilter filter, IWindowAncestorResolver ancestorResolver, IWindowRestoreGuard restoreGuard, IWindowPageTransitionGuard pageTransitionGuard, IWindowMoveGuard moveGuard, IWindowConcealer concealer, IWindowDragGuard dragGuard, ITrackedWindowDragController trackedWindowDragController, WindowTrackingReconciler reconciler, IWindowEventListener listener, IPanState state, IDispatcher dispatcher, ILogger<WindowTracker> logger, IntPtr handle) : IWindowTracker
 {
     private const int SelfHealIntervalMilliseconds = 3000;
-
     private static readonly TimeSpan MinimizeSuspendDelay = TimeSpan.FromMilliseconds(160);
-
     private readonly Dictionary<IntPtr, SuspendedWindowState> suspendedWindowStates = [];
     private readonly Dictionary<IntPtr, CancellationTokenSource> pendingMinimizeSuspensions = [];
     private readonly Lock minimizeSyncRoot = new();
-
     private Timer? selfHealTimer;
     private int selfHealInProgress;
 
@@ -47,9 +28,9 @@ public sealed class WindowTracker(IWindowStore repository,
         listener.WindowLocationChanged += HandleWindowLocationChanged;
         listener.WindowStackChanged += HandleWindowStackChanged;
         state.OffsetChanged += HandleOffsetChanged;
-
-        selfHealTimer = new Timer(HandleSelfHealTick, null, SelfHealIntervalMilliseconds, SelfHealIntervalMilliseconds);
+        selfHealTimer = new(HandleSelfHealTick, null, SelfHealIntervalMilliseconds, SelfHealIntervalMilliseconds);
     }
+
 
     public void Stop()
     {
@@ -62,17 +43,15 @@ public sealed class WindowTracker(IWindowStore repository,
         listener.WindowLocationChanged -= HandleWindowLocationChanged;
         listener.WindowStackChanged -= HandleWindowStackChanged;
         state.OffsetChanged -= HandleOffsetChanged;
-
         CancelPendingMinimizeSuspensions();
-
         selfHealTimer?.Dispose();
         selfHealTimer = null;
     }
 
+
     public void TryRegisterExisting(IntPtr windowHandle) => TryRegister(windowHandle, null);
 
-    private void TryRegister(IntPtr windowHandle,
-        IReadOnlyDictionary<IntPtr, int>? windowStackIndexMap)
+    private void TryRegister(IntPtr windowHandle, IReadOnlyDictionary<IntPtr, int>? windowStackIndexMap)
     {
         if (repository.TryGet(windowHandle, out _))
         {
@@ -92,7 +71,6 @@ public sealed class WindowTracker(IWindowStore repository,
         if (!filter.ShouldTrack(windowHandle, handle))
         {
             IntPtr ancestor = ancestorResolver.GetRootAncestor(windowHandle);
-
             if (ancestor == windowHandle || ancestor == IntPtr.Zero)
             {
                 return;
@@ -108,7 +86,6 @@ public sealed class WindowTracker(IWindowStore repository,
         }
 
         bool isRestore = suspendedWindowStates.TryGetValue(windowHandle, out SuspendedWindowState suspendedState);
-
         if (isRestore)
         {
             restoreGuard.MarkRestoring(windowHandle);
@@ -116,12 +93,9 @@ public sealed class WindowTracker(IWindowStore repository,
         }
 
         int currentOffset = (int)Math.Round(state.Offset);
-        int canvasX = isRestore
-            ? suspendedState.CanvasX
-            : x + currentOffset;
+        int canvasX = isRestore ? suspendedState.CanvasX : x + currentOffset;
         int lastPlacedX = canvasX - currentOffset;
         int zIndex = windowStackIndexMap is not null && windowStackIndexMap.TryGetValue(windowHandle, out int mappedZIndex) ? mappedZIndex : reconciler.GetZIndex(windowHandle);
-
         TrackedWindow trackedWindow = new()
         {
             Handle = windowHandle,
@@ -133,9 +107,9 @@ public sealed class WindowTracker(IWindowStore repository,
             LastPlacedY = y,
             ZIndex = zIndex
         };
-
         repository.Add(trackedWindow);
     }
+
 
     private void HandleWindowCreated(IntPtr windowHandle) => TryRegister(windowHandle, null);
 
@@ -149,6 +123,7 @@ public sealed class WindowTracker(IWindowStore repository,
         Unregister(windowHandle);
     }
 
+
     private void HandleMinimizeStarted(IntPtr windowHandle) => QueueMinimizeSuspension(windowHandle);
 
     private void HandleMinimizeEnded(IntPtr windowHandle)
@@ -156,6 +131,7 @@ public sealed class WindowTracker(IWindowStore repository,
         CancelPendingMinimizeSuspension(windowHandle);
         TryRegister(windowHandle, null);
     }
+
 
     private void HandleDragEnded(IntPtr windowHandle) => HandleWindowMovedExternally(windowHandle);
 
@@ -169,12 +145,12 @@ public sealed class WindowTracker(IWindowStore repository,
         HandleWindowMovedExternally(windowHandle);
     }
 
+
     private void HandleWindowStackChanged() => reconciler.RefreshStackIndices();
 
     private void HandleOffsetChanged()
     {
         IntPtr draggingWindow = dragGuard.DraggingWindow;
-
         if (draggingWindow == IntPtr.Zero)
         {
             draggingWindow = trackedWindowDragController.DraggingWindow;
@@ -193,6 +169,7 @@ public sealed class WindowTracker(IWindowStore repository,
         trackedWindow.CanvasX = trackedWindow.LastPlacedX + (int)Math.Round(state.Offset);
     }
 
+
     private void QueueMinimizeSuspension(IntPtr windowHandle)
     {
         if (windowHandle == IntPtr.Zero)
@@ -201,7 +178,6 @@ public sealed class WindowTracker(IWindowStore repository,
         }
 
         CancellationTokenSource cancellationTokenSource = new();
-
         lock (minimizeSyncRoot)
         {
             if (pendingMinimizeSuspensions.Remove(windowHandle, out CancellationTokenSource? existingCancellationTokenSource))
@@ -215,6 +191,7 @@ public sealed class WindowTracker(IWindowStore repository,
 
         _ = DelayAndSuspendIfStillMinimizedAsync(windowHandle, cancellationTokenSource);
     }
+
 
     private async Task DelayAndSuspendIfStillMinimizedAsync(IntPtr windowHandle, CancellationTokenSource cancellationTokenSource)
     {
@@ -241,6 +218,7 @@ public sealed class WindowTracker(IWindowStore repository,
         }
     }
 
+
     private void CommitMinimizeSuspension(IntPtr windowHandle, CancellationTokenSource cancellationTokenSource)
     {
         if (!TryClaimPendingMinimizeSuspension(windowHandle, cancellationTokenSource))
@@ -260,6 +238,7 @@ public sealed class WindowTracker(IWindowStore repository,
 
         SuspendTracking(windowHandle);
     }
+
 
     private bool TryClaimPendingMinimizeSuspension(IntPtr windowHandle, CancellationTokenSource cancellationTokenSource)
     {
@@ -282,12 +261,12 @@ public sealed class WindowTracker(IWindowStore repository,
         return true;
     }
 
+
     private void CleanupMinimizeSuspension(IntPtr windowHandle, CancellationTokenSource cancellationTokenSource)
     {
         lock (minimizeSyncRoot)
         {
-            if (pendingMinimizeSuspensions.TryGetValue(windowHandle, out CancellationTokenSource? currentCancellationTokenSource) &&
-                ReferenceEquals(currentCancellationTokenSource, cancellationTokenSource))
+            if (pendingMinimizeSuspensions.TryGetValue(windowHandle, out CancellationTokenSource? currentCancellationTokenSource) && ReferenceEquals(currentCancellationTokenSource, cancellationTokenSource))
             {
                 pendingMinimizeSuspensions.Remove(windowHandle);
             }
@@ -296,10 +275,10 @@ public sealed class WindowTracker(IWindowStore repository,
         cancellationTokenSource.Dispose();
     }
 
+
     private void CancelPendingMinimizeSuspension(IntPtr windowHandle)
     {
         CancellationTokenSource? cancellationTokenSource = null;
-
         lock (minimizeSyncRoot)
         {
             if (pendingMinimizeSuspensions.Remove(windowHandle, out CancellationTokenSource? removedCancellationTokenSource))
@@ -317,13 +296,13 @@ public sealed class WindowTracker(IWindowStore repository,
         cancellationTokenSource.Dispose();
     }
 
+
     private void CancelPendingMinimizeSuspensions()
     {
         List<CancellationTokenSource> cancellationTokenSources;
-
         lock (minimizeSyncRoot)
         {
-            cancellationTokenSources = [.. pendingMinimizeSuspensions.Values];
+            cancellationTokenSources = [..pendingMinimizeSuspensions.Values];
             pendingMinimizeSuspensions.Clear();
         }
 
@@ -333,6 +312,7 @@ public sealed class WindowTracker(IWindowStore repository,
             cancellationTokenSource.Dispose();
         }
     }
+
 
     private void SuspendTracking(IntPtr windowHandle)
     {
@@ -344,6 +324,7 @@ public sealed class WindowTracker(IWindowStore repository,
         suspendedWindowStates[windowHandle] = new(trackedWindow.CanvasX);
         Unregister(windowHandle);
     }
+
 
     private void HandleWindowMovedExternally(IntPtr windowHandle)
     {
@@ -372,17 +353,13 @@ public sealed class WindowTracker(IWindowStore repository,
             return;
         }
 
-        if (x == trackedWindow.LastPlacedX &&
-            y == trackedWindow.LastPlacedY &&
-            width == trackedWindow.Width &&
-            height == trackedWindow.Height)
+        if (x == trackedWindow.LastPlacedX && y == trackedWindow.LastPlacedY && width == trackedWindow.Width && height == trackedWindow.Height)
         {
             return;
         }
 
         int newCanvasX = x + (int)Math.Round(state.Offset);
         _ = pageTransitionGuard.TryMapToPreservedPage(windowHandle, newCanvasX, width, out newCanvasX);
-
         trackedWindow.CanvasX = newCanvasX;
         trackedWindow.CanvasY = y;
         trackedWindow.Width = width;
@@ -391,6 +368,7 @@ public sealed class WindowTracker(IWindowStore repository,
         trackedWindow.LastPlacedY = y;
         repository.NotifyChanged(windowHandle);
     }
+
 
     private void Unregister(IntPtr windowHandle) => repository.Remove(windowHandle);
 
@@ -405,12 +383,13 @@ public sealed class WindowTracker(IWindowStore repository,
         {
             dispatcher.Dispatch(RunSelfHeal);
         }
-        catch (Exception exception) when (exception is InvalidOperationException or COMException)
+        catch (Exception exception)when (exception is InvalidOperationException or COMException)
         {
             Volatile.Write(ref selfHealInProgress, 0);
             logger.LogDebug(exception, "The dispatcher rejected window tracker self-healing");
         }
     }
+
 
     private void RunSelfHeal()
     {
@@ -424,6 +403,7 @@ public sealed class WindowTracker(IWindowStore repository,
         }
     }
 
+
     private void RemoveStaleWindow(IntPtr windowHandle)
     {
         suspendedWindowStates.Remove(windowHandle);
@@ -431,6 +411,7 @@ public sealed class WindowTracker(IWindowStore repository,
         pageTransitionGuard.Clear(windowHandle);
         Unregister(windowHandle);
     }
+
 
     private static void TryCancel(CancellationTokenSource cancellationTokenSource)
     {
@@ -442,6 +423,7 @@ public sealed class WindowTracker(IWindowStore repository,
         {
         }
     }
+
 
     private readonly record struct SuspendedWindowState(int CanvasX);
 }

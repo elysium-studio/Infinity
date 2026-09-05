@@ -24,11 +24,7 @@ public sealed class Settings
 
     public List<LaunchableApplication>? RecentApplications { get; set; } = [];
 
-    public List<List<int>> ScrollModifierKeys { get; set; } =
-        [
-            [VirtualKeys.VK_LWIN, VirtualKeys.VK_RWIN],
-            [VirtualKeys.VK_LCONTROL, VirtualKeys.VK_RCONTROL]
-        ];
+    public List<List<int>> ScrollModifierKeys { get; set; } = [[VirtualKeys.VK_LWIN, VirtualKeys.VK_RWIN], [VirtualKeys.VK_LCONTROL, VirtualKeys.VK_RCONTROL]];
 
     public ScrollSpeed ScrollSpeed { get; set; } = ScrollSpeed.Normal;
 

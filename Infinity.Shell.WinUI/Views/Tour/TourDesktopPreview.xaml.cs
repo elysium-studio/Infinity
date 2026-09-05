@@ -1,9 +1,9 @@
+using System;
+using System.Numerics;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
-using System;
-using System.Numerics;
 
 namespace Infinity.Shell.WinUI;
 
@@ -11,9 +11,7 @@ public sealed partial class TourDesktopPreview : UserControl
 {
     private const float CycleDuration = 4800;
     private const float PageDistance = 212;
-
     private bool animationsStarted;
-
     public static readonly DependencyProperty ScenarioProperty = DependencyProperty.Register(nameof(Scenario), typeof(TourDesktopScenario), typeof(TourDesktopPreview), new PropertyMetadata(TourDesktopScenario.Overview, HandleScenarioChanged));
 
     public TourDesktopPreview()
@@ -23,11 +21,9 @@ public sealed partial class TourDesktopPreview : UserControl
         Unloaded += HandleUnloaded;
     }
 
-    public TourDesktopScenario Scenario
-    {
-        get => (TourDesktopScenario)GetValue(ScenarioProperty);
-        set => SetValue(ScenarioProperty, value);
-    }
+
+    public TourDesktopScenario Scenario { get => (TourDesktopScenario)GetValue(ScenarioProperty); set => SetValue(ScenarioProperty, value); }
+
 
     private static void HandleScenarioChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
     {
@@ -37,6 +33,7 @@ public sealed partial class TourDesktopPreview : UserControl
         }
     }
 
+
     private static CubicBezierEasingFunction CreateEasing(Compositor compositor) => compositor.CreateCubicBezierEasingFunction(new Vector2(0.16f, 1), new Vector2(0.3f, 1));
 
     private void HandleLoaded(object sender, RoutedEventArgs args)
@@ -45,6 +42,7 @@ public sealed partial class TourDesktopPreview : UserControl
         StartScenario();
     }
 
+
     private void HandleUnloaded(object sender, RoutedEventArgs args) => StopScenario();
 
     private void ApplySceneClip()
@@ -52,16 +50,16 @@ public sealed partial class TourDesktopPreview : UserControl
         Visual visual = ElementCompositionPreview.GetElementVisual(Scene);
         Compositor compositor = visual.Compositor;
         CompositionRoundedRectangleGeometry geometry = compositor.CreateRoundedRectangleGeometry();
-        geometry.Size = new Vector2(520, 200);
-        geometry.CornerRadius = new Vector2(12);
+        geometry.Size = new(520, 200);
+        geometry.CornerRadius = new(12);
         visual.Clip = compositor.CreateGeometricClip(geometry);
     }
+
 
     private void StartScenario()
     {
         StopScenario();
         ResetVisuals();
-
         switch (Scenario)
         {
             case TourDesktopScenario.Overview:
@@ -87,6 +85,7 @@ public sealed partial class TourDesktopPreview : UserControl
         animationsStarted = true;
     }
 
+
     private void ResetVisuals()
     {
         SetTranslation(PageWorld, Vector3.Zero);
@@ -103,13 +102,13 @@ public sealed partial class TourDesktopPreview : UserControl
         PointerGlyph.Visibility = Visibility.Collapsed;
     }
 
+
     private void StartOverviewAnimation()
     {
         Visual pageVisual = GetVisual(PageWorld);
-        pageVisual.CenterPoint = new Vector3(260, 112, 0);
+        pageVisual.CenterPoint = new(260, 112, 0);
         Compositor compositor = pageVisual.Compositor;
         CubicBezierEasingFunction easing = CreateEasing(compositor);
-
         Vector3KeyFrameAnimation scale = compositor.CreateVector3KeyFrameAnimation();
         scale.InsertKeyFrame(0, new Vector3(0.96f, 0.96f, 1));
         scale.InsertKeyFrame(0.12f, new Vector3(0.96f, 0.96f, 1));
@@ -119,15 +118,14 @@ public sealed partial class TourDesktopPreview : UserControl
         scale.InsertKeyFrame(1, new Vector3(0.96f, 0.96f, 1));
         ConfigureLoop(scale);
         pageVisual.StartAnimation(nameof(Visual.Scale), scale);
-
         StartOpacityAnimation(OverviewChrome, 0, 0.12f, 0.78f, 0.94f, 0);
     }
+
 
     private void StartWindowMovement(float distance, bool showPointer)
     {
         StartTranslationAnimation(MovingWindow, new Vector3(distance, 0, 0));
         StartDestinationAnimation(distance);
-
         if (showPointer)
         {
             PointerGlyph.Visibility = Visibility.Visible;
@@ -136,6 +134,7 @@ public sealed partial class TourDesktopPreview : UserControl
         }
     }
 
+
     private void StartPageMovement(float distance, UIElement destinationAccent)
     {
         StartTranslationAnimation(PageWorld, new Vector3(-distance, 0, 0));
@@ -143,11 +142,13 @@ public sealed partial class TourDesktopPreview : UserControl
         StartOpacityAnimation(destinationAccent, 0, 0.24f, 0.68f, 0.88f, 0);
     }
 
+
     private void StartDestinationAnimation(float distance)
     {
         SetTranslation(DestinationGlow, new Vector3(distance - PageDistance, 0, 0));
         StartOpacityAnimation(DestinationGlow, 0, 0.2f, 0.7f, 0.88f, 0);
     }
+
 
     private void StartTranslationAnimation(UIElement element, Vector3 destination)
     {
@@ -164,6 +165,7 @@ public sealed partial class TourDesktopPreview : UserControl
         ConfigureLoop(movement);
         visual.Properties.StartAnimation("Translation", movement);
     }
+
 
     private void StartOpacityAnimation(UIElement element, float initial, float revealAt, float holdUntil, float resetAt, float final, bool invert = false)
     {
@@ -182,17 +184,20 @@ public sealed partial class TourDesktopPreview : UserControl
         visual.StartAnimation(nameof(Visual.Opacity), opacity);
     }
 
+
     private static Visual GetVisual(UIElement element)
     {
         ElementCompositionPreview.SetIsTranslationEnabled(element, true);
         return ElementCompositionPreview.GetElementVisual(element);
     }
 
+
     private static void SetTranslation(UIElement element, Vector3 value)
     {
         Visual visual = GetVisual(element);
         visual.Properties.InsertVector3("Translation", value);
     }
+
 
     private static void SetScale(UIElement element, Vector3 value) => GetVisual(element).Scale = value;
 
@@ -205,6 +210,7 @@ public sealed partial class TourDesktopPreview : UserControl
         animation.DelayBehavior = AnimationDelayBehavior.SetInitialValueBeforeDelay;
     }
 
+
     private void StopScenario()
     {
         if (!animationsStarted)
@@ -212,7 +218,20 @@ public sealed partial class TourDesktopPreview : UserControl
             return;
         }
 
-        foreach (UIElement element in new UIElement[] { Scene, OverviewChrome, PageWorld, MovingWindow, PointerGlyph, PageOneAccent, PageTwoAccent, PageThreeAccent, DestinationGlow })
+        foreach (UIElement element in new UIElement[]
+        {
+            Scene,
+            OverviewChrome,
+            PageWorld,
+            MovingWindow,
+            PointerGlyph,
+            PageOneAccent,
+            PageTwoAccent,
+            PageThreeAccent,
+            DestinationGlow
+        }
+
+        )
         {
             Visual visual = GetVisual(element);
             visual.StopAnimation(nameof(Visual.Scale));

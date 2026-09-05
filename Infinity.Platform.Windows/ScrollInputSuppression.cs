@@ -14,5 +14,6 @@ public sealed class ScrollInputSuppression : IScrollInputSuppression
         return new ScrollInputSuppressionLease(this);
     }
 
+
     internal void Release() => Interlocked.Decrement(ref suppressionCount);
 }

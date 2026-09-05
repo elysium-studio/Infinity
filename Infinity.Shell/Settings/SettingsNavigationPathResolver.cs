@@ -5,31 +5,30 @@ public sealed class SettingsNavigationPathResolver
     public IReadOnlyList<ISettingViewModel> GetInitialPath(IEnumerable<ISettingViewModel> roots)
     {
         ISettingViewModel? initial = roots.FirstOrDefault();
-
         if (initial is null)
         {
-            return [];
+            return[];
         }
 
         return AppendDefaultChild([initial]);
     }
 
+
     public IReadOnlyList<ISettingViewModel> GetSelectionPath(IEnumerable<ISettingViewModel> roots, ISettingViewModel target)
     {
         ArgumentNullException.ThrowIfNull(target);
-
         foreach (ISettingViewModel root in roots)
         {
             List<ISettingViewModel> path = [];
-
             if (TryFindPath(root, target, path))
             {
                 return AppendDefaultChild(path);
             }
         }
 
-        return [];
+        return[];
     }
+
 
     public IReadOnlyList<ISettingViewModel> GetBreadcrumbPath(IReadOnlyList<ISettingViewModel> currentPath, int breadcrumbIndex)
     {
@@ -38,11 +37,11 @@ public sealed class SettingsNavigationPathResolver
             return currentPath;
         }
 
-        return AppendDefaultChild([.. currentPath.Take(breadcrumbIndex + 1)]);
+        return AppendDefaultChild([..currentPath.Take(breadcrumbIndex + 1)]);
     }
 
-    public IReadOnlyList<ISettingViewModel> GetBackPath(IReadOnlyList<ISettingViewModel> currentPath)
-        => currentPath.Count < 2 ? currentPath : [.. currentPath.Take(currentPath.Count - 1)];
+
+    public IReadOnlyList<ISettingViewModel> GetBackPath(IReadOnlyList<ISettingViewModel> currentPath) => currentPath.Count < 2 ? currentPath : [..currentPath.Take(currentPath.Count - 1)];
 
     private static IReadOnlyList<ISettingViewModel> AppendDefaultChild(List<ISettingViewModel> path)
     {
@@ -54,10 +53,10 @@ public sealed class SettingsNavigationPathResolver
         return path;
     }
 
+
     private static bool TryFindPath(ISettingViewModel current, ISettingViewModel target, List<ISettingViewModel> path)
     {
         path.Add(current);
-
         if (ReferenceEquals(current, target))
         {
             return true;

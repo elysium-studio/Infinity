@@ -5,8 +5,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Infinity.Platform.Windows;
 
-public sealed class WindowActivator :
-    IWindowActivator
+public sealed class WindowActivator : IWindowActivator
 {
     private static readonly TimeSpan ActivationRetryDelay = TimeSpan.FromMilliseconds(60);
 
@@ -18,7 +17,6 @@ public sealed class WindowActivator :
         }
 
         HWND hwnd = new(handle);
-
         if (!PInvoke.IsWindow(hwnd))
         {
             return;
@@ -30,12 +28,12 @@ public sealed class WindowActivator :
         }
     }
 
+
     private static async Task RetryRestoreAndActivateAsync(HWND hwnd)
     {
         try
         {
             await Task.Delay(ActivationRetryDelay).ConfigureAwait(false);
-
             if (!PInvoke.IsWindow(hwnd))
             {
                 return;
@@ -50,6 +48,7 @@ public sealed class WindowActivator :
         {
         }
     }
+
 
     private static bool RestoreAndActivate(HWND hwnd)
     {

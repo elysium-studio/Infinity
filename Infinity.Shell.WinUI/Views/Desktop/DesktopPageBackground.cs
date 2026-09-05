@@ -1,4 +1,3 @@
-using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml.Media;
 
 namespace Infinity.Shell.WinUI;

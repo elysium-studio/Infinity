@@ -10,7 +10,6 @@ public sealed class WindowPageGeometry
     public int GetPage(TrackedWindow window, int workspaceWidth)
     {
         double canvasX = GetSafeCanvasX(window);
-
         if (workspaceWidth <= 0)
         {
             return 0;
@@ -18,6 +17,7 @@ public sealed class WindowPageGeometry
 
         return ClampPage(Math.Floor(canvasX / workspaceWidth));
     }
+
 
     public int GetCenterPage(TrackedWindow window, int workspaceWidth)
     {
@@ -30,20 +30,20 @@ public sealed class WindowPageGeometry
         return Math.Max(0, ClampPage(Math.Floor(center / workspaceWidth)));
     }
 
+
     public double GetTargetOffset(TrackedWindow window, int workspaceWidth, int windowPage)
     {
         double windowLeft = GetSafeCanvasX(window);
         double windowCenter = windowLeft + (GetSafeWidth(window) / 2d);
         double targetOffset = windowCenter - (workspaceWidth / 2d);
         double pageLeft = windowPage * (double)workspaceWidth;
-
         return IsFinite(targetOffset) ? Math.Max(pageLeft, targetOffset) : pageLeft;
     }
+
 
     public bool IsFullyVisible(TrackedWindow window, double viewportLeft, int workspaceWidth)
     {
         double viewportRight = viewportLeft + workspaceWidth;
-
         if (!IsValidViewport(viewportLeft, viewportRight))
         {
             return false;
@@ -51,14 +51,13 @@ public sealed class WindowPageGeometry
 
         double windowLeft = GetSafeCanvasX(window);
         double windowRight = windowLeft + GetSafeWidth(window);
-
         return windowLeft >= viewportLeft - ScrollTolerance && windowRight <= viewportRight + ScrollTolerance;
     }
+
 
     public bool IsMeaningfullyVisible(TrackedWindow window, double viewportLeft, int workspaceWidth)
     {
         double viewportRight = viewportLeft + workspaceWidth;
-
         if (!IsValidViewport(viewportLeft, viewportRight))
         {
             return false;
@@ -67,7 +66,6 @@ public sealed class WindowPageGeometry
         double windowLeft = GetSafeCanvasX(window);
         double windowWidth = GetSafeWidth(window);
         double windowRight = windowLeft + windowWidth;
-
         if (windowWidth <= 0)
         {
             return false;
@@ -79,7 +77,6 @@ public sealed class WindowPageGeometry
         }
 
         double windowCenter = windowLeft + (windowWidth / 2d);
-
         if (windowCenter >= viewportLeft && windowCenter <= viewportRight)
         {
             return true;
@@ -89,8 +86,8 @@ public sealed class WindowPageGeometry
         return visibleWidth / windowWidth >= MeaningfulVisibilityRatio;
     }
 
-    public bool AreClose(double left, double right)
-        => IsFinite(left) && IsFinite(right) && Math.Abs(left - right) < ScrollTolerance;
+
+    public bool AreClose(double left, double right) => IsFinite(left) && IsFinite(right) && Math.Abs(left - right) < ScrollTolerance;
 
     public bool IsFinite(double value) => !double.IsNaN(value) && !double.IsInfinity(value);
 

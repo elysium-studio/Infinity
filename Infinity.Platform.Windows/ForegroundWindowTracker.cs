@@ -1,18 +1,16 @@
+using System.Runtime.InteropServices;
 using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
-using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 
 namespace Infinity.Platform.Windows;
 
-public sealed class ForegroundWindowTracker :
-    IForegroundWindowTracker
+public sealed class ForegroundWindowTracker : IForegroundWindowTracker
 {
     private static readonly TimeSpan ForegroundDelay = TimeSpan.FromMilliseconds(50);
-
     private readonly IWindowEventListener listener;
     private readonly IWindowFocusGuard focusGuard;
     private readonly IDispatcher dispatcher;
@@ -21,35 +19,20 @@ public sealed class ForegroundWindowTracker :
     private readonly Func<nint, bool> isWindowHandleValid;
     private readonly Lock transitionSyncRoot = new();
     private readonly ForegroundTransitionHistory transitionHistory = new();
-
     private int isStarted;
     private int foregroundInFlight;
     private int foregroundRequested;
 
     public event EventHandler<nint>? ForegroundWindowChanged;
 
-    public ForegroundWindowTracker(IWindowEventListener listener,
-        IWindowFocusGuard focusGuard,
-        IDispatcher dispatcher,
-        ILogger<ForegroundWindowTracker> logger) :
-        this(listener,
-            focusGuard,
-            dispatcher,
-            logger,
-            ForegroundDelay,
-            IsWindowHandleValid)
+    public ForegroundWindowTracker(IWindowEventListener listener, IWindowFocusGuard focusGuard, IDispatcher dispatcher, ILogger<ForegroundWindowTracker> logger) : this(listener, focusGuard, dispatcher, logger, ForegroundDelay, IsWindowHandleValid)
     {
     }
 
-    internal ForegroundWindowTracker(IWindowEventListener listener,
-        IWindowFocusGuard focusGuard,
-        IDispatcher dispatcher,
-        ILogger<ForegroundWindowTracker> logger,
-        TimeSpan foregroundDelay,
-        Func<nint, bool> isWindowHandleValid)
+
+    internal ForegroundWindowTracker(IWindowEventListener listener, IWindowFocusGuard focusGuard, IDispatcher dispatcher, ILogger<ForegroundWindowTracker> logger, TimeSpan foregroundDelay, Func<nint, bool> isWindowHandleValid)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(foregroundDelay, TimeSpan.Zero);
-
         this.listener = listener;
         this.focusGuard = focusGuard;
         this.dispatcher = dispatcher;
@@ -57,6 +40,7 @@ public sealed class ForegroundWindowTracker :
         this.foregroundDelay = foregroundDelay;
         this.isWindowHandleValid = isWindowHandleValid;
     }
+
 
     public void Start()
     {
@@ -69,6 +53,7 @@ public sealed class ForegroundWindowTracker :
         listener.WindowDestroyed += HandleWindowDestroyed;
     }
 
+
     public void Stop()
     {
         if (Interlocked.CompareExchange(ref isStarted, 0, 1) != 1)
@@ -78,14 +63,13 @@ public sealed class ForegroundWindowTracker :
 
         listener.ForegroundChanged -= HandleForegroundChanged;
         listener.WindowDestroyed -= HandleWindowDestroyed;
-
         Volatile.Write(ref foregroundRequested, 0);
-
         lock (transitionSyncRoot)
         {
             transitionHistory.Reset();
         }
     }
+
 
     public void NotifyForegroundWindowChanged(nint windowHandle)
     {
@@ -96,6 +80,7 @@ public sealed class ForegroundWindowTracker :
 
         RaiseForegroundWindowChanged(windowHandle, false);
     }
+
 
     private void HandleForegroundChanged(nint windowHandle)
     {
@@ -112,6 +97,7 @@ public sealed class ForegroundWindowTracker :
         ScheduleForegroundPublish();
     }
 
+
     private void HandleWindowDestroyed(nint windowHandle)
     {
         if (windowHandle == 0)
@@ -125,6 +111,7 @@ public sealed class ForegroundWindowTracker :
         }
     }
 
+
     private void ScheduleForegroundPublish()
     {
         if (!IsStarted())
@@ -133,7 +120,6 @@ public sealed class ForegroundWindowTracker :
         }
 
         Volatile.Write(ref foregroundRequested, 1);
-
         if (Interlocked.CompareExchange(ref foregroundInFlight, 1, 0) != 0)
         {
             return;
@@ -142,6 +128,7 @@ public sealed class ForegroundWindowTracker :
         _ = Task.Run(RunForegroundPublishLoopAsync);
     }
 
+
     private async Task RunForegroundPublishLoopAsync()
     {
         while (true)
@@ -149,9 +136,7 @@ public sealed class ForegroundWindowTracker :
             try
             {
                 await Task.Delay(foregroundDelay).ConfigureAwait(false);
-
                 Volatile.Write(ref foregroundRequested, 0);
-
                 if (IsStarted())
                 {
                     PublishPendingForegroundWindow();
@@ -163,7 +148,6 @@ public sealed class ForegroundWindowTracker :
             }
 
             Interlocked.Exchange(ref foregroundInFlight, 0);
-
             if (!IsStarted())
             {
                 return;
@@ -181,17 +165,16 @@ public sealed class ForegroundWindowTracker :
         }
     }
 
+
     private void PublishPendingForegroundWindow()
     {
         ForegroundTransition transition;
-
         lock (transitionSyncRoot)
         {
             transition = transitionHistory.TakePending();
         }
 
         nint windowHandle = transition.WindowHandle;
-
         if (windowHandle == 0)
         {
             return;
@@ -199,9 +182,7 @@ public sealed class ForegroundWindowTracker :
 
         if (transition.IsCloseFallback)
         {
-            logger.LogDebug("Ignoring foreground fallback to {WindowHandle} after window {ClosedWindowHandle} closed",
-                windowHandle,
-                transition.PreviousWindowHandle);
+            logger.LogDebug("Ignoring foreground fallback to {WindowHandle} after window {ClosedWindowHandle} closed", windowHandle, transition.PreviousWindowHandle);
             return;
         }
 
@@ -218,25 +199,18 @@ public sealed class ForegroundWindowTracker :
         RaiseForegroundWindowChanged(windowHandle, true);
     }
 
+
     private void RaiseForegroundWindowChanged(nint windowHandle, bool requireStarted)
     {
         EventHandler<nint>? handler = ForegroundWindowChanged;
-
         if (handler is null)
         {
             return;
         }
 
-        Dispatch(() =>
-        {
-            if (requireStarted && !IsStarted())
-            {
-                return;
-            }
-
-            handler(this, windowHandle);
-        });
+        Dispatch(() =>  {  if (requireStarted && !IsStarted())  {  return;  }   handler(this, windowHandle);  });
     }
+
 
     private bool IsDirectFocus(nint windowHandle)
     {
@@ -250,6 +224,7 @@ public sealed class ForegroundWindowTracker :
             return false;
         }
     }
+
 
     private void Dispatch(Action action)
     {
@@ -271,6 +246,7 @@ public sealed class ForegroundWindowTracker :
         }
     }
 
+
     private bool IsStarted() => Volatile.Read(ref isStarted) != 0;
 
     private static bool IsWindowHandleValid(nint windowHandle)
@@ -283,6 +259,7 @@ public sealed class ForegroundWindowTracker :
         return PInvoke.IsWindow(new HWND(windowHandle));
     }
 
+
     internal sealed class ForegroundTransitionHistory
     {
         private ForegroundTransition pendingTransition;
@@ -292,14 +269,12 @@ public sealed class ForegroundWindowTracker :
 
         public void RecordForeground(nint windowHandle)
         {
-            pendingTransition = new ForegroundTransition(windowHandle,
-                observedWindowHandle,
-                observedPreviousWindowHandle,
-                observedWindowDestroyed);
+            pendingTransition = new(windowHandle, observedWindowHandle, observedPreviousWindowHandle, observedWindowDestroyed);
             observedPreviousWindowHandle = observedWindowHandle;
             observedWindowHandle = windowHandle;
             observedWindowDestroyed = false;
         }
+
 
         public void RecordDestroyed(nint windowHandle)
         {
@@ -310,9 +285,13 @@ public sealed class ForegroundWindowTracker :
 
             if (windowHandle == pendingTransition.PreviousWindowHandle)
             {
-                pendingTransition = pendingTransition with { PreviousWindowDestroyed = true };
+                pendingTransition = pendingTransition with
+                {
+                    PreviousWindowDestroyed = true
+                };
             }
         }
+
 
         public ForegroundTransition TakePending()
         {
@@ -320,6 +299,7 @@ public sealed class ForegroundWindowTracker :
             pendingTransition = default;
             return transition;
         }
+
 
         public void Reset()
         {
@@ -330,14 +310,9 @@ public sealed class ForegroundWindowTracker :
         }
     }
 
-    internal readonly record struct ForegroundTransition(nint WindowHandle,
-        nint PreviousWindowHandle,
-        nint PreviousPreviousWindowHandle,
-        bool PreviousWindowDestroyed)
+
+    internal readonly record struct ForegroundTransition(nint WindowHandle, nint PreviousWindowHandle, nint PreviousPreviousWindowHandle, bool PreviousWindowDestroyed)
     {
-        public bool IsCloseFallback =>
-            PreviousWindowDestroyed &&
-            PreviousWindowHandle != 0 &&
-            WindowHandle == PreviousPreviousWindowHandle;
+        public bool IsCloseFallback => PreviousWindowDestroyed && PreviousWindowHandle != 0 && WindowHandle == PreviousPreviousWindowHandle;
     }
 }

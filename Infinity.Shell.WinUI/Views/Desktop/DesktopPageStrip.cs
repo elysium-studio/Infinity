@@ -1,23 +1,21 @@
-using Elysium.Application.Abstractions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Composition;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, IPager pager, IScroller scroller, IWorkspace workspace, PageTitleStore pageTitleStore, PageLayoutStore pageLayoutStore, DesktopPageReorderController reorderController, DesktopPageArrangementCoordinator arrangementCoordinator, DesktopOverviewDragScroller overviewDragScroller, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, ITextLocalizer localizer, DesktopPageLayoutCalculator layoutCalculator, DesktopSnapLayoutCatalog snapLayoutCatalog, DesktopPageBackgroundFactory backgroundFactory, DesktopWallpaperPlacementCalculator wallpaperPlacementCalculator, DesktopWallpaperBrushFactory wallpaperBrushFactory, ILogger<DesktopPageStrip> logger) :
-    IDisposable
+public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, IPager pager, IScroller scroller, IWorkspace workspace, PageTitleStore pageTitleStore, PageLayoutStore pageLayoutStore, DesktopPageReorderController reorderController, DesktopPageArrangementCoordinator arrangementCoordinator, DesktopOverviewDragScroller overviewDragScroller, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, ITextLocalizer localizer, DesktopPageLayoutCalculator layoutCalculator, DesktopSnapLayoutCatalog snapLayoutCatalog, DesktopPageBackgroundFactory backgroundFactory, DesktopWallpaperPlacementCalculator wallpaperPlacementCalculator, DesktopWallpaperBrushFactory wallpaperBrushFactory, ILogger<DesktopPageStrip> logger) : IDisposable
 {
     private static readonly TimeSpan ReorderAnimationDuration = TimeSpan.FromMilliseconds(180);
-
     private readonly Dictionary<int, DesktopPagePreview> visiblePages = [];
     private readonly List<DesktopPagePreview> pagePool = [];
     private readonly Stack<DesktopPagePreview> availablePages = [];
@@ -57,7 +55,6 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
     public void Start(Canvas canvas, Canvas shadowCanvas, Canvas titleCanvas, FrameworkElement scaleElement, double scale)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
-
         if (started)
         {
             return;
@@ -71,19 +68,17 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         overviewScale = scale;
         interactionEnabled = false;
         SetHeadersVisible(false);
-
         scaleHost.SizeChanged += HandleScaleHostSizeChanged;
         ConfigureHost();
         EnsurePagePoolCapacity();
-
         backgroundSource.BackgroundChanged += HandleBackgroundChanged;
         pageTitleStore.TitleChanged += HandlePageTitleChanged;
         pageLayoutStore.LayoutChanged += HandlePageLayoutChanged;
         overviewDragScroller.ScrollLimitReached += HandleScrollLimitReached;
-
         RefreshBackground();
         Synchronise(scroller.VisualOffset);
     }
+
 
     public void Stop()
     {
@@ -96,12 +91,10 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         SetHeadersVisible(false);
         overviewDragScroller.Stop();
         cursorConfinement.Release();
-
         backgroundSource.BackgroundChanged -= HandleBackgroundChanged;
         pageTitleStore.TitleChanged -= HandlePageTitleChanged;
         pageLayoutStore.LayoutChanged -= HandlePageLayoutChanged;
         overviewDragScroller.ScrollLimitReached -= HandleScrollLimitReached;
-
         if (scaleHost is not null)
         {
             scaleHost.SizeChanged -= HandleScaleHostSizeChanged;
@@ -126,11 +119,9 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         pagePool.Clear();
         retiredPages.Clear();
         hostLayout = null;
-
         host?.Children.Clear();
         shadowHost?.Children.Clear();
         titleHost?.Children.Clear();
-
         host = null;
         shadowHost = null;
         titleHost = null;
@@ -143,6 +134,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         displayState = null;
     }
 
+
     public void Synchronise(double offset)
     {
         if (!started)
@@ -152,10 +144,10 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
 
         currentOffset = offset;
         currentSpacingProgress = 1;
-
         ConfigureHost();
         RefreshVisiblePages(null);
     }
+
 
     public void RefreshLayout(double offset, double spacingProgress = 1, TimeSpan? transitionDuration = null)
     {
@@ -175,7 +167,6 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         currentOffset = offset;
         currentSpacingProgress = spacingProgress;
         TimeSpan? reorderTransition = null;
-
         if (reorderState is not null)
         {
             DesktopPageReorderPreviewState previousState = reorderState;
@@ -185,12 +176,12 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
 
         ConfigureHost();
         RefreshVisiblePages(reorderTransition ?? transitionDuration);
-
         if (reorderState is not null)
         {
             ReorderPreviewChanged?.Invoke(reorderState, reorderTransition);
         }
     }
+
 
     public void ClearTranslationTransitions()
     {
@@ -199,6 +190,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             page.ClearTranslationTransition();
         }
     }
+
 
     public void SetHeadersVisible(bool visible)
     {
@@ -211,16 +203,8 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         titleHost.IsHitTestVisible = visible;
     }
 
-    public void SetMonitorBounds(int x, int y, int width, int height)
-    {
-        wallpaperPlacement = wallpaperPlacementCalculator.Calculate(
-            x,
-            y,
-            width,
-            height,
-            workspace.WorkAreaX,
-            workspace.WorkAreaY);
-    }
+
+    public void SetMonitorBounds(int x, int y, int width, int height) => wallpaperPlacement = wallpaperPlacementCalculator.Calculate(x, y, width, height, workspace.WorkAreaX, workspace.WorkAreaY);
 
     public void SetWorkAreaOffset(double x, double y)
     {
@@ -228,11 +212,11 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         workAreaOffsetY = double.IsFinite(y) ? y : 0;
     }
 
+
     public void SetInteractionEnabled(bool value)
     {
         interactionEnabled = value;
         bool canceledReorder = !value && reorderState is not null;
-
         if (!value)
         {
             ClearWindowSnapTarget();
@@ -259,11 +243,11 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         }
     }
 
+
     internal bool TryUpdateWindowSnapTarget(double pointerX, double pointerY, out DesktopSnapSlotTarget target)
     {
         target = default;
         DesktopPagePreview? targetPage = visiblePages.Values.FirstOrDefault(page => pointerX >= page.ScreenX && pointerX <= page.ScreenX + page.ScreenWidth && pointerY >= page.ScreenY && pointerY <= page.ScreenY + page.ScreenHeight);
-
         if (targetPage is null)
         {
             ClearWindowSnapTarget();
@@ -271,7 +255,6 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         }
 
         DesktopSnapLayoutKind layout = targetPage.TitleEditor.ViewModel.Layout;
-
         if (layout == DesktopSnapLayoutKind.None || targetPage.ScreenWidth <= 0 || targetPage.ScreenHeight <= 0)
         {
             ClearWindowSnapTarget();
@@ -281,7 +264,6 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         double normalizedX = (pointerX - targetPage.ScreenX) / targetPage.ScreenWidth;
         double normalizedY = (pointerY - targetPage.ScreenY) / targetPage.ScreenHeight;
         int slot = snapLayoutCatalog.HitTest(layout, normalizedX, normalizedY);
-
         if (slot < 0)
         {
             ClearWindowSnapTarget();
@@ -295,9 +277,10 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         }
 
         targetPage.ShowSnapZones(layout, slot);
-        target = new DesktopSnapSlotTarget(targetPage.Page, layout, slot);
+        target = new(targetPage.Page, layout, slot);
         return true;
     }
+
 
     internal void ClearWindowSnapTarget()
     {
@@ -309,19 +292,19 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         activeSnapPage = -1;
     }
 
+
     internal bool TryCancelEditor()
     {
         DesktopPagePreview? page = visiblePages.Values.FirstOrDefault(page => page.TitleEditor.ViewModel.IsEditing);
-
         if (page is null)
         {
             return false;
         }
 
         page.TitleEditor.ViewModel.Cancel();
-
         return true;
     }
+
 
     public void Dispose()
     {
@@ -331,10 +314,10 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         }
 
         disposed = true;
-
         Stop();
         GC.SuppressFinalize(this);
     }
+
 
     private void RefreshVisiblePages(TimeSpan? transitionDuration, bool preserveExistingBindings = false)
     {
@@ -359,6 +342,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
                 retiredPages.Add(page);
             }
         }
+
         foreach (int page in retiredPages)
         {
             DesktopPagePreview preview = visiblePages[page];
@@ -372,7 +356,6 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             if (!visiblePages.TryGetValue(page, out DesktopPagePreview? preview))
             {
                 preview = Acquire();
-
                 if (preview is null)
                 {
                     logger.LogWarning("Desktop page pool exhausted while presenting page {Page}", page);
@@ -397,15 +380,14 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         }
     }
 
+
     private DesktopPagePreview? Acquire() => availablePages.Count > 0 ? availablePages.Pop() : null;
 
     private void UpdatePage(int page, DesktopPagePreview preview, TimeSpan? transitionDuration)
     {
-
         double fullContentOffset = layoutCalculator.CalculateContentOffset(currentOffset, workspace.Width);
         double baseX = page * (workspace.Width + layoutCalculator.PageSpacing) - fullContentOffset;
         double targetX = layoutCalculator.CalculatePageX(page, workspace.Width, currentOffset, currentSpacingProgress);
-
         if (reorderState is not null)
         {
             targetX = page == reorderState.SourcePage ? targetX + reorderState.HorizontalDelta : layoutCalculator.CalculatePageX(reorderState.MapPage(page), workspace.Width, currentOffset, currentSpacingProgress);
@@ -418,7 +400,6 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         double pageScreenY = workAreaOffsetY + ((animationHeight / 2) * (1 - overviewScale));
         double titleX = pageScreenX + ((workspace.Width * overviewScale) - preview.TitleEditor.Width) / 2;
         double translationX = targetX - baseX;
-
         Canvas.SetLeft(preview.PageHost, leadingSpace + baseX);
         Canvas.SetTop(preview.PageHost, 0);
         Canvas.SetLeft(preview.ShadowHost, pageScreenX);
@@ -426,10 +407,10 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         Canvas.SetLeft(preview.TitleEditor, titleX);
         Canvas.SetTop(preview.TitleEditor, pageScreenY - preview.TitleEditor.Height);
         preview.SetScreenBounds(pageScreenX, pageScreenY, workspace.Width * overviewScale, workspace.Height * overviewScale);
-
         TimeSpan? effectiveTransition = reorderState?.SourcePage == page ? null : transitionDuration;
         preview.Update(translationX, translationX * overviewScale, effectiveTransition);
     }
+
 
     private void ConfigureHost()
     {
@@ -441,21 +422,23 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         double viewportWidth = GetViewportWidth();
         double viewportHeight = GetViewportHeight();
         (double, double, double, double, double) nextLayout = (viewportWidth, viewportHeight, workspace.Width, workspace.Height, overviewScale);
-        if (hostLayout == nextLayout) return;
-        hostLayout = nextLayout;
+        if (hostLayout == nextLayout)
+        {
+            return;
+        }
 
+        hostLayout = nextLayout;
         double unscaledViewportWidth = viewportWidth / overviewScale;
         leadingSpace = Math.Max(0, (unscaledViewportWidth - workspace.Width) / 2);
-
         host.Width = unscaledViewportWidth;
         host.Height = workspace.Height;
         Canvas.SetLeft(host, -leadingSpace);
-
         shadowHost.Width = viewportWidth;
         shadowHost.Height = viewportHeight;
         titleHost.Width = viewportWidth;
         titleHost.Height = viewportHeight;
     }
+
 
     private void EnsurePagePoolCapacity()
     {
@@ -466,11 +449,9 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
 
         int capacity = layoutCalculator.CalculateVisiblePageCapacity(GetViewportWidth(), workspace.Width, overviewScale);
         Visual scaleVisual = ElementCompositionPreview.GetElementVisual(scaleHost);
-
         for (int index = pagePool.Count; index < capacity; index++)
         {
             DesktopPagePreview page = new(scaleVisual, overviewScale, snapLayoutCatalog, wallpaperBrushFactory, editorLabels);
-
             page.Click += HandlePageClicked;
             page.DragStarted += HandlePageDragStarted;
             page.DragMoved += HandlePageDragMoved;
@@ -479,16 +460,15 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             page.TitleEditor.ViewModel.TitleSubmitted += HandleTitleSubmitted;
             page.TitleEditor.ViewModel.LayoutSubmitted += HandleLayoutSubmitted;
             page.TitleEditor.ViewModel.ArrangeRequested += HandleArrangeRequested;
-
             page.Hide();
             pagePool.Add(page);
             availablePages.Push(page);
-
             host.Children.Add(page.PageHost);
             shadowHost.Children.Add(page.ShadowHost);
             titleHost.Children.Add(page.TitleEditor);
         }
     }
+
 
     private double GetViewportWidth() => scaleHost?.ActualWidth > 0 ? scaleHost.ActualWidth : workspace.Width;
 
@@ -510,6 +490,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         RefreshVisiblePages(null);
     }
 
+
     private void HandlePageClicked(object sender, RoutedEventArgs args)
     {
         if (started && reorderState is null && sender is DesktopPagePreview { IsDragging: false } page)
@@ -517,6 +498,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             PageInvoked?.Invoke(page.Page);
         }
     }
+
 
     private void HandlePageDragStarted(DesktopPagePreview page)
     {
@@ -529,9 +511,9 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         reorderPointerDelta = 0;
         reorderStartContentOffset = layoutCalculator.CalculateContentOffset(currentOffset, workspace.Width, currentSpacingProgress);
         cursorConfinement.Begin(GetViewportWidth(), GetViewportHeight(), overviewScale, scaleHost?.XamlRoot?.RasterizationScale ?? 1, constrainVertical: false);
-
         ReorderPreviewChanged?.Invoke(reorderState, null);
     }
+
 
     private void HandlePageDragMoved(DesktopPagePreview page, double horizontalDelta, double pointerX)
     {
@@ -545,13 +527,10 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         reorderPointerDelta = horizontalDelta + constrainedPointerX - pointerX;
         overviewDragScroller.Update(page.DispatcherQueue, constrainedPointerX, viewportWidth);
         cursorConfinement.Update(viewportWidth, GetViewportHeight(), overviewScale, scaleHost?.XamlRoot?.RasterizationScale ?? 1);
-
         DesktopPageReorderPreviewState previousState = reorderState;
         UpdateReorderState(!overviewDragScroller.IsActive);
-
         bool layoutChanged = HasReorderLayoutChanged(previousState, reorderState);
         TimeSpan? transitionDuration = layoutChanged ? ReorderAnimationDuration : null;
-
         if (layoutChanged)
         {
             RefreshVisiblePages(transitionDuration);
@@ -564,25 +543,22 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         ReorderPreviewChanged?.Invoke(reorderState, transitionDuration);
     }
 
+
     private async void HandlePageDragCompleted(DesktopPagePreview page)
     {
         DesktopPageReorderPreviewState? currentState = reorderState;
-
         if (currentState is null || !started || currentState.SourcePage != page.Page)
         {
             return;
         }
 
-        var dispatcherQueue = page.DispatcherQueue;
+        DispatcherQueue dispatcherQueue = page.DispatcherQueue;
         overviewDragScroller.Stop();
         cursorConfinement.Release();
         UpdateReorderState(true);
-
         DesktopPageReorderPreviewState completedState = reorderState ?? currentState;
-
         IReadOnlyDictionary<int, string>? reorderedTitles = null;
         Exception? failure = null;
-
         try
         {
             if (completedState.SourcePage != completedState.TargetPage)
@@ -596,7 +572,6 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         }
 
         void CompleteDrop() => CompletePageDrag(completedState, reorderedTitles, failure);
-
         if (dispatcherQueue.HasThreadAccess)
         {
             CompleteDrop();
@@ -607,10 +582,10 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         }
     }
 
+
     private void CompletePageDrag(DesktopPageReorderPreviewState completedState, IReadOnlyDictionary<int, string>? reorderedTitles, Exception? failure)
     {
         bool reordered = false;
-
         if (failure is not null)
         {
             logger.LogError(failure, "Failed to reorder desktop page {SourcePage} to {TargetPage}", completedState.SourcePage, completedState.TargetPage);
@@ -624,16 +599,13 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         reorderState = null;
         reorderPointerDelta = 0;
         reorderStartContentOffset = 0;
-
         if (started)
         {
-            // RemapVisiblePages has already bound each preview to the page identity
-            // that travelled with it. Do not immediately overwrite that binding from
-            // an options monitor which may not have observed the persisted reorder yet.
             RefreshVisiblePages(ReorderAnimationDuration, preserveExistingBindings: reordered);
             ReorderPreviewChanged?.Invoke(null, ReorderAnimationDuration);
         }
     }
+
 
     private void HandlePageDragCanceled(DesktopPagePreview page)
     {
@@ -645,13 +617,12 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         reorderState = null;
         reorderPointerDelta = 0;
         reorderStartContentOffset = 0;
-
         overviewDragScroller.Stop();
         cursorConfinement.Release();
         RefreshVisiblePages(ReorderAnimationDuration);
-
         ReorderPreviewChanged?.Invoke(null, ReorderAnimationDuration);
     }
+
 
     private void HandleScrollLimitReached()
     {
@@ -662,12 +633,11 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
 
         DesktopPageReorderPreviewState previousState = reorderState;
         UpdateReorderState(true);
-
         TimeSpan? transitionDuration = HasReorderLayoutChanged(previousState, reorderState) ? ReorderAnimationDuration : null;
-
         RefreshVisiblePages(transitionDuration);
         ReorderPreviewChanged?.Invoke(reorderState, transitionDuration);
     }
+
 
     private void UpdateReorderState(bool createGap)
     {
@@ -679,14 +649,13 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         double currentContentOffset = layoutCalculator.CalculateContentOffset(currentOffset, workspace.Width, currentSpacingProgress);
         double logicalDelta = (reorderPointerDelta / overviewScale) + (currentContentOffset - reorderStartContentOffset);
         double stride = workspace.Width + layoutCalculator.PageSpacing;
-
         double roundedPageDelta = stride > 0 ? Math.Round(logicalDelta / stride, MidpointRounding.AwayFromZero) : 0;
-
         long targetPage = reorderState.SourcePage + (long)Math.Clamp(roundedPageDelta, int.MinValue, int.MaxValue);
         long maximumPage = pager.MaxPages.HasValue ? Math.Max(0, pager.MaxPages.Value - 1L) : int.MaxValue;
         int clampedTargetPage = (int)Math.Clamp(targetPage, 0, maximumPage);
         reorderState = new(reorderState.SourcePage, clampedTargetPage, logicalDelta, createGap);
     }
+
 
     private static bool HasReorderLayoutChanged(DesktopPageReorderPreviewState previousState, DesktopPageReorderPreviewState currentState)
     {
@@ -703,20 +672,20 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         return Math.Sign(previousState.TargetPage - previousState.SourcePage) != Math.Sign(currentState.TargetPage - currentState.SourcePage);
     }
 
+
     private void RemapVisiblePages(int sourcePage, int targetPage, IReadOnlyDictionary<int, string> reorderedTitles)
     {
-        KeyValuePair<int, DesktopPagePreview>[] pages = [.. visiblePages];
+        KeyValuePair<int, DesktopPagePreview>[] pages = [..visiblePages];
         visiblePages.Clear();
-
-        foreach ((int page, DesktopPagePreview preview) in pages)
+        foreach ((int page, DesktopPagePreview preview)in pages)
         {
             int reorderedPage = PageReorderMapping.Map(page, sourcePage, targetPage);
             string title = reorderedTitles.TryGetValue(reorderedPage, out string? reorderedTitle) ? reorderedTitle : pageTitleStore.GetTitle(reorderedPage);
-
             preview.Bind(reorderedPage, workspace.Width, workspace.Height, background!, wallpaperPlacement, title, pageLayoutStore.GetLayout(reorderedPage), GetRasterizationScale());
             visiblePages[reorderedPage] = preview;
         }
     }
+
 
     private async void HandleTitleSubmitted(DesktopPageTitleViewModel viewModel, string title)
     {
@@ -731,26 +700,42 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         }
     }
 
+
     private async void HandleLayoutSubmitted(DesktopPageTitleViewModel viewModel, DesktopSnapLayoutKind layout)
     {
+        if (!started || reorderState is not null)
+        {
+            return;
+        }
+
+        int page = viewModel.Page;
         try
         {
-            await pageLayoutStore.UpdateAsync(viewModel.Page, layout);
+            if (layout != DesktopSnapLayoutKind.None)
+            {
+                arrangementCoordinator.Arrange(page, layout, workspace.WorkAreaX, workspace.WorkAreaY);
+            }
+
+            await pageLayoutStore.UpdateAsync(page, layout);
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "Failed to update the snap layout for desktop page {Page}", viewModel.Page);
-            DesktopSnapLayoutKind configuredLayout = pageLayoutStore.GetLayout(viewModel.Page);
-            viewModel.Bind(viewModel.Page, pageTitleStore.GetTitle(viewModel.Page), configuredLayout);
+            logger.LogError(exception, "Failed to update or arrange the snap layout for desktop page {Page}", page);
+            if (viewModel.Page == page)
+            {
+                DesktopSnapLayoutKind configuredLayout = pageLayoutStore.GetLayout(page);
+                viewModel.Bind(page, pageTitleStore.GetTitle(page), configuredLayout);
+            }
         }
         finally
         {
-            if (visiblePages.TryGetValue(viewModel.Page, out DesktopPagePreview? preview))
+            if (visiblePages.TryGetValue(page, out DesktopPagePreview? preview))
             {
                 preview.HideSnapZones();
             }
         }
     }
+
 
     private void HandleArrangeRequested(DesktopPageTitleViewModel viewModel)
     {
@@ -762,6 +747,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         arrangementCoordinator.Arrange(viewModel.Page, viewModel.Layout, workspace.WorkAreaX, workspace.WorkAreaY);
         visiblePages.GetValueOrDefault(viewModel.Page)?.TitleEditor.CloseLayoutFlyout();
     }
+
 
     private void HandlePageTitleChanged(int page, string title)
     {
@@ -783,6 +769,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         }
     }
 
+
     private void HandlePageLayoutChanged(int page, DesktopSnapLayoutKind layout)
     {
         void RefreshLayout()
@@ -803,12 +790,12 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         }
     }
 
+
     private void HandleBackgroundChanged(object? sender, EventArgs args) => QueueBackgroundRefresh();
 
     private void QueueBackgroundRefresh()
     {
         Canvas? currentHost = host;
-
         if (currentHost is null)
         {
             return;
@@ -824,6 +811,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         }
     }
 
+
     private void RefreshBackground()
     {
         if (!started)
@@ -834,7 +822,6 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         try
         {
             DesktopBackground current = backgroundSource.GetBackground();
-
             if (background is not null && current == backgroundSnapshot)
             {
                 return;
@@ -842,7 +829,6 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
 
             backgroundSnapshot = current;
             background = backgroundFactory.Create(current);
-
             if (background is not null)
             {
                 foreach (DesktopPagePreview page in visiblePages.Values)
@@ -857,5 +843,4 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
             logger.LogError(exception, "Failed to refresh desktop page backgrounds");
         }
     }
-
 }

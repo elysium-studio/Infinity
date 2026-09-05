@@ -4,6 +4,7 @@ public interface ITrackedWindowDragController
 {
     IntPtr DraggingWindow { get; }
 
+
     bool Begin(IntPtr windowHandle);
 
     bool MoveTo(IntPtr windowHandle, double canvasX, double canvasY);

@@ -18,7 +18,6 @@ internal static partial class DesktopOverlayWindowStyle
     private const int WsStaticEdge = 0x00020000;
     private const int WsSysMenu = 0x00080000;
     private const int WsThickFrame = 0x00040000;
-
     private static readonly nint HwndNotTopmost = new(-2);
     private static readonly nint HwndTopmost = new(-1);
 
@@ -26,7 +25,6 @@ internal static partial class DesktopOverlayWindowStyle
     {
         int style = GetWindowLong(handle, GwlStyle);
         int extendedStyle = GetWindowLong(handle, GwlExStyle);
-
         if (enabled)
         {
             style &= ~(WsCaption | WsThickFrame | WsSysMenu | WsMinimizeBox | WsMaximizeBox);
@@ -42,12 +40,14 @@ internal static partial class DesktopOverlayWindowStyle
         _ = SetWindowLong(handle, GwlExStyle, extendedStyle);
     }
 
+
     public static void SetSharpCorners(nint handle)
     {
         const uint sharpCornerPreference = 1;
         uint value = sharpCornerPreference;
         _ = DwmSetWindowAttribute(handle, DwmwaWindowCornerPreference, ref value, sizeof(uint));
     }
+
 
     public static void SetTopMost(nint handle, bool enabled) => SetWindowPos(handle, enabled ? HwndTopmost : HwndNotTopmost, 0, 0, 0, 0, SwpNoMove | SwpNoSize | SwpNoActivate);
 

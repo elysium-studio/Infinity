@@ -26,6 +26,7 @@ public sealed class DesktopWindowSelectionModel
         return true;
     }
 
+
     public void RemoveSelected(nint handle) => selectedHandles.Remove(handle);
 
     public void ClearSelectedHandles() => selectedHandles.Clear();

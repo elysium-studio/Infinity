@@ -1,15 +1,9 @@
-using Infinity.Application.Abstractions;
 using System.Collections.Generic;
+using Infinity.Application.Abstractions;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopWindowSnapInteractionCoordinator(
-    DesktopOverviewConfiguration configuration,
-    DesktopPageStrip pageStrip,
-    DesktopSnapPlacementResolver placementResolver,
-    DesktopSnapSlotOccupancyResolver occupancyResolver,
-    DesktopWindowPreviewCollection previews,
-    IWindowCollection windowCollection)
+public sealed class DesktopWindowSnapInteractionCoordinator(DesktopOverviewConfiguration configuration, DesktopPageStrip pageStrip, DesktopSnapPlacementResolver placementResolver, DesktopSnapSlotOccupancyResolver occupancyResolver, DesktopWindowPreviewCollection previews, IWindowCollection windowCollection)
 {
     private nint activeWindow;
     private bool isActive;
@@ -22,7 +16,6 @@ public sealed class DesktopWindowSnapInteractionCoordinator(
     {
         monitorOriginX = originX;
         monitorOriginY = originY;
-
         if (isActive)
         {
             return;
@@ -33,11 +26,13 @@ public sealed class DesktopWindowSnapInteractionCoordinator(
         previews.WindowDragCompleted += HandleWindowDragCompleted;
     }
 
+
     public void UpdateMonitorOrigin(int originX, int originY)
     {
         monitorOriginX = originX;
         monitorOriginY = originY;
     }
+
 
     public void Stop()
     {
@@ -52,6 +47,7 @@ public sealed class DesktopWindowSnapInteractionCoordinator(
         Clear();
     }
 
+
     public void Refresh()
     {
         if (!isActive || !configuration.IsSnapAssistanceEnabled)
@@ -60,9 +56,7 @@ public sealed class DesktopWindowSnapInteractionCoordinator(
             return;
         }
 
-        if (activeWindow == 0 ||
-            !pageStrip.TryUpdateWindowSnapTarget(pointerX, pointerY, out DesktopSnapSlotTarget target) ||
-            !placementResolver.TryResolve(target.Page, target.Layout, target.Slot, monitorOriginX, monitorOriginY, out DesktopSnapPlacement placement))
+        if (activeWindow == 0 || !pageStrip.TryUpdateWindowSnapTarget(pointerX, pointerY, out DesktopSnapSlotTarget target) || !placementResolver.TryResolve(target.Page, target.Layout, target.Slot, monitorOriginX, monitorOriginY, out DesktopSnapPlacement placement))
         {
             ClearPreviewTarget();
             pageStrip.ClearWindowSnapTarget();
@@ -71,7 +65,6 @@ public sealed class DesktopWindowSnapInteractionCoordinator(
 
         IReadOnlySet<nint> selectedHandles = previews.GetSelectedHandles();
         TrackedWindow? occupant;
-
         if (selectedHandles.Count > 1 && selectedHandles.Contains(activeWindow))
         {
             occupancyResolver.TryGetOccupant(placement, selectedHandles, windowCollection.AllTrackedWindows, out occupant);
@@ -84,6 +77,7 @@ public sealed class DesktopWindowSnapInteractionCoordinator(
         previews.SetSnapTarget(activeWindow, new DesktopWindowSnapTarget(placement, occupant?.Handle ?? 0));
     }
 
+
     public void Clear()
     {
         ClearPreviewTarget();
@@ -93,6 +87,7 @@ public sealed class DesktopWindowSnapInteractionCoordinator(
         pageStrip.ClearWindowSnapTarget();
     }
 
+
     private void HandleWindowDragMoved(nint handle, double x, double y)
     {
         activeWindow = handle;
@@ -101,6 +96,7 @@ public sealed class DesktopWindowSnapInteractionCoordinator(
         Refresh();
     }
 
+
     private void HandleWindowDragCompleted(nint handle)
     {
         if (activeWindow == handle)
@@ -108,6 +104,7 @@ public sealed class DesktopWindowSnapInteractionCoordinator(
             Clear();
         }
     }
+
 
     private void ClearPreviewTarget()
     {

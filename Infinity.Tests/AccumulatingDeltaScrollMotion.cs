@@ -19,6 +19,7 @@ internal sealed class AccumulatingDeltaScrollMotion : IDeltaScrollMotion
         return delta;
     }
 
+
     public void Reset()
     {
         ResetCount++;

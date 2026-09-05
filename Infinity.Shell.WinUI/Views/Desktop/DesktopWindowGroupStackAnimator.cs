@@ -6,7 +6,6 @@ namespace Infinity.Shell.WinUI;
 public sealed class DesktopWindowGroupStackAnimator
 {
     private static readonly TimeSpan TransitionDuration = TimeSpan.FromMilliseconds(160);
-
     private readonly HashSet<nint> handles = [];
     private readonly List<KeyValuePair<nint, DesktopWindowPreview>> followers = [];
     private nint leaderHandle;
@@ -20,13 +19,13 @@ public sealed class DesktopWindowGroupStackAnimator
         leaderHandle = leader;
         handles.Clear();
         handles.UnionWith(selectedHandles);
-
         if (previews.TryGetValue(leader, out DesktopWindowPreview? leaderPreview))
         {
             leaderPreview.SetGroupDragLeader(true);
             Update(previews, TransitionDuration);
         }
     }
+
 
     internal void Update(IReadOnlyDictionary<nint, DesktopWindowPreview> previews, TimeSpan? transitionDuration = null)
     {
@@ -43,12 +42,8 @@ public sealed class DesktopWindowGroupStackAnimator
                 followers.Add(new(handle, follower));
             }
         }
-        followers.Sort(static (left, right) =>
-        {
-            int order = right.Value.ZIndex.CompareTo(left.Value.ZIndex);
-            return order != 0 ? order : ((long)left.Key).CompareTo((long)right.Key);
-        });
 
+        followers.Sort(static (left, right) =>  {  int order = right.Value.ZIndex.CompareTo(left.Value.ZIndex);  return order != 0 ? order : ((long)left.Key).CompareTo((long)right.Key);  });
         for (int index = 0; index < followers.Count; index++)
         {
             int depth = index + 1;
@@ -57,6 +52,7 @@ public sealed class DesktopWindowGroupStackAnimator
             followers[index].Value.SetGroupStackTarget(leader.VisualX + offset, leader.VisualY + offset, scale, depth, transitionDuration);
         }
     }
+
 
     internal void End(IReadOnlyDictionary<nint, DesktopWindowPreview> previews)
     {
@@ -71,15 +67,16 @@ public sealed class DesktopWindowGroupStackAnimator
         Reset();
     }
 
+
     public void Remove(nint handle)
     {
         handles.Remove(handle);
-
         if (leaderHandle == handle)
         {
             Reset();
         }
     }
+
 
     public void Reset()
     {

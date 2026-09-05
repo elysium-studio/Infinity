@@ -6,22 +6,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public sealed class WindowCollection(IWindowStore store,
-    IScrollTimer timer,
-    IScroller scroller,
-    IWindowStack windowStack,
-    IForegroundWindowTracker foregroundWindowTracker,
-    IWindowEventListener listener,
-    IWorkspace workspace,
-    IForegroundWindowCoordinator foregroundCoordinator,
-    IWindowNavigationCoordinator navigationCoordinator,
-    IDispatcher dispatcher,
-    ILogger<WindowCollection> logger) :
-    IWindowCollection
+public sealed class WindowCollection(IWindowStore store, IScrollTimer timer, IScroller scroller, IWindowStack windowStack, IForegroundWindowTracker foregroundWindowTracker, IWindowEventListener listener, IWorkspace workspace, IForegroundWindowCoordinator foregroundCoordinator, IWindowNavigationCoordinator navigationCoordinator, IDispatcher dispatcher, ILogger<WindowCollection> logger) : IWindowCollection
 {
     private readonly Lock refreshSyncRoot = new();
     private readonly Lock reorderSyncRoot = new();
-
     private bool refreshQueued;
     private bool reorderQueued;
     private bool queuedRefreshShouldRefreshWindowStack;
@@ -42,13 +30,11 @@ public sealed class WindowCollection(IWindowStore store,
 
     public IEnumerable<TrackedWindow> AllTrackedWindows => store;
 
-    public bool TryGetTrackedWindow(IntPtr handle, out TrackedWindow? trackedWindow) =>
-        store.TryGet(handle, out trackedWindow);
+    public bool TryGetTrackedWindow(IntPtr handle, out TrackedWindow? trackedWindow) => store.TryGet(handle, out trackedWindow);
 
     public void Start()
     {
         logger.LogInformation("Window collection starting");
-
         store.WindowAdded += HandleWindowAdded;
         store.WindowRemoved += HandleWindowRemoved;
         store.WindowChanged += HandleWindowChanged;
@@ -59,15 +45,14 @@ public sealed class WindowCollection(IWindowStore store,
         listener.MinimizeStarted += HandleWindowMinimizeStarted;
         listener.MinimizeEnded += HandleWindowMinimizeEnded;
         workspace.WorkspaceLayoutChanged += HandleWorkspaceLayoutChanged;
-
         windowStack.Refresh();
         Queue(false);
     }
 
+
     public void Stop()
     {
         logger.LogInformation("Window collection stopping");
-
         store.WindowAdded -= HandleWindowAdded;
         store.WindowRemoved -= HandleWindowRemoved;
         store.WindowChanged -= HandleWindowChanged;
@@ -78,7 +63,6 @@ public sealed class WindowCollection(IWindowStore store,
         listener.MinimizeStarted -= HandleWindowMinimizeStarted;
         listener.MinimizeEnded -= HandleWindowMinimizeEnded;
         workspace.WorkspaceLayoutChanged -= HandleWorkspaceLayoutChanged;
-
         lock (refreshSyncRoot)
         {
             refreshQueued = false;
@@ -91,14 +75,13 @@ public sealed class WindowCollection(IWindowStore store,
         }
     }
 
+
     public void Queue(bool refreshWindowStack)
     {
         bool shouldQueue;
-
         lock (refreshSyncRoot)
         {
             queuedRefreshShouldRefreshWindowStack |= refreshWindowStack;
-
             shouldQueue = !refreshQueued;
             refreshQueued = true;
         }
@@ -111,10 +94,10 @@ public sealed class WindowCollection(IWindowStore store,
         dispatcher.Dispatch(ProcessQueuedRefresh);
     }
 
+
     public void QueueReorder()
     {
         bool shouldQueue;
-
         lock (reorderSyncRoot)
         {
             shouldQueue = !reorderQueued;
@@ -129,64 +112,48 @@ public sealed class WindowCollection(IWindowStore store,
         dispatcher.Dispatch(ProcessQueuedReorder);
     }
 
+
     private void HandleWindowAdded(object? sender, TrackedWindow trackedWindow)
     {
         logger.LogInformation("Window added: {Title} ({Handle})", trackedWindow.Title, trackedWindow.Handle);
-
         WindowAdded?.Invoke(this, trackedWindow);
         Queue(true);
     }
 
+
     private void HandleWindowRemoved(object? sender, IntPtr handle)
     {
         logger.LogInformation("Window removed: {Handle}", handle);
-
         foregroundCoordinator.NotifyWindowClosed(handle);
-
-        dispatcher.Dispatch(() =>
-        {
-            WindowRemoved?.Invoke(this, handle);
-            Queue(true);
-        });
+        dispatcher.Dispatch(() =>  {  WindowRemoved?.Invoke(this, handle);  Queue(true);  });
     }
 
-    private void HandleWindowChanged(object? sender, TrackedWindow trackedWindow) =>
-        dispatcher.Dispatch(() => WindowChanged?.Invoke(this, trackedWindow));
 
-    private void HandleScrollTick(object? sender, EventArgs args) =>
-        Queue(false);
+    private void HandleWindowChanged(object? sender, TrackedWindow trackedWindow) => dispatcher.Dispatch(() => WindowChanged?.Invoke(this, trackedWindow));
 
-    private void HandleScrollStopped(object? sender, EventArgs args) =>
-        dispatcher.Dispatch(() =>
-        {
-            navigationCoordinator.CompleteNavigation();
-            ScrollStopped?.Invoke(this, EventArgs.Empty);
-        });
+    private void HandleScrollTick(object? sender, EventArgs args) => Queue(false);
 
-    private void HandleWindowStackChanged(object? sender, EventArgs args) =>
-        QueueReorder();
+    private void HandleScrollStopped(object? sender, EventArgs args) => dispatcher.Dispatch(() =>  {  navigationCoordinator.CompleteNavigation();  ScrollStopped?.Invoke(this, EventArgs.Empty);  });
 
-    private void HandleForegroundWindowChanged(object? sender, IntPtr handle) =>
-        dispatcher.Dispatch(() => foregroundCoordinator.HandleForegroundWindowChanged(handle));
+    private void HandleWindowStackChanged(object? sender, EventArgs args) => QueueReorder();
 
-    private void HandleWindowMinimizeStarted(IntPtr handle) =>
-        dispatcher.Dispatch(() => foregroundCoordinator.HandleWindowMinimizeStarted(handle));
+    private void HandleForegroundWindowChanged(object? sender, IntPtr handle) => dispatcher.Dispatch(() => foregroundCoordinator.HandleForegroundWindowChanged(handle));
 
-    private void HandleWindowMinimizeEnded(IntPtr handle) =>
-        dispatcher.Dispatch(() => foregroundCoordinator.HandleWindowMinimizeEnded(handle));
+    private void HandleWindowMinimizeStarted(IntPtr handle) => dispatcher.Dispatch(() => foregroundCoordinator.HandleWindowMinimizeStarted(handle));
+
+    private void HandleWindowMinimizeEnded(IntPtr handle) => dispatcher.Dispatch(() => foregroundCoordinator.HandleWindowMinimizeEnded(handle));
 
     private void HandleWorkspaceLayoutChanged(object? sender, EventArgs args)
     {
         logger.LogInformation("Workspace layout changed");
-
         Queue(false);
         WorkspaceLayoutChanged?.Invoke(this, EventArgs.Empty);
     }
 
+
     private void ProcessQueuedRefresh()
     {
         bool shouldRefreshWindowStack;
-
         lock (refreshSyncRoot)
         {
             refreshQueued = false;
@@ -201,6 +168,7 @@ public sealed class WindowCollection(IWindowStore store,
 
         RefreshRequested?.Invoke(this, EventArgs.Empty);
     }
+
 
     private void ProcessQueuedReorder()
     {

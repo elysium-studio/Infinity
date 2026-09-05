@@ -1,7 +1,7 @@
-using Infinity.Platform.Abstractions;
-using Microsoft.Win32.SafeHandles;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Infinity.Platform.Abstractions;
+using Microsoft.Win32.SafeHandles;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Dwm;
@@ -11,15 +11,13 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Infinity.Platform.Windows;
 
-public sealed class WindowFilter(WindowFilterOptions options) :
-    IWindowFilter
+public sealed class WindowFilter(WindowFilterOptions options) : IWindowFilter
 {
     private const DWMWINDOWATTRIBUTE DwmwaCloaked = DWMWINDOWATTRIBUTE.DWMWA_CLOAKED;
 
     public unsafe bool ShouldTrack(nint windowHandle, nint ownerHandle)
     {
         HWND hwnd = new(windowHandle);
-
         if (windowHandle == ownerHandle)
         {
             return false;
@@ -42,7 +40,6 @@ public sealed class WindowFilter(WindowFilterOptions options) :
 
         int cloaked = 0;
         PInvoke.DwmGetWindowAttribute(hwnd, DwmwaCloaked, &cloaked, (uint)sizeof(int));
-
         if (cloaked != 0)
         {
             return false;
@@ -65,16 +62,12 @@ public sealed class WindowFilter(WindowFilterOptions options) :
 
         int exStyle = PInvoke.GetWindowLong(hwnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
         bool isToolWindow = (exStyle & 0x00000080) != 0;
-
         if ((exStyle & 0x00080000) != 0)
         {
             COLORREF colourKey = default;
             byte alpha = byte.MaxValue;
             LAYERED_WINDOW_ATTRIBUTES_FLAGS flags = default;
-
-            if (PInvoke.GetLayeredWindowAttributes(hwnd, &colourKey, &alpha, &flags) &&
-                (flags & LAYERED_WINDOW_ATTRIBUTES_FLAGS.LWA_ALPHA) != 0 &&
-                alpha == 0)
+            if (PInvoke.GetLayeredWindowAttributes(hwnd, &colourKey, &alpha, &flags) && (flags & LAYERED_WINDOW_ATTRIBUTES_FLAGS.LWA_ALPHA) != 0 && alpha == 0)
             {
                 return false;
             }
@@ -91,7 +84,7 @@ public sealed class WindowFilter(WindowFilterOptions options) :
             _ = PInvoke.GetClassName(hwnd, classPtr, 256);
         }
 
-        if (options.BlockedClassNames.Contains(new string(classBuffer).TrimEnd('\0')))
+        if (options.BlockedClassNames.Contains(new string (classBuffer).TrimEnd('\0')))
         {
             return false;
         }
@@ -102,13 +95,12 @@ public sealed class WindowFilter(WindowFilterOptions options) :
             _ = PInvoke.GetWindowText(hwnd, titlePtr, 256);
         }
 
-        if (string.IsNullOrWhiteSpace(new string(titleBuffer).TrimEnd('\0')))
+        if (string.IsNullOrWhiteSpace(new string (titleBuffer).TrimEnd('\0')))
         {
             return false;
         }
 
         PInvoke.GetWindowThreadProcessId(hwnd, out uint processId);
-
         if (processId == (uint)Environment.ProcessId)
         {
             return false;
@@ -122,7 +114,6 @@ public sealed class WindowFilter(WindowFilterOptions options) :
         try
         {
             Process process = Process.GetProcessById((int)processId);
-
             if (options.BlockedProcessNames.Contains(process.ProcessName))
             {
                 return false;
@@ -136,10 +127,10 @@ public sealed class WindowFilter(WindowFilterOptions options) :
         return true;
     }
 
+
     private static unsafe bool IsElevated(uint processId)
     {
         using SafeHandle processHandle = PInvoke.OpenProcess_SafeHandle(PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_LIMITED_INFORMATION, false, processId);
-
         if (processHandle.IsInvalid)
         {
             return true;
@@ -154,7 +145,6 @@ public sealed class WindowFilter(WindowFilterOptions options) :
         {
             int elevated = 0;
             uint returnLength = 0;
-
             if (!PInvoke.GetTokenInformation(new HANDLE(tokenHandle.DangerousGetHandle()), TOKEN_INFORMATION_CLASS.TokenElevation, &elevated, (uint)sizeof(int), &returnLength))
             {
                 return true;

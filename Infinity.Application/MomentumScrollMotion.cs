@@ -2,14 +2,11 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Application;
 
-public sealed class MomentumScrollMotion :
-    IVelocityScrollMotion
+public sealed class MomentumScrollMotion : IVelocityScrollMotion
 {
     private const double FrictionFactor = 0.88;
     private const double StopThreshold = 0.15;
-
     private readonly Lock syncLock = new();
-
     private double velocity;
     private double subPixelRemainder;
 
@@ -24,6 +21,7 @@ public sealed class MomentumScrollMotion :
         }
     }
 
+
     public void AddVelocity(double pixelsPerTick)
     {
         lock (syncLock)
@@ -31,6 +29,7 @@ public sealed class MomentumScrollMotion :
             velocity += pixelsPerTick;
         }
     }
+
 
     public double Drain()
     {
@@ -44,14 +43,13 @@ public sealed class MomentumScrollMotion :
             }
 
             velocity *= FrictionFactor;
-
             double exactStep = velocity + subPixelRemainder;
             int intStep = (int)Math.Truncate(exactStep);
             subPixelRemainder = exactStep - intStep;
-
             return intStep;
         }
     }
+
 
     public void Reset()
     {

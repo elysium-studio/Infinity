@@ -1,20 +1,13 @@
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Presentation;
 using Elysium.Presentation.Abstractions;
 using Microsoft.Extensions.Logging;
-using System.ComponentModel;
 
 namespace Infinity.Shell;
 
-public sealed class TourViewModel(IServiceProvider provider,
-    IServiceFactory factory,
-    IMessenger messenger,
-    IDisposer disposer,
-    IWritableOptions<Settings> writer,
-    ILogger<TourViewModel> logger,
-    IEnumerable<ITourViewModel> items) :
-    ObservableCollectionViewModel<ITourViewModel>(provider, factory, messenger, disposer, items)
+public sealed class TourViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IWritableOptions<Settings> writer, ILogger<TourViewModel> logger, IEnumerable<ITourViewModel> items) : ObservableCollectionViewModel<ITourViewModel>(provider, factory, messenger, disposer, items)
 {
     private bool isFinishing;
 
@@ -26,10 +19,7 @@ public sealed class TourViewModel(IServiceProvider provider,
 
     public int SelectedIndex
     {
-        get
-        {
-            return SelectedItem is null ? -1 : IndexOf(SelectedItem);
-        }
+        get => SelectedItem is null ? -1 : IndexOf(SelectedItem);
         set
         {
             if (value >= 0 && value < Count)
@@ -38,6 +28,7 @@ public sealed class TourViewModel(IServiceProvider provider,
             }
         }
     }
+
 
     public bool CanGoBack
     {
@@ -53,6 +44,7 @@ public sealed class TourViewModel(IServiceProvider provider,
         }
     }
 
+
     public bool CanGoNext
     {
         get
@@ -67,6 +59,7 @@ public sealed class TourViewModel(IServiceProvider provider,
         }
     }
 
+
     public bool IsLastStep => SelectedItem is not null && IndexOf(SelectedItem) == Count - 1;
 
     public void GoNext()
@@ -78,6 +71,7 @@ public sealed class TourViewModel(IServiceProvider provider,
         }
     }
 
+
     public void GoBack()
     {
         if (CanGoBack)
@@ -87,6 +81,7 @@ public sealed class TourViewModel(IServiceProvider provider,
         }
     }
 
+
     public async void Finish()
     {
         if (isFinishing)
@@ -95,7 +90,6 @@ public sealed class TourViewModel(IServiceProvider provider,
         }
 
         isFinishing = true;
-
         try
         {
             await writer.WriteAsync(settings => settings.ShowHintOnStartup = false);
@@ -110,12 +104,12 @@ public sealed class TourViewModel(IServiceProvider provider,
         }
     }
 
+
     public void Cancel() => Cancelled?.Invoke(this, EventArgs.Empty);
 
     protected override void OnPropertyChanged(PropertyChangedEventArgs args)
     {
         base.OnPropertyChanged(args);
-
         if (args.PropertyName == nameof(SelectedItem))
         {
             OnPropertyChanged(nameof(CurrentStep));

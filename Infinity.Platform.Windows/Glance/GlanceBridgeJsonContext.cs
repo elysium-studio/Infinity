@@ -1,5 +1,5 @@
-using Infinity.Application.Abstractions;
 using System.Text.Json.Serialization;
+using Infinity.Application.Abstractions;
 
 namespace Infinity.Platform.Windows;
 
@@ -8,7 +8,6 @@ namespace Infinity.Platform.Windows;
 [JsonSerializable(typeof(InfinityPageNavigationState))]
 [JsonSerializable(typeof(InfinityPageNavigationVisibility))]
 [JsonSerializable(typeof(InfinityPageTitleUpdate))]
-internal sealed partial class GlanceBridgeJsonContext :
-    JsonSerializerContext
+internal sealed partial class GlanceBridgeJsonContext : JsonSerializerContext
 {
 }

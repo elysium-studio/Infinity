@@ -1,7 +1,6 @@
-﻿namespace Infinity.Application.Abstractions;
+namespace Infinity.Application.Abstractions;
 
-public interface IWindowStore :
-    IReadOnlyCollection<TrackedWindow>
+public interface IWindowStore : IReadOnlyCollection<TrackedWindow>
 {
     new WindowStoreEnumerator GetEnumerator();
 

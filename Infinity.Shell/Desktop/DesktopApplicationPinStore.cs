@@ -8,24 +8,19 @@ namespace Infinity.Shell;
 public sealed class DesktopApplicationPinStore : IDesktopApplicationPinStore
 {
     private const int MaximumApplications = 12;
-
     private readonly Lock syncRoot = new();
     private readonly SemaphoreSlim writeGate = new(1, 1);
     private readonly List<LaunchableApplication> applications;
     private readonly IWritableOptions<Settings> writer;
     private readonly ILogger<DesktopApplicationPinStore> logger;
 
-    public DesktopApplicationPinStore(
-        IOptionsMonitor<Settings> settings,
-        IWritableOptions<Settings> writer,
-        ILogger<DesktopApplicationPinStore> logger)
+    public DesktopApplicationPinStore(IOptionsMonitor<Settings> settings, IWritableOptions<Settings> writer, ILogger<DesktopApplicationPinStore> logger)
     {
-        applications = [.. (settings.CurrentValue.PinnedApplications ?? [])
-            .DistinctBy(application => application.Id, StringComparer.OrdinalIgnoreCase)
-            .Take(MaximumApplications)];
+        applications = [..(settings.CurrentValue.PinnedApplications ?? []).DistinctBy(application => application.Id, StringComparer.OrdinalIgnoreCase).Take(MaximumApplications)];
         this.writer = writer;
         this.logger = logger;
     }
+
 
     public event Action? PinsChanged;
 
@@ -35,10 +30,11 @@ public sealed class DesktopApplicationPinStore : IDesktopApplicationPinStore
         {
             lock (syncRoot)
             {
-                return [.. applications];
+                return[..applications];
             }
         }
     }
+
 
     public Task PinAsync(LaunchableApplication application, CancellationToken cancellationToken = default)
     {
@@ -46,33 +42,30 @@ public sealed class DesktopApplicationPinStore : IDesktopApplicationPinStore
         return UpdateAsync(application, pin: true, cancellationToken);
     }
 
+
     public Task UnpinAsync(LaunchableApplication application, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(application);
         return UpdateAsync(application, pin: false, cancellationToken);
     }
 
-    private async Task UpdateAsync(
-        LaunchableApplication application,
-        bool pin,
-        CancellationToken cancellationToken)
+
+    private async Task UpdateAsync(LaunchableApplication application, bool pin, CancellationToken cancellationToken)
     {
         IReadOnlyList<LaunchableApplication>? snapshot = UpdateCore(application, pin);
-
         if (snapshot is null)
         {
             return;
         }
 
         await writeGate.WaitAsync(cancellationToken);
-
         try
         {
             Settings updated = await writer.ReadAsync(cancellationToken) ?? new Settings();
-            updated.PinnedApplications = [.. snapshot];
+            updated.PinnedApplications = [..snapshot];
             await writer.WriteAsync(updated, cancellationToken);
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException)when (cancellationToken.IsCancellationRequested)
         {
             throw;
         }
@@ -86,15 +79,13 @@ public sealed class DesktopApplicationPinStore : IDesktopApplicationPinStore
         }
     }
 
+
     private IReadOnlyList<LaunchableApplication>? UpdateCore(LaunchableApplication application, bool pin)
     {
         IReadOnlyList<LaunchableApplication> snapshot;
-
         lock (syncRoot)
         {
-            int existingIndex = applications.FindIndex(candidate =>
-                string.Equals(candidate.Id, application.Id, StringComparison.OrdinalIgnoreCase));
-
+            int existingIndex = applications.FindIndex(candidate => string.Equals(candidate.Id, application.Id, StringComparison.OrdinalIgnoreCase));
             if ((pin && existingIndex >= 0) || (!pin && existingIndex < 0))
             {
                 return null;
@@ -103,7 +94,6 @@ public sealed class DesktopApplicationPinStore : IDesktopApplicationPinStore
             if (pin)
             {
                 applications.Add(application);
-
                 if (applications.Count > MaximumApplications)
                 {
                     applications.RemoveAt(0);
@@ -114,7 +104,7 @@ public sealed class DesktopApplicationPinStore : IDesktopApplicationPinStore
                 applications.RemoveAt(existingIndex);
             }
 
-            snapshot = [.. applications];
+            snapshot = [..applications];
         }
 
         PinsChanged?.Invoke();

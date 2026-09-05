@@ -14,7 +14,6 @@ internal static partial class PackageIdentity
         {
             uint length = 0;
             int result = GetCurrentPackageFullName(ref length, 0);
-
             if (result == ErrorInsufficientBuffer)
             {
                 return true;
@@ -29,7 +28,7 @@ internal static partial class PackageIdentity
         }
     }
 
+
     [LibraryImport("kernel32.dll")]
-    private static partial int GetCurrentPackageFullName(ref uint packageFullNameLength,
-        nint packageFullName);
+    private static partial int GetCurrentPackageFullName(ref uint packageFullNameLength, nint packageFullName);
 }

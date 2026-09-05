@@ -2,8 +2,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed partial class SnapAssistanceView :
-    UserControl
+public sealed partial class SnapAssistanceView : UserControl
 {
     public SnapAssistanceView() => InitializeComponent();
 

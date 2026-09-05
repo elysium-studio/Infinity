@@ -1,6 +1,6 @@
+using System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using System;
 using Windows.Foundation;
 
 namespace Infinity.Shell.WinUI;
@@ -11,7 +11,6 @@ public sealed partial class DesktopSnapCanvas : Panel
     {
         double desiredWidth = 0;
         double desiredHeight = 0;
-
         foreach (UIElement child in Children)
         {
             if (child is not FrameworkElement { DataContext: DesktopSnapLayoutSlotViewModel slot })
@@ -26,9 +25,9 @@ public sealed partial class DesktopSnapCanvas : Panel
 
         double width = double.IsFinite(availableSize.Width) ? availableSize.Width : desiredWidth;
         double height = double.IsFinite(availableSize.Height) ? availableSize.Height : desiredHeight;
-
-        return new Size(width, height);
+        return new(width, height);
     }
+
 
     protected override Size ArrangeOverride(Size finalSize)
     {

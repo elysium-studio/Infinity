@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
+using XamlApplication = Microsoft.UI.Xaml.Application;
 
 namespace Infinity.Shell.WinUI;
 
@@ -8,7 +9,7 @@ internal static class FluentVisualResources
 {
     public static Brush GetBrush(string key, Color fallback)
     {
-        if (Microsoft.UI.Xaml.Application.Current.Resources.TryGetValue(key, out object? value) && value is Brush brush)
+        if (XamlApplication.Current.Resources.TryGetValue(key, out object? value) && value is Brush brush)
         {
             return brush;
         }
@@ -16,9 +17,10 @@ internal static class FluentVisualResources
         return new SolidColorBrush(fallback);
     }
 
+
     public static CornerRadius GetOverlayCornerRadius()
     {
-        if (Microsoft.UI.Xaml.Application.Current.Resources.TryGetValue("OverlayCornerRadius", out object? value))
+        if (XamlApplication.Current.Resources.TryGetValue("OverlayCornerRadius", out object? value))
         {
             if (value is CornerRadius cornerRadius)
             {
@@ -27,10 +29,10 @@ internal static class FluentVisualResources
 
             if (value is double radius)
             {
-                return new CornerRadius(radius);
+                return new(radius);
             }
         }
 
-        return new CornerRadius(8);
+        return new(8);
     }
 }

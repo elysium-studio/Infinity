@@ -1,19 +1,13 @@
-using Infinity.Application.Abstractions;
-using Infinity.Platform.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Infinity.Application.Abstractions;
+using Infinity.Platform.Abstractions;
 using Windows.System;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopOverviewInputController(
-    IWindowCollection windowCollection,
-    IPager pager,
-    DesktopWindowPlacementCoordinator windowPlacementCoordinator,
-    DesktopWindowPreviewCollection previews,
-    ITrackedForegroundWindowSource trackedForegroundWindowSource,
-    IKeyboardTextTranslator keyboardTextTranslator)
+public sealed class DesktopOverviewInputController(IWindowCollection windowCollection, IPager pager, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowPreviewCollection previews, ITrackedForegroundWindowSource trackedForegroundWindowSource, IKeyboardTextTranslator keyboardTextTranslator)
 {
     private bool controlKeyDown;
     private bool filterActive;
@@ -26,7 +20,6 @@ public sealed class DesktopOverviewInputController(
     {
         bool isActive = !string.IsNullOrWhiteSpace(text);
         nint focusedHandle = previews.SetFilter(text, windowCollection.AllTrackedWindows);
-
         if (!isRunning)
         {
             filterActive = false;
@@ -40,7 +33,6 @@ public sealed class DesktopOverviewInputController(
         }
 
         filterActive = isActive;
-
         if (!isActive)
         {
             RestorePageBeforeFilter();
@@ -49,6 +41,7 @@ public sealed class DesktopOverviewInputController(
 
         NavigateToWindow(focusedHandle);
     }
+
 
     public bool HandleKeyDown(VirtualKey key)
     {
@@ -67,6 +60,7 @@ public sealed class DesktopOverviewInputController(
         return TryHandleCommand(key, controlKeyDown, shiftKeyDown);
     }
 
+
     public void HandleKeyUp(VirtualKey key)
     {
         if (key == VirtualKey.Shift)
@@ -79,10 +73,10 @@ public sealed class DesktopOverviewInputController(
         }
     }
 
+
     public bool TryHandleGlobalKeyDown(int virtualKeyCode, bool controlDown, bool shiftDown, bool menuDown, bool windowsDown, Action removeLastCharacter, Action<string> appendText, Action requestTextFocus)
     {
         VirtualKey key = (VirtualKey)virtualKeyCode;
-
         if (TryHandleCommand(key, controlDown && !menuDown, shiftDown))
         {
             return true;
@@ -101,7 +95,6 @@ public sealed class DesktopOverviewInputController(
         }
 
         string? text = keyboardTextTranslator.Translate(virtualKeyCode);
-
         if (string.IsNullOrEmpty(text) || text.Any(char.IsControl))
         {
             return false;
@@ -112,6 +105,7 @@ public sealed class DesktopOverviewInputController(
         return true;
     }
 
+
     public void Reset()
     {
         filterActive = false;
@@ -120,11 +114,13 @@ public sealed class DesktopOverviewInputController(
         previews.SetFilter(string.Empty, windowCollection.AllTrackedWindows);
     }
 
+
     public void ResetModifiers()
     {
         shiftKeyDown = false;
         controlKeyDown = false;
     }
+
 
     private bool TryHandleCommand(VirtualKey key, bool controlDown, bool shiftDown)
     {
@@ -175,7 +171,6 @@ public sealed class DesktopOverviewInputController(
         }
 
         nint handle = filterActive ? previews.GetSelectedMatchingWindow(windowCollection.AllTrackedWindows) : previews.GetFocusedHandle();
-
         if (handle == 0 && !filterActive)
         {
             handle = previews.SelectFirst(GetWindowsOnPage(pager.CurrentPage));
@@ -190,11 +185,11 @@ public sealed class DesktopOverviewInputController(
         return true;
     }
 
+
     private void MoveSelectedWindows(int pageDelta)
     {
         IReadOnlyCollection<nint> selectedHandles = previews.GetSelectedHandles();
         nint navigationHandle = previews.GetFocusedHandle();
-
         if (selectedHandles.Count > 0 && !selectedHandles.Contains(navigationHandle))
         {
             navigationHandle = selectedHandles.First();
@@ -204,9 +199,6 @@ public sealed class DesktopOverviewInputController(
         {
             if (navigationHandle == 0)
             {
-                // Modifier-based movement targets the last window the user
-                // interacted with. It must not manufacture keyboard focus,
-                // which would display the white arrow-navigation border.
                 navigationHandle = trackedForegroundWindowSource.GetTrackedForegroundWindow();
             }
 
@@ -216,15 +208,12 @@ public sealed class DesktopOverviewInputController(
             }
         }
 
-        if (navigationHandle == 0 ||
-            !windowCollection.TryGetTrackedWindow(navigationHandle, out TrackedWindow? navigationWindow) ||
-            navigationWindow is null)
+        if (navigationHandle == 0 || !windowCollection.TryGetTrackedWindow(navigationHandle, out TrackedWindow? navigationWindow) || navigationWindow is null)
         {
             return;
         }
 
         int targetPage = windowPlacementCoordinator.GetPage(navigationWindow) + pageDelta;
-
         if (targetPage < 0 || pager.MaxPages.HasValue && targetPage >= pager.MaxPages.Value)
         {
             return;
@@ -232,11 +221,10 @@ public sealed class DesktopOverviewInputController(
 
         if (windowPlacementCoordinator.MoveByPages(selectedHandles, pageDelta, pager.MaxPages) > 0)
         {
-            // Follow the moved window without assigning keyboard focus; the
-            // focus visual is reserved for explicit arrow/Tab navigation.
             pager.NavigateToPage(targetPage);
         }
     }
+
 
     private void NavigateToPage(int page)
     {
@@ -249,6 +237,7 @@ public sealed class DesktopOverviewInputController(
         previews.SelectFirst(GetWindowsOnPage(page));
     }
 
+
     private void NavigateToWindow(nint handle)
     {
         if (handle == 0 || !windowCollection.TryGetTrackedWindow(handle, out TrackedWindow? trackedWindow) || trackedWindow is null)
@@ -257,12 +246,12 @@ public sealed class DesktopOverviewInputController(
         }
 
         int page = windowPlacementCoordinator.GetPage(trackedWindow);
-
         if (!pager.IsPageCentered(page))
         {
             pager.NavigateToPage(page);
         }
     }
+
 
     private void RestorePageBeforeFilter()
     {
@@ -274,16 +263,12 @@ public sealed class DesktopOverviewInputController(
         pageBeforeFilter = -1;
     }
 
-    private TrackedWindow[] GetWindowsOnPage(int page) => [.. windowCollection.AllTrackedWindows
-        .Where(window => windowPlacementCoordinator.GetPage(window) == page)
-        .OrderBy(window => window.CanvasY)
-        .ThenBy(window => window.CanvasX)
-        .ThenBy(window => (long)window.Handle)];
+
+    private TrackedWindow[] GetWindowsOnPage(int page) => [..windowCollection.AllTrackedWindows.Where(window => windowPlacementCoordinator.GetPage(window) == page).OrderBy(window => window.CanvasY).ThenBy(window => window.CanvasX).ThenBy(window => (long)window.Handle)];
 
     private static bool TryGetPageFromNumberKey(VirtualKey key, out int page)
     {
         int virtualKey = (int)key;
-
         if (virtualKey is >= 0x31 and <= 0x39)
         {
             page = virtualKey - 0x31;

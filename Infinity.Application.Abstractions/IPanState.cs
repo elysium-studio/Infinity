@@ -1,4 +1,4 @@
-﻿namespace Infinity.Application.Abstractions;
+namespace Infinity.Application.Abstractions;
 
 public interface IPanState
 {
@@ -6,9 +6,12 @@ public interface IPanState
 
     double Offset { get; }
 
+
     double MinOffset { get; }
 
+
     double MaxOffset { get; }
+
 
     void SetMaxOffset(double value);
 

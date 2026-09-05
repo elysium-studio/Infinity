@@ -19,14 +19,12 @@ public sealed class AboutViewModel
     private static string GetVersion()
     {
         string? informationalVersion = EntryAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-
         if (informationalVersion is null)
         {
             return "1.0.0";
         }
 
         int metadataIndex = informationalVersion.IndexOf('+');
-
         return metadataIndex >= 0 ? informationalVersion[..metadataIndex] : informationalVersion;
     }
 }

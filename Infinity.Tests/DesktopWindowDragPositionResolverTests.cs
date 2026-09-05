@@ -16,12 +16,11 @@ public sealed class DesktopWindowDragPositionResolverTests
     {
         TrackedWindow window = CreateWindow(100, 100, 800, 500);
         DesktopWindowDragPositionResolver resolver = CreateResolver(window);
-
         bool resolved = resolver.TryResolve(window.Handle, 0, 900, out DesktopWindowDragPosition position);
-
         Assert.True(resolved);
         Assert.Equal(540, position.CanvasY);
     }
+
 
     [Fact]
     public void ResolveKeepsWindowInsideSideTaskbarBoundary()
@@ -30,30 +29,29 @@ public sealed class DesktopWindowDragPositionResolverTests
         workspace.WidthValue = 1872;
         TrackedWindow window = CreateWindow(100, 100, 800, 500);
         DesktopWindowDragPositionResolver resolver = CreateResolver(window);
-
         bool resolved = resolver.TryResolve(window.Handle, -500, 0, out DesktopWindowDragPosition position);
-
         Assert.True(resolved);
         Assert.Equal(48, position.CanvasX);
     }
 
+
     private DesktopWindowDragPositionResolver CreateResolver(TrackedWindow window)
     {
         store.Add(window);
-        return new DesktopWindowDragPositionResolver(store, workspace, layoutCalculator);
+        return new(store, workspace, layoutCalculator);
     }
+
 
     private static TrackedWindow CreateWindow(int x, int y, int width, int height) => new()
     {
-        Handle = new nint(1),
+        Handle = new(1),
         CanvasX = x,
         CanvasY = y,
         Width = width,
         Height = height
     };
 
-    private sealed class TestWorkspace :
-        IWorkspace
+    private sealed class TestWorkspace : IWorkspace
     {
         public event EventHandler? WorkspaceLayoutChanged;
 

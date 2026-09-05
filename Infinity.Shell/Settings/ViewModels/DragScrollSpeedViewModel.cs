@@ -4,13 +4,4 @@ using Elysium.Presentation;
 
 namespace Infinity.Shell;
 
-public sealed partial class DragScrollSpeedViewModel(IServiceProvider provider,
-    IServiceFactory factory,
-    IMessenger messenger,
-    IDisposer disposer,
-    IDispatcher dispatcher,
-    Settings settings,
-    IWritableOptions<Settings> writer,
-    Func<Settings, int> read,
-    Action<Settings, int> write) : ObservableReadWriteViewModel<Settings, int>(provider, factory, messenger, disposer, dispatcher, settings, writer, read, write),
-    IScrollingViewModel;
+public sealed partial class DragScrollSpeedViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IDispatcher dispatcher, Settings settings, IWritableOptions<Settings> writer, Func<Settings, int> read, Action<Settings, int> write) : ObservableReadWriteViewModel<Settings, int>(provider, factory, messenger, disposer, dispatcher, settings, writer, read, write), IScrollingViewModel;

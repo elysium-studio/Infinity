@@ -21,13 +21,12 @@ public sealed class StartupPageRestorerTests
         geometryReader.SetVisibleGeometry(fullscreenWindow.Handle, -3840, 0, 1920, 1080);
         geometryReader.SetVisibleGeometry(secondPageWindow.Handle, -1240, 100, 800, 600);
         StartupPageRestorer restorer = CreateRestorer(store, state, geometryReader);
-
         restorer.Restore();
-
         Assert.Equal(3840, state.Offset);
         Assert.Equal(-8, fullscreenWindow.CanvasX);
         Assert.Equal(2600, secondPageWindow.CanvasX);
     }
+
 
     [Fact]
     public void RestoreKeepsPartiallyVisibleWindowsOnCurrentPage()
@@ -39,12 +38,11 @@ public sealed class StartupPageRestorerTests
         TestGeometryReader geometryReader = new();
         geometryReader.SetVisibleGeometry(window.Handle, -1800, 100, 1820, 600);
         StartupPageRestorer restorer = CreateRestorer(store, state, geometryReader);
-
         restorer.Restore();
-
         Assert.Equal(0, state.Offset);
         Assert.Equal(-1810, window.CanvasX);
     }
+
 
     [Fact]
     public void RestoreUsesTrackedBoundsWhenVisibleFrameCannotBeRead()
@@ -54,33 +52,24 @@ public sealed class StartupPageRestorerTests
         store.Add(window);
         PanState state = new();
         StartupPageRestorer restorer = CreateRestorer(store, state, new TestGeometryReader());
-
         restorer.Restore();
-
         Assert.Equal(1920, state.Offset);
         Assert.Equal(100, window.CanvasX);
     }
 
-    private static StartupPageRestorer CreateRestorer(WindowStore store,
-        PanState state,
-        IWindowGeometryReader geometryReader) =>
-        new(store,
-            state,
-            new TestWorkspace(),
-            geometryReader,
-            NullLogger<StartupPageRestorer>.Instance);
+
+    private static StartupPageRestorer CreateRestorer(WindowStore store, PanState state, IWindowGeometryReader geometryReader) => new(store, state, new TestWorkspace(), geometryReader, NullLogger<StartupPageRestorer>.Instance);
 
     private static TrackedWindow CreateWindow(int handle, int canvasX, int width) => new()
     {
-        Handle = new IntPtr(handle),
+        Handle = new(handle),
         CanvasX = canvasX,
         CanvasY = 100,
         Width = width,
         Height = 600
     };
 
-    private sealed class TestGeometryReader :
-        IWindowGeometryReader
+    private sealed class TestGeometryReader : IWindowGeometryReader
     {
         private readonly Dictionary<IntPtr, Geometry> visibleGeometries = [];
 
@@ -88,11 +77,9 @@ public sealed class StartupPageRestorerTests
 
         public bool IsVisible(IntPtr windowHandle) => true;
 
-        public void SetVisibleGeometry(IntPtr handle, int x, int y, int width, int height) =>
-            visibleGeometries[handle] = new(x, y, width, height);
+        public void SetVisibleGeometry(IntPtr handle, int x, int y, int width, int height) => visibleGeometries[handle] = new(x, y, width, height);
 
-        public bool TryReadGeometry(IntPtr windowHandle, out int x, out int y, out int width, out int height) =>
-            TryReadVisibleGeometry(windowHandle, out x, out y, out width, out height);
+        public bool TryReadGeometry(IntPtr windowHandle, out int x, out int y, out int width, out int height) => TryReadVisibleGeometry(windowHandle, out x, out y, out width, out height);
 
         public bool TryReadVisibleGeometry(IntPtr windowHandle, out int x, out int y, out int width, out int height)
         {
@@ -112,11 +99,12 @@ public sealed class StartupPageRestorerTests
             return false;
         }
 
+
         private readonly record struct Geometry(int X, int Y, int Width, int Height);
     }
 
-    private sealed class TestWorkspace :
-        IWorkspace
+
+    private sealed class TestWorkspace : IWorkspace
     {
         public event EventHandler? WorkspaceLayoutChanged;
 

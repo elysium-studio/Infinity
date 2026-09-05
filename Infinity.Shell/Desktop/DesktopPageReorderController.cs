@@ -15,22 +15,18 @@ public sealed class DesktopPageReorderController(IWindowStore windowStore, IScro
 
         IReadOnlyDictionary<int, string> reorderedTitles = await pageTitleStore.ReorderAsync(sourcePage, targetPage);
         await pageLayoutStore.ReorderAsync(sourcePage, targetPage);
-
         int workspaceWidth = workspace.Width;
         List<TrackedWindow> changedWindows = [];
-
         foreach (TrackedWindow window in windowStore)
         {
             int page = PageReorderMapping.GetPage(window, workspaceWidth);
             int reorderedPage = PageReorderMapping.Map(page, sourcePage, targetPage);
-
             if (reorderedPage == page)
             {
                 continue;
             }
 
             long reorderedX = (long)window.CanvasX + ((long)reorderedPage - page) * workspaceWidth;
-
             if (reorderedX is < int.MinValue or > int.MaxValue)
             {
                 logger.LogWarning("Skipped page reorder for window {WindowHandle} because its target position is outside the supported range", window.Handle);
@@ -49,7 +45,6 @@ public sealed class DesktopPageReorderController(IWindowStore windowStore, IScro
 
         scroller.Reposition();
         logger.LogInformation("Reordered desktop page {SourcePage} to {TargetPage} with {WindowCount} windows updated", sourcePage, targetPage, changedWindows.Count);
-
         return reorderedTitles;
     }
 }

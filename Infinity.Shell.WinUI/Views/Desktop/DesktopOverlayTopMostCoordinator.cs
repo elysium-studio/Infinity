@@ -1,18 +1,13 @@
-using Elysium.Platform.Abstractions;
-using Microsoft.UI.Dispatching;
 using System;
 using System.Threading;
+using Elysium.Platform.Abstractions;
+using Microsoft.UI.Dispatching;
 
 namespace Infinity.Shell.WinUI;
 
-internal sealed class DesktopOverlayTopMostCoordinator(
-    IWindowEventListener windowEvents,
-    DispatcherQueue dispatcherQueue,
-    Func<bool> isActive,
-    Action promote)
+internal sealed class DesktopOverlayTopMostCoordinator(IWindowEventListener windowEvents, DispatcherQueue dispatcherQueue, Func<bool> isActive, Action promote)
 {
     private const long PromotionCooldownMilliseconds = 75;
-
     private int isStarted;
     private int isSuspended;
     private int promotionQueued;
@@ -29,6 +24,7 @@ internal sealed class DesktopOverlayTopMostCoordinator(
         windowEvents.WindowStackChanged += HandleWindowStackChanged;
     }
 
+
     public void PromoteNow()
     {
         if (Volatile.Read(ref isSuspended) != 0 || !isActive())
@@ -40,11 +36,13 @@ internal sealed class DesktopOverlayTopMostCoordinator(
         promote();
     }
 
+
     public void Suspend()
     {
         Interlocked.Exchange(ref isSuspended, 1);
         Interlocked.Exchange(ref promotionQueued, 0);
     }
+
 
     public void Resume()
     {
@@ -54,11 +52,13 @@ internal sealed class DesktopOverlayTopMostCoordinator(
         }
     }
 
+
     public void Reset()
     {
         Interlocked.Exchange(ref isSuspended, 0);
         Interlocked.Exchange(ref promotionQueued, 0);
     }
+
 
     private void HandleForegroundChanged(nint handle) => QueuePromotion(ignoreCooldown: true);
 
@@ -71,8 +71,7 @@ internal sealed class DesktopOverlayTopMostCoordinator(
             return;
         }
 
-        if (!ignoreCooldown &&
-            Environment.TickCount64 - Volatile.Read(ref lastPromotionTick) < PromotionCooldownMilliseconds)
+        if (!ignoreCooldown && Environment.TickCount64 - Volatile.Read(ref lastPromotionTick) < PromotionCooldownMilliseconds)
         {
             return;
         }
@@ -93,6 +92,7 @@ internal sealed class DesktopOverlayTopMostCoordinator(
             Interlocked.Exchange(ref promotionQueued, 0);
         }
     }
+
 
     private void PromoteQueued()
     {

@@ -1,6 +1,6 @@
-using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Windows.Foundation.Metadata;
 using Windows.Graphics.Capture;
 using Windows.Security.Authorization.AppCapabilityAccess;
@@ -11,7 +11,6 @@ public sealed class WindowCaptureAccess(ILogger<WindowCaptureAccess> logger)
 {
     private Task<bool>? request;
 
-    // Called on the overlay's UI thread; denied access keeps the system indicator.
     public Task<bool> RequestBorderlessAsync() => request ??= RequestAsync();
 
     private async Task<bool> RequestAsync()
@@ -25,7 +24,10 @@ public sealed class WindowCaptureAccess(ILogger<WindowCaptureAccess> logger)
         {
             AppCapabilityAccessStatus status = await GraphicsCaptureAccess.RequestAccessAsync(GraphicsCaptureAccessKind.Borderless);
             if (status != AppCapabilityAccessStatus.Allowed)
+            {
                 logger.LogWarning("Borderless capture access returned {Status}; Windows will show its capture indicator", status);
+            }
+
             return status == AppCapabilityAccessStatus.Allowed;
         }
         catch (Exception exception)

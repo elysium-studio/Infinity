@@ -1,14 +1,12 @@
-using Microsoft.UI.Dispatching;
 using System;
 using System.Threading;
+using Microsoft.UI.Dispatching;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Infinity.UI.WinUI;
 
-// Runs independently of both the XAML dispatcher and capture's thread-pool
-// workers. Only cached HWNDs and native opacity are touched from this thread.
 internal sealed class DesktopOverlayResponsivenessMonitor : IDisposable
 {
     private const long TimeoutMilliseconds = 5000;
@@ -30,14 +28,23 @@ internal sealed class DesktopOverlayResponsivenessMonitor : IDisposable
         this.handles = handles;
         this.dispatcher = dispatcher;
         this.dismiss = dismiss;
-        new Thread(Run) { IsBackground = true, Name = "Infinity overlay responsiveness" }.Start();
+        new Thread(Run)
+        {
+            IsBackground = true,
+            Name = "Infinity overlay responsiveness"
+        }.Start();
     }
+
 
     public void Start()
     {
         lock (gate)
         {
-            if (disposed || enabled) return;
+            if (disposed || enabled)
+            {
+                return;
+            }
+
             generation++;
             lastResponse = Environment.TickCount64;
             enabled = true;
@@ -46,6 +53,7 @@ internal sealed class DesktopOverlayResponsivenessMonitor : IDisposable
             Monitor.PulseAll(gate);
         }
     }
+
 
     public void Stop()
     {
@@ -56,6 +64,7 @@ internal sealed class DesktopOverlayResponsivenessMonitor : IDisposable
         }
     }
 
+
     private unsafe void Run()
     {
         lock (gate)
@@ -63,47 +72,45 @@ internal sealed class DesktopOverlayResponsivenessMonitor : IDisposable
             while (!disposed)
             {
                 Monitor.Wait(gate, 250);
-                if (disposed) return;
-                if (!enabled) continue;
+                if (disposed)
+                {
+                    return;
+                }
+
+                if (!enabled)
+                {
+                    continue;
+                }
+
                 int current = generation;
                 if (!tripped && Environment.TickCount64 - lastResponse >= TimeoutMilliseconds)
                 {
                     tripped = true;
-                    dispatcher.TryEnqueue(() =>
-                    {
-                        lock (gate)
-                        {
-                            if (!enabled || generation != current) return;
-                        }
-                        dismiss();
-                    });
+                    dispatcher.TryEnqueue(() =>  {  lock (gate)  {  if (!enabled || generation != current)  {  return;  }  }   dismiss();  });
                 }
 
                 if (tripped)
                 {
-                    // SetLayeredWindowAttributes does not require the frozen
-                    // dispatcher to process a ShowWindow/SetWindowPos message.
-                    // Zero-alpha layered windows also let mouse input through.
                     foreach (HWND handle in handles)
+                    {
                         PInvoke.SetLayeredWindowAttributes(handle, new COLORREF(0), 0, LAYERED_WINDOW_ATTRIBUTES_FLAGS.LWA_ALPHA);
+                    }
+
                     PInvoke.ClipCursor(null);
                     continue;
                 }
 
-                if (pingPending) continue;
-                pingPending = true;
-                dispatcher.TryEnqueue(() =>
+                if (pingPending)
                 {
-                    lock (gate)
-                    {
-                        if (!enabled || generation != current || tripped) return;
-                        lastResponse = Environment.TickCount64;
-                        pingPending = false;
-                    }
-                });
+                    continue;
+                }
+
+                pingPending = true;
+                dispatcher.TryEnqueue(() =>  {  lock (gate)  {  if (!enabled || generation != current || tripped)  {  return;  }   lastResponse = Environment.TickCount64;  pingPending = false;  }  });
             }
         }
     }
+
 
     public void Dispose()
     {

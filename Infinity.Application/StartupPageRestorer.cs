@@ -5,27 +5,17 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public sealed class StartupPageRestorer(IWindowStore store,
-    IPanState state,
-    IWorkspace workspace,
-    IWindowGeometryReader geometryReader,
-    ILogger<StartupPageRestorer> logger)
+public sealed class StartupPageRestorer(IWindowStore store, IPanState state, IWorkspace workspace, IWindowGeometryReader geometryReader, ILogger<StartupPageRestorer> logger)
 {
     public void Restore()
     {
         int workspaceWidth = workspace.Width;
-
         if (workspaceWidth <= 0)
         {
             return;
         }
 
-        StartupWindowBounds? leftmostOffscreenWindow = store
-            .Select(GetVisibleBounds)
-            .Where(bounds => bounds.Top < workspace.Height && bounds.Bottom > 0)
-            .Where(bounds => bounds.Right <= 0)
-            .MinBy(bounds => bounds.Left);
-
+        StartupWindowBounds? leftmostOffscreenWindow = store.Select(GetVisibleBounds).Where(bounds => bounds.Top < workspace.Height && bounds.Bottom > 0).Where(bounds => bounds.Right <= 0).MinBy(bounds => bounds.Left);
         if (leftmostOffscreenWindow is null)
         {
             return;
@@ -34,21 +24,13 @@ public sealed class StartupPageRestorer(IWindowStore store,
         long distanceFromCurrentPage = -(long)leftmostOffscreenWindow.Left;
         long pages = (distanceFromCurrentPage + workspaceWidth - 1) / workspaceWidth;
         long pageShift = pages * workspaceWidth;
-
         if (pageShift is <= 0 or > int.MaxValue || !CanShiftWindows(pageShift))
         {
             logger.LogWarning("Startup page offset exceeded the supported canvas range");
             return;
         }
 
-        logger.LogInformation("Offscreen window detected during startup. Handle={WindowHandle}, Left={WindowLeft}, Top={WindowTop}, Right={WindowRight}, Bottom={WindowBottom}, PageShift={PageShift}",
-            leftmostOffscreenWindow.Handle,
-            leftmostOffscreenWindow.Left,
-            leftmostOffscreenWindow.Top,
-            leftmostOffscreenWindow.Right,
-            leftmostOffscreenWindow.Bottom,
-            pageShift);
-
+        logger.LogInformation("Offscreen window detected during startup. Handle={WindowHandle}, Left={WindowLeft}, Top={WindowTop}, Right={WindowRight}, Bottom={WindowBottom}, PageShift={PageShift}", leftmostOffscreenWindow.Handle, leftmostOffscreenWindow.Left, leftmostOffscreenWindow.Top, leftmostOffscreenWindow.Right, leftmostOffscreenWindow.Bottom, pageShift);
         foreach (TrackedWindow trackedWindow in store)
         {
             trackedWindow.CanvasX += (int)pageShift;
@@ -57,26 +39,19 @@ public sealed class StartupPageRestorer(IWindowStore store,
         state.SetOffset(pageShift);
     }
 
+
     private StartupWindowBounds GetVisibleBounds(TrackedWindow window)
     {
-        if (geometryReader.TryReadVisibleGeometry(window.Handle,
-            out int x,
-            out int y,
-            out int width,
-            out int height))
+        if (geometryReader.TryReadVisibleGeometry(window.Handle, out int x, out int y, out int width, out int height))
         {
             return new(window.Handle, x, y, (long)x + width, (long)y + height);
         }
 
-        return new(window.Handle,
-            window.CanvasX,
-            window.CanvasY,
-            (long)window.CanvasX + window.Width,
-            (long)window.CanvasY + window.Height);
+        return new(window.Handle, window.CanvasX, window.CanvasY, (long)window.CanvasX + window.Width, (long)window.CanvasY + window.Height);
     }
 
-    private bool CanShiftWindows(long pageShift) =>
-        store.All(window => (long)window.CanvasX + pageShift is >= int.MinValue and <= int.MaxValue);
+
+    private bool CanShiftWindows(long pageShift) => store.All(window => (long)window.CanvasX + pageShift is >= int.MinValue and <= int.MaxValue);
 
     private sealed record StartupWindowBounds(IntPtr Handle, int Left, int Top, long Right, long Bottom);
 }

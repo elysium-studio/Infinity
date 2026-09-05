@@ -1,15 +1,13 @@
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
+using WinRT;
 using Windows.Win32;
 
 namespace Infinity.Platform.Windows;
 
-public sealed class DwmFlushScrollTimer :
-    IScrollTimer,
-    IDisposable
+public sealed class DwmFlushScrollTimer : IScrollTimer, IDisposable
 {
     private const int ShutdownTimeoutMilliseconds = 2000;
-
     private readonly ILogger<DwmFlushScrollTimer> logger;
     private readonly Lock lifecycleLock = new();
     private readonly Thread thread;
@@ -22,14 +20,14 @@ public sealed class DwmFlushScrollTimer :
     public DwmFlushScrollTimer(ILogger<DwmFlushScrollTimer> logger)
     {
         this.logger = logger;
-        thread = new Thread(Run)
+        thread = new(Run)
         {
             IsBackground = true,
             Name = "ScrollTimer"
         };
-
         thread.Start();
     }
+
 
     public void Start()
     {
@@ -39,6 +37,7 @@ public sealed class DwmFlushScrollTimer :
             activeEvent.Set();
         }
     }
+
 
     public void Stop()
     {
@@ -50,6 +49,7 @@ public sealed class DwmFlushScrollTimer :
             }
         }
     }
+
 
     public void Dispose()
     {
@@ -65,9 +65,7 @@ public sealed class DwmFlushScrollTimer :
             activeEvent.Set();
         }
 
-        bool threadStopped = Thread.CurrentThread == thread ||
-            thread.Join(ShutdownTimeoutMilliseconds);
-
+        bool threadStopped = Thread.CurrentThread == thread || thread.Join(ShutdownTimeoutMilliseconds);
         if (threadStopped)
         {
             activeEvent.Dispose();
@@ -80,14 +78,13 @@ public sealed class DwmFlushScrollTimer :
         GC.SuppressFinalize(this);
     }
 
+
     private void Run()
     {
-        WinRT.ComWrappersSupport.InitializeComWrappers();
-
+        ComWrappersSupport.InitializeComWrappers();
         while (running)
         {
             activeEvent.Wait();
-
             if (!running)
             {
                 return;

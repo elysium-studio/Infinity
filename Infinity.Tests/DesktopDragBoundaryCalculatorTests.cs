@@ -11,29 +11,23 @@ public sealed class DesktopDragBoundaryCalculatorTests
     {
         DesktopDragBoundaryCalculator calculator = CreateCalculator();
         calculator.SetWorkAreaOffsetY(50);
-
         DesktopDragBounds bounds = calculator.GetCenteredPageBounds(1600, 1000, 0.5);
-
         Assert.Equal(new DesktopDragBounds(550, 250, 1050, 650), bounds);
     }
+
 
     [Fact]
     public void CenteredPageConfinementKeepsThePointerInsideTheFocusedPage()
     {
         DesktopDragBoundaryCalculator calculator = CreateCalculator();
         calculator.SetWorkAreaOffsetY(50);
-
         (double x, double y) = calculator.ConstrainToCenteredPage(100, 900, 1600, 1000, 0.5);
-
         Assert.Equal(550, x);
         Assert.Equal(650, y);
     }
 
-    private static DesktopDragBoundaryCalculator CreateCalculator() => new(
-        new TestPager(),
-        new TestScroller(),
-        new TestWorkspace(),
-        new DesktopPageLayoutCalculator());
+
+    private static DesktopDragBoundaryCalculator CreateCalculator() => new(new TestPager(), new TestScroller(), new TestWorkspace(), new DesktopPageLayoutCalculator());
 
     private sealed class TestPager : IPager
     {
@@ -53,14 +47,17 @@ public sealed class DesktopDragBoundaryCalculatorTests
         {
         }
 
+
         public void Start()
         {
         }
+
 
         public void Stop()
         {
         }
     }
+
 
     private sealed class TestWorkspace : IWorkspace
     {

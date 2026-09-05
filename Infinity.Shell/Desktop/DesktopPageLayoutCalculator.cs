@@ -4,8 +4,7 @@ public sealed class DesktopPageLayoutCalculator
 {
     public double PageSpacing => 64;
 
-    public int CalculateVisiblePageCapacity(double viewportWidth, double desktopWidth, double overviewScale) =>
-        viewportWidth > 0 && desktopWidth > 0 && overviewScale > 0 ? (int)Math.Ceiling(viewportWidth / (desktopWidth * overviewScale)) + 4 : 0;
+    public int CalculateVisiblePageCapacity(double viewportWidth, double desktopWidth, double overviewScale) => viewportWidth > 0 && desktopWidth > 0 && overviewScale > 0 ? (int)Math.Ceiling(viewportWidth / (desktopWidth * overviewScale)) + 4 : 0;
 
     public (int FirstPage, int LastPage) CalculateVisiblePageRange(int? maximumPageCount, double visualOffset, double desktopWidth, double viewportWidth, double overviewScale, double spacingProgress = 1)
     {
@@ -20,11 +19,8 @@ public sealed class DesktopPageLayoutCalculator
         double pageStride = desktopWidth + (PageSpacing * spacingProgress);
         double viewportLeft = -leadingSpace;
         double viewportRight = desktopWidth + leadingSpace;
-        int firstPage = Math.Max(0,
-            (int)Math.Ceiling((viewportLeft + contentOffset - desktopWidth) / pageStride) - 1);
-        int lastPage = Math.Max(firstPage,
-            (int)Math.Floor((viewportRight + contentOffset) / pageStride) + 1);
-
+        int firstPage = Math.Max(0, (int)Math.Ceiling((viewportLeft + contentOffset - desktopWidth) / pageStride) - 1);
+        int lastPage = Math.Max(firstPage, (int)Math.Floor((viewportRight + contentOffset) / pageStride) + 1);
         if (maximumPageCount.HasValue)
         {
             lastPage = Math.Min(lastPage, maximumPageCount.Value - 1);
@@ -34,22 +30,12 @@ public sealed class DesktopPageLayoutCalculator
         return (firstPage, lastPage);
     }
 
-    public double CalculatePageX(int page, double desktopWidth, double offset, double spacingProgress = 1) =>
-        (page * (desktopWidth + (PageSpacing * spacingProgress))) -
-        CalculateContentOffset(offset, desktopWidth, spacingProgress);
 
-    public double CalculateContentOffset(double offset, double desktopWidth, double spacingProgress = 1) =>
-        desktopWidth > 0
-            ? offset * ((desktopWidth + (PageSpacing * spacingProgress)) / desktopWidth)
-            : offset;
+    public double CalculatePageX(int page, double desktopWidth, double offset, double spacingProgress = 1) => (page * (desktopWidth + (PageSpacing * spacingProgress))) - CalculateContentOffset(offset, desktopWidth, spacingProgress);
 
-    public double CalculateWindowX(double x,
-        int canvasX,
-        int windowWidth,
-        int monitorOriginX,
-        double desktopWidth,
-        double offset,
-        double spacingProgress = 1)
+    public double CalculateContentOffset(double offset, double desktopWidth, double spacingProgress = 1) => desktopWidth > 0 ? offset * ((desktopWidth + (PageSpacing * spacingProgress)) / desktopWidth) : offset;
+
+    public double CalculateWindowX(double x, int canvasX, int windowWidth, int monitorOriginX, double desktopWidth, double offset, double spacingProgress = 1)
     {
         if (desktopWidth <= 0)
         {

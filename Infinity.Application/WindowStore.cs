@@ -1,14 +1,13 @@
-using Infinity.Application.Abstractions;
 using System.Collections;
+using Infinity.Application.Abstractions;
 
 namespace Infinity.Application;
 
-public sealed class WindowStore :
-    IWindowStore
+public sealed class WindowStore : IWindowStore
 {
     private readonly Lock syncRoot = new();
-    private readonly Dictionary<IntPtr, TrackedWindow> lookup = new();
-    private readonly List<TrackedWindow> ordered = new();
+    private readonly Dictionary<IntPtr, TrackedWindow> lookup = [];
+    private readonly List<TrackedWindow> ordered = [];
     private TrackedWindow[]? cachedAll;
 
     public event EventHandler<TrackedWindow>? WindowAdded;
@@ -28,6 +27,7 @@ public sealed class WindowStore :
         }
     }
 
+
     public bool TryGet(IntPtr windowHandle, out TrackedWindow window)
     {
         lock (syncRoot)
@@ -36,14 +36,13 @@ public sealed class WindowStore :
         }
     }
 
+
     public void Add(TrackedWindow window)
     {
         bool added;
-
         lock (syncRoot)
         {
             added = !lookup.TryGetValue(window.Handle, out TrackedWindow? existing);
-
             if (added)
             {
                 ordered.Add(window);
@@ -51,7 +50,6 @@ public sealed class WindowStore :
             else
             {
                 int index = ordered.IndexOf(existing!);
-
                 if (index >= 0)
                 {
                     ordered[index] = window;
@@ -76,10 +74,10 @@ public sealed class WindowStore :
         }
     }
 
+
     public void Remove(IntPtr windowHandle)
     {
         TrackedWindow? window;
-
         lock (syncRoot)
         {
             if (!lookup.Remove(windowHandle, out window))
@@ -94,10 +92,10 @@ public sealed class WindowStore :
         WindowRemoved?.Invoke(this, windowHandle);
     }
 
+
     public void NotifyChanged(IntPtr windowHandle)
     {
         TrackedWindow? window;
-
         lock (syncRoot)
         {
             if (!lookup.TryGetValue(windowHandle, out window))
@@ -109,13 +107,15 @@ public sealed class WindowStore :
         WindowChanged?.Invoke(this, window);
     }
 
+
     public WindowStoreEnumerator GetEnumerator()
     {
         lock (syncRoot)
         {
-            return new(cachedAll ??= [.. ordered]);
+            return new(cachedAll ??= [..ordered]);
         }
     }
+
 
     IEnumerator<TrackedWindow> IEnumerable<TrackedWindow>.GetEnumerator() => GetEnumerator();
 

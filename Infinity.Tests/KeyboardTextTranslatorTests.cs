@@ -15,23 +15,21 @@ public sealed class KeyboardTextTranslatorTests
     [InlineData(0xBA)]
     [InlineData(0xDF)]
     [InlineData(0xE2)]
-    public void TextInputKeysCanBeTranslated(int virtualKeyCode) =>
-        Assert.True(KeyboardTextTranslator.IsTextInputKey(virtualKeyCode));
+    public void TextInputKeysCanBeTranslated(int virtualKeyCode) => Assert.True(KeyboardTextTranslator.IsTextInputKey(virtualKeyCode));
 
     [Theory]
-    [InlineData(0x08)] // Backspace
-    [InlineData(0x0D)] // Enter
-    [InlineData(0x1B)] // Escape
-    [InlineData(0x21)] // Page up
-    [InlineData(0x25)] // Left arrow
-    [InlineData(0x2C)] // Print screen
-    [InlineData(0x70)] // F1
-    [InlineData(0x7B)] // F12
-    [InlineData(0x87)] // F24
-    [InlineData(0xA6)] // Browser back
-    [InlineData(0xAF)] // Volume up
-    public void FunctionAndSystemKeysCannotBeTranslated(int virtualKeyCode) =>
-        Assert.False(KeyboardTextTranslator.IsTextInputKey(virtualKeyCode));
+    [InlineData(0x08)]
+    [InlineData(0x0D)]
+    [InlineData(0x1B)]
+    [InlineData(0x21)]
+    [InlineData(0x25)]
+    [InlineData(0x2C)]
+    [InlineData(0x70)]
+    [InlineData(0x7B)]
+    [InlineData(0x87)]
+    [InlineData(0xA6)]
+    [InlineData(0xAF)]
+    public void FunctionAndSystemKeysCannotBeTranslated(int virtualKeyCode) => Assert.False(KeyboardTextTranslator.IsTextInputKey(virtualKeyCode));
 
     [Theory]
     [InlineData(false, false, false, true)]
@@ -40,6 +38,5 @@ public sealed class KeyboardTextTranslatorTests
     [InlineData(false, true, false, false)]
     [InlineData(false, false, true, false)]
     [InlineData(true, true, true, false)]
-    public void OnlyTextEntryModifierChordsCanBeTranslated(bool controlDown, bool menuDown, bool windowsDown, bool expected) =>
-        Assert.Equal(expected, KeyboardTextTranslator.IsTextEntryChord(controlDown, menuDown, windowsDown));
+    public void OnlyTextEntryModifierChordsCanBeTranslated(bool controlDown, bool menuDown, bool windowsDown, bool expected) => Assert.Equal(expected, KeyboardTextTranslator.IsTextEntryChord(controlDown, menuDown, windowsDown));
 }

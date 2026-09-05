@@ -4,8 +4,7 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Platform.Windows;
 
-public sealed class PointerInputSource :
-    IPointerInputSource
+public sealed class PointerInputSource : IPointerInputSource
 {
     private const int IdleTimeoutMs = 120;
     private const int VelocitySampleCount = 5;
@@ -37,22 +36,19 @@ public sealed class PointerInputSource :
 
     public event Action<double>? ScrollVelocityIdle;
 
-    public PointerInputSource(IMouseInputSource mouseInputSource,
-        IModifierKeyState modifierKeyState,
-        IScrollPresentationSession scrollPresentationSession,
-        IScrollInputSuppression scrollInputSuppression)
+    public PointerInputSource(IMouseInputSource mouseInputSource, IModifierKeyState modifierKeyState, IScrollPresentationSession scrollPresentationSession, IScrollInputSuppression scrollInputSuppression)
     {
         this.mouseInputSource = mouseInputSource;
         this.modifierKeyState = modifierKeyState;
         this.scrollPresentationSession = scrollPresentationSession;
         this.scrollInputSuppression = scrollInputSuppression;
-
         this.mouseInputSource.LeftButtonDown += HandleLeftButtonDown;
         this.mouseInputSource.MiddleButtonPressed += HandleMiddleButtonPressed;
         this.mouseInputSource.RightButtonDown += HandleRightButtonDown;
         this.mouseInputSource.MouseMoved += HandleMouseMoved;
         this.mouseInputSource.WheelScrolled += HandleWheelScrolled;
     }
+
 
     private void HandleLeftButtonDown() => LeftButtonClicked?.Invoke();
 
@@ -67,6 +63,7 @@ public sealed class PointerInputSource :
         MiddleButtonClicked?.Invoke();
     }
 
+
     private void HandleRightButtonDown() => RightButtonClicked?.Invoke();
 
     private void HandleMouseMoved(object? sender, MouseMoveEventArgs args)
@@ -78,6 +75,7 @@ public sealed class PointerInputSource :
 
         CursorMoved?.Invoke(args.X, args.Y);
     }
+
 
     private void HandleWheelScrolled(object? sender, MouseWheelEventArgs args)
     {
@@ -92,7 +90,6 @@ public sealed class PointerInputSource :
         }
 
         args.Handled = true;
-
         if (args.Delta == 0)
         {
             return;
@@ -101,6 +98,7 @@ public sealed class PointerInputSource :
         ScrollDeltaReceived?.Invoke(args.Delta);
         RecordVelocitySample(args.Delta);
     }
+
 
     private void RecordVelocitySample(int delta)
     {
@@ -116,9 +114,8 @@ public sealed class PointerInputSource :
                 isPrecisionGesture = true;
             }
 
-            velocitySamples[velocitySampleIndex] = new DeltaSample(delta, Environment.TickCount64);
+            velocitySamples[velocitySampleIndex] = new(delta, Environment.TickCount64);
             velocitySampleIndex = (velocitySampleIndex + 1) % VelocitySampleCount;
-
             if (velocitySampleCount < VelocitySampleCount)
             {
                 velocitySampleCount++;
@@ -126,7 +123,7 @@ public sealed class PointerInputSource :
 
             if (idleTimer is null)
             {
-                idleTimer = new Timer(HandleIdleTimer, null, IdleTimeoutMs, Timeout.Infinite);
+                idleTimer = new(HandleIdleTimer, null, IdleTimeoutMs, Timeout.Infinite);
             }
             else
             {
@@ -135,11 +132,11 @@ public sealed class PointerInputSource :
         }
     }
 
+
     private void HandleIdleTimer(object? state)
     {
         bool shouldFire;
         double velocity = 0;
-
         lock (scrollGate)
         {
             if (isDisposed)
@@ -148,7 +145,6 @@ public sealed class PointerInputSource :
             }
 
             shouldFire = isPrecisionGesture;
-
             if (shouldFire)
             {
                 velocity = ComputeVelocity();
@@ -165,6 +161,7 @@ public sealed class PointerInputSource :
         }
     }
 
+
     private double ComputeVelocity()
     {
         if (velocitySampleCount < 2)
@@ -174,16 +171,13 @@ public sealed class PointerInputSource :
 
         int oldestIndex = (velocitySampleIndex - velocitySampleCount + VelocitySampleCount) % VelocitySampleCount;
         int newestIndex = (velocitySampleIndex - 1 + VelocitySampleCount) % VelocitySampleCount;
-
         long elapsedMs = velocitySamples[newestIndex].TimestampMs - velocitySamples[oldestIndex].TimestampMs;
-
         if (elapsedMs <= 0)
         {
             return 0.0;
         }
 
         double totalDelta = 0;
-
         for (int i = 0; i < velocitySampleCount; i++)
         {
             int index = (oldestIndex + i) % VelocitySampleCount;
@@ -192,6 +186,7 @@ public sealed class PointerInputSource :
 
         return totalDelta / elapsedMs;
     }
+
 
     public void Dispose()
     {
@@ -212,7 +207,6 @@ public sealed class PointerInputSource :
         mouseInputSource.RightButtonDown -= HandleRightButtonDown;
         mouseInputSource.MouseMoved -= HandleMouseMoved;
         mouseInputSource.WheelScrolled -= HandleWheelScrolled;
-
         GC.SuppressFinalize(this);
     }
 }

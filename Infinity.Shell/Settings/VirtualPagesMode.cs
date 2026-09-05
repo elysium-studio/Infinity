@@ -1,4 +1,4 @@
-﻿namespace Infinity.Shell;
+namespace Infinity.Shell;
 
 public enum VirtualPagesMode
 {

@@ -27,18 +27,7 @@ public sealed class DesktopOverviewSessionController
     private bool isCompletionRequested;
     private bool isReadyToClose;
 
-    public DesktopOverviewSessionController(
-        IDispatcher dispatcher,
-        IPointerInputSource pointer,
-        IModifierKeyState modifierKeyState,
-        IPageGestureSource gestureSource,
-        IPager pager,
-        IScroller scroller,
-        IScrollPresentationSession scrollPresentationSession,
-        IWindowPreviewSurface windowPreviewSurface,
-        IWindowNavigationCoordinator windowNavigationCoordinator,
-        IInfinityGlanceBridge glanceBridge,
-        IDesktopOverviewSettingsNavigator settingsNavigator)
+    public DesktopOverviewSessionController(IDispatcher dispatcher, IPointerInputSource pointer, IModifierKeyState modifierKeyState, IPageGestureSource gestureSource, IPager pager, IScroller scroller, IScrollPresentationSession scrollPresentationSession, IWindowPreviewSurface windowPreviewSurface, IWindowNavigationCoordinator windowNavigationCoordinator, IInfinityGlanceBridge glanceBridge, IDesktopOverviewSettingsNavigator settingsNavigator)
     {
         this.dispatcher = dispatcher;
         this.modifierKeyState = modifierKeyState;
@@ -49,7 +38,6 @@ public sealed class DesktopOverviewSessionController
         this.windowNavigationCoordinator = windowNavigationCoordinator;
         this.glanceBridge = glanceBridge;
         this.settingsNavigator = settingsNavigator;
-
         pointer.ScrollDeltaReceived += HandleScrollDeltaReceived;
         pointer.MiddleButtonClicked += HandleMiddleButtonClicked;
         scroller.ScrollStarted += HandleScrollerScrollStarted;
@@ -57,6 +45,7 @@ public sealed class DesktopOverviewSessionController
         gestureSource.SessionStarted += HandleGestureSessionStarted;
         gestureSource.SessionEnded += HandleGestureSessionEnded;
     }
+
 
     public event Action<DesktopOverviewSessionState>? StateChanged;
 
@@ -70,7 +59,6 @@ public sealed class DesktopOverviewSessionController
         }
 
         isOpen = value;
-
         if (!value && isPreviewActive)
         {
             scroller.CommitPresentation();
@@ -85,6 +73,7 @@ public sealed class DesktopOverviewSessionController
         PublishState();
     }
 
+
     public void SetStaysOpen(bool value)
     {
         if (staysOpen == value)
@@ -96,10 +85,10 @@ public sealed class DesktopOverviewSessionController
         PublishState();
     }
 
+
     public void CompletePreview()
     {
         bool navigateToSettings = navigateToSettingsAfterClose;
-
         ResetPendingNavigation();
         navigateToSettingsAfterClose = false;
         isReadyToClose = false;
@@ -110,12 +99,12 @@ public sealed class DesktopOverviewSessionController
         staysOpen = false;
         isOpen = false;
         PublishState();
-
         if (navigateToSettings)
         {
             _ = settingsNavigator.NavigateAsync();
         }
     }
+
 
     public void DismissPreview()
     {
@@ -134,18 +123,19 @@ public sealed class DesktopOverviewSessionController
         PublishState();
     }
 
+
 #if DEBUG
     public async Task OpenForDebugAsync()
     {
         staysOpen = true;
         isOpen = true;
         PublishState();
-
         await Task.Delay(500);
         dispatcher.Dispatch(BeginPreview);
     }
-#endif
 
+
+#endif
     public void ActivateWindow(nint handle)
     {
         if (handle == 0 || !isPreviewActive || isCompletionRequested)
@@ -161,7 +151,6 @@ public sealed class DesktopOverviewSessionController
         isCompletionRequested = true;
         isSelectionNavigationStarting = true;
         PublishState();
-
         try
         {
             windowNavigationCoordinator.NavigateTo(handle);
@@ -173,6 +162,7 @@ public sealed class DesktopOverviewSessionController
         }
     }
 
+
     public void SelectPage(int page)
     {
         if (!isPreviewActive || isCompletionRequested)
@@ -181,7 +171,6 @@ public sealed class DesktopOverviewSessionController
         }
 
         navigateToSettingsAfterClose = false;
-
         if (pager.IsPageCentered(page))
         {
             DismissPreview();
@@ -195,7 +184,6 @@ public sealed class DesktopOverviewSessionController
         isCompletionRequested = true;
         isSelectionNavigationStarting = true;
         PublishState();
-
         try
         {
             pager.NavigateToPage(page);
@@ -205,6 +193,7 @@ public sealed class DesktopOverviewSessionController
             isSelectionNavigationStarting = false;
         }
     }
+
 
     public void NavigateToSettings()
     {
@@ -217,29 +206,10 @@ public sealed class DesktopOverviewSessionController
         DismissPreview();
     }
 
-    public void NotifyNavigationCompleted()
-        => dispatcher.Dispatch(() =>
-        {
-            isWindowSelectionNavigationPending = false;
-            TryMarkReadyToClose();
 
-            if (!isPreviewActive)
-            {
-                isOpen = false;
-            }
+    public void NotifyNavigationCompleted() => dispatcher.Dispatch(() =>  {  isWindowSelectionNavigationPending = false;  TryMarkReadyToClose();  if (!isPreviewActive)  {  isOpen = false;  }   PublishState();  });
 
-            PublishState();
-        });
-
-    public void NotifyWindowActivationRequested()
-        => dispatcher.Dispatch(() =>
-        {
-            if (!isPreviewActive)
-            {
-                isOpen = false;
-                PublishState();
-            }
-        });
+    public void NotifyWindowActivationRequested() => dispatcher.Dispatch(() =>  {  if (!isPreviewActive)  {  isOpen = false;  PublishState();  }  });
 
     public void NotifyExitAnimationCompleted()
     {
@@ -253,6 +223,7 @@ public sealed class DesktopOverviewSessionController
         PublishState();
     }
 
+
     private void HandleGestureSessionStarted() => dispatcher.Dispatch(OpenPendingSurface);
 
     private void HandleGestureSessionEnded() => dispatcher.Dispatch(ClosePendingSurface);
@@ -264,19 +235,9 @@ public sealed class DesktopOverviewSessionController
             return;
         }
 
-        dispatcher.Dispatch(() =>
-        {
-            if (isCompletionRequested)
-            {
-                ResumePreview();
-            }
-            else
-            {
-                isOpen = true;
-                PublishState();
-            }
-        });
+        dispatcher.Dispatch(() =>  {  if (isCompletionRequested)  {  ResumePreview();  }  else  {  isOpen = true;  PublishState();  }  });
     }
+
 
     private void HandleMiddleButtonClicked()
     {
@@ -286,6 +247,7 @@ public sealed class DesktopOverviewSessionController
         }
     }
 
+
     private void HandleScrollerScrollStarted(object? sender, EventArgs args)
     {
         if (!isSelectionNavigationStarting)
@@ -294,18 +256,8 @@ public sealed class DesktopOverviewSessionController
         }
     }
 
-    private void HandleScrollerScrollStopped(object? sender, EventArgs args)
-        => dispatcher.Dispatch(() =>
-        {
-            if (!isPageSelectionNavigationPending)
-            {
-                return;
-            }
 
-            isPageSelectionNavigationPending = false;
-            TryMarkReadyToClose();
-            PublishState();
-        });
+    private void HandleScrollerScrollStopped(object? sender, EventArgs args) => dispatcher.Dispatch(() =>  {  if (!isPageSelectionNavigationPending)  {  return;  }   isPageSelectionNavigationPending = false;  TryMarkReadyToClose();  PublishState();  });
 
     private void BeginPreview()
     {
@@ -327,17 +279,9 @@ public sealed class DesktopOverviewSessionController
         }
 
         scrollPresentationSession.Begin();
-
-        dispatcher.Dispatch(() =>
-        {
-            navigateToSettingsAfterClose = false;
-            isCompletionRequested = false;
-            isPreviewActive = true;
-            staysOpen = true;
-            isOpen = true;
-            PublishState();
-        });
+        dispatcher.Dispatch(() =>  {  navigateToSettingsAfterClose = false;  isCompletionRequested = false;  isPreviewActive = true;  staysOpen = true;  isOpen = true;  PublishState();  });
     }
+
 
     private void ResumePreview()
     {
@@ -357,12 +301,14 @@ public sealed class DesktopOverviewSessionController
         PublishState();
     }
 
+
     private void OpenPendingSurface()
     {
         staysOpen = true;
         isOpen = true;
         PublishState();
     }
+
 
     private void ClosePendingSurface()
     {
@@ -376,6 +322,7 @@ public sealed class DesktopOverviewSessionController
         PublishState();
     }
 
+
     private void TryMarkReadyToClose()
     {
         if (isCompletionRequested && isDesktopPreviewExitAnimationCompleted && !isPageSelectionNavigationPending && !isWindowSelectionNavigationPending)
@@ -384,6 +331,7 @@ public sealed class DesktopOverviewSessionController
         }
     }
 
+
     private void ResetPendingNavigation()
     {
         isDesktopPreviewExitAnimationCompleted = false;
@@ -391,6 +339,7 @@ public sealed class DesktopOverviewSessionController
         isWindowSelectionNavigationPending = false;
         isSelectionNavigationStarting = false;
     }
+
 
     private void PublishState()
     {

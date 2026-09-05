@@ -12,7 +12,6 @@ public sealed class DesktopDragBoundaryCalculator(IPager pager, IScroller scroll
     public (double X, double Y) Constrain(double pointerX, double pointerY, double viewportWidth, double viewportHeight, double overviewScale)
     {
         DesktopDragBounds bounds = GetBounds(viewportWidth, viewportHeight, overviewScale);
-
         if (!double.IsFinite(pointerX) || !double.IsFinite(pointerY) || !bounds.IsValid)
         {
             return (pointerX, pointerY);
@@ -20,6 +19,7 @@ public sealed class DesktopDragBoundaryCalculator(IPager pager, IScroller scroll
 
         return (Math.Clamp(pointerX, bounds.MinimumX, bounds.MaximumX), Math.Clamp(pointerY, bounds.MinimumY, bounds.MaximumY));
     }
+
 
     public double ConstrainHorizontal(double pointerX, double viewportWidth, double overviewScale)
     {
@@ -32,6 +32,7 @@ public sealed class DesktopDragBoundaryCalculator(IPager pager, IScroller scroll
         return bounds.IsValid ? Math.Clamp(pointerX, bounds.MinimumX, bounds.MaximumX) : pointerX;
     }
 
+
     public DesktopDragBounds GetBounds(double viewportWidth, double viewportHeight, double overviewScale)
     {
         if (!double.IsFinite(viewportWidth) || !double.IsFinite(viewportHeight) || viewportWidth <= 0 || viewportHeight <= 0 || !HasValidDesktop(overviewScale))
@@ -43,8 +44,9 @@ public sealed class DesktopDragBoundaryCalculator(IPager pager, IScroller scroll
         double pageHeight = workspace.Height * overviewScale;
         double minimumY = Math.Max(0, workAreaOffsetY + ((workspace.Height / 2.0) * (1 - overviewScale)));
         double maximumY = Math.Min(viewportHeight, minimumY + pageHeight);
-        return new DesktopDragBounds(minimumX, minimumY, maximumX, maximumY);
+        return new(minimumX, minimumY, maximumX, maximumY);
     }
+
 
     public DesktopDragBounds GetCenteredPageBounds(double viewportWidth, double viewportHeight, double overviewScale)
     {
@@ -57,8 +59,9 @@ public sealed class DesktopDragBoundaryCalculator(IPager pager, IScroller scroll
         double pageHeight = Math.Min(viewportHeight, workspace.Height * overviewScale);
         double minimumY = Math.Max(0, workAreaOffsetY + ((workspace.Height / 2.0) * (1 - overviewScale)));
         double maximumY = Math.Min(viewportHeight, minimumY + pageHeight);
-        return new DesktopDragBounds(minimumX, minimumY, maximumX, maximumY);
+        return new(minimumX, minimumY, maximumX, maximumY);
     }
+
 
     public (double MinimumX, double MaximumX) GetCenteredPageHorizontalBounds(double viewportWidth, double overviewScale)
     {
@@ -72,10 +75,10 @@ public sealed class DesktopDragBoundaryCalculator(IPager pager, IScroller scroll
         return (minimumX, Math.Min(viewportWidth, minimumX + pageWidth));
     }
 
+
     public (double X, double Y) ConstrainToCenteredPage(double pointerX, double pointerY, double viewportWidth, double viewportHeight, double overviewScale)
     {
         DesktopDragBounds bounds = GetCenteredPageBounds(viewportWidth, viewportHeight, overviewScale);
-
         if (!double.IsFinite(pointerX) || !double.IsFinite(pointerY) || !bounds.IsValid)
         {
             return (pointerX, pointerY);
@@ -84,6 +87,7 @@ public sealed class DesktopDragBoundaryCalculator(IPager pager, IScroller scroll
         return (Math.Clamp(pointerX, bounds.MinimumX, bounds.MaximumX), Math.Clamp(pointerY, bounds.MinimumY, bounds.MaximumY));
     }
 
+
     private (double MinimumX, double MaximumX) GetHorizontalBounds(double viewportWidth, double overviewScale)
     {
         double visualOffset = scroller.VisualOffset;
@@ -91,7 +95,6 @@ public sealed class DesktopDragBoundaryCalculator(IPager pager, IScroller scroll
         double firstPageX = -contentOffset;
         double minimumX = ToScreenX(firstPageX, viewportWidth, overviewScale);
         double maximumX = viewportWidth;
-
         if (pager.MaxPages is int maximumPageCount && maximumPageCount > 0)
         {
             double lastPageX = ((maximumPageCount - 1) * (workspace.Width + pageLayoutCalculator.PageSpacing)) - contentOffset;
@@ -102,6 +105,7 @@ public sealed class DesktopDragBoundaryCalculator(IPager pager, IScroller scroll
         maximumX = Math.Clamp(maximumX, minimumX, viewportWidth);
         return (minimumX, maximumX);
     }
+
 
     private bool HasValidDesktop(double overviewScale) => double.IsFinite(overviewScale) && overviewScale > 0 && workspace.Width > 0 && workspace.Height > 0;
 

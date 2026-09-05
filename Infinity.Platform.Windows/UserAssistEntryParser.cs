@@ -12,7 +12,6 @@ internal static class UserAssistEntryParser
     {
         ArgumentNullException.ThrowIfNull(encodedIdentifier);
         ArgumentNullException.ThrowIfNull(data);
-
         if (data.Length < MinimumEntryLength)
         {
             return null;
@@ -20,7 +19,6 @@ internal static class UserAssistEntryParser
 
         int useCount = BinaryPrimitives.ReadInt32LittleEndian(data.AsSpan(UseCountOffset, sizeof(int)));
         long fileTime = BinaryPrimitives.ReadInt64LittleEndian(data.AsSpan(LastUsedFileTimeOffset, sizeof(long)));
-
         if (useCount < 0 || fileTime <= 0)
         {
             return null;
@@ -28,10 +26,7 @@ internal static class UserAssistEntryParser
 
         try
         {
-            return new UserAssistApplicationUsageEntry(
-                UserAssistValueNameDecoder.Decode(encodedIdentifier),
-                useCount,
-                DateTime.FromFileTimeUtc(fileTime));
+            return new(UserAssistValueNameDecoder.Decode(encodedIdentifier), useCount, DateTime.FromFileTimeUtc(fileTime));
         }
         catch (ArgumentOutOfRangeException)
         {

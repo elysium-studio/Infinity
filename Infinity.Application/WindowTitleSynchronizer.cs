@@ -4,10 +4,7 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Application;
 
-public sealed class WindowTitleSynchronizer(IWindowStore repository,
-    IWindowTitleReader titleReader,
-    IWindowEventListener listener) :
-    IWindowTitleSynchronizer
+public sealed class WindowTitleSynchronizer(IWindowStore repository, IWindowTitleReader titleReader, IWindowEventListener listener) : IWindowTitleSynchronizer
 {
     private bool isStarted;
 
@@ -19,12 +16,11 @@ public sealed class WindowTitleSynchronizer(IWindowStore repository,
         }
 
         isStarted = true;
-
         listener.WindowTitleChanged += HandleWindowTitleChanged;
         repository.WindowAdded += HandleWindowAdded;
-
         SynchronizeExistingWindows();
     }
+
 
     public void Stop()
     {
@@ -34,10 +30,10 @@ public sealed class WindowTitleSynchronizer(IWindowStore repository,
         }
 
         isStarted = false;
-
         listener.WindowTitleChanged -= HandleWindowTitleChanged;
         repository.WindowAdded -= HandleWindowAdded;
     }
+
 
     private void SynchronizeExistingWindows()
     {
@@ -47,15 +43,10 @@ public sealed class WindowTitleSynchronizer(IWindowStore repository,
         }
     }
 
-    private void HandleWindowAdded(object? sender, TrackedWindow trackedWindow)
-    {
-        SynchronizeTitle(trackedWindow.Handle);
-    }
 
-    private void HandleWindowTitleChanged(IntPtr windowHandle)
-    {
-        SynchronizeTitle(windowHandle);
-    }
+    private void HandleWindowAdded(object? sender, TrackedWindow trackedWindow) => SynchronizeTitle(trackedWindow.Handle);
+
+    private void HandleWindowTitleChanged(IntPtr windowHandle) => SynchronizeTitle(windowHandle);
 
     private void SynchronizeTitle(IntPtr windowHandle)
     {
@@ -70,7 +61,6 @@ public sealed class WindowTitleSynchronizer(IWindowStore repository,
         }
 
         string title = titleReader.GetTitle(windowHandle);
-
         if (string.Equals(trackedWindow.Title, title, StringComparison.Ordinal))
         {
             return;

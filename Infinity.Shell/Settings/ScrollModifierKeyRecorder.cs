@@ -4,14 +4,9 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed class ScrollModifierKeyRecorder(
-    IHotKeysBuilder builder,
-    HotKeysBuilderOptions builderOptions,
-    IKeyLabelProvider labelProvider,
-    ITextLocalizer localizer)
+public sealed class ScrollModifierKeyRecorder(IHotKeysBuilder builder, HotKeysBuilderOptions builderOptions, IKeyLabelProvider labelProvider, ITextLocalizer localizer)
 {
     private static readonly ScrollModifierKeyRecordingState IdleState = new(false, false, false, string.Empty, []);
-
     private bool isActive;
 
     public event Action<ScrollModifierKeyRecordingState>? StateChanged;
@@ -32,6 +27,7 @@ public sealed class ScrollModifierKeyRecorder(
         Show(combinations);
     }
 
+
     public void Deactivate()
     {
         if (isActive)
@@ -45,25 +41,16 @@ public sealed class ScrollModifierKeyRecorder(
         Publish(IdleState);
     }
 
+
     public void Start()
     {
-        Publish(new ScrollModifierKeyRecordingState(
-            true,
-            false,
-            true,
-            localizer.GetText("ScrollShortcutStartWithModifier"),
-            []));
-
+        Publish(new ScrollModifierKeyRecordingState(true, false, true, localizer.GetText("ScrollShortcutStartWithModifier"), []));
         if (!builder.Start())
         {
-            Publish(new ScrollModifierKeyRecordingState(
-                false,
-                false,
-                true,
-                localizer.GetText("ScrollShortcutRecorderUnavailable"),
-                []));
+            Publish(new ScrollModifierKeyRecordingState(false, false, true, localizer.GetText("ScrollShortcutRecorderUnavailable"), []));
         }
     }
+
 
     public void Cancel()
     {
@@ -71,27 +58,23 @@ public sealed class ScrollModifierKeyRecorder(
         Publish(IdleState);
     }
 
+
     public bool TrySave(out List<List<int>> combinations)
     {
         HotKeysBuilderSnapshot snapshot = builder.Current;
-
         if (!State.IsRecording || !builder.IsComplete || snapshot.Keys.Count != RequiredKeyCount)
         {
             combinations = [];
-            Publish(State with
-            {
-                CanSave = false,
-                IsValidationOpen = true,
-                ValidationMessage = localizer.GetText("ScrollShortcutPressKeysToSave", RequiredKeyCount)
-            });
+            Publish(State with { CanSave = false, IsValidationOpen = true, ValidationMessage = localizer.GetText("ScrollShortcutPressKeysToSave", RequiredKeyCount) });
             return false;
         }
 
-        combinations = [.. snapshot.Combinations.Select(combination => combination.ToList())];
+        combinations = [..snapshot.Combinations.Select(combination => combination.ToList())];
         builder.Stop();
         Show(combinations);
         return true;
     }
+
 
     public void Show(List<List<int>>? combinations)
     {
@@ -103,13 +86,11 @@ public sealed class ScrollModifierKeyRecorder(
 
         HashSet<string> seen = [];
         List<ScrollModifierKeyLabel> labels = [];
-
         foreach (List<int> combination in combinations)
         {
             foreach (int keyCode in combination)
             {
                 ScrollModifierKeyLabel label = BuildLabel(keyCode);
-
                 if (seen.Add(label.ToolTip))
                 {
                     labels.Add(label);
@@ -121,6 +102,7 @@ public sealed class ScrollModifierKeyRecorder(
         Publish(IdleState with { Labels = labels });
     }
 
+
     private void HandleBuilderChanged(object? sender, HotKeysBuilderSnapshot snapshot)
     {
         if (!State.IsRecording)
@@ -128,11 +110,10 @@ public sealed class ScrollModifierKeyRecorder(
             return;
         }
 
-        List<ScrollModifierKeyLabel> labels = [.. snapshot.Keys.Select(BuildLabel)];
+        List<ScrollModifierKeyLabel> labels = [..snapshot.Keys.Select(BuildLabel)];
         bool canSave = builder.IsComplete && snapshot.Keys.Count == RequiredKeyCount;
         bool isValidationOpen = true;
         string validationMessage;
-
         if (snapshot.Keys.Count == 0)
         {
             validationMessage = localizer.GetText("ScrollShortcutStartWithModifier");
@@ -154,31 +135,30 @@ public sealed class ScrollModifierKeyRecorder(
         Publish(new ScrollModifierKeyRecordingState(true, canSave, isValidationOpen, validationMessage, labels));
     }
 
+
     private void HandleBuilderUnavailable(object? sender, EventArgs args)
     {
         if (State.IsRecording)
         {
-            Publish(State with
-            {
-                CanSave = false,
-                IsValidationOpen = true,
-                ValidationMessage = localizer.GetText("ScrollShortcutUnavailable")
-            });
+            Publish(State with { CanSave = false, IsValidationOpen = true, ValidationMessage = localizer.GetText("ScrollShortcutUnavailable") });
         }
     }
+
 
     private ScrollModifierKeyLabel BuildLabel(HotKey key)
     {
         string text = labelProvider.Shorten(key.Text);
-        return new ScrollModifierKeyLabel(text, key.Text);
+        return new(text, key.Text);
     }
+
 
     private ScrollModifierKeyLabel BuildLabel(int keyCode)
     {
         string fullText = labelProvider.GetFullLabel(keyCode);
         string text = labelProvider.Shorten(fullText);
-        return new ScrollModifierKeyLabel(text, fullText);
+        return new(text, fullText);
     }
+
 
     private void Publish(ScrollModifierKeyRecordingState state)
     {

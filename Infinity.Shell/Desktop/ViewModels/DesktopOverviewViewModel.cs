@@ -2,32 +2,22 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Elysium.Application.Abstractions;
 using Elysium.Presentation;
-using Elysium.Presentation.Abstractions;
-using Infinity.Application.Abstractions;
 using NavigationCompletedEventArgs = Infinity.Application.Abstractions.NavigationCompletedEventArgs;
 
 namespace Infinity.Shell;
 
-public sealed partial class DesktopOverviewViewModel :
-    ObservableViewModel,
-    IRecipient<NavigationCompletedEventArgs>,
-    IRecipient<WindowActivationRequestedEventArgs>
+public sealed partial class DesktopOverviewViewModel : ObservableViewModel, IRecipient<NavigationCompletedEventArgs>, IRecipient<WindowActivationRequestedEventArgs>
 {
     private readonly DesktopOverviewSessionController sessionController;
     private bool isApplyingSessionState;
-
     [ObservableProperty]
     private bool isOpen;
-
     [ObservableProperty]
     private bool staysOpen;
-
     [ObservableProperty]
     private bool isDesktopPreviewActive;
-
     [ObservableProperty]
     private bool isDesktopPreviewCompletionRequested;
-
     [ObservableProperty]
     private bool isDesktopPreviewReadyToClose;
 
@@ -39,6 +29,7 @@ public sealed partial class DesktopOverviewViewModel :
         Activate();
     }
 
+
     partial void OnIsOpenChanged(bool value)
     {
         if (!isApplyingSessionState)
@@ -46,6 +37,7 @@ public sealed partial class DesktopOverviewViewModel :
             sessionController.SetOpen(value);
         }
     }
+
 
     partial void OnStaysOpenChanged(bool value)
     {
@@ -55,11 +47,13 @@ public sealed partial class DesktopOverviewViewModel :
         }
     }
 
+
     protected override void RegisterMessages()
     {
         Messenger.Register<NavigationCompletedEventArgs>(this);
         Messenger.Register<WindowActivationRequestedEventArgs>(this);
     }
+
 
     public void CompleteDesktopPreview() => sessionController.CompletePreview();
 
@@ -67,8 +61,8 @@ public sealed partial class DesktopOverviewViewModel :
 
 #if DEBUG
     public Task OpenDesktopPreviewForDebugAsync() => sessionController.OpenForDebugAsync();
-#endif
 
+#endif
     public void ActivateWindow(nint handle) => sessionController.ActivateWindow(handle);
 
     public void SelectPage(int page) => sessionController.SelectPage(page);
@@ -86,7 +80,6 @@ public sealed partial class DesktopOverviewViewModel :
     private void ApplySessionState(DesktopOverviewSessionState state)
     {
         isApplyingSessionState = true;
-
         try
         {
             IsOpen = state.IsOpen;

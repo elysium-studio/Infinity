@@ -13,14 +13,11 @@ public sealed class EasingScrollMotionTests
         uninterrupted.AddDelta(1000);
         retargeted.AddDelta(1000);
         Assert.Equal(uninterrupted.Drain(), retargeted.Drain());
-
         time.Advance(TimeSpan.FromMilliseconds(16));
         retargeted.AddDelta(1000);
-
-        // A new destination must not restart the short initial frame or lose
-        // the velocity that has already accumulated.
         Assert.True(retargeted.Drain() > uninterrupted.Drain());
     }
+
 
     [Fact]
     public void RapidRetargetsConserveTheFullRequestedDistance()

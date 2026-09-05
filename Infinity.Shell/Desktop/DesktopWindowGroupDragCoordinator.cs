@@ -3,16 +3,9 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopWindowGroupDragCoordinator(
-    IWindowStore windowStore,
-    IWorkspace workspace,
-    IPager pager,
-    DesktopWindowDragPositionResolver dragPositionResolver,
-    DesktopSnapSlotOccupancyResolver occupancyResolver,
-    DesktopWindowPlacementCoordinator placementCoordinator)
+public sealed class DesktopWindowGroupDragCoordinator(IWindowStore windowStore, IWorkspace workspace, IPager pager, DesktopWindowDragPositionResolver dragPositionResolver, DesktopSnapSlotOccupancyResolver occupancyResolver, DesktopWindowPlacementCoordinator placementCoordinator, DesktopWindowFrameGeometry frameGeometry)
 {
     private const double PlacementTolerance = 2;
-
     private readonly Dictionary<nint, DesktopSnapPlacement> sourcePlacements = [];
     private nint leaderHandle;
 
@@ -21,7 +14,6 @@ public sealed class DesktopWindowGroupDragCoordinator(
     public bool Begin(nint leader, IEnumerable<nint> handles)
     {
         Cancel();
-
         foreach (nint handle in handles.Where(handle => handle != 0).Distinct())
         {
             if (windowStore.TryGet(handle, out TrackedWindow? window))
@@ -31,7 +23,8 @@ public sealed class DesktopWindowGroupDragCoordinator(
                     Cancel();
                     return false;
                 }
-                sourcePlacements.Add(handle, GetPlacement(window));
+
+                sourcePlacements.Add(handle, frameGeometry.GetVisiblePlacement(window));
             }
         }
 
@@ -44,6 +37,7 @@ public sealed class DesktopWindowGroupDragCoordinator(
         leaderHandle = leader;
         return true;
     }
+
 
     public bool Complete(nint leader, double horizontalVisualDelta, double verticalVisualDelta, DesktopSnapPlacement? snapPlacement)
     {
@@ -63,10 +57,9 @@ public sealed class DesktopWindowGroupDragCoordinator(
             int pageDelta = GetPage(leaderTarget) - GetPage(leaderSource);
             double horizontalDelta = leaderTarget.CanvasX - leaderSource.CanvasX;
             double verticalDelta = leaderTarget.CanvasY - leaderSource.CanvasY;
-            HashSet<nint> selectedHandles = [.. sourcePlacements.Keys];
+            HashSet<nint> selectedHandles = [..sourcePlacements.Keys];
             List<(TrackedWindow Window, DesktopSnapPlacement Placement)> placements = [];
-
-            foreach ((nint handle, DesktopSnapPlacement source) in sourcePlacements)
+            foreach ((nint handle, DesktopSnapPlacement source)in sourcePlacements)
             {
                 if (!windowStore.TryGet(handle, out TrackedWindow? window))
                 {
@@ -75,7 +68,6 @@ public sealed class DesktopWindowGroupDragCoordinator(
 
                 DesktopSnapPlacement target;
                 int targetPage = GetPage(source) + pageDelta;
-
                 if (targetPage < 0 || pager.MaxPages.HasValue && targetPage >= pager.MaxPages.Value)
                 {
                     return false;
@@ -117,7 +109,7 @@ public sealed class DesktopWindowGroupDragCoordinator(
                 return false;
             }
 
-            return placementCoordinator.ApplyPlacements(placements, animate: snapPlacement.HasValue);
+            return placementCoordinator.ApplyPlacements(placements, animate: snapPlacement.HasValue, visibleFrame: true);
         }
         finally
         {
@@ -125,11 +117,13 @@ public sealed class DesktopWindowGroupDragCoordinator(
         }
     }
 
+
     public void Cancel()
     {
         sourcePlacements.Clear();
         leaderHandle = 0;
     }
+
 
     private bool TryResolveLeaderTarget(nint leader, double horizontalVisualDelta, double verticalVisualDelta, DesktopSnapPlacement? snapPlacement, DesktopSnapPlacement source, out DesktopSnapPlacement target)
     {
@@ -145,25 +139,22 @@ public sealed class DesktopWindowGroupDragCoordinator(
             return false;
         }
 
-        target = new DesktopSnapPlacement(position.CanvasX, position.CanvasY, source.Width, source.Height);
+        DesktopSnapPlacement origin = frameGeometry.ToVisible(leader, new(position.CanvasX, position.CanvasY, source.Width, source.Height));
+        target = new(origin.CanvasX, origin.CanvasY, source.Width, source.Height);
         return true;
     }
+
 
     private DesktopSnapPlacement MoveToRelativePage(DesktopSnapPlacement source, int targetPage, double horizontalDelta, double verticalDelta)
     {
         double pageLeft = workspace.WorkAreaX + (targetPage * (double)workspace.Width);
         double targetX = source.CanvasX + horizontalDelta;
         double targetY = source.CanvasY + verticalDelta;
-
-        return new DesktopSnapPlacement(
-            Math.Clamp(targetX, pageLeft, pageLeft + Math.Max(0, workspace.Width - source.Width)),
-            Math.Clamp(targetY, workspace.WorkAreaY, workspace.WorkAreaY + Math.Max(0, workspace.Height - source.Height)),
-            source.Width,
-            source.Height);
+        return new(Math.Clamp(targetX, pageLeft, pageLeft + Math.Max(0, workspace.Width - source.Width)), Math.Clamp(targetY, workspace.WorkAreaY, workspace.WorkAreaY + Math.Max(0, workspace.Height - source.Height)), source.Width, source.Height);
     }
 
-    private bool HasFollowerConflict(IEnumerable<(TrackedWindow Window, DesktopSnapPlacement Placement)> placements, nint leader, IReadOnlySet<nint> selectedHandles)
-        => placements.Any(item => item.Window.Handle != leader && occupancyResolver.IsOccupied(item.Placement, selectedHandles, windowStore));
+
+    private bool HasFollowerConflict(IEnumerable<(TrackedWindow Window, DesktopSnapPlacement Placement)> placements, nint leader, IReadOnlySet<nint> selectedHandles) => placements.Any(item => item.Window.Handle != leader && occupancyResolver.IsOccupied(item.Placement, selectedHandles, windowStore));
 
     private static bool HasDuplicateDestinations(IReadOnlyList<(TrackedWindow Window, DesktopSnapPlacement Placement)> placements)
     {
@@ -181,17 +172,13 @@ public sealed class DesktopWindowGroupDragCoordinator(
         return false;
     }
 
+
     private int GetPage(DesktopSnapPlacement placement)
     {
         double center = placement.CanvasX - workspace.WorkAreaX + (placement.Width / 2d);
         return Math.Max(0, (int)Math.Clamp(Math.Floor(center / workspace.Width), 0, int.MaxValue));
     }
 
-    private static DesktopSnapPlacement GetPlacement(TrackedWindow window) => new(window.CanvasX, window.CanvasY, window.Width, window.Height);
 
-    private static bool IsSamePlacement(DesktopSnapPlacement first, DesktopSnapPlacement second)
-        => Math.Abs(first.CanvasX - second.CanvasX) <= PlacementTolerance &&
-           Math.Abs(first.CanvasY - second.CanvasY) <= PlacementTolerance &&
-           Math.Abs(first.Width - second.Width) <= PlacementTolerance &&
-           Math.Abs(first.Height - second.Height) <= PlacementTolerance;
+    private static bool IsSamePlacement(DesktopSnapPlacement first, DesktopSnapPlacement second) => Math.Abs(first.CanvasX - second.CanvasX) <= PlacementTolerance && Math.Abs(first.CanvasY - second.CanvasY) <= PlacementTolerance && Math.Abs(first.Width - second.Width) <= PlacementTolerance && Math.Abs(first.Height - second.Height) <= PlacementTolerance;
 }

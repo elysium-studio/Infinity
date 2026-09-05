@@ -1,13 +1,11 @@
-using Infinity.Application.Abstractions;
 using System.Diagnostics;
+using Infinity.Application.Abstractions;
 
 namespace Infinity.Application;
 
-public sealed class WindowPageTransitionGuard :
-    IWindowPageTransitionGuard
+public sealed class WindowPageTransitionGuard : IWindowPageTransitionGuard
 {
     private static readonly long TransitionDurationTicks = Stopwatch.Frequency;
-
     private readonly Lock syncRoot = new();
     private readonly Dictionary<nint, PreservedPage> preservedPages = [];
 
@@ -18,17 +16,13 @@ public sealed class WindowPageTransitionGuard :
             return;
         }
 
-        PreservedPage preservedPage = new(
-            page,
-            workspaceWidth,
-            workAreaX,
-            Stopwatch.GetTimestamp() + TransitionDurationTicks);
-
+        PreservedPage preservedPage = new(page, workspaceWidth, workAreaX, Stopwatch.GetTimestamp() + TransitionDurationTicks);
         lock (syncRoot)
         {
             preservedPages[windowHandle] = preservedPage;
         }
     }
+
 
     public bool TryMapToPreservedPage(nint windowHandle, int candidateCanvasX, int windowWidth, out int mappedCanvasX)
     {
@@ -55,6 +49,7 @@ public sealed class WindowPageTransitionGuard :
         }
     }
 
+
     public void Clear(nint windowHandle)
     {
         lock (syncRoot)
@@ -63,9 +58,6 @@ public sealed class WindowPageTransitionGuard :
         }
     }
 
-    private readonly record struct PreservedPage(
-        int Page,
-        int WorkspaceWidth,
-        int WorkAreaX,
-        long ExpiresAt);
+
+    private readonly record struct PreservedPage(int Page, int WorkspaceWidth, int WorkAreaX, long ExpiresAt);
 }

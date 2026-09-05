@@ -2,8 +2,7 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Application;
 
-public sealed class ScrollPresentationSession :
-    IScrollPresentationSession
+public sealed class ScrollPresentationSession : IScrollPresentationSession
 {
     private int isActive;
 

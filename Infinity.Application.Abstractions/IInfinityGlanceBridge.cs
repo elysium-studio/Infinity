@@ -4,6 +4,7 @@ public interface IInfinityGlanceBridge
 {
     bool IsPageNavigationAvailable { get; }
 
+
     event EventHandler<InfinityGlanceAvailabilityChangedEventArgs>? AvailabilityChanged;
 
     event EventHandler<InfinityGlanceMessageReceivedEventArgs>? MessageReceived;

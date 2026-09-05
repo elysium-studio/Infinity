@@ -3,13 +3,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Platform.Windows;
 
-public sealed class DesktopBackgroundSource :
-    IDesktopBackgroundSource,
-    IDisposable
+public sealed class DesktopBackgroundSource : IDesktopBackgroundSource, IDisposable
 {
     private static readonly TimeSpan PollingInterval = TimeSpan.FromSeconds(2);
     private static readonly TimeSpan RecoveryPollingInterval = TimeSpan.FromSeconds(30);
-
     private readonly Lock lifecycleLock = new();
     private readonly Timer changeTimer;
     private readonly ILogger<DesktopBackgroundSource> logger;
@@ -24,58 +21,53 @@ public sealed class DesktopBackgroundSource :
 
     public event EventHandler? BackgroundChanged;
 
-    public DesktopBackgroundSource(ILogger<DesktopBackgroundSource> logger,
-        DesktopWallpaperSnapshotReader snapshotReader) :
-        this(logger,
-            snapshotReader.Read,
-            PollingInterval,
-            RecoveryPollingInterval,
-            true)
+    public DesktopBackgroundSource(ILogger<DesktopBackgroundSource> logger, DesktopWallpaperSnapshotReader snapshotReader) : this(logger, snapshotReader.Read, PollingInterval, RecoveryPollingInterval, true)
     {
     }
 
-    internal DesktopBackgroundSource(ILogger<DesktopBackgroundSource> logger,
-        Func<DesktopBackgroundSnapshot> snapshotReader,
-        TimeSpan pollingInterval,
-        TimeSpan recoveryPollingInterval,
-        bool pollingEnabled)
+
+    internal DesktopBackgroundSource(ILogger<DesktopBackgroundSource> logger, Func<DesktopBackgroundSnapshot> snapshotReader, TimeSpan pollingInterval, TimeSpan recoveryPollingInterval, bool pollingEnabled)
     {
         this.logger = logger;
         this.snapshotReader = snapshotReader;
         this.pollingInterval = pollingInterval;
         this.recoveryPollingInterval = recoveryPollingInterval;
         this.pollingEnabled = pollingEnabled;
-        changeTimer = new Timer(CheckForChanges, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        changeTimer = new(CheckForChanges, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
     }
+
 
     public DesktopBackground GetBackground()
     {
         DesktopBackgroundSnapshot? current = Volatile.Read(ref snapshot);
-
         if (current is null)
         {
-            return new DesktopBackground();
+            return new();
         }
 
         if (!string.IsNullOrEmpty(current.WallpaperPath) && File.Exists(current.WallpaperPath))
         {
-            return new DesktopBackground { Wallpaper = current.WallpaperPath };
+            return new()
+            {
+                Wallpaper = current.WallpaperPath
+            };
         }
 
         uint colour = current.Colour;
         byte r = (byte)(colour & 0xFF);
         byte g = (byte)((colour >> 8) & 0xFF);
         byte b = (byte)((colour >> 16) & 0xFF);
-
-        return new DesktopBackground { Colour = $"#{r:X2}{g:X2}{b:X2}" };
+        return new()
+        {
+            Colour = $"#{r:X2}{g:X2}{b:X2}"};
     }
+
 
     public void Start()
     {
         lock (lifecycleLock)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
-
             if (isStarted)
             {
                 return;
@@ -85,6 +77,7 @@ public sealed class DesktopBackgroundSource :
             ScheduleNextPollCore(TimeSpan.Zero);
         }
     }
+
 
     public void Stop()
     {
@@ -100,6 +93,7 @@ public sealed class DesktopBackgroundSource :
         }
     }
 
+
     internal bool PollForChanges()
     {
         if (disposed)
@@ -108,7 +102,6 @@ public sealed class DesktopBackgroundSource :
         }
 
         DesktopBackgroundSnapshot current;
-
         try
         {
             current = snapshotReader();
@@ -137,11 +130,9 @@ public sealed class DesktopBackgroundSource :
         }
 
         DesktopBackgroundSnapshot? previous = Volatile.Read(ref snapshot);
-
         if (current != previous)
         {
             Volatile.Write(ref snapshot, current);
-
             try
             {
                 BackgroundChanged?.Invoke(this, EventArgs.Empty);
@@ -156,6 +147,7 @@ public sealed class DesktopBackgroundSource :
         return true;
     }
 
+
     private void CheckForChanges(object? state) => _ = PollForChanges();
 
     private void ScheduleNextPoll(TimeSpan dueTime)
@@ -166,6 +158,7 @@ public sealed class DesktopBackgroundSource :
         }
     }
 
+
     private void ScheduleNextPollCore(TimeSpan dueTime)
     {
         if (pollingEnabled && isStarted && !disposed)
@@ -173,6 +166,7 @@ public sealed class DesktopBackgroundSource :
             changeTimer.Change(dueTime, Timeout.InfiniteTimeSpan);
         }
     }
+
 
     public void Dispose()
     {

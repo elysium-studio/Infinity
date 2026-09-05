@@ -2,19 +2,15 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Application;
 
-public sealed class FluentNavigationScrollMotion(TimeProvider timeProvider) :
-    IDeltaScrollMotion
+public sealed class FluentNavigationScrollMotion(TimeProvider timeProvider) : IDeltaScrollMotion
 {
     private const double FirstControlPointX = 0.55;
     private const double FirstControlPointY = 0.55;
     private const double SecondControlPointX = 0;
     private const double SecondControlPointY = 1;
     private const int SolverIterations = 8;
-
     private static readonly TimeSpan Duration = TimeSpan.FromMilliseconds(250);
-
     private readonly Lock syncLock = new();
-
     private long startedAt;
     private double distance;
     private double emittedDistance;
@@ -30,6 +26,7 @@ public sealed class FluentNavigationScrollMotion(TimeProvider timeProvider) :
             }
         }
     }
+
 
     public void AddDelta(double pixels)
     {
@@ -52,6 +49,7 @@ public sealed class FluentNavigationScrollMotion(TimeProvider timeProvider) :
         }
     }
 
+
     public double Drain()
     {
         lock (syncLock)
@@ -65,9 +63,7 @@ public sealed class FluentNavigationScrollMotion(TimeProvider timeProvider) :
             double easedProgress = EvaluateCubicBezier(progress);
             double nextDistance = distance * easedProgress;
             double delta = nextDistance - emittedDistance;
-
             emittedDistance = nextDistance;
-
             if (progress >= 1)
             {
                 delta += distance - emittedDistance;
@@ -78,6 +74,7 @@ public sealed class FluentNavigationScrollMotion(TimeProvider timeProvider) :
         }
     }
 
+
     public void Reset()
     {
         lock (syncLock)
@@ -85,6 +82,7 @@ public sealed class FluentNavigationScrollMotion(TimeProvider timeProvider) :
             ResetCore();
         }
     }
+
 
     private void ResetCore()
     {
@@ -94,6 +92,7 @@ public sealed class FluentNavigationScrollMotion(TimeProvider timeProvider) :
         isActive = false;
     }
 
+
     private static double EvaluateCubicBezier(double progress)
     {
         if (progress is <= 0 or >= 1)
@@ -102,12 +101,10 @@ public sealed class FluentNavigationScrollMotion(TimeProvider timeProvider) :
         }
 
         double parameter = progress;
-
         for (int iteration = 0; iteration < SolverIterations; iteration++)
         {
             double error = EvaluateCurve(parameter, FirstControlPointX, SecondControlPointX) - progress;
             double slope = EvaluateCurveDerivative(parameter, FirstControlPointX, SecondControlPointX);
-
             if (Math.Abs(slope) < double.Epsilon)
             {
                 break;
@@ -119,11 +116,13 @@ public sealed class FluentNavigationScrollMotion(TimeProvider timeProvider) :
         return EvaluateCurve(parameter, FirstControlPointY, SecondControlPointY);
     }
 
+
     private static double EvaluateCurve(double parameter, double firstControlPoint, double secondControlPoint)
     {
         double inverse = 1 - parameter;
         return (3 * inverse * inverse * parameter * firstControlPoint) + (3 * inverse * parameter * parameter * secondControlPoint) + (parameter * parameter * parameter);
     }
+
 
     private static double EvaluateCurveDerivative(double parameter, double firstControlPoint, double secondControlPoint)
     {

@@ -1,4 +1,3 @@
-﻿namespace Infinity.Shell;
+namespace Infinity.Shell;
 
-public interface IDesktopViewModel :
-    IDisposable;
+public interface IDesktopViewModel : IDisposable;

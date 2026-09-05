@@ -1,5 +1,5 @@
-using Elysium.Platform.Abstractions;
 using System.Runtime.InteropServices;
+using Elysium.Platform.Abstractions;
 using Windows.Win32;
 using Windows.Win32.Graphics.Gdi;
 
@@ -12,22 +12,21 @@ public sealed class DesktopWallpaperSnapshotReader(IWorkspace workspace)
         using DesktopWallpaperClient wallpaper = new();
         uint colour = wallpaper.GetBackgroundColor();
         string wallpaperPath = ReadWallpaperPath(wallpaper);
-        return new DesktopBackgroundSnapshot(wallpaperPath, colour);
+        return new(wallpaperPath, colour);
     }
+
 
     private string ReadWallpaperPath(DesktopWallpaperClient wallpaper)
     {
         DesktopWallpaperRect activeMonitor = GetActiveMonitorRect();
         uint monitorCount = wallpaper.GetMonitorCount();
         string? fallbackPath = null;
-
         for (uint monitorIndex = 0; monitorIndex < monitorCount; monitorIndex++)
         {
             string monitorId = wallpaper.GetMonitorId(monitorIndex);
             string path = wallpaper.GetWallpaper(monitorId);
             fallbackPath ??= path;
             DesktopWallpaperRect monitorRect = wallpaper.GetMonitorRect(monitorId);
-
             if (HasSameBounds(monitorRect, activeMonitor))
             {
                 return path;
@@ -37,11 +36,8 @@ public sealed class DesktopWallpaperSnapshotReader(IWorkspace workspace)
         return fallbackPath ?? string.Empty;
     }
 
-    private static bool HasSameBounds(DesktopWallpaperRect first, DesktopWallpaperRect second) =>
-        first.Left == second.Left &&
-        first.Top == second.Top &&
-        first.Right == second.Right &&
-        first.Bottom == second.Bottom;
+
+    private static bool HasSameBounds(DesktopWallpaperRect first, DesktopWallpaperRect second) => first.Left == second.Left && first.Top == second.Top && first.Right == second.Right && first.Bottom == second.Bottom;
 
     private DesktopWallpaperRect GetActiveMonitorRect()
     {
@@ -50,16 +46,11 @@ public sealed class DesktopWallpaperSnapshotReader(IWorkspace workspace)
         {
             cbSize = (uint)Marshal.SizeOf<MONITORINFO>()
         };
-
         if (!PInvoke.GetMonitorInfo(monitor, ref monitorInfo))
         {
             return default;
         }
 
-        return new DesktopWallpaperRect(
-            monitorInfo.rcMonitor.left,
-            monitorInfo.rcMonitor.top,
-            monitorInfo.rcMonitor.right,
-            monitorInfo.rcMonitor.bottom);
+        return new(monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top, monitorInfo.rcMonitor.right, monitorInfo.rcMonitor.bottom);
     }
 }

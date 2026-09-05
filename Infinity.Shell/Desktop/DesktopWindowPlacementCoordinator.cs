@@ -4,50 +4,40 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopWindowPlacementCoordinator(IWindowStore windowStore,
-    IScroller scroller,
-    IWorkspace workspace,
-    IWindowResizeSynchronizer resizeSynchronizer,
-    IWindowCloser windowCloser,
-    IWindowStateController windowStateController,
-    IWindowPageTransitionGuard pageTransitionGuard,
-    DesktopSnapPlacementResolver snapPlacementResolver,
-    DesktopSnapSlotOccupancyResolver occupancyResolver)
+public sealed class DesktopWindowPlacementCoordinator(IWindowStore windowStore, IScroller scroller, IWorkspace workspace, IWindowResizeSynchronizer resizeSynchronizer, IWindowCloser windowCloser, IWindowStateController windowStateController, IWindowPageTransitionGuard pageTransitionGuard, DesktopSnapPlacementResolver snapPlacementResolver, DesktopSnapSlotOccupancyResolver occupancyResolver, DesktopWindowFrameGeometry frameGeometry)
 {
     public event Action<IReadOnlyList<nint>>? PlacementStarting;
+
     public event Action<IReadOnlyList<nint>>? PlacementCompleted;
 
     public bool TrySwapIntoSlot(nint movingHandle, nint occupantHandle, DesktopSnapPlacement targetPlacement)
     {
-        if (!windowStore.TryGet(movingHandle, out TrackedWindow? movingWindow) ||
-            !windowStore.TryGet(occupantHandle, out TrackedWindow? occupant) ||
-            movingHandle == occupantHandle)
+        if (!windowStore.TryGet(movingHandle, out TrackedWindow? movingWindow) || !windowStore.TryGet(occupantHandle, out TrackedWindow? occupant) || movingHandle == occupantHandle)
         {
             return false;
         }
 
-        DesktopSnapPlacement sourcePlacement = GetPlacement(movingWindow);
-        return ApplyPlacements([(occupant, sourcePlacement), (movingWindow, targetPlacement)], animate: true);
+        DesktopSnapPlacement sourcePlacement = frameGeometry.GetVisiblePlacement(movingWindow);
+        return ApplyPlacements([(occupant, sourcePlacement), (movingWindow, targetPlacement)], animate: true, visibleFrame: true);
     }
+
 
     public bool TrySwap(nint firstHandle, nint secondHandle)
     {
-        if (!windowStore.TryGet(firstHandle, out TrackedWindow? first) ||
-            !windowStore.TryGet(secondHandle, out TrackedWindow? second) ||
-            firstHandle == secondHandle)
+        if (!windowStore.TryGet(firstHandle, out TrackedWindow? first) || !windowStore.TryGet(secondHandle, out TrackedWindow? second) || firstHandle == secondHandle)
         {
             return false;
         }
 
-        DesktopSnapPlacement firstPlacement = GetPlacement(first);
-        DesktopSnapPlacement secondPlacement = GetPlacement(second);
-        return ApplyPlacements([(first, secondPlacement), (second, firstPlacement)], animate: true);
+        DesktopSnapPlacement firstPlacement = frameGeometry.GetVisiblePlacement(first);
+        DesktopSnapPlacement secondPlacement = frameGeometry.GetVisiblePlacement(second);
+        return ApplyPlacements([(first, secondPlacement), (second, firstPlacement)], animate: true, visibleFrame: true);
     }
+
 
     public bool TryMoveToSlot(nint windowHandle, int page, DesktopSnapLayoutKind layout, int slot, int screenOriginX, int screenOriginY)
     {
-        if (!windowStore.TryGet(windowHandle, out TrackedWindow? window) ||
-            !snapPlacementResolver.TryResolve(page, layout, slot, screenOriginX, screenOriginY, out DesktopSnapPlacement placement))
+        if (!windowStore.TryGet(windowHandle, out TrackedWindow? window) || !snapPlacementResolver.TryResolve(page, layout, slot, screenOriginX, screenOriginY, out DesktopSnapPlacement placement))
         {
             return false;
         }
@@ -57,8 +47,11 @@ public sealed class DesktopWindowPlacementCoordinator(IWindowStore windowStore,
             return TrySwapIntoSlot(windowHandle, occupant.Handle, placement);
         }
 
-        return ApplyPlacements([(window, placement)], animate: true);
+        return TryPlaceInSlot(windowHandle, placement);
     }
+
+
+    public bool TryPlaceInSlot(nint windowHandle, DesktopSnapPlacement placement) => windowStore.TryGet(windowHandle, out TrackedWindow? window) && ApplyPlacements([(window, placement)], animate: true, visibleFrame: true);
 
     public bool TryMoveToPage(nint windowHandle, int targetPage, bool center)
     {
@@ -68,26 +61,33 @@ public sealed class DesktopWindowPlacementCoordinator(IWindowStore windowStore,
         }
 
         double pageLeft = workspace.WorkAreaX + (targetPage * (double)workspace.Width);
-        if (!TryPrepareForMove(windowHandle, out _)) return false;
+        if (!TryPrepareForMove(windowHandle, out _))
+        {
+            return false;
+        }
+
+        DesktopSnapPlacement visible = frameGeometry.GetVisiblePlacement(window);
         double x;
         double y;
-
         if (center)
         {
-            x = pageLeft + Math.Max(0, (workspace.Width - window.Width) / 2d);
-            y = workspace.WorkAreaY + Math.Max(0, (workspace.Height - window.Height) / 2d);
+            x = pageLeft + Math.Max(0, (workspace.Width - visible.Width) / 2d);
+            y = workspace.WorkAreaY + Math.Max(0, (workspace.Height - visible.Height) / 2d);
         }
         else
         {
             int currentPage = GetPage(window);
             double currentPageLeft = workspace.WorkAreaX + (currentPage * (double)workspace.Width);
-            double relativeX = window.CanvasX - currentPageLeft;
-            x = pageLeft + Math.Clamp(relativeX, 0, Math.Max(0, workspace.Width - window.Width));
-            y = Math.Clamp(window.CanvasY, workspace.WorkAreaY, workspace.WorkAreaY + Math.Max(0, workspace.Height - window.Height));
+            double relativeX = visible.CanvasX - currentPageLeft;
+            x = pageLeft + Math.Clamp(relativeX, 0, Math.Max(0, workspace.Width - visible.Width));
+            y = Math.Clamp(visible.CanvasY, workspace.WorkAreaY, workspace.WorkAreaY + Math.Max(0, workspace.Height - visible.Height));
         }
 
-        return ApplyPlacements([(window, new DesktopSnapPlacement(x, y, window.Width, window.Height))]);
+        x += window.CanvasX - visible.CanvasX;
+        y += window.CanvasY - visible.CanvasY;
+        return ApplyPlacements([(window, new DesktopSnapPlacement(x, y, window.Width, window.Height))], animate: true);
     }
+
 
     public int MoveByPages(IEnumerable<nint> windowHandles, int pageDelta, int? maximumPageCount)
     {
@@ -97,7 +97,6 @@ public sealed class DesktopWindowPlacementCoordinator(IWindowStore windowStore,
         }
 
         List<(TrackedWindow Window, DesktopSnapPlacement Placement)> placements = [];
-
         foreach (nint handle in windowHandles.Distinct())
         {
             if (!windowStore.TryGet(handle, out TrackedWindow? window))
@@ -106,23 +105,22 @@ public sealed class DesktopWindowPlacementCoordinator(IWindowStore windowStore,
             }
 
             int targetPage = GetPage(window) + pageDelta;
-
             if (targetPage < 0 || maximumPageCount.HasValue && targetPage >= maximumPageCount.Value)
             {
                 continue;
             }
 
-            if (!TryPrepareForMove(handle, out _)) continue;
+            if (!TryPrepareForMove(handle, out _))
+            {
+                continue;
+            }
 
-            placements.Add((window, new DesktopSnapPlacement(
-                window.CanvasX + (pageDelta * (double)workspace.Width),
-                window.CanvasY,
-                window.Width,
-                window.Height)));
+            placements.Add((window, new DesktopSnapPlacement(window.CanvasX + (pageDelta * (double)workspace.Width), window.CanvasY, window.Width, window.Height)));
         }
 
-        return ApplyPlacements(placements) ? placements.Count : 0;
+        return ApplyPlacements(placements, animate: true) ? placements.Count : 0;
     }
+
 
     public bool TryClose(nint windowHandle) => windowCloser.TryClose(windowHandle);
 
@@ -134,17 +132,27 @@ public sealed class DesktopWindowPlacementCoordinator(IWindowStore windowStore,
 
     public bool TryMinimize(nint windowHandle) => windowStateController.TryMinimize(windowHandle);
 
-    public bool TryPrepareForMove(nint windowHandle, out DesktopSnapPlacement placement)
-        => TryPrepareForMove(windowHandle, out placement, out _);
+    public bool TryPrepareForMove(nint windowHandle, out DesktopSnapPlacement placement) => TryPrepareForMove(windowHandle, out placement, out _);
 
     public bool TryPrepareForMove(nint windowHandle, out DesktopSnapPlacement placement, out DesktopSnapPlacement originalPlacement)
     {
         placement = default;
         originalPlacement = default;
-        if (!windowStore.TryGet(windowHandle, out TrackedWindow? window)) return false;
+        if (!windowStore.TryGet(windowHandle, out TrackedWindow? window))
+        {
+            return false;
+        }
+
         originalPlacement = placement = GetPlacement(window);
-        if (!windowStateController.GetState(windowHandle).CanRestore) return true;
-        if (workspace.Width <= 0 || workspace.Height <= 0) return false;
+        if (!windowStateController.GetState(windowHandle).CanRestore)
+        {
+            return true;
+        }
+
+        if (workspace.Width <= 0 || workspace.Height <= 0)
+        {
+            return false;
+        }
 
         int page = GetPage(window);
         pageTransitionGuard.PreservePage(windowHandle, page, workspace.Width, workspace.WorkAreaX);
@@ -154,8 +162,6 @@ public sealed class DesktopWindowPlacementCoordinator(IWindowStore windowStore,
             return false;
         }
 
-        // Native restore coordinates are screen coordinates, not Infinity page
-        // coordinates. Retain the page while restoring its normal local bounds.
         double pageLeft = workspace.WorkAreaX + page * (double)workspace.Width;
         double relativeX = Math.Clamp(bounds.X - (double)workspace.WorkAreaX, 0, Math.Max(0, workspace.Width - bounds.Width));
         window.CanvasX = Round(pageLeft + relativeX);
@@ -168,6 +174,7 @@ public sealed class DesktopWindowPlacementCoordinator(IWindowStore windowStore,
         windowStore.NotifyChanged(windowHandle);
         return true;
     }
+
 
     public void CompleteMove(nint windowHandle) => pageTransitionGuard.Clear(windowHandle);
 
@@ -182,16 +189,20 @@ public sealed class DesktopWindowPlacementCoordinator(IWindowStore windowStore,
         return Math.Max(0, (int)Math.Clamp(Math.Floor(center / workspace.Width), 0, int.MaxValue));
     }
 
-    public bool ApplyPlacements(IEnumerable<(TrackedWindow Window, DesktopSnapPlacement Placement)> placements, bool animate = false)
-    {
-        (TrackedWindow Window, DesktopSnapPlacement Placement)[] materialized = [.. placements];
-        if (!animate || materialized.Length == 0) return ApplyPlacementsCore(materialized);
 
-        nint[] handles = [.. materialized.Select(item => item.Window.Handle).Distinct()];
+    public bool ApplyPlacements(IEnumerable<(TrackedWindow Window, DesktopSnapPlacement Placement)> placements, bool animate = false, bool visibleFrame = false)
+    {
+        (TrackedWindow Window, DesktopSnapPlacement Placement)[] materialized = [..placements];
+        if (!animate || materialized.Length == 0)
+        {
+            return ApplyPlacementsCore(materialized, visibleFrame);
+        }
+
+        nint[] handles = [..materialized.Select(item => item.Window.Handle).Distinct()];
         PlacementStarting?.Invoke(handles);
         try
         {
-            return ApplyPlacementsCore(materialized);
+            return ApplyPlacementsCore(materialized, visibleFrame);
         }
         finally
         {
@@ -199,25 +210,28 @@ public sealed class DesktopWindowPlacementCoordinator(IWindowStore windowStore,
         }
     }
 
-    private bool ApplyPlacementsCore((TrackedWindow Window, DesktopSnapPlacement Placement)[] materialized)
+
+    private bool ApplyPlacementsCore((TrackedWindow Window, DesktopSnapPlacement Placement)[] materialized, bool visibleFrame)
     {
-        foreach ((TrackedWindow window, _) in materialized)
+        foreach ((TrackedWindow window, _)in materialized)
         {
-            if (!TryPrepareForMove(window.Handle, out _)) return false;
+            if (!TryPrepareForMove(window.Handle, out _))
+            {
+                return false;
+            }
         }
 
-        foreach ((TrackedWindow window, DesktopSnapPlacement placement) in materialized)
+        foreach ((TrackedWindow window, DesktopSnapPlacement target)in materialized)
         {
-            // A drop can cross pages immediately after restore. Its destination
-            // replaces the restore guard's source page before native events.
+            DesktopSnapPlacement placement = visibleFrame ? frameGeometry.ToOuter(window.Handle, target) : target;
             if (workspace.Width > 0)
             {
                 int targetPage = Math.Max(0, (int)Math.Floor((placement.CanvasX - workspace.WorkAreaX + placement.Width / 2) / workspace.Width));
                 pageTransitionGuard.PreservePage(window.Handle, targetPage, workspace.Width, workspace.WorkAreaX);
             }
+
             int width = RoundPositive(placement.Width);
             int height = RoundPositive(placement.Height);
-
             if (window.Width != width || window.Height != height)
             {
                 resizeSynchronizer.TrySynchronize(window.Handle, width, height);
@@ -235,12 +249,14 @@ public sealed class DesktopWindowPlacementCoordinator(IWindowStore windowStore,
             scroller.Reposition();
         }
 
-        foreach ((TrackedWindow window, _) in materialized)
+        foreach ((TrackedWindow window, _)in materialized)
         {
             windowStore.NotifyChanged(window.Handle);
         }
+
         return true;
     }
+
 
     private static DesktopSnapPlacement GetPlacement(TrackedWindow window) => new(window.CanvasX, window.CanvasY, window.Width, window.Height);
 
@@ -252,7 +268,6 @@ public sealed class DesktopWindowPlacementCoordinator(IWindowStore windowStore,
         }
 
         pageTransitionGuard.PreservePage(windowHandle, GetPage(window), workspace.Width, workspace.WorkAreaX);
-
         if (changeState(windowHandle))
         {
             return true;
@@ -261,6 +276,7 @@ public sealed class DesktopWindowPlacementCoordinator(IWindowStore windowStore,
         pageTransitionGuard.Clear(windowHandle);
         return false;
     }
+
 
     private static int Round(double value) => (int)Math.Clamp(Math.Round(value), int.MinValue, int.MaxValue);
 

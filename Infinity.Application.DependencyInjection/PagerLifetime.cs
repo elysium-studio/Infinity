@@ -6,27 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application.DependencyInjection;
 
-public sealed class PagerLifetime(IWindowTracker tracker,
-    IWindowEnumerator enumerator,
-    IWindowEventListener listener,
-    IWindowDragGuard dragGuard,
-    IPageGestureSource gestureSource,
-    IWindowPageJumper jumper,
-    IWindowTitleSynchronizer titleSynchronizer,
-    IWindowStack stack,
-    IForegroundWindowTracker foreground,
-    IScrollInputSource scrollInput,
-    IPointerInputSource pointerInput,
-    IKeyboardInputSource keyboardInput,
-    IScroller coordinator,
-    IWindowConcealmentRecovery concealmentRecovery,
-    StartupPageRestorer startupPageRestorer,
-    IPager pager,
-    IWindowCollection windowCollection,
-    IScrollTimer timer,
-    ILogger<PagerLifetime> logger) :
-    IHostedService,
-    IDisposable
+public sealed class PagerLifetime(IWindowTracker tracker, IWindowEnumerator enumerator, IWindowEventListener listener, IWindowDragGuard dragGuard, IPageGestureSource gestureSource, IWindowPageJumper jumper, IWindowTitleSynchronizer titleSynchronizer, IWindowStack stack, IForegroundWindowTracker foreground, IScrollInputSource scrollInput, IPointerInputSource pointerInput, IKeyboardInputSource keyboardInput, IScroller coordinator, IWindowConcealmentRecovery concealmentRecovery, StartupPageRestorer startupPageRestorer, IPager pager, IWindowCollection windowCollection, IScrollTimer timer, ILogger<PagerLifetime> logger) : IHostedService, IDisposable
 {
     private int cleanupCompleted;
     private int startInitiated;
@@ -39,16 +19,13 @@ public sealed class PagerLifetime(IWindowTracker tracker,
         }
 
         logger.LogInformation("Pager lifetime initialising");
-
         try
         {
             timer.Tick += HandleScrollTimerTick;
-
             cancellationToken.ThrowIfCancellationRequested();
             concealmentRecovery.RecoverStrandedWindows();
             enumerator.EnumerateVisible(windowHandle => tracker.TryRegisterExisting(windowHandle));
             startupPageRestorer.Restore();
-
             cancellationToken.ThrowIfCancellationRequested();
             titleSynchronizer.Start();
             stack.Refresh();
@@ -72,26 +49,25 @@ public sealed class PagerLifetime(IWindowTracker tracker,
         }
 
         logger.LogInformation("Pager lifetime initialised");
-
         return Task.CompletedTask;
     }
+
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Pager lifetime shutting down");
-
         Cleanup();
-
         logger.LogInformation("Pager lifetime shut down");
-
         return Task.CompletedTask;
     }
+
 
     public void Dispose()
     {
         Cleanup();
         GC.SuppressFinalize(this);
     }
+
 
     private void Cleanup()
     {
@@ -118,6 +94,7 @@ public sealed class PagerLifetime(IWindowTracker tracker,
         TryCleanup(listener.Dispose, "window event listener");
     }
 
+
     private void TryCleanup(Action cleanup, string component)
     {
         try
@@ -130,6 +107,6 @@ public sealed class PagerLifetime(IWindowTracker tracker,
         }
     }
 
-    private void HandleScrollTimerTick(object? sender, EventArgs args) =>
-        coordinator.OnTick();
+
+    private void HandleScrollTimerTick(object? sender, EventArgs args) => coordinator.OnTick();
 }

@@ -1,28 +1,20 @@
-using Microsoft.UI.Dispatching;
 using System;
+using Microsoft.UI.Dispatching;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopOverviewClockController
+public sealed class DesktopOverviewClockController(DesktopOverviewClockViewModel viewModel, DesktopOverviewClockFormatter formatter)
 {
     private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(1);
-
-    private readonly DesktopOverviewClockViewModel viewModel;
-    private readonly DesktopOverviewClockFormatter formatter;
+    private readonly DesktopOverviewClockViewModel viewModel = viewModel;
+    private readonly DesktopOverviewClockFormatter formatter = formatter;
     private DispatcherQueueTimer? timer;
-
-    public DesktopOverviewClockController(DesktopOverviewClockViewModel viewModel, DesktopOverviewClockFormatter formatter)
-    {
-        this.viewModel = viewModel;
-        this.formatter = formatter;
-    }
 
     public DesktopOverviewClockViewModel ViewModel => viewModel;
 
     public void Start(DispatcherQueue dispatcherQueue)
     {
         Update();
-
         if (timer is not null)
         {
             return;
@@ -33,6 +25,7 @@ public sealed class DesktopOverviewClockController
         timer.Tick += HandleTick;
         timer.Start();
     }
+
 
     public void Stop()
     {
@@ -45,6 +38,7 @@ public sealed class DesktopOverviewClockController
         timer.Tick -= HandleTick;
         timer = null;
     }
+
 
     private void HandleTick(DispatcherQueueTimer sender, object args) => Update();
 

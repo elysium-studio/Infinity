@@ -1,4 +1,3 @@
 namespace Infinity.Shell;
 
-public interface IOverviewViewModel :
-    IDisposable;
+public interface IOverviewViewModel : IDisposable;

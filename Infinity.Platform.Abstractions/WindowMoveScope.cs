@@ -1,7 +1,6 @@
-﻿namespace Infinity.Platform.Abstractions;
+namespace Infinity.Platform.Abstractions;
 
-public readonly struct WindowMoveScope(Action end) :
-    IDisposable
+public readonly struct WindowMoveScope(Action end) : IDisposable
 {
     public void Dispose() => end();
 }

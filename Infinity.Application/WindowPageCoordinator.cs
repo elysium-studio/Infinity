@@ -1,29 +1,18 @@
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Elysium.Application.Abstractions;
 using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace Infinity.Application;
 
-public sealed class WindowPageCoordinator(IWindowStore store,
-    IScroller scroller,
-    IWorkspace workspace,
-    IWindowActivator activator,
-    IDispatcher dispatcher,
-    WindowPageGeometry geometry) :
-    IWindowNavigationCoordinator,
-    IForegroundWindowCoordinator,
-    ITrackedForegroundWindowSource,
-    ITrackedForegroundWindowTarget
+public sealed class WindowPageCoordinator(IWindowStore store, IScroller scroller, IWorkspace workspace, IWindowActivator activator, IDispatcher dispatcher, WindowPageGeometry geometry) : IWindowNavigationCoordinator, IForegroundWindowCoordinator, ITrackedForegroundWindowSource, ITrackedForegroundWindowTarget
 {
     private static readonly TimeSpan ProgrammaticForegroundWindow = TimeSpan.FromMilliseconds(600);
     private static readonly TimeSpan ForegroundFollowDeferDelay = TimeSpan.FromMilliseconds(80);
     private static readonly TimeSpan ForegroundFollowSuppressionWindow = TimeSpan.FromMilliseconds(900);
-
     private readonly Lock syncRoot = new();
-
     private CancellationTokenSource? foregroundFollowCancellationTokenSource;
     private IntPtr expectedProgrammaticHandle;
     private IntPtr foregroundWindowHandle;
@@ -33,7 +22,6 @@ public sealed class WindowPageCoordinator(IWindowStore store,
     private long foregroundFollowSuppressedAtTimestamp;
     private long foregroundFollowGeneration;
     private bool suppressAllForegroundFollow;
-
     private int navigationTargetPage = -1;
     private double navigationTargetOffset = -1;
     private IntPtr pendingActivation;
@@ -53,6 +41,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
                 return navigationTargetPage;
             }
         }
+
         set
         {
             lock (syncRoot)
@@ -61,6 +50,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             }
         }
     }
+
 
     public double NavigationTargetOffset
     {
@@ -71,6 +61,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
                 return navigationTargetOffset;
             }
         }
+
         set
         {
             lock (syncRoot)
@@ -79,6 +70,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             }
         }
     }
+
 
     public IntPtr PendingActivation
     {
@@ -89,6 +81,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
                 return pendingActivation;
             }
         }
+
         set
         {
             lock (syncRoot)
@@ -97,6 +90,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             }
         }
     }
+
 
     public void NavigateTo(IntPtr handle)
     {
@@ -118,7 +112,6 @@ public sealed class WindowPageCoordinator(IWindowStore store,
 
         int windowPage = geometry.GetCenterPage(trackedWindow, workspaceWidth);
         double targetOffset = windowPage * (double)workspaceWidth;
-
         if (geometry.AreClose(scroller.VisualOffset, targetOffset))
         {
             RequestActivation(handle);
@@ -130,6 +123,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         NavigationStarted?.Invoke(this, new NavigationStartedEventArgs(windowPage));
         scroller.ScrollTo(targetOffset);
     }
+
 
     public void NavigateToPage(IntPtr handle)
     {
@@ -155,7 +149,6 @@ public sealed class WindowPageCoordinator(IWindowStore store,
 
         int windowPage = geometry.GetPage(trackedWindow, workspaceWidth);
         double targetOffset = geometry.GetTargetOffset(trackedWindow, workspaceWidth, windowPage);
-
         if (IsNavigationSettled(windowPage, targetOffset))
         {
             return;
@@ -164,6 +157,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         SetNavigationTarget(windowPage, targetOffset);
         scroller.ScrollTo(targetOffset);
     }
+
 
     public void HandleForegroundWindowChanged(IntPtr handle)
     {
@@ -184,7 +178,6 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         }
 
         RecordForegroundWindow(handle, true);
-
         if (!TryGetWorkspaceWidth(out int workspaceWidth))
         {
             return;
@@ -198,6 +191,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         QueueForegroundFollow(handle);
     }
 
+
     public void HandleWindowMinimizeStarted(IntPtr handle)
     {
         if (handle == default)
@@ -206,7 +200,6 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         }
 
         SuppressAllForegroundFollow();
-
         lock (syncRoot)
         {
             if (handle == foregroundWindowHandle)
@@ -221,6 +214,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         }
     }
 
+
     public void HandleWindowMinimizeEnded(IntPtr handle)
     {
         if (handle == default)
@@ -229,7 +223,6 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         }
 
         SuppressAllForegroundFollow();
-
         lock (syncRoot)
         {
             foregroundWindowHandle = handle;
@@ -239,12 +232,12 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         NavigateToPage(handle);
     }
 
+
     public void NotifyWindowClosed(IntPtr handle)
     {
         lock (syncRoot)
         {
             StartForegroundFollowSuppressionCore(true);
-
             if (handle != default && handle == expectedProgrammaticHandle)
             {
                 ClearExpectedProgrammaticActivationCore();
@@ -262,12 +255,12 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         }
     }
 
+
     public void ExpectProgrammaticActivation(IntPtr handle)
     {
         lock (syncRoot)
         {
             CancelPendingForegroundFollowCore();
-
             if (handle == default)
             {
                 ClearExpectedProgrammaticActivationCore();
@@ -281,6 +274,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         }
     }
 
+
     public void Activate(IntPtr handle)
     {
         if (handle == default)
@@ -292,6 +286,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         activator.Activate(handle);
     }
 
+
     public void CancelNavigation()
     {
         lock (syncRoot)
@@ -302,10 +297,10 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         }
     }
 
+
     public void CompleteNavigation()
     {
         IntPtr handle;
-
         lock (syncRoot)
         {
             if (navigationTargetPage < 0 || !geometry.AreClose(scroller.VisualOffset, navigationTargetOffset))
@@ -320,12 +315,12 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         }
 
         NavigationCompleted?.Invoke(this, EventArgs.Empty);
-
         if (handle != default)
         {
             RequestActivation(handle);
         }
     }
+
 
     private void RequestActivation(IntPtr handle)
     {
@@ -334,15 +329,14 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         activator.Activate(handle);
     }
 
+
     private void QueueForegroundFollow(IntPtr handle)
     {
         CancellationTokenSource cancellationTokenSource = new();
         long generation;
-
         lock (syncRoot)
         {
             CancelPendingForegroundFollowCore();
-
             foregroundFollowGeneration++;
             generation = foregroundFollowGeneration;
             foregroundFollowCancellationTokenSource = cancellationTokenSource;
@@ -350,6 +344,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
 
         _ = DelayAndCommitForegroundFollowAsync(generation, handle, cancellationTokenSource);
     }
+
 
     private async Task DelayAndCommitForegroundFollowAsync(long generation, IntPtr handle, CancellationTokenSource cancellationTokenSource)
     {
@@ -376,6 +371,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         }
     }
 
+
     private void RunCommitForegroundFollow(long generation, IntPtr handle)
     {
         try
@@ -392,6 +388,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         {
         }
     }
+
 
     private void CommitForegroundFollow(long generation, IntPtr handle)
     {
@@ -422,9 +419,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
 
         int windowPage = geometry.GetPage(trackedWindow, workspaceWidth);
         double targetOffset = geometry.GetTargetOffset(trackedWindow, workspaceWidth, windowPage);
-
         PendingActivation = handle;
-
         if (IsNavigationSettled(windowPage, targetOffset))
         {
             RequestActivation(handle);
@@ -434,6 +429,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         SetNavigationTarget(windowPage, targetOffset);
         scroller.ScrollTo(targetOffset);
     }
+
 
     private bool ShouldCommitForegroundFollow(long generation, IntPtr handle)
     {
@@ -453,6 +449,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         }
     }
 
+
     private bool ShouldIgnoreForegroundWindowChanged(IntPtr handle)
     {
         lock (syncRoot)
@@ -468,7 +465,6 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             }
 
             bool isInsideProgrammaticWindow = Stopwatch.GetElapsedTime(expectedProgrammaticAtTimestamp) < ProgrammaticForegroundWindow;
-
             if (!isInsideProgrammaticWindow)
             {
                 ClearExpectedProgrammaticActivationCore();
@@ -485,6 +481,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         }
     }
 
+
     public IntPtr GetTrackedForegroundWindow()
     {
         lock (syncRoot)
@@ -492,6 +489,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
             return trackedForegroundWindowHandle;
         }
     }
+
 
     public void SetTrackedForegroundWindow(nint windowHandle)
     {
@@ -507,18 +505,19 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         }
     }
 
+
     private void RecordForegroundWindow(IntPtr handle, bool isTracked)
     {
         lock (syncRoot)
         {
             foregroundWindowHandle = handle;
-
             if (isTracked)
             {
                 trackedForegroundWindowHandle = handle;
             }
         }
     }
+
 
     public void SuppressForegroundFollow()
     {
@@ -528,6 +527,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         }
     }
 
+
     private void SuppressAllForegroundFollow()
     {
         lock (syncRoot)
@@ -536,6 +536,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         }
     }
 
+
     private void StartForegroundFollowSuppressionCore(bool suppressAll)
     {
         foregroundFollowSuppressedAtTimestamp = Stopwatch.GetTimestamp();
@@ -543,6 +544,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         suppressAllForegroundFollow = suppressAll;
         CancelPendingForegroundFollowCore();
     }
+
 
     private bool IsForegroundFollowSuppressedCore(IntPtr handle)
     {
@@ -562,10 +564,10 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         return false;
     }
 
+
     private void CancelPendingForegroundFollowCore()
     {
         foregroundFollowGeneration++;
-
         if (foregroundFollowCancellationTokenSource is null)
         {
             return;
@@ -574,6 +576,7 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         TryCancel(foregroundFollowCancellationTokenSource);
         foregroundFollowCancellationTokenSource = null;
     }
+
 
     private void CleanupForegroundFollowDelay(long generation, CancellationTokenSource cancellationTokenSource)
     {
@@ -588,11 +591,13 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         cancellationTokenSource.Dispose();
     }
 
+
     private void ClearExpectedProgrammaticActivationCore()
     {
         expectedProgrammaticHandle = default;
         expectedProgrammaticAtTimestamp = 0;
     }
+
 
     private void SetNavigationTarget(int page, double offset)
     {
@@ -603,10 +608,10 @@ public sealed class WindowPageCoordinator(IWindowStore store,
         }
     }
 
+
     private bool IsNavigationSettled(int page, double offset)
     {
         double visualOffset = scroller.VisualOffset;
-
         if (!geometry.IsFinite(visualOffset))
         {
             return false;
@@ -614,17 +619,17 @@ public sealed class WindowPageCoordinator(IWindowStore store,
 
         lock (syncRoot)
         {
-            return navigationTargetPage == page &&
-                geometry.AreClose(navigationTargetOffset, offset) &&
-                geometry.AreClose(visualOffset, offset);
+            return navigationTargetPage == page && geometry.AreClose(navigationTargetOffset, offset) && geometry.AreClose(visualOffset, offset);
         }
     }
+
 
     private bool TryGetWorkspaceWidth(out int workspaceWidth)
     {
         workspaceWidth = workspace.Width;
         return workspaceWidth > 0;
     }
+
 
     private static void TryCancel(CancellationTokenSource cancellationTokenSource)
     {

@@ -4,16 +4,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public sealed class Pager(IWindowStore repository,
-    IPanState state,
-    IScroller coordinator,
-    IWorkspace workspace,
-    IForegroundWindowCoordinator foregroundWindowCoordinator,
-    ILogger<Pager> logger) :
-    IPager
+public sealed class Pager(IWindowStore repository, IPanState state, IScroller coordinator, IWorkspace workspace, IForegroundWindowCoordinator foregroundWindowCoordinator, ILogger<Pager> logger) : IPager
 {
     private int lastPage;
-
     private int? maxPages;
     private bool isStarted;
 
@@ -29,17 +22,13 @@ public sealed class Pager(IWindowStore repository,
         {
             int currentPage = CurrentPage;
             TrackedWindow? rightmostWindow = repository.MaxBy(window => (long)window.CanvasX + window.Width);
-
-            int pageCount = rightmostWindow is not null && workspace.Width > 0
-                ? (int)Math.Ceiling(((long)rightmostWindow.CanvasX + rightmostWindow.Width - 1) / (double)workspace.Width)
-                : 1;
-
+            int pageCount = rightmostWindow is not null && workspace.Width > 0 ? (int)Math.Ceiling(((long)rightmostWindow.CanvasX + rightmostWindow.Width - 1) / (double)workspace.Width) : 1;
             pageCount = Math.Max(1, pageCount);
             pageCount = Math.Max(pageCount, currentPage + 1);
-
             return maxPages.HasValue ? Math.Min(pageCount, maxPages.Value) : pageCount;
         }
     }
+
 
     public bool IsPageCentered(int page)
     {
@@ -53,31 +42,30 @@ public sealed class Pager(IWindowStore repository,
         return Math.Abs(coordinator.VisualOffset - targetOffset) < 0.5;
     }
 
+
     public void NavigateToPage(int page)
     {
         int targetPage = NormalizePage(page);
-
         logger.LogInformation("Navigating to page {Page}", targetPage);
-
         double targetOffset = targetPage * workspace.Width;
         foregroundWindowCoordinator.SuppressForegroundFollow();
         coordinator.ScrollTo(targetOffset);
     }
 
+
     private int NormalizePage(int page)
     {
-        int targetPage = maxPages.HasValue
-            ? Math.Min(page, maxPages.Value - 1)
-            : page;
-
+        int targetPage = maxPages.HasValue ? Math.Min(page, maxPages.Value - 1) : page;
         return Math.Max(0, targetPage);
     }
+
 
     public void SetMaxPages(int? maxPages)
     {
         logger.LogInformation("Max pages set to {MaxPages}", maxPages);
         this.maxPages = maxPages;
     }
+
 
     public void Start()
     {
@@ -92,6 +80,7 @@ public sealed class Pager(IWindowStore repository,
         state.OffsetChanged += HandleOffsetChanged;
     }
 
+
     public void Stop()
     {
         if (!isStarted)
@@ -104,10 +93,10 @@ public sealed class Pager(IWindowStore repository,
         state.OffsetChanged -= HandleOffsetChanged;
     }
 
+
     private void HandleOffsetChanged()
     {
         int page = CurrentPage;
-
         if (page == lastPage)
         {
             return;

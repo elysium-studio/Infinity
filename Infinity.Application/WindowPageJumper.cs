@@ -4,17 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public sealed class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
-    WindowArrowMoveGesture arrowMove,
-    WindowNumberSwitchGesture numberSwitch,
-    WindowNumberMoveGesture numberMove,
-    IForegroundWindowSource foregroundWindowSource,
-    ITrackedForegroundWindowSource trackedForegroundWindowSource,
-    IWindowStore store,
-    IPager pager,
-    IWorkspace workspace,
-    ILogger<WindowPageJumper> logger) :
-    IWindowPageJumper
+public sealed class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch, WindowArrowMoveGesture arrowMove, WindowNumberSwitchGesture numberSwitch, WindowNumberMoveGesture numberMove, IForegroundWindowSource foregroundWindowSource, ITrackedForegroundWindowSource trackedForegroundWindowSource, IWindowStore store, IPager pager, IWorkspace workspace, ILogger<WindowPageJumper> logger) : IWindowPageJumper
 {
     private const int VirtualKeyRight = 0x27;
     private const int VirtualKey0 = 0x30;
@@ -34,6 +24,7 @@ public sealed class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
         numberMove.Invoked += HandleNumberMoveGesture;
     }
 
+
     public void Stop()
     {
         if (!isStarted)
@@ -47,6 +38,7 @@ public sealed class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
         numberSwitch.Invoked -= HandleNumberSwitchGesture;
         numberMove.Invoked -= HandleNumberMoveGesture;
     }
+
 
     private void HandleArrowSwitchGesture(WindowArrowSwitchEventArgs args) => HandleArrow(args.VirtualKeyCode, moveWindow: false);
 
@@ -62,6 +54,7 @@ public sealed class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
         SwitchPage(direction, moveWindow);
     }
 
+
     private void HandleNumber(int virtualKeyCode, bool moveWindow)
     {
         if (virtualKeyCode == VirtualKey0)
@@ -72,8 +65,8 @@ public sealed class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
         SwitchToPage(virtualKeyCode - VirtualKey0 - 1, moveWindow);
     }
 
-    private bool IsWithinBounds(int targetPage) =>
-        targetPage >= 0 && (pager.MaxPages is null || targetPage < pager.MaxPages.Value);
+
+    private bool IsWithinBounds(int targetPage) => targetPage >= 0 && (pager.MaxPages is null || targetPage < pager.MaxPages.Value);
 
     private void SwitchPage(JumpDirection direction, bool moveWindow)
     {
@@ -84,7 +77,6 @@ public sealed class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
         }
 
         int targetPage = pager.CurrentPage + (direction == JumpDirection.Right ? 1 : -1);
-
         if (!IsWithinBounds(targetPage))
         {
             logger.LogDebug("Page switch blocked at boundary (target {Page})", targetPage);
@@ -93,6 +85,7 @@ public sealed class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
 
         pager.NavigateToPage(targetPage);
     }
+
 
     private void SwitchToPage(int targetPage, bool moveWindow)
     {
@@ -111,6 +104,7 @@ public sealed class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
         pager.NavigateToPage(targetPage);
     }
 
+
     private void JumpForegroundWindow(JumpDirection direction)
     {
         if (!TryGetForegroundWindow(out nint windowHandle, out TrackedWindow trackedWindow))
@@ -121,7 +115,6 @@ public sealed class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
 
         int currentPage = (int)Math.Floor(trackedWindow.CanvasX / (double)workspace.Width);
         int targetPage = currentPage + (direction == JumpDirection.Right ? 1 : -1);
-
         if (!IsWithinBounds(targetPage))
         {
             logger.LogDebug("Window jump blocked at boundary ({Handle}, target {Page})", windowHandle, targetPage);
@@ -130,6 +123,7 @@ public sealed class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
 
         ApplyPageJump(windowHandle, trackedWindow, currentPage, targetPage);
     }
+
 
     private void JumpForegroundWindowToPage(int targetPage)
     {
@@ -140,9 +134,9 @@ public sealed class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
         }
 
         int currentPage = (int)Math.Floor(trackedWindow.CanvasX / (double)workspace.Width);
-
         ApplyPageJump(windowHandle, trackedWindow, currentPage, targetPage);
     }
+
 
     private void ApplyPageJump(nint windowHandle, TrackedWindow trackedWindow, int currentPage, int targetPage)
     {
@@ -152,19 +146,16 @@ public sealed class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch,
         }
 
         int delta = (targetPage - currentPage) * workspace.Width;
-
         trackedWindow.CanvasX += delta;
         store.NotifyChanged(windowHandle);
-
         logger.LogInformation("Window {Handle} jumped to page {Page}", windowHandle, targetPage);
-
         pager.NavigateToPage(targetPage);
     }
+
 
     private bool TryGetForegroundWindow(out nint windowHandle, out TrackedWindow trackedWindow)
     {
         windowHandle = foregroundWindowSource.GetForegroundWindow();
-
         if (store.TryGet(windowHandle, out trackedWindow))
         {
             return true;

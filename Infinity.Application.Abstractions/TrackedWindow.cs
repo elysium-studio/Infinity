@@ -22,6 +22,7 @@ public sealed record TrackedWindow
 
     public bool IsConcealed { get; set; }
 
+
     public void InvalidatePlacement()
     {
         LastPlacedX = int.MinValue;

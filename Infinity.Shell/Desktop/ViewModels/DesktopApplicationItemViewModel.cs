@@ -6,7 +6,6 @@ namespace Infinity.Shell;
 public abstract partial class DesktopApplicationItemViewModel(LaunchableApplication application) : ObservableObject
 {
     private int iconLoadState;
-
     [ObservableProperty]
     private ApplicationIcon? icon;
 
@@ -24,6 +23,7 @@ public abstract partial class DesktopApplicationItemViewModel(LaunchableApplicat
         Volatile.Write(ref iconLoadState, 2);
         OnPropertyChanged(nameof(ShowFallbackIcon));
     }
+
 
     internal void CancelIconLoad() => Interlocked.CompareExchange(ref iconLoadState, 0, 1);
 }

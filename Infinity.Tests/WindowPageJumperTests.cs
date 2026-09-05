@@ -12,52 +12,34 @@ public sealed class WindowPageJumperTests
     {
         WindowStore store = new();
         IntPtr applicationWindow = new(1);
-        store.Add(new TrackedWindow
-        {
-            Handle = applicationWindow,
-            CanvasX = 0,
-            CanvasY = 0,
-            Width = 1000,
-            Height = 1000
-        });
+        store.Add(new TrackedWindow { Handle = applicationWindow, CanvasX = 0, CanvasY = 0, Width = 1000, Height = 1000 });
         WindowArrowSwitchGesture arrowSwitch = new();
         WindowArrowMoveGesture arrowMove = new();
         WindowNumberSwitchGesture numberSwitch = new();
         WindowNumberMoveGesture numberMove = new();
         TestPager pager = new();
-        WindowPageJumper jumper = new(arrowSwitch,
-            arrowMove,
-            numberSwitch,
-            numberMove,
-            new TestForegroundWindowSource(new IntPtr(99)),
-            new TestTrackedForegroundWindowSource(applicationWindow),
-            store,
-            pager,
-            new TestWorkspace(),
-            NullLogger<WindowPageJumper>.Instance);
+        WindowPageJumper jumper = new(arrowSwitch, arrowMove, numberSwitch, numberMove, new TestForegroundWindowSource(new IntPtr(99)), new TestTrackedForegroundWindowSource(applicationWindow), store, pager, new TestWorkspace(), NullLogger<WindowPageJumper>.Instance);
         jumper.Start();
-
         arrowMove.Invoke(0x27);
-
         Assert.True(store.TryGet(applicationWindow, out TrackedWindow movedWindow));
         Assert.Equal(1000, movedWindow.CanvasX);
         Assert.Equal(1, pager.CurrentPage);
     }
 
-    private sealed class TestForegroundWindowSource(IntPtr handle) :
-        IForegroundWindowSource
+
+    private sealed class TestForegroundWindowSource(IntPtr handle) : IForegroundWindowSource
     {
         public IntPtr GetForegroundWindow() => handle;
     }
 
-    private sealed class TestTrackedForegroundWindowSource(IntPtr handle) :
-        ITrackedForegroundWindowSource
+
+    private sealed class TestTrackedForegroundWindowSource(IntPtr handle) : ITrackedForegroundWindowSource
     {
         public IntPtr GetTrackedForegroundWindow() => handle;
     }
 
-    private sealed class TestPager :
-        IPager
+
+    private sealed class TestPager : IPager
     {
         public event Action<int>? PageChanged;
 
@@ -75,21 +57,24 @@ public sealed class WindowPageJumperTests
             PageChanged?.Invoke(page);
         }
 
+
         public void SetMaxPages(int? maxPages)
         {
         }
 
+
         public void Start()
         {
         }
+
 
         public void Stop()
         {
         }
     }
 
-    private sealed class TestWorkspace :
-        IWorkspace
+
+    private sealed class TestWorkspace : IWorkspace
     {
         public event EventHandler? WorkspaceLayoutChanged;
 

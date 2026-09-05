@@ -2,8 +2,7 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Tests;
 
-internal sealed class TestScroller :
-    IScroller
+internal sealed class TestScroller : IScroller
 {
     public event EventHandler? ScrollStarted;
 
@@ -15,33 +14,32 @@ internal sealed class TestScroller :
 
     public int ResetCount { get; private set; }
 
+
     public void CancelNavigation()
     {
     }
 
-    public void Dispose()
-    {
-        GC.SuppressFinalize(this);
-    }
+
+    public void Dispose() => GC.SuppressFinalize(this);
 
     public void CommitPresentation()
     {
     }
 
+
     public void OnTick()
     {
     }
 
+
     public void Reposition() => RepositionCount++;
 
-    public void Reset()
-    {
-        ResetCount++;
-    }
+    public void Reset() => ResetCount++;
 
     public void ScrollBy(double delta)
     {
     }
+
 
     public void ScrollTo(double offset, bool animate = true) => VisualOffset = offset;
 

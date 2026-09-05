@@ -1,16 +1,12 @@
+using System;
+using System.Threading;
 using Elysium.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Threading;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopWallpaperPreloader(
-    IDesktopBackgroundSource backgroundSource,
-    DesktopWallpaperSurfaceProvider surfaceProvider,
-    IDispatcher dispatcher,
-    ILogger<DesktopWallpaperPreloader> logger)
+public sealed class DesktopWallpaperPreloader(IDesktopBackgroundSource backgroundSource, DesktopWallpaperSurfaceProvider surfaceProvider, IDispatcher dispatcher, ILogger<DesktopWallpaperPreloader> logger)
 {
     private volatile bool started;
     private int refreshQueued;
@@ -27,11 +23,13 @@ public sealed class DesktopWallpaperPreloader(
         QueueRefresh();
     }
 
+
     public void Stop()
     {
         started = false;
         backgroundSource.BackgroundChanged -= HandleBackgroundChanged;
     }
+
 
     private void HandleBackgroundChanged(object? sender, EventArgs args) => QueueRefresh();
 
@@ -44,8 +42,6 @@ public sealed class DesktopWallpaperPreloader(
 
         try
         {
-            // LoadedImageSurface is created on the UI thread. Decoding is
-            // asynchronous and never waits for the overview to open.
             dispatcher.Dispatch(Refresh);
         }
         catch (Exception exception)
@@ -55,10 +51,10 @@ public sealed class DesktopWallpaperPreloader(
         }
     }
 
+
     private void Refresh()
     {
         Interlocked.Exchange(ref refreshQueued, 0);
-
         if (!started)
         {
             return;

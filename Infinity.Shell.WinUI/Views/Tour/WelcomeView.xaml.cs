@@ -1,9 +1,9 @@
+using System;
+using System.Numerics;
 using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
-using System;
-using System.Numerics;
 
 namespace Infinity.Shell.WinUI;
 
@@ -16,6 +16,7 @@ public sealed partial class WelcomeView : UserControl
         Unloaded += HandleUnloaded;
     }
 
+
     private static CubicBezierEasingFunction CreateEasing(Compositor compositor) => compositor.CreateCubicBezierEasingFunction(new Vector2(0.16f, 1), new Vector2(0.3f, 1));
 
     private void HandleLoaded(object sender, RoutedEventArgs args)
@@ -26,9 +27,16 @@ public sealed partial class WelcomeView : UserControl
         AnimateGlow(GlowTwo, 1800);
     }
 
+
     private void HandleUnloaded(object sender, RoutedEventArgs args)
     {
-        foreach (UIElement element in new UIElement[] { HeroCard, HeadingGroup })
+        foreach (UIElement element in new UIElement[]
+        {
+            HeroCard,
+            HeadingGroup
+        }
+
+        )
         {
             Visual visual = ElementCompositionPreview.GetElementVisual(element);
             visual.StopAnimation(nameof(Visual.Scale));
@@ -40,6 +48,7 @@ public sealed partial class WelcomeView : UserControl
         ElementCompositionPreview.GetElementVisual(GlowTwo).StopAnimation(nameof(Visual.Scale));
     }
 
+
     private static void AnimateEntrance(UIElement element, int delay)
     {
         ElementCompositionPreview.SetIsTranslationEnabled(element, true);
@@ -48,29 +57,27 @@ public sealed partial class WelcomeView : UserControl
         CubicBezierEasingFunction easing = CreateEasing(compositor);
         visual.Properties.InsertVector3("Translation", new Vector3(0, 18, 0));
         visual.Opacity = 0;
-
         Vector3KeyFrameAnimation movement = compositor.CreateVector3KeyFrameAnimation();
         movement.InsertKeyFrame(0, new Vector3(0, 18, 0));
         movement.InsertKeyFrame(1, Vector3.Zero, easing);
         movement.Duration = TimeSpan.FromMilliseconds(520);
         movement.DelayTime = TimeSpan.FromMilliseconds(delay);
         movement.DelayBehavior = AnimationDelayBehavior.SetInitialValueBeforeDelay;
-
         ScalarKeyFrameAnimation opacity = compositor.CreateScalarKeyFrameAnimation();
         opacity.InsertKeyFrame(0, 0);
         opacity.InsertKeyFrame(1, 1, easing);
         opacity.Duration = movement.Duration;
         opacity.DelayTime = movement.DelayTime;
         opacity.DelayBehavior = AnimationDelayBehavior.SetInitialValueBeforeDelay;
-
         visual.Properties.StartAnimation("Translation", movement);
         visual.StartAnimation(nameof(Visual.Opacity), opacity);
     }
 
+
     private static void AnimateGlow(UIElement element, int delay)
     {
         Visual visual = ElementCompositionPreview.GetElementVisual(element);
-        visual.CenterPoint = new Vector3((float)(element.RenderSize.Width / 2), (float)(element.RenderSize.Height / 2), 0);
+        visual.CenterPoint = new((float)(element.RenderSize.Width / 2), (float)(element.RenderSize.Height / 2), 0);
         Compositor compositor = visual.Compositor;
         CubicBezierEasingFunction easing = CreateEasing(compositor);
         Vector3KeyFrameAnimation scale = compositor.CreateVector3KeyFrameAnimation();

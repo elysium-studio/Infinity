@@ -1,14 +1,11 @@
-using Infinity.Application.Abstractions;
-
 using System.Diagnostics;
+using Infinity.Application.Abstractions;
 
 namespace Infinity.Application;
 
-public sealed class WindowRestoreGuard :
-    IWindowRestoreGuard
+public sealed class WindowRestoreGuard : IWindowRestoreGuard
 {
     private static readonly long RestoreWindowDurationTicks = Stopwatch.Frequency / 2;
-
     private readonly Lock syncRoot = new();
     private readonly Dictionary<IntPtr, long> restoringWindows = [];
 
@@ -31,10 +28,10 @@ public sealed class WindowRestoreGuard :
         }
     }
 
+
     public void MarkRestoring(IntPtr windowHandle)
     {
         long expiresAt = Stopwatch.GetTimestamp() + RestoreWindowDurationTicks;
-
         lock (syncRoot)
         {
             restoringWindows[windowHandle] = expiresAt;

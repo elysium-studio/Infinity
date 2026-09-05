@@ -1,11 +1,9 @@
 using Infinity.Platform.Abstractions;
 using Windows.Win32;
-using Windows.Win32.UI.Input.KeyboardAndMouse;
 
 namespace Infinity.Platform.Windows;
 
-public sealed class KeyboardTextTranslator :
-    IKeyboardTextTranslator
+public sealed class KeyboardTextTranslator : IKeyboardTextTranslator
 {
     private const int KeyboardStateLength = 256;
     private const int TranslationBufferLength = 8;
@@ -26,7 +24,6 @@ public sealed class KeyboardTextTranslator :
         }
 
         Span<byte> keyboardState = stackalloc byte[KeyboardStateLength];
-
         if (!PInvoke.GetKeyboardState(keyboardState))
         {
             return null;
@@ -35,7 +32,6 @@ public sealed class KeyboardTextTranslator :
         bool controlDown = IsAnyKeyDown(keyboardState, VirtualKeyControl, VirtualKeyLeftControl, VirtualKeyRightControl);
         bool menuDown = IsAnyKeyDown(keyboardState, VirtualKeyMenu, VirtualKeyLeftMenu, VirtualKeyRightMenu);
         bool windowsDown = IsAnyKeyDown(keyboardState, VirtualKeyLeftWindows, VirtualKeyRightWindows);
-
         if (!IsTextEntryChord(controlDown, menuDown, windowsDown))
         {
             return null;
@@ -43,37 +39,18 @@ public sealed class KeyboardTextTranslator :
 
         uint scanCode = PInvoke.MapVirtualKey((uint)virtualKeyCode, MAP_VIRTUAL_KEY_TYPE.MAPVK_VK_TO_VSC);
         Span<char> buffer = stackalloc char[TranslationBufferLength];
-        int length = PInvoke.ToUnicodeEx((uint)virtualKeyCode,
-            scanCode,
-            keyboardState,
-            buffer,
-            0,
-            null);
-
-        return length > 0 ? new string(buffer[..length]) : null;
+        int length = PInvoke.ToUnicodeEx((uint)virtualKeyCode, scanCode, keyboardState, buffer, 0, null);
+        return length > 0 ? new string (buffer[..length]) : null;
     }
 
-    internal static bool IsTextInputKey(int virtualKeyCode) =>
-        virtualKeyCode == 0x20 ||
-        virtualKeyCode is >= 0x30 and <= 0x39 ||
-        virtualKeyCode is >= 0x41 and <= 0x5A ||
-        virtualKeyCode is >= 0x60 and <= 0x6F ||
-        virtualKeyCode is >= 0xBA and <= 0xC0 ||
-        virtualKeyCode is >= 0xDB and <= 0xDF ||
-        virtualKeyCode == 0xE2;
 
-    internal static bool IsTextEntryChord(bool controlDown, bool menuDown, bool windowsDown) =>
-        !windowsDown && controlDown == menuDown;
+    internal static bool IsTextInputKey(int virtualKeyCode) => virtualKeyCode == 0x20 || virtualKeyCode is >= 0x30 and <= 0x39 || virtualKeyCode is >= 0x41 and <= 0x5A || virtualKeyCode is >= 0x60 and <= 0x6F || virtualKeyCode is >= 0xBA and <= 0xC0 || virtualKeyCode is >= 0xDB and <= 0xDF || virtualKeyCode == 0xE2;
 
-    private static bool IsAnyKeyDown(ReadOnlySpan<byte> keyboardState, int firstVirtualKey, int secondVirtualKey) =>
-        IsKeyDown(keyboardState, firstVirtualKey) ||
-        IsKeyDown(keyboardState, secondVirtualKey);
+    internal static bool IsTextEntryChord(bool controlDown, bool menuDown, bool windowsDown) => !windowsDown && controlDown == menuDown;
 
-    private static bool IsAnyKeyDown(ReadOnlySpan<byte> keyboardState, int firstVirtualKey, int secondVirtualKey, int thirdVirtualKey) =>
-        IsKeyDown(keyboardState, firstVirtualKey) ||
-        IsKeyDown(keyboardState, secondVirtualKey) ||
-        IsKeyDown(keyboardState, thirdVirtualKey);
+    private static bool IsAnyKeyDown(ReadOnlySpan<byte> keyboardState, int firstVirtualKey, int secondVirtualKey) => IsKeyDown(keyboardState, firstVirtualKey) || IsKeyDown(keyboardState, secondVirtualKey);
 
-    private static bool IsKeyDown(ReadOnlySpan<byte> keyboardState, int virtualKey) =>
-        (keyboardState[virtualKey] & 0x80) != 0;
+    private static bool IsAnyKeyDown(ReadOnlySpan<byte> keyboardState, int firstVirtualKey, int secondVirtualKey, int thirdVirtualKey) => IsKeyDown(keyboardState, firstVirtualKey) || IsKeyDown(keyboardState, secondVirtualKey) || IsKeyDown(keyboardState, thirdVirtualKey);
+
+    private static bool IsKeyDown(ReadOnlySpan<byte> keyboardState, int virtualKey) => (keyboardState[virtualKey] & 0x80) != 0;
 }

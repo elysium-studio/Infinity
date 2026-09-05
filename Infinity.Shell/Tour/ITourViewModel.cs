@@ -1,9 +1,9 @@
 namespace Elysium.Presentation.Abstractions;
 
-public interface ITourViewModel :
-    IDisposable
+public interface ITourViewModel : IDisposable
 {
     bool CanGoBack { get; }
+
 
     bool CanGoNext { get; }
 }

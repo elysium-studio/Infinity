@@ -12,6 +12,7 @@ public sealed class WindowCaptureFrameGeometryTests
         Assert.False(result.RequiresPoolResize);
     }
 
+
     [Fact]
     public void GrowthInAnOldBufferRetainsThePreviousImage()
     {
@@ -19,6 +20,7 @@ public sealed class WindowCaptureFrameGeometryTests
         Assert.False(result.CanPresent);
         Assert.True(result.RequiresPoolResize);
     }
+
 
     [Fact]
     public void ShrinkPresentsOnlyValidContentAndRecreatesThePool()
@@ -30,6 +32,7 @@ public sealed class WindowCaptureFrameGeometryTests
         Assert.Equal(600, result.Height);
     }
 
+
     [Theory]
     [InlineData(0, 600)]
     [InlineData(800, 0)]
@@ -40,6 +43,7 @@ public sealed class WindowCaptureFrameGeometryTests
         Assert.False(result.CanPresent);
         Assert.False(result.RequiresPoolResize);
     }
+
 
     [Fact]
     public void ACompleteFrameAfterGrowthCanBePresented()

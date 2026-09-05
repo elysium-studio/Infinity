@@ -4,30 +4,18 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopApplicationLaunchCoordinator(IApplicationLauncher launcher,
-    IRecentApplicationStore recentApplicationStore,
-    IWindowCollection windowCollection,
-    IWindowStore windowStore,
-    IForegroundWindowTracker foregroundWindowTracker,
-    IWindowResizeSynchronizer resizeSynchronizer,
-    IScroller scroller,
-    DesktopApplicationPlacementResolver placementResolver,
-    ILogger<DesktopApplicationLaunchCoordinator> logger)
+public sealed class DesktopApplicationLaunchCoordinator(IApplicationLauncher launcher, IRecentApplicationStore recentApplicationStore, IWindowCollection windowCollection, IWindowStore windowStore, IForegroundWindowTracker foregroundWindowTracker, IWindowResizeSynchronizer resizeSynchronizer, IScroller scroller, DesktopApplicationPlacementResolver placementResolver, ILogger<DesktopApplicationLaunchCoordinator> logger)
 {
     private static readonly TimeSpan LaunchTimeout = TimeSpan.FromSeconds(12);
-
     private readonly SemaphoreSlim launchGate = new(1, 1);
 
     public async Task<nint> LaunchAsync(LaunchableApplication application, DesktopApplicationTarget target, int screenOriginX, int screenOriginY, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(application);
-
         await launchGate.WaitAsync(cancellationToken);
-
         try
         {
             TrackedWindow? window = await WaitForApplicationWindowAsync(application, cancellationToken);
-
             if (window is null || !placementResolver.TryResolve(window, target, screenOriginX, screenOriginY, out DesktopApplicationPlacement placement))
             {
                 return 0;
@@ -45,12 +33,7 @@ public sealed class DesktopApplicationLaunchCoordinator(IApplicationLauncher lau
             window.InvalidatePlacement();
             windowStore.NotifyChanged(window.Handle);
             scroller.Reposition();
-
-            logger.LogInformation("Opened {ApplicationName} on desktop page {Page}{Slot}",
-                application.DisplayName,
-                target.Page + 1,
-                target.IsSnapSlot ? $" in slot {target.Slot + 1}" : string.Empty);
-
+            logger.LogInformation("Opened {ApplicationName} on desktop page {Page}{Slot}", application.DisplayName, target.Page + 1, target.IsSnapSlot ? $" in slot {target.Slot + 1}" : string.Empty);
             return window.Handle;
         }
         finally
@@ -59,11 +42,11 @@ public sealed class DesktopApplicationLaunchCoordinator(IApplicationLauncher lau
         }
     }
 
+
     private async Task<TrackedWindow?> WaitForApplicationWindowAsync(LaunchableApplication application, CancellationToken cancellationToken)
     {
-        HashSet<nint> existingWindows = [.. windowCollection.AllTrackedWindows.Select(window => window.Handle)];
+        HashSet<nint> existingWindows = [..windowCollection.AllTrackedWindows.Select(window => window.Handle)];
         TaskCompletionSource<TrackedWindow> completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
-
         void HandleWindowAdded(object? sender, TrackedWindow window)
         {
             if (!existingWindows.Contains(window.Handle))
@@ -82,7 +65,6 @@ public sealed class DesktopApplicationLaunchCoordinator(IApplicationLauncher lau
 
         windowCollection.WindowAdded += HandleWindowAdded;
         foregroundWindowTracker.ForegroundWindowChanged += HandleForegroundWindowChanged;
-
         try
         {
             if (!launcher.TryLaunch(application))
@@ -91,15 +73,13 @@ public sealed class DesktopApplicationLaunchCoordinator(IApplicationLauncher lau
             }
 
             await recentApplicationStore.RecordAsync(application, cancellationToken);
-
             using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeout.CancelAfter(LaunchTimeout);
-
             try
             {
                 return await completion.Task.WaitAsync(timeout.Token);
             }
-            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            catch (OperationCanceledException)when (!cancellationToken.IsCancellationRequested)
             {
                 logger.LogWarning("Timed out waiting for {ApplicationName} to create or activate a window", application.DisplayName);
                 return null;
@@ -111,6 +91,7 @@ public sealed class DesktopApplicationLaunchCoordinator(IApplicationLauncher lau
             foregroundWindowTracker.ForegroundWindowChanged -= HandleForegroundWindowChanged;
         }
     }
+
 
     private static int Round(double value) => (int)Math.Clamp(Math.Round(value), int.MinValue, int.MaxValue);
 

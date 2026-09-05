@@ -5,9 +5,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Infinity.Platform.Windows;
 
-public sealed class WindowAncestorResolver :
-    IWindowAncestorResolver
+public sealed class WindowAncestorResolver : IWindowAncestorResolver
 {
-    public nint GetRootAncestor(nint windowHandle) =>
-        PInvoke.GetAncestor(new HWND(windowHandle), GET_ANCESTOR_FLAGS.GA_ROOT);
+    public nint GetRootAncestor(nint windowHandle) => PInvoke.GetAncestor(new HWND(windowHandle), GET_ANCESTOR_FLAGS.GA_ROOT);
 }

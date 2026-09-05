@@ -10,9 +10,12 @@ public interface IWindowNavigationCoordinator
 
     int NavigationTargetPage { get; set; }
 
+
     double NavigationTargetOffset { get; set; }
 
+
     IntPtr PendingActivation { get; set; }
+
 
     void NavigateTo(IntPtr handle);
 

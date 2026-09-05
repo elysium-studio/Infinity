@@ -1,11 +1,10 @@
+using System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using System;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed partial class ResetPageCustomizationsView :
-    UserControl
+public sealed partial class ResetPageCustomizationsView : UserControl
 {
     private bool isConfirmationOpen;
 
@@ -21,7 +20,6 @@ public sealed partial class ResetPageCustomizationsView :
         }
 
         isConfirmationOpen = true;
-
         try
         {
             ContentDialog dialog = new()
@@ -33,7 +31,6 @@ public sealed partial class ResetPageCustomizationsView :
                 DefaultButton = ContentDialogButton.Close,
                 XamlRoot = XamlRoot
             };
-
             if (await dialog.ShowAsync() == ContentDialogResult.Primary)
             {
                 await ViewModel.ResetAsync();

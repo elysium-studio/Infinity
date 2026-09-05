@@ -6,24 +6,17 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed partial class ResetPageCustomizationsViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IDispatcher dispatcher, Settings settings, IWritableOptions<Settings> writer, ITextLocalizer localizer) :
-    ObservableViewModel(provider, factory, messenger, disposer),
-    IAdvancedViewModel,
-    IRecipient<OptionsChangedEventArgs<Settings>>
+public sealed partial class ResetPageCustomizationsViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IDispatcher dispatcher, Settings settings, IWritableOptions<Settings> writer, ITextLocalizer localizer) : ObservableViewModel(provider, factory, messenger, disposer), IAdvancedViewModel, IRecipient<OptionsChangedEventArgs<Settings>>
 {
     private readonly IDispatcher dispatcher = dispatcher;
-
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanReset))]
     private bool hasCustomizations;
-
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanReset))]
     private bool isResetting;
-
     [ObservableProperty]
     private bool isErrorOpen;
-
     [ObservableProperty]
     private string errorMessage = string.Empty;
 
@@ -52,14 +45,11 @@ public sealed partial class ResetPageCustomizationsViewModel(IServiceProvider pr
 
         IsResetting = true;
         IsErrorOpen = false;
-
         try
         {
             Settings updated = await writer.ReadAsync() ?? new Settings();
-
             updated.PageLayouts = [];
             updated.PageTitles = [];
-
             await writer.WriteAsync(updated);
             Apply(updated);
         }
@@ -73,6 +63,7 @@ public sealed partial class ResetPageCustomizationsViewModel(IServiceProvider pr
             IsResetting = false;
         }
     }
+
 
     private void Apply(Settings options) => HasCustomizations = options.PageLayouts is { Count: > 0 } || options.PageTitles is { Count: > 0 };
 }

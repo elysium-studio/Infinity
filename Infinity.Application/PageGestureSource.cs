@@ -4,14 +4,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public sealed class PageGestureSource(IKeyboardInputSource keyboardInputSource,
-    IModifierKeyState modifierKeyState,
-    IEnumerable<IPageGesture> gestures,
-    ILogger<PageGestureSource> logger) :
-    IPageGestureSource
+public sealed class PageGestureSource(IKeyboardInputSource keyboardInputSource, IModifierKeyState modifierKeyState, IEnumerable<IPageGesture> gestures, ILogger<PageGestureSource> logger) : IPageGestureSource
 {
-    private readonly List<IPageGesture> registeredGestures = [.. gestures];
-    private readonly HashSet<int> triggerKeys = [.. gestures.SelectMany(gesture => gesture.TriggerKeys)];
+    private readonly List<IPageGesture> registeredGestures = [..gestures];
+    private readonly HashSet<int> triggerKeys = [..gestures.SelectMany(gesture => gesture.TriggerKeys)];
     private readonly HashSet<int> activeTriggerKeys = [];
     private bool sessionActive;
     private bool isStarted;
@@ -33,6 +29,7 @@ public sealed class PageGestureSource(IKeyboardInputSource keyboardInputSource,
         modifierKeyState.StateChanged += HandleModifierStateChanged;
     }
 
+
     public void Stop()
     {
         if (!isStarted)
@@ -48,6 +45,7 @@ public sealed class PageGestureSource(IKeyboardInputSource keyboardInputSource,
         sessionActive = false;
     }
 
+
     private void HandleKeyDown(object? sender, KeyEventArgs args)
     {
         if (args.Handled || !modifierKeyState.IsActive)
@@ -61,18 +59,12 @@ public sealed class PageGestureSource(IKeyboardInputSource keyboardInputSource,
         }
 
         args.Handled = true;
-
         if (!activeTriggerKeys.Add(args.VirtualKeyCode))
         {
             return;
         }
 
-        IPageGesture? gesture = registeredGestures
-            .Where(candidate => candidate.TriggerKeys.Contains(args.VirtualKeyCode))
-            .Where(candidate => candidate.RequiredKeys.Count == 0 || candidate.RequiredKeys.Any(keyboardInputSource.IsKeyDown))
-            .OrderByDescending(candidate => candidate.RequiredKeys.Count)
-            .FirstOrDefault();
-
+        IPageGesture? gesture = registeredGestures.Where(candidate => candidate.TriggerKeys.Contains(args.VirtualKeyCode)).Where(candidate => candidate.RequiredKeys.Count == 0 || candidate.RequiredKeys.Any(keyboardInputSource.IsKeyDown)).OrderByDescending(candidate => candidate.RequiredKeys.Count).FirstOrDefault();
         if (gesture is null)
         {
             return;
@@ -86,9 +78,9 @@ public sealed class PageGestureSource(IKeyboardInputSource keyboardInputSource,
         }
 
         logger.LogDebug("Firing page gesture for key {Key}", args.VirtualKeyCode);
-
         gesture.Invoke(args.VirtualKeyCode);
     }
+
 
     private void HandleKeyUp(object? sender, KeyEventArgs args)
     {
@@ -102,6 +94,7 @@ public sealed class PageGestureSource(IKeyboardInputSource keyboardInputSource,
             args.Handled = true;
         }
     }
+
 
     private void HandleModifierStateChanged(bool isActive)
     {
