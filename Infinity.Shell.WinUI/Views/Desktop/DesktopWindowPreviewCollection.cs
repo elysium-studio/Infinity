@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory factory, IWindowGeometryReader geometryReader, IWindowStack windowStack, ITrackedForegroundWindowTarget trackedForegroundWindowTarget, DesktopWindowSelectionModel selection, DesktopWindowGroupDragCoordinator groupDragCoordinator, DesktopWindowGroupStackAnimator groupStackAnimator, DesktopWindowDropNavigationCoordinator dropNavigationCoordinator) :
+public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory factory, IWindowGeometryReader geometryReader, IWindowStack windowStack, ITrackedForegroundWindowTarget trackedForegroundWindowTarget, DesktopWindowSelectionModel selection, DesktopWindowGroupDragCoordinator groupDragCoordinator, DesktopWindowGroupStackAnimator groupStackAnimator, DesktopWindowDropNavigationCoordinator dropNavigationCoordinator, DesktopWindowPlacementCoordinator placementCoordinator) :
     IDisposable
 {
     private readonly Dictionary<nint, DesktopWindowPreview> previews = [];
@@ -18,6 +18,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
     private string filterText = string.Empty;
     private bool interactionEnabled;
     private bool disposed;
+    private bool placementEventsSubscribed;
     private DesktopCaptureViewport captureViewport;
 
     public void SetCaptureViewport(DesktopCaptureViewport viewport)
@@ -41,6 +42,12 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
     public IReadOnlyList<TrackedWindow> Synchronise(Canvas backgroundCanvas, Canvas canvas, Canvas focusCanvas, IEnumerable<TrackedWindow> trackedWindows, double layoutScale)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
+        if (!placementEventsSubscribed)
+        {
+            placementCoordinator.PlacementStarting += HandlePlacementStarting;
+            placementCoordinator.PlacementCompleted += HandlePlacementCompleted;
+            placementEventsSubscribed = true;
+        }
 
         backgroundHost = backgroundCanvas;
         host = canvas;
@@ -172,6 +179,12 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
     public void Clear()
     {
+        if (placementEventsSubscribed)
+        {
+            placementCoordinator.PlacementStarting -= HandlePlacementStarting;
+            placementCoordinator.PlacementCompleted -= HandlePlacementCompleted;
+            placementEventsSubscribed = false;
+        }
         foreach (DesktopWindowPreview preview in previews.Values)
         {
             preview.Invoked -= HandleWindowInvoked;
@@ -341,6 +354,26 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
     }
 
     private void HandleWindowPositionChanged(nint handle) => WindowPositionChanged?.Invoke(handle);
+
+    private void HandlePlacementStarting(IReadOnlyList<nint> handles)
+    {
+        if (!interactionEnabled) return;
+        foreach (nint handle in handles)
+        {
+            if (previews.TryGetValue(handle, out DesktopWindowPreview? preview)) preview.BeginPlacementAnimation();
+        }
+    }
+
+    private void HandlePlacementCompleted(IReadOnlyList<nint> handles)
+    {
+        foreach (nint handle in handles)
+        {
+            if (previews.TryGetValue(handle, out DesktopWindowPreview? preview)) preview.EndPlacementAnimation();
+        }
+        // Force one final geometry/layout update after the whole native batch.
+        // Intermediate resize notifications must not consume the animation.
+        foreach (nint handle in handles) WindowPositionChanged?.Invoke(handle);
+    }
 
     private void HandleWindowDragMoved(nint handle, double pointerX, double pointerY)
     {

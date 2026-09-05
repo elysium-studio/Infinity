@@ -20,6 +20,9 @@ internal sealed class DesktopWindowPreview :
 
     private readonly ThumbnailCompositionPreview? preview;
     private readonly DesktopThumbnailCaptureVisibility captureVisibility;
+    private readonly DesktopWindowPlacementAnimator placementAnimator;
+    private DesktopWindowPlacementAnimator.Bounds? placementAnimationSource;
+    private bool placementInProgress;
     private readonly Border backgroundHost;
     private readonly Border focusHost;
     private readonly Grid focusVisual;
@@ -73,6 +76,7 @@ internal sealed class DesktopWindowPreview :
         Host = host;
         this.backgroundHost = backgroundHost;
         this.focusHost = focusHost;
+        placementAnimator = new(host, backgroundHost, focusHost);
         this.preview = preview;
         captureVisibility = new(preview, host.DispatcherQueue);
         this.focusVisual = focusVisual;
@@ -195,6 +199,7 @@ internal sealed class DesktopWindowPreview :
 
         if (!value)
         {
+            CancelPlacementAnimation();
             CompleteDrag();
             Host.ReleasePointerCaptures();
         }
@@ -286,10 +291,66 @@ internal sealed class DesktopWindowPreview :
         RefreshCaptureVisibility();
         ApplyIndicatorVisibility();
         ApplyInteractionState();
+        StartPendingPlacementAnimation();
+    }
+
+    public void BeginPlacementAnimation()
+    {
+        Vector3 translation = appliedTranslation ?? Host.Translation;
+        Vector3 scale = Host.Scale;
+        placementAnimationSource = placementAnimator.Capture(new(
+            translation.X + width / 2 * (1 - scale.X),
+            translation.Y + height / 2 * (1 - scale.Y), width * scale.X, height * scale.Y));
+        placementAnimator.Stop();
+        if (placementAnimationSource is { IsValid: true } source && width > 0 && height > 0)
+        {
+            // Hold the displayed bounds while native resize calls run. This
+            // also prevents a second arrange flashing the previous destination.
+            SetGroupTransitions(null);
+            Vector3 heldScale = new(ToFloat(source.Width / width), ToFloat(source.Height / height), 1);
+            Vector3 heldTranslation = new(ToFloat(source.X - width / 2 * (1 - heldScale.X)),
+                ToFloat(source.Y - height / 2 * (1 - heldScale.Y)), shadowDepth);
+            Host.Scale = backgroundHost.Scale = focusHost.Scale = heldScale;
+            Host.Translation = backgroundHost.Translation = focusHost.Translation = heldTranslation;
+            appliedTranslation = heldTranslation;
+        }
+        placementInProgress = true;
+        captureVisibility.HoldForTransition(DesktopWindowPlacementAnimator.Duration);
+    }
+
+    public void EndPlacementAnimation() => placementInProgress = false;
+
+    private void StartPendingPlacementAnimation()
+    {
+        if (placementInProgress || isGroupDragLeader || isGroupStacked || placementAnimationSource is not { } source) return;
+        placementAnimationSource = null;
+        SetGroupTransitions(null);
+        Host.Scale = backgroundHost.Scale = focusHost.Scale = Vector3.One;
+        ApplyTranslation();
+        captureVisibility.HoldForTransition(DesktopWindowPlacementAnimator.Duration);
+        placementAnimator.Start(source, new(VisualX, VisualY, width, height), shadowDepth);
+    }
+
+    private void CancelPlacementAnimation()
+    {
+        bool wasPending = placementAnimationSource.HasValue;
+        placementAnimationSource = null;
+        placementInProgress = false;
+        placementAnimator.Stop();
+        if (wasPending && !isGroupStacked)
+        {
+            Host.Scale = backgroundHost.Scale = focusHost.Scale = Vector3.One;
+            ApplyTranslation();
+        }
     }
 
     public void Update(double x, double y, double width, double height, TimeSpan? transitionDuration = null)
     {
+        if (placementInProgress) return;
+        if (placementAnimationSource is null && (this.x != x || this.y != y || this.width != width || this.height != height))
+        {
+            placementAnimator.Stop();
+        }
         captureVisibility.HoldForTransition(transitionDuration);
         SetTranslationTransition(transitionDuration);
 
@@ -313,6 +374,7 @@ internal sealed class DesktopWindowPreview :
             ApplySize(width, height);
         }
         RefreshCaptureVisibility();
+        StartPendingPlacementAnimation();
     }
 
     public void SetSnapTarget(DesktopWindowSnapTarget? target)
@@ -333,6 +395,8 @@ internal sealed class DesktopWindowPreview :
         }
 
         disposed = true;
+        CancelPlacementAnimation();
+        placementAnimator.Dispose();
 
         CompleteDrag();
         Host.ReleasePointerCaptures();
@@ -375,6 +439,7 @@ internal sealed class DesktopWindowPreview :
 
     private void HandlePointerPressed(object sender, PointerRoutedEventArgs args)
     {
+        CancelPlacementAnimation();
         suppressNextTap = false;
         isControlClick = args.KeyModifiers.HasFlag(VirtualKeyModifiers.Control);
         var point = args.GetCurrentPoint(Host);

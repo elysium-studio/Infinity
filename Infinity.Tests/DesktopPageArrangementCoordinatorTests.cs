@@ -21,6 +21,10 @@ public sealed class DesktopPageArrangementCoordinatorTests
         DesktopPageArrangementCoordinator coordinator = new(store, catalog, placementResolver, occupancyResolver, placementCoordinator);
         TrackedWindow occupied = AddWindow(store, 1, 6, 6, 948, 1028);
         TrackedWindow floating = AddWindow(store, 2, 1200, 200, 500, 400);
+        List<nint> animatedHandles = [];
+        int completedBatches = 0;
+        placementCoordinator.PlacementStarting += handles => animatedHandles.AddRange(handles);
+        placementCoordinator.PlacementCompleted += _ => completedBatches++;
 
         int arranged = coordinator.Arrange(0, DesktopSnapLayoutKind.Halves, 0, 0);
 
@@ -28,6 +32,8 @@ public sealed class DesktopPageArrangementCoordinatorTests
         Assert.Equal((6, 6, 948, 1028), (occupied.CanvasX, occupied.CanvasY, occupied.Width, occupied.Height));
         Assert.Equal((966, 6, 948, 1028), (floating.CanvasX, floating.CanvasY, floating.Width, floating.Height));
         Assert.Equal(1, scroller.RepositionCount);
+        Assert.Equal(new nint[] { 2 }, animatedHandles);
+        Assert.Equal(1, completedBatches);
     }
 
     [Fact]

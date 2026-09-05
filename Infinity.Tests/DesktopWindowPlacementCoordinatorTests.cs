@@ -31,6 +31,70 @@ public sealed class DesktopWindowPlacementCoordinatorTests
     }
 
     [Fact]
+    public void SlotSwapBracketsBothWindowsWithOneAnimationBatch()
+    {
+        DesktopWindowPlacementCoordinator coordinator = CreateCoordinator();
+        TrackedWindow moving = AddWindow(1, 120, 80, 700, 500);
+        TrackedWindow occupant = AddWindow(2, 1006, 6, 948, 1028);
+        List<string> events = [];
+        coordinator.PlacementStarting += handles =>
+        {
+            Assert.Equal(new nint[] { 2, 1 }, handles);
+            Assert.Equal(120, moving.CanvasX);
+            Assert.Equal(1006, occupant.CanvasX);
+            events.Add("start");
+        };
+        coordinator.PlacementCompleted += handles =>
+        {
+            Assert.Equal(new nint[] { 2, 1 }, handles);
+            Assert.Equal(1006, moving.CanvasX);
+            Assert.Equal(120, occupant.CanvasX);
+            events.Add("complete");
+        };
+
+        Assert.True(coordinator.TrySwapIntoSlot(1, 2, new(1006, 6, 948, 1028)));
+        Assert.Equal(new[] { "start", "complete" }, events);
+    }
+
+    [Fact]
+    public void FailedAnimatedPlacementStillEndsTheBatch()
+    {
+        DesktopWindowPlacementCoordinator coordinator = CreateCoordinator();
+        TrackedWindow window = AddWindow(1, 100, 40, 1920, 1040);
+        windowStateController.State = new(true, false, true);
+        windowStateController.RestoreSucceeds = false;
+        List<string> events = [];
+        coordinator.PlacementStarting += _ => events.Add("start");
+        coordinator.PlacementCompleted += _ => events.Add("complete");
+
+        Assert.False(coordinator.ApplyPlacements([(window, new(1006, 6, 948, 1028))], animate: true));
+        Assert.Equal(new[] { "start", "complete" }, events);
+    }
+
+    [Fact]
+    public void OrdinaryPageMovesDoNotStartPlacementAnimations()
+    {
+        DesktopWindowPlacementCoordinator coordinator = CreateCoordinator();
+        AddWindow(1, 300, 140, 800, 600);
+        int starts = 0;
+        coordinator.PlacementStarting += _ => starts++;
+
+        Assert.True(coordinator.TryMoveToPage(1, 1, false));
+        Assert.Equal(0, starts);
+    }
+
+    [Fact]
+    public void EmptyArrangementDoesNotStartAnAnimationBatch()
+    {
+        DesktopWindowPlacementCoordinator coordinator = CreateCoordinator();
+        int starts = 0;
+        coordinator.PlacementStarting += _ => starts++;
+
+        Assert.True(coordinator.ApplyPlacements([], animate: true));
+        Assert.Equal(0, starts);
+    }
+
+    [Fact]
     public void MoveToOccupiedSlotSwapsInsteadOfOverlapping()
     {
         DesktopWindowPlacementCoordinator coordinator = CreateCoordinator();

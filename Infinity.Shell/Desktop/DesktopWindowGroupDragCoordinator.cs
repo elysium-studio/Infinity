@@ -117,7 +117,7 @@ public sealed class DesktopWindowGroupDragCoordinator(
                 return false;
             }
 
-            return placementCoordinator.ApplyPlacements(placements);
+            return placementCoordinator.ApplyPlacements(placements, animate: snapPlacement.HasValue);
         }
         finally
         {
