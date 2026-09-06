@@ -4,6 +4,36 @@ namespace Infinity.Tests;
 
 public sealed class EasingScrollMotionTests
 {
+    [Theory]
+    [InlineData(60)]
+    [InlineData(120)]
+    [InlineData(144)]
+    [InlineData(240)]
+    public void FrameDrivenWheelMotionPreservesItsCurveAndExactDestination(int refreshRate)
+    {
+        ManualScrollTimeProvider time = new();
+        EasingScrollMotion motion = new(time);
+        motion.AddDelta(1000);
+        double distance = motion.Drain();
+        TimeSpan previous = TimeSpan.Zero;
+        for (int frame = 1; frame <= refreshRate && motion.IsActive; frame++)
+        {
+            TimeSpan now = TimeSpan.FromSeconds((double)frame / refreshRate);
+            time.Advance(now - previous);
+            previous = now;
+            double delta = motion.Drain();
+            Assert.True(delta >= 0);
+            distance += delta;
+            if (frame == refreshRate / 4)
+            {
+                Assert.InRange(distance, 995, 998);
+            }
+        }
+
+        Assert.False(motion.IsActive);
+        Assert.Equal(1000, distance, 6);
+    }
+
     [Fact]
     public void RetargetingPreservesTheElapsedFrameAndVelocity()
     {

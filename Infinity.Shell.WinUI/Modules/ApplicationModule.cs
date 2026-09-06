@@ -16,7 +16,7 @@ public sealed class ApplicationModule(string applicationData, DispatcherQueue di
         builder.WithAppDomainHandler();
         builder.WithTaskSchedulerHandler();
         registerFlushHandler(builder.CreateFlushHandler());
-    }).AddSingleton(new AppEnvironment(applicationData)).AddSingleton<IStartupManager>(new StartupManager(Environment.ProcessPath ?? string.Empty, "InfinityDesktop", "InfinityDesktop")).AddSingleton<IDispatcher>(new Dispatcher(args =>
+    }).AddSingleton(dispatcherQueue).AddSingleton(new AppEnvironment(applicationData)).AddSingleton<IStartupManager>(new StartupManager(Environment.ProcessPath ?? string.Empty, "InfinityDesktop", "InfinityDesktop")).AddSingleton<IDispatcher>(new Dispatcher(args =>
 {
     if (!dispatcherQueue.TryEnqueue(() => args()))
     {
