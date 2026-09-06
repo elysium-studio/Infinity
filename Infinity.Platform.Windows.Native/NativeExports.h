@@ -2,6 +2,10 @@
 
 #include <windows.h>
 
+extern "C" __declspec(dllexport) int __stdcall ContentDragProbe_Create(void** result);
+extern "C" __declspec(dllexport) unsigned int __stdcall ContentDragProbe_Poll(void* context);
+extern "C" __declspec(dllexport) void __stdcall ContentDragProbe_Destroy(void* context);
+
 extern "C" __declspec(dllexport) int __stdcall ApplicationCatalog_Enumerate(wchar_t** buffer, int* characterCount);
 
 extern "C" __declspec(dllexport) void __stdcall ApplicationCatalog_Free(wchar_t* buffer);

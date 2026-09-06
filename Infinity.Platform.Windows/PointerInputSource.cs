@@ -79,7 +79,7 @@ public sealed class PointerInputSource : IPointerInputSource
 
     private void HandleWheelScrolled(object? sender, MouseWheelEventArgs args)
     {
-        if (scrollInputSuppression.IsSuppressed)
+        if (scrollInputSuppression.IsWheelSuppressed)
         {
             return;
         }
@@ -155,7 +155,7 @@ public sealed class PointerInputSource : IPointerInputSource
             isPrecisionGesture = false;
         }
 
-        if (shouldFire && velocity != 0)
+        if (shouldFire && velocity != 0 && !scrollInputSuppression.IsWheelSuppressed)
         {
             ScrollVelocityIdle?.Invoke(velocity);
         }

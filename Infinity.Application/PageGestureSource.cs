@@ -1,10 +1,11 @@
 using Elysium.Platform.Abstractions;
 using Infinity.Application.Abstractions;
+using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public sealed class PageGestureSource(IKeyboardInputSource keyboardInputSource, IModifierKeyState modifierKeyState, IEnumerable<IPageGesture> gestures, ILogger<PageGestureSource> logger) : IPageGestureSource
+public sealed class PageGestureSource(IKeyboardInputSource keyboardInputSource, IModifierKeyState modifierKeyState, IEnumerable<IPageGesture> gestures, ILogger<PageGestureSource> logger, IScrollInputSuppression scrollInputSuppression) : IPageGestureSource
 {
     private readonly List<IPageGesture> registeredGestures = [..gestures];
     private readonly HashSet<int> triggerKeys = [..gestures.SelectMany(gesture => gesture.TriggerKeys)];
@@ -48,7 +49,7 @@ public sealed class PageGestureSource(IKeyboardInputSource keyboardInputSource, 
 
     private void HandleKeyDown(object? sender, KeyEventArgs args)
     {
-        if (args.Handled || !modifierKeyState.IsActive)
+        if (args.Handled || !modifierKeyState.IsActive || scrollInputSuppression.IsSuppressed)
         {
             return;
         }

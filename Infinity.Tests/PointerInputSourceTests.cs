@@ -7,6 +7,51 @@ namespace Infinity.Tests;
 public sealed class PointerInputSourceTests
 {
     [Fact]
+    public void MovementIsReportedWhenModifiersWereAlreadyHeld()
+    {
+        TestMouseInputSource mouse = new();
+        TestModifierKeyState modifiers = new() { IsActive = true };
+        using PointerInputSource pointer = new(mouse, modifiers, new ScrollPresentationSession(), new ScrollInputSuppression());
+        (int X, int Y)? position = null;
+        pointer.CursorMoved += (x, y) => position = (x, y);
+        mouse.RaiseMouseMoved(120, 240);
+        Assert.Equal((120, 240), position);
+    }
+
+    [Fact]
+    public void MovementWithoutModifiersDoesNotTriggerDragDetection()
+    {
+        TestMouseInputSource mouse = new();
+        TestModifierKeyState modifiers = new();
+        using PointerInputSource pointer = new(mouse, modifiers, new ScrollPresentationSession(), new ScrollInputSuppression());
+        int notifications = 0;
+        pointer.CursorMoved += (x, y) => notifications++;
+        mouse.RaiseMouseMoved(120, 240);
+        Assert.Equal(0, notifications);
+        modifiers.IsActive = true;
+        mouse.RaiseMouseMoved(130, 250);
+        Assert.Equal(1, notifications);
+        modifiers.IsActive = false;
+        mouse.RaiseMouseMoved(140, 260);
+        Assert.Equal(1, notifications);
+    }
+
+    [Fact]
+    public void KeyboardOnlySuppressionStillRoutesWheelToTheOverview()
+    {
+        TestMouseInputSource mouse = new();
+        ScrollPresentationSession presentation = new();
+        ScrollInputSuppression suppression = new();
+        using PointerInputSource pointer = new(mouse, new TestModifierKeyState { IsActive = true }, presentation, suppression);
+        using IDisposable lease = suppression.SuppressKeyboard();
+        int receivedDelta = 0;
+        pointer.ScrollDeltaReceived += delta => receivedDelta = delta;
+        presentation.Begin();
+        Assert.True(mouse.RaiseWheelScrolled(120).Handled);
+        Assert.Equal(120, receivedDelta);
+    }
+
+    [Fact]
     public void ModifiedMiddleButtonIsHandledBeforeRaisingTrigger()
     {
         TestMouseInputSource mouse = new();
@@ -115,16 +160,9 @@ public sealed class PointerInputSourceTests
         }
 
 
-        event EventHandler<MouseMoveEventArgs>? IMouseInputSource.MouseMoved
-        {
-            add
-            {
-            }
+        public event EventHandler<MouseMoveEventArgs>? MouseMoved;
 
-            remove
-            {
-            }
-        }
+        public void RaiseMouseMoved(int x, int y) => MouseMoved?.Invoke(this, new MouseMoveEventArgs(x, y));
 
 
         public event EventHandler<MouseWheelEventArgs>? WheelScrolled;

@@ -4,11 +4,13 @@ using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using Elysium.Platform.Abstractions;
+using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Infinity.Platform.Windows;
 using Infinity.UI.WinUI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using Microsoft.Extensions.Logging;
 
 namespace Infinity.Shell.WinUI;
 
@@ -37,6 +39,8 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
     private readonly DesktopOverviewConfiguration overviewConfiguration;
     private readonly DesktopOverlayTopMostCoordinator topMostCoordinator;
     private readonly DispatcherQueue dispatcherQueue;
+    private readonly DesktopContentDragController contentDrag;
+    private readonly DesktopLiveWindowDragController liveWindowDrag;
     private readonly HashSet<int> consumedKeyUps = [];
     private readonly Lock consumedKeyUpsLock = new();
     private DesktopOverviewViewModel? subscribedViewModel;
@@ -48,7 +52,7 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
     private int globalDismissQueued;
     private int openingGeneration;
 
-    public DesktopOverviewView(DesktopScrollPreviewView desktopScrollPreview, DesktopOverviewBackdropAnimator backdropAnimator, DesktopOverviewWallpaperPresenter wallpaperPresenter, WindowInputTransparencyController inputController, IDesktopBackgroundSource backgroundSource, IKeyboardInputSource keyboardInputSource, IWindowEventListener windowEventListener, DesktopOverviewConfiguration overviewConfiguration)
+    public DesktopOverviewView(DesktopScrollPreviewView desktopScrollPreview, DesktopOverviewBackdropAnimator backdropAnimator, DesktopOverviewWallpaperPresenter wallpaperPresenter, WindowInputTransparencyController inputController, IDesktopBackgroundSource backgroundSource, IKeyboardInputSource keyboardInputSource, IWindowEventListener windowEventListener, DesktopOverviewConfiguration overviewConfiguration, IModifierKeyState modifierKeyState, IPointerInputSource pointerInputSource, IWindowDragGuard dragGuard, IWindowStore windows, IWindowGeometryReader geometry, ITrackedWindowDragController dragController, ILogger<DesktopContentDragController> contentDragLogger, ILogger<DesktopLiveWindowDragController> liveWindowDragLogger)
     {
         InitializeComponent();
         IsBlurEnabled = false;
@@ -60,6 +64,8 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
         this.keyboardInputSource = keyboardInputSource;
         this.overviewConfiguration = overviewConfiguration;
         dispatcherQueue = DispatcherQueue;
+        contentDrag = new(this, desktopScrollPreview, modifierKeyState, pointerInputSource, dragGuard, contentDragLogger);
+        liveWindowDrag = new(this, desktopScrollPreview, modifierKeyState, windowEventListener, dragGuard, windows, geometry, dragController, liveWindowDragLogger);
         topMostCoordinator = new(windowEventListener, dispatcherQueue, () => isOverlayOpen && IsOpen, PromoteTopMost);
         backdropAnimator.Reset(BackgroundSurface);
         backdropAnimator.Reset(ThemeBackgroundSurface);
@@ -81,6 +87,10 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
 
 
     public DesktopOverviewViewModel ViewModel => (DesktopOverviewViewModel)DataContext;
+
+    internal bool CanContinueContentDrag => IsOpen && !IsEmergencyHidden;
+
+    internal bool IsOverlayVisible => isOverlayOpen;
 
 #if DEBUG
     internal async Task OpenApplicationPickerForDebugAsync()
@@ -113,6 +123,8 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
 
     protected override void OnClosed()
     {
+        contentDrag.Stop();
+        liveWindowDrag.Stop();
         isOverlayOpen = false;
         isScreenshotCapturePending = false;
         Interlocked.Exchange(ref globalDismissQueued, 0);
@@ -163,6 +175,19 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
         TrackConsumedKeyUp(args.VirtualKeyCode);
         if (desktopScrollPreview.TryCancelBoundaryResize())
         {
+            return;
+        }
+
+        if (contentDrag.IsActive || liveWindowDrag.IsActive)
+        {
+            if (args.VirtualKeyCode == EscapeVirtualKey)
+            {
+                dispatcherQueue.TryEnqueue(() =>
+                {
+                    contentDrag.Cancel();
+                    liveWindowDrag.Cancel();
+                });
+            }
             return;
         }
 
@@ -403,7 +428,7 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
         }
 
         topMostCoordinator.PromoteNow();
-        inputController.SetInputEnabled(Handle, true);
+        inputController.SetInputEnabled(Handle, true, activate: !contentDrag.IsActive && !liveWindowDrag.IsActive);
         if (ViewModel.IsDesktopPreviewActive)
         {
             BeginDesktopPreview();
@@ -526,7 +551,7 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
 
     private void HandleBackgroundInvoked(object? sender, EventArgs args) => ViewModel.DismissDesktopPreview();
 
-    private void HandleInputFocusRequested(object? sender, EventArgs args) => inputController.SetInputEnabled(Handle, true);
+    private void HandleInputFocusRequested(object? sender, EventArgs args) => inputController.SetInputEnabled(Handle, true, activate: !contentDrag.IsActive && !liveWindowDrag.IsActive);
 
     private void HandlePageInvoked(int page) => ViewModel.SelectPage(page);
 

@@ -8,6 +8,45 @@ namespace Infinity.Tests;
 
 public sealed class ScrollPresentationTests
 {
+    [Theory]
+    [InlineData(false, 0)]
+    [InlineData(true, 1000)]
+    public void NativeWindowDragAllowsWheelNavigationOnlyInsideOverview(bool overviewOpen, int expectedOffset)
+    {
+        PanState state = new();
+        state.SetMaxOffset(3000);
+        ScrollPresentationSession session = new();
+        if (overviewOpen)
+        {
+            session.Begin();
+        }
+
+        TestScrollInputSource source = new();
+        TestWindowDragGuard guard = new() { DraggingWindow = 1 };
+        using Scroller scroller = CreateScroller(state, new WindowStore(), new TestWindowMover(), session, source: source, navigationMotion: new QueuedDeltaScrollMotion(), pageCenterTargetResolver: new TestPageCenterTargetResolver(1000), dragGuard: guard);
+        scroller.Start();
+        source.RaiseScroll(-120);
+        scroller.OnTick();
+        Assert.Equal(expectedOffset, state.Offset);
+    }
+
+    [Fact]
+    public void CommittingOverviewDoesNotRepositionTheWindowInTheNativeMoveLoop()
+    {
+        WindowStore store = new();
+        store.Add(CreateWindow(500, 1));
+        store.Add(CreateWindow(1500, 2));
+        PanState state = new();
+        state.SetOffset(1000);
+        ScrollPresentationSession session = new();
+        session.Begin();
+        TestWindowMover mover = new();
+        TestWindowDragGuard guard = new() { DraggingWindow = 1 };
+        using Scroller scroller = CreateScroller(state, store, mover, session, dragGuard: guard);
+        scroller.CommitPresentation();
+        Assert.Collection(mover.Moves, move => Assert.Equal(((nint)2, 500), (move.Handle, move.X)));
+    }
+
     [Fact]
     public void PresentationSessionDefersWindowMovementUntilExplicitCommit()
     {
@@ -339,7 +378,7 @@ public sealed class ScrollPresentationTests
     }
 
 
-    private static Scroller CreateScroller(PanState state, WindowStore store, TestWindowMover mover, IScrollPresentationSession? presentationSession = null, IScrollInputSource? source = null, IDeltaScrollMotion? easingMotion = null, IDeltaScrollMotion? navigationMotion = null, IPageCenterTargetResolver? pageCenterTargetResolver = null) => new(state, presentationSession ?? new ScrollPresentationSession(), store, mover, new TestWindowMoveGuard(), new TestWindowDragGuard(), source ?? new TestScrollInputSource(), new TestDispatcher(), () => new ScrollerConfiguration { PixelsPerScrollNotch = 120 }, easingMotion ?? new AccumulatingDeltaScrollMotion(), navigationMotion ?? new TestDeltaScrollMotion(), new TestVelocityScrollMotion(), pageCenterTargetResolver ?? new TestPageCenterTargetResolver(), () => { }, () => { }, NullLogger<Scroller>.Instance);
+    private static Scroller CreateScroller(PanState state, WindowStore store, TestWindowMover mover, IScrollPresentationSession? presentationSession = null, IScrollInputSource? source = null, IDeltaScrollMotion? easingMotion = null, IDeltaScrollMotion? navigationMotion = null, IPageCenterTargetResolver? pageCenterTargetResolver = null, IWindowDragGuard? dragGuard = null) => new(state, presentationSession ?? new ScrollPresentationSession(), store, mover, new TestWindowMoveGuard(), dragGuard ?? new TestWindowDragGuard(), source ?? new TestScrollInputSource(), new TestDispatcher(), () => new ScrollerConfiguration { PixelsPerScrollNotch = 120 }, easingMotion ?? new AccumulatingDeltaScrollMotion(), navigationMotion ?? new TestDeltaScrollMotion(), new TestVelocityScrollMotion(), pageCenterTargetResolver ?? new TestPageCenterTargetResolver(), () => { }, () => { }, NullLogger<Scroller>.Instance);
 
     private static TrackedWindow CreateWindow(int canvasX, int handle = 1) => new()
     {
@@ -381,11 +420,11 @@ public sealed class ScrollPresentationTests
     {
         public event Action? HoldStarted;
 
-        public bool IsAnyDragging => false;
+        public bool IsAnyDragging => DraggingWindow != 0;
 
-        public IntPtr DraggingWindow => IntPtr.Zero;
+        public IntPtr DraggingWindow { get; set; }
 
-        public bool IsDragging(IntPtr windowHandle) => false;
+        public bool IsDragging(IntPtr windowHandle) => windowHandle != 0 && windowHandle == DraggingWindow;
 
         public void Start() => HoldStarted?.Invoke();
 

@@ -65,6 +65,8 @@ public sealed partial class DesktopOverviewViewModel : ObservableViewModel, IRec
 #endif
     public void ActivateWindow(nint handle) => sessionController.ActivateWindow(handle);
 
+    public void OpenForContentDrag() => sessionController.OpenForContentDrag();
+
     public void SelectPage(int page) => sessionController.SelectPage(page);
 
     public void NavigateToSettings() => sessionController.NavigateToSettings();

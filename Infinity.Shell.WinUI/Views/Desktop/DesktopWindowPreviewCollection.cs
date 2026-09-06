@@ -4,6 +4,8 @@ using System.Linq;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml;
+using Windows.Foundation;
 
 namespace Infinity.Shell.WinUI;
 
@@ -95,6 +97,28 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
 
     internal bool TryGet(nint handle, out DesktopWindowPreview? preview) => previews.TryGetValue(handle, out preview);
+
+    internal bool TryHitTestContentDrag(double x, double y, out nint handle, out Rect bounds)
+    {
+        handle = 0;
+        bounds = default;
+        int highest = int.MinValue;
+        foreach ((nint candidate, DesktopWindowPreview preview) in previews)
+        {
+            if (preview.IsDragging || preview.Host.Visibility != Visibility.Visible || preview.Host.Opacity == 0 || preview.ZIndex < highest || !double.IsFinite(preview.Host.Width) || !double.IsFinite(preview.Host.Height) || preview.Host.Width <= 0 || preview.Host.Height <= 0)
+            {
+                continue;
+            }
+            Rect rectangle = new(preview.VisualX, preview.VisualY, preview.Host.Width, preview.Host.Height);
+            if (rectangle.Contains(new Point(x, y)))
+            {
+                highest = preview.ZIndex;
+                handle = candidate;
+                bounds = rectangle;
+            }
+        }
+        return handle != 0;
+    }
 
     public nint SetFilter(string value, IEnumerable<TrackedWindow> trackedWindows)
     {
@@ -402,6 +426,14 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
     }
 
 
+    public void SetDropPage(nint handle, int? page)
+    {
+        if (previews.TryGetValue(handle, out DesktopWindowPreview? preview))
+        {
+            preview.SetDropPage(page);
+        }
+    }
+
     private void HandleWindowDragMoved(nint handle, double pointerX, double pointerY)
     {
         if (handle == groupStackAnimator.LeaderHandle)
@@ -447,7 +479,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         if (completion.IsGroupDrag && completion.Handle == groupStackAnimator.LeaderHandle)
         {
             DesktopSnapPlacement? snapPlacement = completion.SnapTarget?.Placement;
-            moved = groupDragCoordinator.Complete(completion.Handle, completion.HorizontalDelta, completion.VerticalDelta, snapPlacement);
+            moved = groupDragCoordinator.Complete(completion.Handle, completion.HorizontalDelta, completion.VerticalDelta, snapPlacement, completion.DropPage);
             groupStackAnimator.End(previews);
             groupDragCoordinator.Cancel();
         }
@@ -463,7 +495,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
         appearanceDragHandles.Clear();
         WindowDragCompleted?.Invoke(completion.Handle);
-        if (moved)
+        if (moved || completion.DropPage.HasValue)
         {
             dropNavigationCoordinator.NavigateToDroppedWindow(completion.Handle);
         }

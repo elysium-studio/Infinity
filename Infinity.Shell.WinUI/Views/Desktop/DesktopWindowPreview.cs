@@ -29,7 +29,7 @@ internal sealed class DesktopWindowPreview : IDisposable
     private readonly Grid focusVisual;
     private readonly Grid selectionVisual;
     private readonly ITrackedWindowDragController dragController;
-    private readonly DesktopWindowDragPageNavigator windowDragPageNavigator;
+    private readonly DesktopOverviewDragScroller overviewDragScroller;
     private readonly DesktopWindowDragPositionResolver dragPositionResolver;
     private readonly DesktopDragBoundaryCalculator dragBoundaryCalculator;
     private readonly DesktopDragCursorConfinement cursorConfinement;
@@ -50,6 +50,7 @@ internal sealed class DesktopWindowPreview : IDisposable
     private double width;
     private double height;
     private DesktopWindowSnapTarget? snapTarget;
+    private int? dropPage;
     private bool interactionEnabled;
     private bool isControlClick;
     private bool isFilterMatch = true;
@@ -73,7 +74,7 @@ internal sealed class DesktopWindowPreview : IDisposable
     private TimeSpan? translationTransitionDuration;
     private TimeSpan? scaleTransitionDuration;
 
-    public DesktopWindowPreview(nint windowHandle, Border host, Border backgroundHost, Border focusHost, ThumbnailCompositionPreview? preview, Grid focusVisual, Grid selectionVisual, ITrackedWindowDragController dragController, DesktopWindowDragPageNavigator windowDragPageNavigator, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, double layoutScale)
+    public DesktopWindowPreview(nint windowHandle, Border host, Border backgroundHost, Border focusHost, ThumbnailCompositionPreview? preview, Grid focusVisual, Grid selectionVisual, ITrackedWindowDragController dragController, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, double layoutScale)
     {
         this.windowHandle = windowHandle;
         Host = host;
@@ -87,7 +88,7 @@ internal sealed class DesktopWindowPreview : IDisposable
         this.focusVisual = focusVisual;
         this.selectionVisual = selectionVisual;
         this.dragController = dragController;
-        this.windowDragPageNavigator = windowDragPageNavigator;
+        this.overviewDragScroller = overviewDragScroller;
         this.dragPositionResolver = dragPositionResolver;
         this.dragBoundaryCalculator = dragBoundaryCalculator;
         this.cursorConfinement = cursorConfinement;
@@ -101,7 +102,6 @@ internal sealed class DesktopWindowPreview : IDisposable
         Host.PointerCaptureLost += HandlePointerCaptureLost;
         Host.Tapped += HandleTapped;
         Host.ContextFlyout = contextMenuBuilder.Create(windowHandle);
-        windowDragPageNavigator.PageSnapCommitted += HandleWindowPageSnapCommitted;
     }
 
 
@@ -434,6 +434,8 @@ internal sealed class DesktopWindowPreview : IDisposable
 
     public void SetSnapTarget(DesktopWindowSnapTarget? target) => snapTarget = target;
 
+    public void SetDropPage(int? page) => dropPage = page;
+
     public void ClearTranslationTransition() => SetTranslationTransition(null);
 
     public void Dispose()
@@ -454,7 +456,6 @@ internal sealed class DesktopWindowPreview : IDisposable
         Host.PointerCanceled -= HandlePointerCanceled;
         Host.PointerCaptureLost -= HandlePointerCaptureLost;
         Host.Tapped -= HandleTapped;
-        windowDragPageNavigator.PageSnapCommitted -= HandleWindowPageSnapCommitted;
         captureVisibility.Dispose();
         preview?.Dispose();
         GC.SuppressFinalize(this);
@@ -524,7 +525,6 @@ internal sealed class DesktopWindowPreview : IDisposable
         Point currentPoint = new(pointerX, pointerY);
         double horizontalDelta = currentPoint.X - dragStartPoint.X;
         double verticalDelta = currentPoint.Y - dragStartPoint.Y;
-        double horizontalPointerDelta = currentPoint.X - dragLastPoint.X;
         if (!isDragging)
         {
             double distance = Math.Sqrt(horizontalDelta * horizontalDelta + verticalDelta * verticalDelta);
@@ -575,9 +575,7 @@ internal sealed class DesktopWindowPreview : IDisposable
             ClearTranslationTransition();
             ApplyIndicatorVisibility();
             DragStarted?.Invoke(windowHandle);
-            DesktopDragBounds centeredPageBounds = dragBoundaryCalculator.GetCenteredPageBounds(viewportWidth, viewportHeight, layoutScale);
-            bool startsWithinCenteredPage = windowDragPageNavigator.IsEnabled && centeredPageBounds.IsValid && currentPoint.X >= centeredPageBounds.MinimumX && currentPoint.X <= centeredPageBounds.MaximumX;
-            cursorConfinement.Begin(viewportWidth, viewportHeight, layoutScale, Host.XamlRoot?.RasterizationScale ?? 1, constrainVertical: true, constrainToCenteredPage: startsWithinCenteredPage);
+            cursorConfinement.Begin(viewportWidth, viewportHeight, layoutScale, Host.XamlRoot?.RasterizationScale ?? 1, constrainVertical: true);
         }
         else
         {
@@ -586,7 +584,7 @@ internal sealed class DesktopWindowPreview : IDisposable
             dragLastPoint = currentPoint;
         }
 
-        windowDragPageNavigator.Update(Host.DispatcherQueue, currentPoint.X, horizontalPointerDelta, viewportWidth, layoutScale);
+        overviewDragScroller.UpdateWindowDrag(rawPoint.X, viewportWidth, layoutScale);
         cursorConfinement.Update(viewportWidth, viewportHeight, layoutScale, Host.XamlRoot?.RasterizationScale ?? 1);
         DragMoved?.Invoke(windowHandle, currentPoint.X, currentPoint.Y);
         ApplyTranslation();
@@ -639,9 +637,10 @@ internal sealed class DesktopWindowPreview : IDisposable
         double horizontalDelta = dragHorizontalDelta;
         double verticalDelta = dragVerticalDelta;
         DesktopWindowSnapTarget? completedSnapTarget = snapTarget;
+        int? completedDropPage = dropPage;
         if (wasDragging)
         {
-            windowDragPageNavigator.Stop();
+            overviewDragScroller.Stop();
             cursorConfinement.Release();
         }
 
@@ -656,11 +655,12 @@ internal sealed class DesktopWindowPreview : IDisposable
         isDragging = false;
         ApplyIndicatorVisibility();
         snapTarget = null;
+        dropPage = null;
         if (wasDragging)
         {
             if (wasGroupDrag)
             {
-                DragCompleted?.Invoke(new DesktopWindowDragCompletion(windowHandle, horizontalDelta, verticalDelta, completedSnapTarget, true, false));
+                DragCompleted?.Invoke(new DesktopWindowDragCompletion(windowHandle, horizontalDelta, verticalDelta, completedSnapTarget, true, false, completedDropPage));
                 dragController.End(windowHandle);
                 dragHorizontalDelta = 0;
                 dragVerticalDelta = 0;
@@ -676,16 +676,16 @@ internal sealed class DesktopWindowPreview : IDisposable
             dragVerticalDelta = 0;
             SetPromoted(false);
             windowPlacementCoordinator.CompleteMove(windowHandle);
-            bool moved = completedSnapTarget is { OccupantHandle: not 0 } swapTarget ? windowPlacementCoordinator.TrySwapIntoSlot(windowHandle, swapTarget.OccupantHandle, swapTarget.Placement) : completedSnapTarget.HasValue ? windowPlacementCoordinator.TryPlaceInSlot(windowHandle, completedSnapTarget.Value.Placement) : dragPositionResolver.TryResolve(windowHandle, horizontalDelta, verticalDelta, out DesktopWindowDragPosition position) && dragController.MoveTo(windowHandle, position.CanvasX, position.CanvasY);
+            bool moved = completedSnapTarget is { OccupantHandle: not 0 } swapTarget ? windowPlacementCoordinator.TrySwapIntoSlot(windowHandle, swapTarget.OccupantHandle, swapTarget.Placement) : completedSnapTarget.HasValue ? windowPlacementCoordinator.TryPlaceInSlot(windowHandle, completedSnapTarget.Value.Placement) : dragPositionResolver.TryResolve(windowHandle, horizontalDelta, verticalDelta, out DesktopWindowDragPosition position, completedDropPage) && dragController.MoveTo(windowHandle, position.CanvasX, position.CanvasY);
             dragController.End(windowHandle);
             if (moved)
             {
                 PositionChanged?.Invoke(windowHandle);
-                DragCompleted?.Invoke(new DesktopWindowDragCompletion(windowHandle, horizontalDelta, verticalDelta, completedSnapTarget, false, true));
+                DragCompleted?.Invoke(new DesktopWindowDragCompletion(windowHandle, horizontalDelta, verticalDelta, completedSnapTarget, false, true, completedDropPage));
                 return;
             }
 
-            DragCompleted?.Invoke(new DesktopWindowDragCompletion(windowHandle, horizontalDelta, verticalDelta, completedSnapTarget, false, false));
+            DragCompleted?.Invoke(new DesktopWindowDragCompletion(windowHandle, horizontalDelta, verticalDelta, completedSnapTarget, false, false, completedDropPage));
         }
         else
         {
@@ -703,19 +703,10 @@ internal sealed class DesktopWindowPreview : IDisposable
     {
         double viewportWidth = Host.XamlRoot?.Size.Width ?? 0;
         double viewportHeight = Host.XamlRoot?.Size.Height ?? 0;
-        (double pointerX, double pointerY) = cursorConfinement.IsConstrainedToCenteredPage ? dragBoundaryCalculator.ConstrainToCenteredPage(dragLastPoint.X, dragLastPoint.Y, viewportWidth, viewportHeight, layoutScale) : dragBoundaryCalculator.Constrain(dragLastPoint.X, dragLastPoint.Y, viewportWidth, viewportHeight, layoutScale);
+        (double pointerX, double pointerY) = dragBoundaryCalculator.Constrain(dragLastPoint.X, dragLastPoint.Y, viewportWidth, viewportHeight, layoutScale);
         dragHorizontalDelta += (pointerX - dragLastPoint.X) / layoutScale;
         dragVerticalDelta += (pointerY - dragLastPoint.Y) / layoutScale;
         dragLastPoint = new(pointerX, pointerY);
-    }
-
-
-    private void HandleWindowPageSnapCommitted()
-    {
-        if (isDragging)
-        {
-            cursorConfinement.UseCenteredPageBounds();
-        }
     }
 
 

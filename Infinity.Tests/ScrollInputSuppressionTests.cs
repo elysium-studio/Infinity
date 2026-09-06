@@ -5,6 +5,30 @@ namespace Infinity.Tests;
 public sealed class ScrollInputSuppressionTests
 {
     [Fact]
+    public void KeyboardSuppressionAllowsWheelBrowsing()
+    {
+        ScrollInputSuppression suppression = new();
+        IDisposable keyboard = suppression.SuppressKeyboard();
+        Assert.True(suppression.IsSuppressed);
+        Assert.False(suppression.IsWheelSuppressed);
+        keyboard.Dispose();
+        keyboard.Dispose();
+        Assert.False(suppression.IsSuppressed);
+    }
+
+    [Fact]
+    public void FullSuppressionOverridesKeyboardOnlyLeases()
+    {
+        ScrollInputSuppression suppression = new();
+        using IDisposable keyboard = suppression.SuppressKeyboard();
+        IDisposable all = suppression.Suppress();
+        Assert.True(suppression.IsWheelSuppressed);
+        all.Dispose();
+        Assert.False(suppression.IsWheelSuppressed);
+        Assert.True(suppression.IsSuppressed);
+    }
+
+    [Fact]
     public void SuppressionRemainsActiveUntilEveryLeaseIsReleased()
     {
         ScrollInputSuppression suppression = new();

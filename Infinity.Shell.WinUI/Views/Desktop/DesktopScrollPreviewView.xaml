@@ -520,5 +520,24 @@
                 <FontIcon FontSize="16" Glyph="&#xE713;" />
             </Button>
         </Grid>
+        <Grid
+            x:Name="ContentDragSurface"
+            AllowDrop="True"
+            Background="Transparent"
+            DragEnter="HandleContentDragEntered"
+            DragOver="HandleContentDragOver"
+            DragLeave="HandleContentDragLeave"
+            Drop="HandleContentDragLeave"
+            Visibility="Collapsed">
+            <Border
+                x:Name="ContentDragOutline"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                BorderBrush="{ThemeResource SystemControlHighlightAccentBrush}"
+                BorderThickness="2"
+                CornerRadius="6"
+                IsHitTestVisible="False"
+                Visibility="Collapsed" />
+        </Grid>
     </Grid>
 </UserControl>

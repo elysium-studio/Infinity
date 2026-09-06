@@ -27,6 +27,7 @@ public sealed partial class DesktopPagePreview : Button, IDisposable
     private readonly DesktopWallpaperBrushFactory wallpaperBrushFactory;
     private readonly SpriteVisual wallpaperVisual;
     private readonly Border interactionLayer;
+    private readonly Border dropOutline;
     private readonly DesktopSnapZonePresenter snapZones;
     private readonly double visualScale;
     private readonly CompositionRoundedRectangleGeometry clipGeometry;
@@ -96,6 +97,15 @@ public sealed partial class DesktopPagePreview : Button, IDisposable
         Content = content;
         PageHost = new();
         PageHost.Children.Add(this);
+        dropOutline = new()
+        {
+            IsHitTestVisible = false,
+            BorderThickness = new(2 / visualScale),
+            CornerRadius = new(VisibleCornerRadius / visualScale),
+            Margin = new(-3 / visualScale),
+            Visibility = Visibility.Collapsed
+        };
+        PageHost.Children.Add(dropOutline);
         PointerEntered += HandlePointerEntered;
         PointerExited += HandlePointerExited;
         PageHost.AddHandler(PointerPressedEvent, new PointerEventHandler(HandlePointerPressed), true);
@@ -137,6 +147,21 @@ public sealed partial class DesktopPagePreview : Button, IDisposable
 
     public Grid PageHost { get; }
 
+    public void SetDropTarget(bool value)
+    {
+        if ((dropOutline.Visibility == Visibility.Visible) == value)
+        {
+            return;
+        }
+
+        if (value)
+        {
+            dropOutline.BorderBrush = FluentVisualResources.GetBrush("AccentFillColorDefaultBrush", Color.FromArgb(255, 0, 120, 212));
+        }
+
+        dropOutline.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+    }
+
     public Border ShadowHost => shadowHost;
 
     public DesktopPageTitleEditor TitleEditor { get; }
@@ -163,6 +188,11 @@ public sealed partial class DesktopPagePreview : Button, IDisposable
 
     public void Bind(int page, double width, double height, DesktopPageBackground background, DesktopWallpaperPlacement wallpaperPlacement, string title, DesktopSnapLayoutKind layout, double rasterizationScale)
     {
+        if (Page != page)
+        {
+            SetDropTarget(false);
+        }
+
         Page = page;
         PageHost.Width = width;
         PageHost.Height = height;

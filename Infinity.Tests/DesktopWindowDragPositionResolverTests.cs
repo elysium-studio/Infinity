@@ -12,6 +12,40 @@ public sealed class DesktopWindowDragPositionResolverTests
     private readonly DesktopPageLayoutCalculator layoutCalculator = new();
 
     [Fact]
+    public void PointerDestinationWinsWhenAWideThumbnailStillHasItsCenterOnTheSourcePage()
+    {
+        DesktopWindowDragPositionResolver resolver = CreateResolver(CreateWindow(100, 100, 1600, 500));
+        Assert.True(resolver.TryResolve(new(1), 900, 0, out DesktopWindowDragPosition position, 1));
+        Assert.Equal(1920, position.CanvasX);
+    }
+
+    [Theory]
+    [InlineData(2120, 1984, 2, 4040)]
+    [InlineData(4040, -1984, 1, 2120)]
+    [InlineData(200, 5952, 3, 5960)]
+    public void DroppingPreservesPageLocalPositionInEitherDirection(int sourceX, double visualDelta, int page, double expectedX)
+    {
+        DesktopWindowDragPositionResolver resolver = CreateResolver(CreateWindow(sourceX, 100, 400, 500));
+        Assert.True(resolver.TryResolve(new(1), visualDelta, 0, out DesktopWindowDragPosition position, page));
+        Assert.Equal(expectedX, position.CanvasX);
+    }
+
+    [Fact]
+    public void DropPositionStaysWithinTheChosenPage()
+    {
+        DesktopWindowDragPositionResolver resolver = CreateResolver(CreateWindow(100, 100, 400, 500));
+        Assert.True(resolver.TryResolve(new(1), 4000, 0, out DesktopWindowDragPosition position, 1));
+        Assert.Equal(3440, position.CanvasX);
+    }
+
+    [Fact]
+    public void InvalidDestinationIsRejected()
+    {
+        DesktopWindowDragPositionResolver resolver = CreateResolver(CreateWindow(100, 100, 400, 500));
+        Assert.False(resolver.TryResolve(new(1), 100, 0, out _, -1));
+    }
+
+    [Fact]
     public void ResolveKeepsWindowAboveBottomTaskbar()
     {
         TrackedWindow window = CreateWindow(100, 100, 800, 500);

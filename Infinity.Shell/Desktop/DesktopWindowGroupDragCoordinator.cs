@@ -39,7 +39,7 @@ public sealed class DesktopWindowGroupDragCoordinator(IWindowStore windowStore, 
     }
 
 
-    public bool Complete(nint leader, double horizontalVisualDelta, double verticalVisualDelta, DesktopSnapPlacement? snapPlacement)
+    public bool Complete(nint leader, double horizontalVisualDelta, double verticalVisualDelta, DesktopSnapPlacement? snapPlacement, int? dropPage = null)
     {
         if (!IsActive || leader != leaderHandle || workspace.Width <= 0 || workspace.Height <= 0 || !sourcePlacements.TryGetValue(leader, out DesktopSnapPlacement leaderSource))
         {
@@ -49,7 +49,7 @@ public sealed class DesktopWindowGroupDragCoordinator(IWindowStore windowStore, 
 
         try
         {
-            if (!TryResolveLeaderTarget(leader, horizontalVisualDelta, verticalVisualDelta, snapPlacement, leaderSource, out DesktopSnapPlacement leaderTarget))
+            if (!TryResolveLeaderTarget(leader, horizontalVisualDelta, verticalVisualDelta, snapPlacement, leaderSource, dropPage, out DesktopSnapPlacement leaderTarget))
             {
                 return false;
             }
@@ -125,7 +125,7 @@ public sealed class DesktopWindowGroupDragCoordinator(IWindowStore windowStore, 
     }
 
 
-    private bool TryResolveLeaderTarget(nint leader, double horizontalVisualDelta, double verticalVisualDelta, DesktopSnapPlacement? snapPlacement, DesktopSnapPlacement source, out DesktopSnapPlacement target)
+    private bool TryResolveLeaderTarget(nint leader, double horizontalVisualDelta, double verticalVisualDelta, DesktopSnapPlacement? snapPlacement, DesktopSnapPlacement source, int? dropPage, out DesktopSnapPlacement target)
     {
         if (snapPlacement.HasValue)
         {
@@ -133,7 +133,7 @@ public sealed class DesktopWindowGroupDragCoordinator(IWindowStore windowStore, 
             return true;
         }
 
-        if (!dragPositionResolver.TryResolve(leader, horizontalVisualDelta, verticalVisualDelta, out DesktopWindowDragPosition position))
+        if (!dragPositionResolver.TryResolve(leader, horizontalVisualDelta, verticalVisualDelta, out DesktopWindowDragPosition position, dropPage))
         {
             target = default;
             return false;

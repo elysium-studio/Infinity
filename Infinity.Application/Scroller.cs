@@ -334,7 +334,7 @@ public sealed class Scroller(IPanState state, IScrollPresentationSession present
 
     private void HandleScrollDeltaReceived(int nativeScrollDelta)
     {
-        if (dragGuard.IsAnyDragging || nativeScrollDelta == 0)
+        if (dragGuard.IsAnyDragging && !presentationSession.IsActive || nativeScrollDelta == 0)
         {
             return;
         }
@@ -369,7 +369,7 @@ public sealed class Scroller(IPanState state, IScrollPresentationSession present
 
     private void HandleScrollVelocityIdle(double velocity)
     {
-        if (dragGuard.IsAnyDragging)
+        if (dragGuard.IsAnyDragging && !presentationSession.IsActive)
         {
             return;
         }

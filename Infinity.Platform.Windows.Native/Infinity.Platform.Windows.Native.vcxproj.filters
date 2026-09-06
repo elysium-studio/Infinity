@@ -19,6 +19,9 @@
     <ClCompile Include="NativeExports.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ContentDragProbe.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

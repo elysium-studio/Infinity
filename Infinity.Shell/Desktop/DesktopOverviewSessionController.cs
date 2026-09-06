@@ -136,6 +136,8 @@ public sealed class DesktopOverviewSessionController
 
 
 #endif
+    public void OpenForContentDrag() => BeginPreview();
+
     public void ActivateWindow(nint handle)
     {
         if (handle == 0 || !isPreviewActive || isCompletionRequested)

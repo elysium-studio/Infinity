@@ -10,8 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Input;
-using Windows.Foundation;
+using Microsoft.UI.Xaml.Controls.Primitives;
 
 namespace Infinity.Shell.WinUI;
 
@@ -25,8 +24,7 @@ public sealed class DesktopOverlayBoundaryResizeController(IWindowStore windows,
     private Boundary? active;
     private DesktopSharedBoundaryResizePlan? plan;
     private IDisposable? suppression;
-    private Point pointerStart;
-    private uint pointerId;
+    private double dragDistance;
 
     public bool IsResizing => plan is not null;
 
@@ -131,17 +129,14 @@ public sealed class DesktopOverlayBoundaryResizeController(IWindowStore windows,
                     continue;
                 }
 
-                SharedBoundaryHandle grip = new() { IsVertical = DesktopSharedBoundaryCalculator.IsVertical(edge), Scale = new((float)(1 / scale), (float)(1 / scale), 1) };
+                Splitter grip = new() { Orientation = DesktopSharedBoundaryCalculator.IsVertical(edge) ? Orientation.Vertical : Orientation.Horizontal, RequestedTheme = ElementTheme.Dark, Scale = new((float)(1 / scale), (float)(1 / scale), 1) };
                 string label = localizer.GetText("DesktopSharedBoundaryResize");
                 AutomationProperties.SetName(grip, label);
-                ToolTipService.SetToolTip(grip, label);
                 Boundary boundary = new(grip, group);
                 grip.Tag = boundary;
-                grip.PointerPressed += HandlePressed;
-                grip.PointerMoved += HandleMoved;
-                grip.PointerReleased += HandleReleased;
-                grip.PointerCanceled += HandleCancelled;
-                grip.PointerCaptureLost += HandleCancelled;
+                grip.DragStarted += HandleDragStarted;
+                grip.DragDelta += HandleDragDelta;
+                grip.DragCompleted += HandleDragCompleted;
                 boundaries.Add(boundary);
                 host.Children.Add(grip);
             }
@@ -156,44 +151,41 @@ public sealed class DesktopOverlayBoundaryResizeController(IWindowStore windows,
             return;
         }
 
-        bool vertical = boundary.Handle.IsVertical;
-        double start = boundary.Members.Min(member => vertical ? member.Bounds.CanvasY : member.Bounds.CanvasX);
-        double end = boundary.Members.Max(member => vertical ? member.Bounds.CanvasY + member.Bounds.Height : member.Bounds.CanvasX + member.Bounds.Width);
-        double line = DesktopSharedBoundaryCalculator.Coordinate(first.Bounds, first.Edge) + delta;
-        double x = preview.VisualX + (vertical ? line : (start + end) / 2) - first.Bounds.CanvasX;
-        double y = preview.VisualY + (vertical ? (start + end) / 2 : line) - first.Bounds.CanvasY;
-        Canvas.SetLeft(boundary.Handle, x - 16 / scale);
-        Canvas.SetTop(boundary.Handle, y - 16 / scale);
+        DesktopSnapPlacement bounds = DesktopSharedBoundaryVisual.GetBounds(boundary.Members, DesktopSharedBoundaryVisual.Thickness / scale, delta);
+        boundary.Handle.Width = bounds.Width * scale;
+        boundary.Handle.Height = bounds.Height * scale;
+        Canvas.SetLeft(boundary.Handle, preview.VisualX + bounds.CanvasX - first.Bounds.CanvasX);
+        Canvas.SetTop(boundary.Handle, preview.VisualY + bounds.CanvasY - first.Bounds.CanvasY);
     }
 
-    private void HandlePressed(object sender, PointerRoutedEventArgs args)
+    private void HandleDragStarted(object sender, DragStartedEventArgs args)
     {
-        if (!enabled || active is not null || sender is not SharedBoundaryHandle { Tag: Boundary boundary } grip || !args.GetCurrentPoint(grip).Properties.IsLeftButtonPressed)
+        if (sender is not Splitter grip)
         {
             return;
         }
 
-        args.Handled = true;
+        if (!enabled || active is not null || grip.Tag is not Boundary boundary)
+        {
+            grip.CancelDrag();
+            return;
+        }
+
         List<(DesktopSharedBoundaryMember Member, WindowResizeLimits Limits)> items = [];
         foreach (DesktopSharedBoundaryMember member in boundary.Members)
         {
             if (!windows.TryGet(member.Handle, out TrackedWindow? window) || !resizer.TryGetLimits(member.Handle, out WindowResizeLimits limits))
             {
+                grip.CancelDrag();
                 return;
             }
 
             items.Add((member with { Bounds = new(window.CanvasX, window.CanvasY, window.Width, window.Height) }, limits));
         }
 
-        if (!grip.CapturePointer(args.Pointer))
-        {
-            return;
-        }
-
         active = boundary;
         plan = new(items);
-        pointerId = args.Pointer.PointerId;
-        pointerStart = args.GetCurrentPoint((UIElement)grip.XamlRoot.Content).Position;
+        dragDistance = 0;
         suppression = scrollSuppression.Suppress();
         scroller.CancelNavigation();
         foreach (Boundary other in boundaries)
@@ -202,16 +194,15 @@ public sealed class DesktopOverlayBoundaryResizeController(IWindowStore windows,
         }
     }
 
-    private void HandleMoved(object sender, PointerRoutedEventArgs args)
+    private void HandleDragDelta(object sender, DragDeltaEventArgs args)
     {
-        if (active is null || plan is null || args.Pointer.PointerId != pointerId)
+        if (active is null || plan is null || !ReferenceEquals(sender, active.Handle))
         {
             return;
         }
 
-        args.Handled = true;
-        Point point = args.GetCurrentPoint((UIElement)active.Handle.XamlRoot.Content).Position;
-        plan.Update(active.Handle.IsVertical ? point.X - pointerStart.X : point.Y - pointerStart.Y, scale);
+        dragDistance += active.Handle.Orientation == Orientation.Vertical ? args.HorizontalChange : args.VerticalChange;
+        plan.Update(dragDistance, scale);
         foreach (DesktopSharedBoundaryMember member in plan.Members)
         {
             if (!previews.TryGet(member.Handle, out DesktopWindowPreview? preview) || preview is null)
@@ -227,25 +218,14 @@ public sealed class DesktopOverlayBoundaryResizeController(IWindowStore windows,
         Position(active, plan.Delta);
     }
 
-    private void HandleReleased(object sender, PointerRoutedEventArgs args)
+    private void HandleDragCompleted(object sender, DragCompletedEventArgs args)
     {
-        if (active is null || args.Pointer.PointerId != pointerId)
+        if (active is null || !ReferenceEquals(sender, active.Handle))
         {
             return;
         }
 
-        HandleMoved(sender, args);
-        Finish(true);
-        args.Handled = true;
-    }
-
-    private void HandleCancelled(object sender, PointerRoutedEventArgs args)
-    {
-        if (active is not null && args.Pointer.PointerId == pointerId)
-        {
-            args.Handled = true;
-            Cancel();
-        }
+        Finish(!args.Canceled);
     }
 
     private bool IsPlanValid() => plan is not null && plan.Members.All(member => windows.TryGet(member.Handle, out TrackedWindow? window) && new DesktopSnapPlacement(window.CanvasX, window.CanvasY, window.Width, window.Height) == member.Bounds);
@@ -264,7 +244,7 @@ public sealed class DesktopOverlayBoundaryResizeController(IWindowStore windows,
         active = null;
         try
         {
-            boundary?.Handle.ReleasePointerCaptures();
+            boundary?.Handle.CancelDrag();
             if (apply)
             {
                 List<(TrackedWindow Window, DesktopSnapPlacement Placement)> targets = [];
@@ -305,15 +285,13 @@ public sealed class DesktopOverlayBoundaryResizeController(IWindowStore windows,
         }
     }
 
-    private void Unsubscribe(SharedBoundaryHandle grip)
+    private void Unsubscribe(Splitter grip)
     {
-        grip.PointerPressed -= HandlePressed;
-        grip.PointerMoved -= HandleMoved;
-        grip.PointerReleased -= HandleReleased;
-        grip.PointerCanceled -= HandleCancelled;
-        grip.PointerCaptureLost -= HandleCancelled;
+        grip.DragStarted -= HandleDragStarted;
+        grip.DragDelta -= HandleDragDelta;
+        grip.DragCompleted -= HandleDragCompleted;
         grip.Tag = null;
     }
 
-    private sealed record Boundary(SharedBoundaryHandle Handle, IReadOnlyList<DesktopSharedBoundaryMember> Members);
+    private sealed record Boundary(Splitter Handle, IReadOnlyList<DesktopSharedBoundaryMember> Members);
 }

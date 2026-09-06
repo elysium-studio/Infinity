@@ -15,11 +15,8 @@ public sealed class DesktopDragCursorConfinement : IDisposable
     private double overviewScale;
     private double rasterizationScale;
     private bool constrainVertically;
-    private bool constrainToCenteredPage;
     private bool active;
     private bool disposed;
-
-    public bool IsConstrainedToCenteredPage => constrainToCenteredPage;
 
     public DesktopDragCursorConfinement(IPointerConfinement pointerConfinement, IPanState panState, DesktopDragBoundaryCalculator boundaryCalculator)
     {
@@ -42,7 +39,7 @@ public sealed class DesktopDragCursorConfinement : IDisposable
     }
 
 
-    public void Begin(double width, double height, double scale, double rasterScale, bool constrainVertical, bool constrainToCenteredPage = false)
+    public void Begin(double width, double height, double scale, double rasterScale, bool constrainVertical)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
         viewportWidth = width;
@@ -50,7 +47,6 @@ public sealed class DesktopDragCursorConfinement : IDisposable
         overviewScale = scale;
         rasterizationScale = rasterScale;
         constrainVertically = constrainVertical;
-        this.constrainToCenteredPage = constrainToCenteredPage;
         active = true;
         Apply();
     }
@@ -67,18 +63,6 @@ public sealed class DesktopDragCursorConfinement : IDisposable
         viewportHeight = height;
         overviewScale = scale;
         rasterizationScale = rasterScale;
-        Apply();
-    }
-
-
-    public void UseCenteredPageBounds()
-    {
-        if (!active || constrainToCenteredPage)
-        {
-            return;
-        }
-
-        constrainToCenteredPage = true;
         Apply();
     }
 
@@ -118,7 +102,7 @@ public sealed class DesktopDragCursorConfinement : IDisposable
             return;
         }
 
-        DesktopDragBounds bounds = constrainToCenteredPage ? boundaryCalculator.GetCenteredPageBounds(viewportWidth, viewportHeight, overviewScale) : boundaryCalculator.GetBounds(viewportWidth, viewportHeight, overviewScale);
+        DesktopDragBounds bounds = boundaryCalculator.GetBounds(viewportWidth, viewportHeight, overviewScale);
         if (!bounds.IsValid)
         {
             pointerConfinement.Release();

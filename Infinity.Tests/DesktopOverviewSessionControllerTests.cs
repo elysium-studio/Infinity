@@ -9,6 +9,30 @@ namespace Infinity.Tests;
 public sealed class DesktopOverviewSessionControllerTests
 {
     [Fact]
+    public void ContentDragOpensPresentationWithoutAScrollOrClick()
+    {
+        SessionFixture fixture = new();
+        fixture.Controller.OpenForContentDrag();
+        Assert.True(fixture.PresentationSession.IsActive);
+        Assert.True(fixture.Controller.State.IsOpen);
+        Assert.True(fixture.Controller.State.StaysOpen);
+        Assert.True(fixture.Controller.State.IsPreviewActive);
+    }
+
+    [Fact]
+    public void ContentDragDismissalCompletesThePresentation()
+    {
+        SessionFixture fixture = new();
+        fixture.Controller.OpenForContentDrag();
+        fixture.Controller.DismissPreview();
+        fixture.Controller.NotifyExitAnimationCompleted();
+        Assert.True(fixture.Controller.State.IsReadyToClose);
+        fixture.Controller.CompletePreview();
+        Assert.False(fixture.Controller.State.IsOpen);
+        Assert.False(fixture.PresentationSession.IsActive);
+    }
+
+    [Fact]
     public void ModifiedScrollOpensTheSurfaceWithoutStartingPresentation()
     {
         SessionFixture fixture = new();

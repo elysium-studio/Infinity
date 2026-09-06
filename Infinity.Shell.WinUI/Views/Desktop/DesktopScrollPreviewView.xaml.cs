@@ -379,6 +379,13 @@ public sealed partial class DesktopScrollPreviewView : UserControl
 
     private void SetInteractionEnabled(bool value)
     {
+        interactionReady = value;
+        if (!value)
+        {
+            ContentDragOutline.Visibility = Visibility.Collapsed;
+        }
+
+        value &= !contentDragEnabled;
         DismissSurface.IsHitTestVisible = value;
         bool searchEnabled = value && overviewConfiguration.ShowSearchBox;
         bool shortcutButtonEnabled = value && overviewConfiguration.ShowKeyboardShortcutButton;
@@ -984,7 +991,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
 
     private void HandleCharacterReceived(UIElement sender, CharacterReceivedRoutedEventArgs args)
     {
-        if (!isRunning || !overviewConfiguration.ShowSearchBox || WindowSearchBox.FocusState != FocusState.Unfocused || ApplicationPickerFlyout.IsOpen || pageStrip.IsEditorActive || args.Character < 0x20 || args.Character == 0x7F)
+        if (contentDragEnabled || !isRunning || !overviewConfiguration.ShowSearchBox || WindowSearchBox.FocusState != FocusState.Unfocused || ApplicationPickerFlyout.IsOpen || pageStrip.IsEditorActive || args.Character < 0x20 || args.Character == 0x7F)
         {
             return;
         }

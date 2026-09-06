@@ -3,28 +3,6 @@ namespace Infinity.Shell;
 public static class DesktopSharedBoundaryCalculator
 {
     private const double Tolerance = 2;
-    private static readonly DesktopResizeEdge[] Edges = Enum.GetValues<DesktopResizeEdge>();
-
-    public static DesktopResizeEdge? FindChangedEdge(DesktopSnapPlacement original, DesktopSnapPlacement current)
-    {
-        DesktopResizeEdge? changed = null;
-        foreach (DesktopResizeEdge edge in Edges)
-        {
-            if (Math.Abs(Coordinate(current, edge) - Coordinate(original, edge)) < 0.5)
-            {
-                continue;
-            }
-
-            if (changed.HasValue)
-            {
-                return null;
-            }
-
-            changed = edge;
-        }
-
-        return changed;
-    }
 
     public static IReadOnlyList<DesktopSharedBoundaryMember> FindGroup(nint source, DesktopResizeEdge edge, IReadOnlyList<(nint Handle, DesktopSnapPlacement Bounds)> windows)
     {

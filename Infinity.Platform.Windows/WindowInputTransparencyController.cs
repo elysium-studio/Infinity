@@ -6,7 +6,7 @@ namespace Infinity.Platform.Windows;
 
 public sealed class WindowInputTransparencyController
 {
-    public void SetInputEnabled(nint windowHandle, bool enabled)
+    public void SetInputEnabled(nint windowHandle, bool enabled, bool activate = true)
     {
         if (windowHandle == 0)
         {
@@ -16,12 +16,16 @@ public sealed class WindowInputTransparencyController
         HWND handle = new(windowHandle);
         WINDOW_EX_STYLE style = (WINDOW_EX_STYLE)PInvoke.GetWindowLong(handle, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
         WINDOW_EX_STYLE updated = enabled ? style & ~(WINDOW_EX_STYLE.WS_EX_TRANSPARENT | WINDOW_EX_STYLE.WS_EX_NOACTIVATE) : style | WINDOW_EX_STYLE.WS_EX_TRANSPARENT | WINDOW_EX_STYLE.WS_EX_NOACTIVATE;
+        if (enabled && !activate)
+        {
+            updated |= WINDOW_EX_STYLE.WS_EX_NOACTIVATE;
+        }
         if (updated != style)
         {
             _ = PInvoke.SetWindowLong(handle, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE, (int)updated);
         }
 
-        if (enabled)
+        if (enabled && activate)
         {
             _ = PInvoke.SetForegroundWindow(handle);
         }

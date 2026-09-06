@@ -10,6 +10,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
+using Windows.Foundation;
 
 namespace Infinity.Shell.WinUI;
 
@@ -88,6 +89,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         }
 
         started = false;
+        ClearWindowDropTarget();
         SetHeadersVisible(false);
         overviewDragScroller.Stop();
         cursorConfinement.Release();
@@ -243,6 +245,47 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         }
     }
 
+
+    internal bool TryHitTestContentDrag(Point point, out int page, out Rect bounds)
+    {
+        foreach (DesktopPagePreview preview in visiblePages.Values)
+        {
+            bounds = new(preview.ScreenX, preview.ScreenY, preview.ScreenWidth, preview.ScreenHeight);
+            if (bounds.Contains(point))
+            {
+                page = preview.Page;
+                return true;
+            }
+        }
+
+        page = -1;
+        bounds = default;
+        return false;
+    }
+
+    internal int? UpdateWindowDropTarget(double pointerX, double pointerY, bool showOutline)
+    {
+        int? targetPage = null;
+        foreach (DesktopPagePreview page in visiblePages.Values)
+        {
+            bool isTarget = pointerX >= page.ScreenX && pointerX <= page.ScreenX + page.ScreenWidth && pointerY >= page.ScreenY && pointerY <= page.ScreenY + page.ScreenHeight;
+            page.SetDropTarget(isTarget && showOutline);
+            if (isTarget)
+            {
+                targetPage = page.Page;
+            }
+        }
+
+        return targetPage;
+    }
+
+    internal void ClearWindowDropTarget()
+    {
+        foreach (DesktopPagePreview page in pagePool)
+        {
+            page.SetDropTarget(false);
+        }
+    }
 
     internal bool TryUpdateWindowSnapTarget(double pointerX, double pointerY, out DesktopSnapSlotTarget target)
     {
@@ -525,7 +568,7 @@ public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, 
         double viewportWidth = GetViewportWidth();
         double constrainedPointerX = dragBoundaryCalculator.ConstrainHorizontal(pointerX, viewportWidth, overviewScale);
         reorderPointerDelta = horizontalDelta + constrainedPointerX - pointerX;
-        overviewDragScroller.Update(page.DispatcherQueue, constrainedPointerX, viewportWidth);
+        overviewDragScroller.Update(constrainedPointerX, viewportWidth);
         cursorConfinement.Update(viewportWidth, GetViewportHeight(), overviewScale, scaleHost?.XamlRoot?.RasterizationScale ?? 1);
         DesktopPageReorderPreviewState previousState = reorderState;
         UpdateReorderState(!overviewDragScroller.IsActive);

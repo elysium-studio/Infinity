@@ -7,7 +7,7 @@ using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopWindowPreviewFactory(WindowCapturePreviewSurface previewSurface, ITrackedWindowDragController dragController, DesktopWindowDragPageNavigator windowDragPageNavigator, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, ILogger<DesktopWindowPreviewFactory> logger)
+public sealed class DesktopWindowPreviewFactory(WindowCapturePreviewSurface previewSurface, ITrackedWindowDragController dragController, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, ILogger<DesktopWindowPreviewFactory> logger)
 {
     internal DesktopWindowPreview Create(Canvas backgroundCanvas, Canvas canvas, Canvas focusCanvas, nint windowHandle, double layoutScale)
     {
@@ -68,6 +68,6 @@ public sealed class DesktopWindowPreviewFactory(WindowCapturePreviewSurface prev
             backgroundHost.Background = new SolidColorBrush(Color.FromArgb(255, 32, 32, 32));
         }
 
-        return new(windowHandle, host, backgroundHost, focusHost, preview, focusVisual, selectionVisual, dragController, windowDragPageNavigator, dragPositionResolver, dragBoundaryCalculator, cursorConfinement, windowPlacementCoordinator, contextMenuBuilder, layoutScale);
+        return new(windowHandle, host, backgroundHost, focusHost, preview, focusVisual, selectionVisual, dragController, overviewDragScroller, dragPositionResolver, dragBoundaryCalculator, cursorConfinement, windowPlacementCoordinator, contextMenuBuilder, layoutScale);
     }
 }

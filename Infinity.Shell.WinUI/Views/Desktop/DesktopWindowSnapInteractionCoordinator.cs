@@ -50,13 +50,16 @@ public sealed class DesktopWindowSnapInteractionCoordinator(DesktopOverviewConfi
 
     public void Refresh()
     {
-        if (!isActive || !configuration.IsSnapAssistanceEnabled)
+        if (!isActive || activeWindow == 0)
         {
             Clear();
             return;
         }
 
-        if (activeWindow == 0 || !pageStrip.TryUpdateWindowSnapTarget(pointerX, pointerY, out DesktopSnapSlotTarget target) || !placementResolver.TryResolve(target.Page, target.Layout, target.Slot, monitorOriginX, monitorOriginY, out DesktopSnapPlacement placement))
+        DesktopSnapPlacement placement = default;
+        bool hasSlotTarget = configuration.IsSnapAssistanceEnabled && pageStrip.TryUpdateWindowSnapTarget(pointerX, pointerY, out DesktopSnapSlotTarget target) && placementResolver.TryResolve(target.Page, target.Layout, target.Slot, monitorOriginX, monitorOriginY, out placement);
+        previews.SetDropPage(activeWindow, pageStrip.UpdateWindowDropTarget(pointerX, pointerY, showOutline: !hasSlotTarget));
+        if (!hasSlotTarget)
         {
             ClearPreviewTarget();
             pageStrip.ClearWindowSnapTarget();
@@ -81,6 +84,8 @@ public sealed class DesktopWindowSnapInteractionCoordinator(DesktopOverviewConfi
     public void Clear()
     {
         ClearPreviewTarget();
+        previews.SetDropPage(activeWindow, null);
+        pageStrip.ClearWindowDropTarget();
         activeWindow = 0;
         pointerX = 0;
         pointerY = 0;

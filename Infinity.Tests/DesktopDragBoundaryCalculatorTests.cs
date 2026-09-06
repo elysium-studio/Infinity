@@ -7,22 +7,21 @@ namespace Infinity.Tests;
 public sealed class DesktopDragBoundaryCalculatorTests
 {
     [Fact]
-    public void CenteredPageBoundsFollowTheScaledWorkspaceInsteadOfTheViewportEdges()
+    public void DragCanCrossTheCenteredPageIntoTheVisibleNeighbour()
     {
         DesktopDragBoundaryCalculator calculator = CreateCalculator();
-        calculator.SetWorkAreaOffsetY(50);
-        DesktopDragBounds bounds = calculator.GetCenteredPageBounds(1600, 1000, 0.5);
-        Assert.Equal(new DesktopDragBounds(550, 250, 1050, 650), bounds);
+        (double x, double y) = calculator.Constrain(1200, 500, 1600, 1000, 0.5);
+        Assert.Equal(1200, x);
+        Assert.Equal(500, y);
     }
 
-
     [Fact]
-    public void CenteredPageConfinementKeepsThePointerInsideTheFocusedPage()
+    public void DragRemainsWithinTheVisibleStripAndWorkAreaHeight()
     {
         DesktopDragBoundaryCalculator calculator = CreateCalculator();
         calculator.SetWorkAreaOffsetY(50);
-        (double x, double y) = calculator.ConstrainToCenteredPage(100, 900, 1600, 1000, 0.5);
-        Assert.Equal(550, x);
+        (double x, double y) = calculator.Constrain(1800, 900, 1600, 1000, 0.5);
+        Assert.Equal(1600, x);
         Assert.Equal(650, y);
     }
 
