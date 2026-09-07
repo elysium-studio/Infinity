@@ -21,7 +21,7 @@ public static class IServiceCollectionExtensions
             services.AddSingleton<IDesktopBackgroundSource, DesktopBackgroundSource>();
             services.AddSingleton<ApplicationCatalog>();
             services.AddSingleton<IApplicationCatalog>(provider => provider.GetRequiredService<ApplicationCatalog>());
-            services.AddSingleton<IWindowIconSource, WindowIconSource>();
+            services.AddSingleton<IWindowIconSource, WindowIconSource>().AddSingleton<IWindowTextRecognizer, WindowTextRecognizer>();
             services.AddSingleton<IApplicationLauncher>(provider => provider.GetRequiredService<ApplicationCatalog>());
             services.AddSingleton<ITaskbarPinnedApplicationSource, TaskbarPinnedApplicationSource>();
             services.AddSingleton<IScrollInputSuppression, ScrollInputSuppression>();

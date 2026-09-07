@@ -4,7 +4,10 @@ using Microsoft.Extensions.Options;
 
 namespace Infinity.Shell;
 
-public sealed class PageTitleStore(IOptionsMonitor<Settings> settings, IWritableOptions<Settings> writer, ITextLocalizer localizer)
+public sealed class PageTitleStore(
+    IOptionsMonitor<Settings> settings,
+    IWritableOptions<Settings> writer,
+    ITextLocalizer localizer)
 {
     public event Action<int, string>? TitleChanged;
 

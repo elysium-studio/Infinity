@@ -23,7 +23,8 @@ public sealed class EasingScrollMotion : IDeltaScrollMotion
     }
 
 
-    public EasingScrollMotion(TimeProvider timeProvider) => this.timeProvider = timeProvider;
+    public EasingScrollMotion(
+        TimeProvider timeProvider) => this.timeProvider = timeProvider;
 
     public bool IsActive
     {

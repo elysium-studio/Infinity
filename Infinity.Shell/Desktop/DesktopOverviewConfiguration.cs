@@ -19,4 +19,6 @@ public sealed class DesktopOverviewConfiguration
     public bool ShowPageHeaders { get; set; } = true;
 
     public bool ShowSearchBox { get; set; } = true;
+
+    public bool SearchWindowContents { get; set; } = true;
 }

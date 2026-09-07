@@ -15,7 +15,11 @@ internal sealed class DesktopThumbnailCaptureVisibility : IDisposable
     private bool transitionHeld;
     private bool disposed;
 
-    public DesktopThumbnailCaptureVisibility(ThumbnailCompositionPreview? preview, DispatcherQueue dispatcher)
+    public bool IsCapturing => capturing;
+
+    public DesktopThumbnailCaptureVisibility(
+        ThumbnailCompositionPreview? preview,
+        DispatcherQueue dispatcher)
     {
         this.preview = preview;
         releaseTimer = dispatcher.CreateTimer();

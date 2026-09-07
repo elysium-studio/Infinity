@@ -4,7 +4,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public sealed class Pager(IWindowStore repository, IPanState state, IScroller coordinator, IWorkspace workspace, IForegroundWindowCoordinator foregroundWindowCoordinator, ILogger<Pager> logger) : IPager
+public sealed class Pager(
+    IWindowStore repository,
+    IPanState state,
+    IScroller coordinator,
+    IWorkspace workspace,
+    IForegroundWindowCoordinator foregroundWindowCoordinator,
+    ILogger<Pager> logger) : IPager
 {
     private int lastPage;
     private int? maxPages;

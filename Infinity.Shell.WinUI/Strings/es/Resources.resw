@@ -485,4 +485,10 @@
   <data name="DesktopSharedBoundaryResize" xml:space="preserve">
     <value>Cambiar el tamaño de las ventanas adyacentes</value>
   </data>
+  <data name="SearchWindowContentsCard.Header" xml:space="preserve">
+    <value>Buscar en el contenido de las ventanas</value>
+  </data>
+  <data name="SearchWindowContentsCard.Description" xml:space="preserve">
+    <value>Busca texto visible mediante OCR local mientras la vista general está abierta. Las capturas y el texto extraído son temporales y no se guardan.</value>
+  </data>
 </root>

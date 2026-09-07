@@ -485,4 +485,10 @@
   <data name="DesktopSharedBoundaryResize" xml:space="preserve">
     <value>[Ŕéšîžé ñéîĝĥƀöûŕîñĝ ŵîñðöŵš]</value>
   </data>
+  <data name="SearchWindowContentsCard.Header" xml:space="preserve">
+    <value>[Šéárçh ŵíñðøŵ çøñţéñţš]</value>
+  </data>
+  <data name="SearchWindowContentsCard.Description" xml:space="preserve">
+    <value>[Šéárçh visible text using local OCR while the overview is open. Snapshots and extracted text are temporary and are not saved.]</value>
+  </data>
 </root>

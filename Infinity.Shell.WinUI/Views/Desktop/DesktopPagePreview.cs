@@ -55,7 +55,12 @@ public sealed partial class DesktopPagePreview : Button, IDisposable
     private bool interactionEnabled;
     private bool disposed;
 
-    public DesktopPagePreview(Visual scaleVisual, double overviewScale, DesktopSnapLayoutCatalog snapLayoutCatalog, DesktopWallpaperBrushFactory wallpaperBrushFactory, DesktopPageEditorLabels labels)
+    public DesktopPagePreview(
+        Visual scaleVisual,
+        double overviewScale,
+        DesktopSnapLayoutCatalog snapLayoutCatalog,
+        DesktopWallpaperBrushFactory wallpaperBrushFactory,
+        DesktopPageEditorLabels labels)
     {
         this.wallpaperBrushFactory = wallpaperBrushFactory;
         visualScale = double.IsFinite(overviewScale) && overviewScale > 0 ? overviewScale : 1;

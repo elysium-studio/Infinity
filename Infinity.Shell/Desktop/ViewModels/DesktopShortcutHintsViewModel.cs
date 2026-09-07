@@ -16,7 +16,11 @@ public sealed partial class DesktopShortcutHintsViewModel : ObservableObject, IR
     [ObservableProperty]
     private string secondModifier = string.Empty;
 
-    public DesktopShortcutHintsViewModel(IMessenger messenger, IDispatcher dispatcher, Settings settings, IKeyLabelProvider labelProvider)
+    public DesktopShortcutHintsViewModel(
+        IMessenger messenger,
+        IDispatcher dispatcher,
+        Settings settings,
+        IKeyLabelProvider labelProvider)
     {
         this.dispatcher = dispatcher;
         this.labelProvider = labelProvider;

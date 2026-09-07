@@ -1,6 +1,8 @@
 namespace Infinity.Shell;
 
-public readonly record struct DesktopWindowDragAnchor(double HorizontalRatio, double VerticalRatio)
+public readonly record struct DesktopWindowDragAnchor(
+    double HorizontalRatio,
+    double VerticalRatio)
 {
     public static bool TryCreate(double pointerX, double pointerY, DesktopSnapPlacement visibleBounds, out DesktopWindowDragAnchor anchor)
     {

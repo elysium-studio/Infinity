@@ -13,7 +13,8 @@ public sealed class DesktopWorkspace : IWorkspace, IDisposable
     private readonly ILogger<DesktopWorkspace> logger;
     private bool disposed;
 
-    public DesktopWorkspace(ILogger<DesktopWorkspace> logger)
+    public DesktopWorkspace(
+        ILogger<DesktopWorkspace> logger)
     {
         this.logger = logger;
         SystemEvents.DisplaySettingsChanged += HandleWorkspaceLayoutChanged;
@@ -83,5 +84,9 @@ public sealed class DesktopWorkspace : IWorkspace, IDisposable
     }
 
 
-    private readonly record struct WorkspaceBounds(int X, int Y, int Width, int Height);
+    private readonly record struct WorkspaceBounds(
+        int X,
+        int Y,
+        int Width,
+        int Height);
 }

@@ -59,5 +59,9 @@ public sealed class WindowPageTransitionGuard : IWindowPageTransitionGuard
     }
 
 
-    private readonly record struct PreservedPage(int Page, int WorkspaceWidth, int WorkAreaX, long ExpiresAt);
+    private readonly record struct PreservedPage(
+        int Page,
+        int WorkspaceWidth,
+        int WorkAreaX,
+        long ExpiresAt);
 }

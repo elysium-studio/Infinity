@@ -3,7 +3,13 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopWindowSnapInteractionCoordinator(DesktopOverviewConfiguration configuration, DesktopPageStrip pageStrip, DesktopSnapPlacementResolver placementResolver, DesktopSnapSlotOccupancyResolver occupancyResolver, DesktopWindowPreviewCollection previews, IWindowCollection windowCollection)
+public sealed class DesktopWindowSnapInteractionCoordinator(
+    DesktopOverviewConfiguration configuration,
+    DesktopPageStrip pageStrip,
+    DesktopSnapPlacementResolver placementResolver,
+    DesktopSnapSlotOccupancyResolver occupancyResolver,
+    DesktopWindowPreviewCollection previews,
+    IWindowCollection windowCollection)
 {
     private nint activeWindow;
     private bool isActive;

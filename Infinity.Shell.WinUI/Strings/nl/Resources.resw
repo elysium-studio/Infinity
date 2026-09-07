@@ -485,4 +485,10 @@
   <data name="DesktopSharedBoundaryResize" xml:space="preserve">
     <value>Aangrenzende vensters vergroten of verkleinen</value>
   </data>
+  <data name="SearchWindowContentsCard.Header" xml:space="preserve">
+    <value>Vensterinhoud doorzoeken</value>
+  </data>
+  <data name="SearchWindowContentsCard.Description" xml:space="preserve">
+    <value>Doorzoek zichtbare tekst met lokale OCR terwijl het overzicht open is. Momentopnamen en uitgelezen tekst zijn tijdelijk en worden niet opgeslagen.</value>
+  </data>
 </root>

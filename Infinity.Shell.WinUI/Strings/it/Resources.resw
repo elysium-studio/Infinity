@@ -485,4 +485,10 @@
   <data name="DesktopSharedBoundaryResize" xml:space="preserve">
     <value>Ridimensiona le finestre adiacenti</value>
   </data>
+  <data name="SearchWindowContentsCard.Header" xml:space="preserve">
+    <value>Cerca nei contenuti delle finestre</value>
+  </data>
+  <data name="SearchWindowContentsCard.Description" xml:space="preserve">
+    <value>Cerca il testo visibile con OCR locale mentre la panoramica è aperta. Le istantanee e il testo estratto sono temporanei e non vengono salvati.</value>
+  </data>
 </root>

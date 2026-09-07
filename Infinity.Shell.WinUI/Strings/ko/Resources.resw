@@ -485,4 +485,10 @@
   <data name="DesktopSharedBoundaryResize" xml:space="preserve">
     <value>인접한 창 크기 조정</value>
   </data>
+  <data name="SearchWindowContentsCard.Header" xml:space="preserve">
+    <value>창 내용 검색</value>
+  </data>
+  <data name="SearchWindowContentsCard.Description" xml:space="preserve">
+    <value>개요가 열려 있는 동안 로컬 OCR로 표시된 텍스트를 검색합니다. 스냅샷과 추출된 텍스트는 임시 데이터이며 저장되지 않습니다.</value>
+  </data>
 </root>

@@ -485,4 +485,10 @@
   <data name="DesktopSharedBoundaryResize" xml:space="preserve">
     <value>Redimensionar janelas vizinhas</value>
   </data>
+  <data name="SearchWindowContentsCard.Header" xml:space="preserve">
+    <value>Pesquisar conteúdo das janelas</value>
+  </data>
+  <data name="SearchWindowContentsCard.Description" xml:space="preserve">
+    <value>Pesquise texto visível com OCR local enquanto a visão geral estiver aberta. As capturas e o texto extraído são temporários e não são salvos.</value>
+  </data>
 </root>

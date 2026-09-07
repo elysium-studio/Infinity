@@ -100,7 +100,11 @@ public sealed class StartupPageRestorerTests
         }
 
 
-        private readonly record struct Geometry(int X, int Y, int Width, int Height);
+        private readonly record struct Geometry(
+            int X,
+            int Y,
+            int Width,
+            int Height);
     }
 
 

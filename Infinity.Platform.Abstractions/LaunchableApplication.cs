@@ -1,3 +1,5 @@
 namespace Infinity.Platform.Abstractions;
 
-public sealed record LaunchableApplication(string Id, string DisplayName);
+public sealed record LaunchableApplication(
+    string Id,
+    string DisplayName);

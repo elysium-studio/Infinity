@@ -14,7 +14,25 @@ using Windows.Foundation;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopPageStrip(IDesktopBackgroundSource backgroundSource, IPager pager, IScroller scroller, IWorkspace workspace, PageTitleStore pageTitleStore, PageLayoutStore pageLayoutStore, DesktopPageReorderController reorderController, DesktopPageArrangementCoordinator arrangementCoordinator, DesktopOverviewDragScroller overviewDragScroller, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, ITextLocalizer localizer, DesktopPageLayoutCalculator layoutCalculator, DesktopSnapLayoutCatalog snapLayoutCatalog, DesktopPageBackgroundFactory backgroundFactory, DesktopWallpaperPlacementCalculator wallpaperPlacementCalculator, DesktopWallpaperBrushFactory wallpaperBrushFactory, ILogger<DesktopPageStrip> logger) : IDisposable
+public sealed class DesktopPageStrip(
+    IDesktopBackgroundSource backgroundSource,
+    IPager pager,
+    IScroller scroller,
+    IWorkspace workspace,
+    PageTitleStore pageTitleStore,
+    PageLayoutStore pageLayoutStore,
+    DesktopPageReorderController reorderController,
+    DesktopPageArrangementCoordinator arrangementCoordinator,
+    DesktopOverviewDragScroller overviewDragScroller,
+    DesktopDragBoundaryCalculator dragBoundaryCalculator,
+    DesktopDragCursorConfinement cursorConfinement,
+    ITextLocalizer localizer,
+    DesktopPageLayoutCalculator layoutCalculator,
+    DesktopSnapLayoutCatalog snapLayoutCatalog,
+    DesktopPageBackgroundFactory backgroundFactory,
+    DesktopWallpaperPlacementCalculator wallpaperPlacementCalculator,
+    DesktopWallpaperBrushFactory wallpaperBrushFactory,
+    ILogger<DesktopPageStrip> logger) : IDisposable
 {
     private static readonly TimeSpan ReorderAnimationDuration = TimeSpan.FromMilliseconds(180);
     private readonly Dictionary<int, DesktopPagePreview> visiblePages = [];

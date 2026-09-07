@@ -1,6 +1,12 @@
 namespace Infinity.Shell;
 
-public readonly record struct DesktopCaptureViewport(double Left, double Top, double Right, double Bottom, double Prewarm, double Retention)
+public readonly record struct DesktopCaptureViewport(
+    double Left,
+    double Top,
+    double Right,
+    double Bottom,
+    double Prewarm,
+    double Retention)
 {
     public static DesktopCaptureViewport Create(double screenWidth, double screenHeight, double workWidth, double workHeight, double offsetX, double offsetY, double scale)
     {

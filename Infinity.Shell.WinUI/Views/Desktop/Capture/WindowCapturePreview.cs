@@ -1,5 +1,7 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
+using Infinity.Platform.Abstractions;
 using Infinity.Platform.Windows;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Composition;
@@ -38,8 +40,12 @@ public sealed class WindowCapturePreview : IDisposable
     private bool disposed;
     private bool failed;
     private bool deviceLost;
+    private TaskCompletionSource<WindowContentSnapshot?>? snapshotRequest;
 
-    internal WindowCapturePreview(nint windowHandle, ILogger logger, Action<WindowCapturePreview> onDisposed)
+    internal WindowCapturePreview(
+        nint windowHandle,
+        ILogger logger,
+        Action<WindowCapturePreview> onDisposed)
     {
         WindowHandle = windowHandle;
         this.logger = logger;
@@ -64,6 +70,58 @@ public sealed class WindowCapturePreview : IDisposable
     public event Action? FrameAvailabilityChanged;
 
     public bool HasCurrentFrame => frameState.HasCurrentFrame;
+
+    internal async Task<WindowContentSnapshot?> TakeSnapshotAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        TaskCompletionSource<WindowContentSnapshot?> completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (Volatile.Read(ref disposeRequested) != 0 || !work.Enqueue(() => BeginSnapshot(completion)))
+        {
+            return null;
+        }
+
+        try
+        {
+            return await completion.Task.WaitAsync(TimeSpan.FromSeconds(2), cancellationToken).ConfigureAwait(false);
+        }
+        catch (TimeoutException)
+        {
+            return null;
+        }
+        finally
+        {
+            work.Enqueue(() => EndSnapshot(completion));
+        }
+    }
+
+    private void BeginSnapshot(TaskCompletionSource<WindowContentSnapshot?> completion)
+    {
+        lock (gate)
+        {
+            if (disposed || closed || failed || !active || snapshotRequest is not null)
+            {
+                completion.TrySetResult(null);
+                return;
+            }
+
+            snapshotRequest = completion;
+        }
+
+        UpdateSession();
+    }
+
+    private void EndSnapshot(TaskCompletionSource<WindowContentSnapshot?> completion)
+    {
+        lock (gate)
+        {
+            if (ReferenceEquals(snapshotRequest, completion))
+            {
+                snapshotRequest = null;
+            }
+        }
+
+        UpdateSession();
+    }
 
     private void InvalidateFrame()
     {
@@ -179,6 +237,11 @@ public sealed class WindowCapturePreview : IDisposable
             }
 
             active = value;
+            if (!value)
+            {
+                snapshotRequest?.TrySetResult(null);
+                snapshotRequest = null;
+            }
             if (value && failed)
             {
                 failed = false;
@@ -256,7 +319,7 @@ public sealed class WindowCapturePreview : IDisposable
 
         lock (gate)
         {
-            if (!disposed && !closed && !failed && active && visible)
+            if (!disposed && !closed && !failed && active && (visible || snapshotRequest is not null))
             {
                 if (session is not null)
                 {
@@ -320,7 +383,7 @@ public sealed class WindowCapturePreview : IDisposable
     {
         lock (gate)
         {
-            if (disposed || closed || !active || !visible || !sender.Equals(framePool) || !frameState.IsCurrent(sessionGeneration))
+            if (disposed || closed || !active || (!visible && snapshotRequest is null) || !sender.Equals(framePool) || !frameState.IsCurrent(sessionGeneration))
             {
                 return;
             }
@@ -340,10 +403,28 @@ public sealed class WindowCapturePreview : IDisposable
                     WindowCaptureFrameGeometry geometry = WindowCaptureFrameGeometry.Calculate(content.Width, content.Height, description.Width, description.Height, poolSize.Width, poolSize.Height);
                     if (geometry.CanPresent)
                     {
-                        renderer.Present(frame, geometry);
-                        if (frameState.TryMarkPresented(sessionGeneration))
+                        if (visible)
                         {
-                            NotifyFrameAvailabilityChanged();
+                            renderer.Present(frame, geometry);
+                            if (frameState.TryMarkPresented(sessionGeneration))
+                            {
+                                NotifyFrameAvailabilityChanged();
+                            }
+                        }
+
+                        if (snapshotRequest is not null && !geometry.RequiresPoolResize)
+                        {
+                            TaskCompletionSource<WindowContentSnapshot?> completion = snapshotRequest;
+                            snapshotRequest = null;
+                            try
+                            {
+                                completion.TrySetResult(renderer.TakeSnapshot(frame, geometry));
+                            }
+                            catch (Exception exception)
+                            {
+                                logger.LogWarning(exception, "Could not take a content-search snapshot for HWND {WindowHandle}", WindowHandle);
+                                completion.TrySetResult(null);
+                            }
                         }
                     }
 
@@ -460,6 +541,8 @@ public sealed class WindowCapturePreview : IDisposable
             }
 
             disposed = true;
+            snapshotRequest?.TrySetResult(null);
+            snapshotRequest = null;
         }
 
         try

@@ -9,7 +9,10 @@ using Microsoft.UI.Dispatching;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class WindowCapturePreviewSurface(WindowCaptureSupport support, WindowCaptureAccess access, ILogger<WindowCapturePreviewSurface> logger) : IWindowPreviewSurface, IDisposable
+public sealed class WindowCapturePreviewSurface(
+    WindowCaptureSupport support,
+    WindowCaptureAccess access,
+    ILogger<WindowCapturePreviewSurface> logger) : IWindowPreviewSurface, IDisposable
 {
     private readonly HashSet<WindowCapturePreview> previews = [];
     private readonly Lock gate = new();
@@ -20,6 +23,27 @@ public sealed class WindowCapturePreviewSurface(WindowCaptureSupport support, Wi
     private Task? accessRequest;
 
     public bool IsAvailable => !disposed && support.IsSupported;
+
+    public Task<WindowContentSnapshot?> TakeSnapshotAsync(nint handle, CancellationToken cancellationToken)
+    {
+        lock (gate)
+        {
+            if (!active || !accessResolved || disposed)
+            {
+                return Task.FromResult<WindowContentSnapshot?>(null);
+            }
+
+            foreach (WindowCapturePreview preview in previews)
+            {
+                if (preview.WindowHandle == handle)
+                {
+                    return preview.TakeSnapshotAsync(cancellationToken);
+                }
+            }
+        }
+
+        return Task.FromResult<WindowContentSnapshot?>(null);
+    }
 
     public WindowCapturePreview? CreatePreview(nint windowHandle)
     {

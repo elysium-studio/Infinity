@@ -485,4 +485,10 @@
   <data name="DesktopSharedBoundaryResize" xml:space="preserve">
     <value>Zmień rozmiar sąsiednich okien</value>
   </data>
+  <data name="SearchWindowContentsCard.Header" xml:space="preserve">
+    <value>Przeszukuj zawartość okien</value>
+  </data>
+  <data name="SearchWindowContentsCard.Description" xml:space="preserve">
+    <value>Przeszukuj widoczny tekst za pomocą lokalnego OCR, gdy przegląd jest otwarty. Migawki i rozpoznany tekst są tymczasowe i nie są zapisywane.</value>
+  </data>
 </root>

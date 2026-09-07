@@ -12,7 +12,10 @@ public sealed class PresentationScrollTimer : IScrollTimer, IDisposable
     private IScrollTimer? activeTimer;
     private bool disposed;
 
-    public PresentationScrollTimer(IScrollTimer desktopTimer, IScrollTimer presentationTimer, IScrollPresentationSession presentationSession)
+    public PresentationScrollTimer(
+        IScrollTimer desktopTimer,
+        IScrollTimer presentationTimer,
+        IScrollPresentationSession presentationSession)
     {
         this.desktopTimer = desktopTimer;
         this.presentationTimer = presentationTimer;

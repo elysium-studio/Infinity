@@ -5,7 +5,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public sealed class PageGestureSource(IKeyboardInputSource keyboardInputSource, IModifierKeyState modifierKeyState, IEnumerable<IPageGesture> gestures, ILogger<PageGestureSource> logger, IScrollInputSuppression scrollInputSuppression) : IPageGestureSource
+public sealed class PageGestureSource(
+    IKeyboardInputSource keyboardInputSource,
+    IModifierKeyState modifierKeyState,
+    IEnumerable<IPageGesture> gestures,
+    ILogger<PageGestureSource> logger,
+    IScrollInputSuppression scrollInputSuppression) : IPageGestureSource
 {
     private readonly List<IPageGesture> registeredGestures = [..gestures];
     private readonly HashSet<int> triggerKeys = [..gestures.SelectMany(gesture => gesture.TriggerKeys)];

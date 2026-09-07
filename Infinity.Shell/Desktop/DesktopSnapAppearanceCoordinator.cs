@@ -4,7 +4,14 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopSnapAppearanceCoordinator(IWindowStore windows, IWorkspace workspace, PageLayoutStore layouts, DesktopSnapLayoutCatalog catalog, DesktopSnapPlacementResolver resolver, IWindowSnapAppearance appearance, DesktopWindowFrameGeometry frameGeometry)
+public sealed class DesktopSnapAppearanceCoordinator(
+    IWindowStore windows,
+    IWorkspace workspace,
+    PageLayoutStore layouts,
+    DesktopSnapLayoutCatalog catalog,
+    DesktopSnapPlacementResolver resolver,
+    IWindowSnapAppearance appearance,
+    DesktopWindowFrameGeometry frameGeometry)
 {
     private readonly HashSet<nint> slotted = [];
     private readonly HashSet<nint> dragging = [];

@@ -7,7 +7,8 @@ using Windows.Security.Authorization.AppCapabilityAccess;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class WindowCaptureAccess(ILogger<WindowCaptureAccess> logger)
+public sealed class WindowCaptureAccess(
+    ILogger<WindowCaptureAccess> logger)
 {
     private Task<bool>? request;
 

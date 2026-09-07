@@ -14,7 +14,10 @@ public sealed class DesktopApplicationPinStore : IDesktopApplicationPinStore
     private readonly IWritableOptions<Settings> writer;
     private readonly ILogger<DesktopApplicationPinStore> logger;
 
-    public DesktopApplicationPinStore(IOptionsMonitor<Settings> settings, IWritableOptions<Settings> writer, ILogger<DesktopApplicationPinStore> logger)
+    public DesktopApplicationPinStore(
+        IOptionsMonitor<Settings> settings,
+        IWritableOptions<Settings> writer,
+        ILogger<DesktopApplicationPinStore> logger)
     {
         applications = [..(settings.CurrentValue.PinnedApplications ?? []).DistinctBy(application => application.Id, StringComparer.OrdinalIgnoreCase).Take(MaximumApplications)];
         this.writer = writer;

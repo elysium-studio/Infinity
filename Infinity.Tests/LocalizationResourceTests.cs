@@ -34,5 +34,7 @@ public sealed class LocalizationResourceTests
 
     private static string[] GetPlaceholders(string value) => [..Regex.Matches(value, "\\{\\d+\\}").Select(match => match.Value)];
 
-    private sealed record ResourceEntry(string Name, string Value);
+    private sealed record ResourceEntry(
+        string Name,
+        string Value);
 }

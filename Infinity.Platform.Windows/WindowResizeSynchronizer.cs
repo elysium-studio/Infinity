@@ -9,7 +9,8 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Infinity.Platform.Windows;
 
-public sealed unsafe class WindowResizeSynchronizer(ILogger<WindowResizeSynchronizer> logger) : IWindowResizeSynchronizer
+public sealed unsafe class WindowResizeSynchronizer(
+    ILogger<WindowResizeSynchronizer> logger) : IWindowResizeSynchronizer
 {
     private const int CompositorFramesToWait = 2;
     private const uint CompositorClockTimeoutMilliseconds = 50;

@@ -7,7 +7,22 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public sealed class WindowTracker(IWindowStore repository, IWindowGeometryReader reader, IWindowFilter filter, IWindowAncestorResolver ancestorResolver, IWindowRestoreGuard restoreGuard, IWindowPageTransitionGuard pageTransitionGuard, IWindowMoveGuard moveGuard, IWindowDragGuard dragGuard, ITrackedWindowDragController trackedWindowDragController, WindowTrackingReconciler reconciler, IWindowEventListener listener, IPanState state, IDispatcher dispatcher, ILogger<WindowTracker> logger, IntPtr handle) : IWindowTracker
+public sealed class WindowTracker(
+    IWindowStore repository,
+    IWindowGeometryReader reader,
+    IWindowFilter filter,
+    IWindowAncestorResolver ancestorResolver,
+    IWindowRestoreGuard restoreGuard,
+    IWindowPageTransitionGuard pageTransitionGuard,
+    IWindowMoveGuard moveGuard,
+    IWindowDragGuard dragGuard,
+    ITrackedWindowDragController trackedWindowDragController,
+    WindowTrackingReconciler reconciler,
+    IWindowEventListener listener,
+    IPanState state,
+    IDispatcher dispatcher,
+    ILogger<WindowTracker> logger,
+    IntPtr handle) : IWindowTracker
 {
     private const int SelfHealIntervalMilliseconds = 3000;
     private static readonly TimeSpan MinimizeSuspendDelay = TimeSpan.FromMilliseconds(160);
@@ -420,5 +435,6 @@ public sealed class WindowTracker(IWindowStore repository, IWindowGeometryReader
     }
 
 
-    private readonly record struct SuspendedWindowState(int CanvasX);
+    private readonly record struct SuspendedWindowState(
+        int CanvasX);
 }

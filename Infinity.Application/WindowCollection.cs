@@ -6,7 +6,18 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public sealed class WindowCollection(IWindowStore store, IScrollTimer timer, IScroller scroller, IWindowStack windowStack, IForegroundWindowTracker foregroundWindowTracker, IWindowEventListener listener, IWorkspace workspace, IForegroundWindowCoordinator foregroundCoordinator, IWindowNavigationCoordinator navigationCoordinator, IDispatcher dispatcher, ILogger<WindowCollection> logger) : IWindowCollection
+public sealed class WindowCollection(
+    IWindowStore store,
+    IScrollTimer timer,
+    IScroller scroller,
+    IWindowStack windowStack,
+    IForegroundWindowTracker foregroundWindowTracker,
+    IWindowEventListener listener,
+    IWorkspace workspace,
+    IForegroundWindowCoordinator foregroundCoordinator,
+    IWindowNavigationCoordinator navigationCoordinator,
+    IDispatcher dispatcher,
+    ILogger<WindowCollection> logger) : IWindowCollection
 {
     private readonly Lock refreshSyncRoot = new();
     private readonly Lock reorderSyncRoot = new();

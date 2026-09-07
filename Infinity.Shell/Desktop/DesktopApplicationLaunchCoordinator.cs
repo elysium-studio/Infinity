@@ -4,7 +4,16 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopApplicationLaunchCoordinator(IApplicationLauncher launcher, IRecentApplicationStore recentApplicationStore, IWindowCollection windowCollection, IWindowStore windowStore, IForegroundWindowTracker foregroundWindowTracker, IWindowResizeSynchronizer resizeSynchronizer, IScroller scroller, DesktopApplicationPlacementResolver placementResolver, ILogger<DesktopApplicationLaunchCoordinator> logger)
+public sealed class DesktopApplicationLaunchCoordinator(
+    IApplicationLauncher launcher,
+    IRecentApplicationStore recentApplicationStore,
+    IWindowCollection windowCollection,
+    IWindowStore windowStore,
+    IForegroundWindowTracker foregroundWindowTracker,
+    IWindowResizeSynchronizer resizeSynchronizer,
+    IScroller scroller,
+    DesktopApplicationPlacementResolver placementResolver,
+    ILogger<DesktopApplicationLaunchCoordinator> logger)
 {
     private static readonly TimeSpan LaunchTimeout = TimeSpan.FromSeconds(12);
     private readonly SemaphoreSlim launchGate = new(1, 1);

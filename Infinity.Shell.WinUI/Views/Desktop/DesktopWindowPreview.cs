@@ -80,6 +80,10 @@ internal sealed class DesktopWindowPreview : IDisposable
     private bool isSelected;
     private bool suppressNextTap;
     private bool disposed;
+    private string? searchSnippet;
+    private readonly DesktopWindowPeekGesture peekGesture = new();
+    private bool isPeeking;
+    private DesktopWindowSearchImage? searchImage;
     private int zIndex;
     private int groupStackIndex;
     private double groupTargetX;
@@ -91,7 +95,28 @@ internal sealed class DesktopWindowPreview : IDisposable
     private TimeSpan? translationTransitionDuration;
     private TimeSpan? scaleTransitionDuration;
 
-    public DesktopWindowPreview(nint windowHandle, Border host, Border backgroundHost, Border focusHost, ThumbnailCompositionPreview? preview, Grid liveContent, Func<DesktopWindowResizePreview> createResizePreview, Grid focusVisual, Grid selectionVisual, ITrackedWindowDragController dragController, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, DesktopWindowDragFrames dragFrames, IPager pager, DesktopWindowThrowPlacementResolver throwPlacementResolver, PageLayoutStore pageLayouts, double layoutScale)
+    public DesktopWindowPreview(
+        nint windowHandle,
+        Border host,
+        Border backgroundHost,
+        Border focusHost,
+        ThumbnailCompositionPreview? preview,
+        Grid liveContent,
+        Func<DesktopWindowResizePreview> createResizePreview,
+        Grid focusVisual,
+        Grid selectionVisual,
+        ITrackedWindowDragController dragController,
+        DesktopOverviewDragScroller overviewDragScroller,
+        DesktopWindowDragPositionResolver dragPositionResolver,
+        DesktopDragBoundaryCalculator dragBoundaryCalculator,
+        DesktopDragCursorConfinement cursorConfinement,
+        DesktopWindowPlacementCoordinator windowPlacementCoordinator,
+        DesktopWindowContextMenuBuilder contextMenuBuilder,
+        DesktopWindowDragFrames dragFrames,
+        IPager pager,
+        DesktopWindowThrowPlacementResolver throwPlacementResolver,
+        PageLayoutStore pageLayouts,
+        double layoutScale)
     {
         this.windowHandle = windowHandle;
         Host = host;
@@ -129,6 +154,7 @@ internal sealed class DesktopWindowPreview : IDisposable
 
 
     public event Action<nint>? Invoked;
+    public event Action<nint>? PeekRequested;
 
     public event Action<nint>? SelectionToggled;
 
@@ -167,6 +193,55 @@ internal sealed class DesktopWindowPreview : IDisposable
     public void StopDragScroll() => overviewDragScroller.Stop();
 
     public bool IsDragging => isDragging || isLiveDragging || isGroupDragLeader || isGroupStacked;
+
+    public bool IsResizing => boundaryResizePreview;
+
+    public bool CanPeek => !disposed && peekGesture.IsEnabled && !IsDragging && !IsResizing && (searchImage?.Visibility == Visibility.Visible || preview?.HasCurrentFrame == true);
+
+    public void SetPeeking(bool value)
+    {
+        isPeeking = value;
+        double opacity = isFilterMatch && !value ? 1 : 0;
+        Host.Opacity = backgroundHost.Opacity = focusHost.Opacity = opacity;
+        ApplyInteractionState();
+        if (!disposed)
+        {
+            RefreshCaptureVisibility();
+        }
+    }
+
+    public void SetSearchSnapshot(DesktopWindowSearchSnapshot? snapshot, string query)
+    {
+        peekGesture.IsEnabled = !string.IsNullOrWhiteSpace(query) && isFilterMatch;
+        if (isPeeking)
+        {
+            return;
+        }
+        if (snapshot is null || searchSnippet is null || string.IsNullOrWhiteSpace(query) || !isFilterMatch || boundaryResizePreview || IsDragging || !captureVisibility.IsCapturing)
+        {
+            searchImage?.Clear();
+            return;
+        }
+
+        if (searchImage is null)
+        {
+            searchImage = new();
+            ((Grid)Host.Child).Children.Add(searchImage);
+        }
+
+        searchImage.Show(snapshot, query, Host.CornerRadius);
+    }
+
+    public void SetSearchSnippet(string? text)
+    {
+        if (searchSnippet == text)
+        {
+            return;
+        }
+
+        searchSnippet = text;
+        ToolTipService.SetToolTip(Host, text);
+    }
 
     public bool CanDeferLiveDragRefresh(TrackedWindow window) => isLiveDragging && sourceWindowWidth == window.Width && sourceWindowHeight == window.Height;
 
@@ -320,12 +395,13 @@ internal sealed class DesktopWindowPreview : IDisposable
 
     public void SetBoundaryResizePreview(double deltaX, double deltaY, double targetWidth, double targetHeight)
     {
-        if (width <= 0 || height <= 0 || !double.IsFinite(targetWidth) || !double.IsFinite(targetHeight) || targetWidth <= 0 || targetHeight <= 0)
+        if (isPeeking || width <= 0 || height <= 0 || !double.IsFinite(targetWidth) || !double.IsFinite(targetHeight) || targetWidth <= 0 || targetHeight <= 0)
         {
             return;
         }
 
         boundaryResizePreview = true;
+        searchImage?.Clear();
         placementAnimator.Stop();
         SetGroupTransitions(null);
         liveContent.Opacity = 0;
@@ -462,7 +538,7 @@ internal sealed class DesktopWindowPreview : IDisposable
             Host.ReleasePointerCaptures();
         }
 
-        double opacity = value ? 1 : 0;
+        double opacity = value && !isPeeking ? 1 : 0;
         Host.Opacity = opacity;
         backgroundHost.Opacity = opacity;
         focusHost.Opacity = opacity;
@@ -643,6 +719,7 @@ internal sealed class DesktopWindowPreview : IDisposable
         }
 
         disposed = true;
+        searchImage?.Clear();
         ClearDragVisual();
         CancelPlacementAnimation();
         placementAnimator.Dispose();
@@ -685,16 +762,29 @@ internal sealed class DesktopWindowPreview : IDisposable
 
     private void HandlePointerPressed(object sender, PointerRoutedEventArgs args)
     {
+        PointerPoint point = args.GetCurrentPoint(Host);
+        UIElement coordinateRoot = Host.XamlRoot?.Content as UIElement ?? Host;
+        Point position = args.GetCurrentPoint(coordinateRoot).Position;
+        if (peekGesture.Begin(args.Pointer.PointerId, position.X, position.Y, point.Properties.IsLeftButtonPressed, args.KeyModifiers == VirtualKeyModifiers.Menu))
+        {
+            suppressNextTap = true;
+            isControlClick = false;
+            if (!Host.CapturePointer(args.Pointer))
+            {
+                peekGesture.Cancel();
+            }
+            args.Handled = true;
+            return;
+        }
+
         CancelPlacementAnimation();
         suppressNextTap = false;
         isControlClick = args.KeyModifiers.HasFlag(VirtualKeyModifiers.Control);
-        PointerPoint point = args.GetCurrentPoint(Host);
         if (!point.Properties.IsLeftButtonPressed)
         {
             return;
         }
 
-        UIElement coordinateRoot = Host.XamlRoot?.Content as UIElement ?? Host;
         if (!Host.CapturePointer(args.Pointer))
         {
             return;
@@ -713,6 +803,14 @@ internal sealed class DesktopWindowPreview : IDisposable
 
     private void HandlePointerMoved(object sender, PointerRoutedEventArgs args)
     {
+        if (peekGesture.IsActive(args.Pointer.PointerId))
+        {
+            Point position = args.GetCurrentPoint(Host.XamlRoot?.Content as UIElement ?? Host).Position;
+            peekGesture.Move(args.Pointer.PointerId, position.X, position.Y);
+            args.Handled = true;
+            return;
+        }
+
         if (dragPointerId != args.Pointer.PointerId || dragCoordinateRoot is null)
         {
             return;
@@ -811,6 +909,25 @@ internal sealed class DesktopWindowPreview : IDisposable
 
     private void HandlePointerReleased(object sender, PointerRoutedEventArgs args)
     {
+        if (peekGesture.IsActive(args.Pointer.PointerId))
+        {
+            Point position = args.GetCurrentPoint(Host.XamlRoot?.Content as UIElement ?? Host).Position;
+            bool clicked = peekGesture.Complete(args.Pointer.PointerId, position.X, position.Y);
+            Host.ReleasePointerCapture(args.Pointer);
+            args.Handled = true;
+            if (clicked && interactionEnabled && isFilterMatch && !IsDragging && !IsResizing)
+            {
+                Host.DispatcherQueue.TryEnqueue(() =>
+                {
+                    if (!disposed && peekGesture.IsEnabled && interactionEnabled && isFilterMatch && !IsDragging && !IsResizing)
+                    {
+                        PeekRequested?.Invoke(windowHandle);
+                    }
+                });
+            }
+            return;
+        }
+
         if (dragPointerId != args.Pointer.PointerId)
         {
             return;
@@ -830,6 +947,14 @@ internal sealed class DesktopWindowPreview : IDisposable
 
     private void HandlePointerCanceled(object sender, PointerRoutedEventArgs args)
     {
+        if (peekGesture.IsActive(args.Pointer.PointerId))
+        {
+            peekGesture.Cancel();
+            Host.ReleasePointerCapture(args.Pointer);
+            args.Handled = true;
+            return;
+        }
+
         if (dragPointerId != args.Pointer.PointerId)
         {
             return;
@@ -844,6 +969,11 @@ internal sealed class DesktopWindowPreview : IDisposable
 
     private void HandlePointerCaptureLost(object sender, PointerRoutedEventArgs args)
     {
+        if (peekGesture.IsActive(args.Pointer.PointerId))
+        {
+            peekGesture.Cancel();
+        }
+
         if (dragPointerId == args.Pointer.PointerId)
         {
             isControlClick = false;
@@ -979,7 +1109,7 @@ internal sealed class DesktopWindowPreview : IDisposable
     }
 
 
-    private void RefreshCaptureVisibility() => captureVisibility.Update(appliedTranslation?.X ?? 0, appliedTranslation?.Y ?? 0, width, height, isFilterMatch, IsDragging);
+    private void RefreshCaptureVisibility() => captureVisibility.Update(appliedTranslation?.X ?? 0, appliedTranslation?.Y ?? 0, width, height, isFilterMatch, IsDragging || isPeeking);
 
     private void ApplySize(double targetWidth, double targetHeight)
     {
@@ -1023,7 +1153,7 @@ internal sealed class DesktopWindowPreview : IDisposable
     }
 
 
-    private void ApplyInteractionState() => Host.IsHitTestVisible = interactionEnabled && isFilterMatch && !isGroupStacked;
+    private void ApplyInteractionState() => Host.IsHitTestVisible = interactionEnabled && isFilterMatch && !isGroupStacked && !isPeeking;
 
     private void ApplyIndicatorVisibility()
     {

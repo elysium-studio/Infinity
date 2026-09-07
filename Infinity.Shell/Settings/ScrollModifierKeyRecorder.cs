@@ -4,7 +4,11 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed class ScrollModifierKeyRecorder(IHotKeysBuilder builder, HotKeysBuilderOptions builderOptions, IKeyLabelProvider labelProvider, ITextLocalizer localizer)
+public sealed class ScrollModifierKeyRecorder(
+    IHotKeysBuilder builder,
+    HotKeysBuilderOptions builderOptions,
+    IKeyLabelProvider labelProvider,
+    ITextLocalizer localizer)
 {
     private static readonly ScrollModifierKeyRecordingState IdleState = new(false, false, false, string.Empty, []);
     private bool isActive;

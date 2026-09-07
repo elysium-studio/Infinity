@@ -2,7 +2,8 @@ using System.Collections;
 
 namespace Infinity.Application.Abstractions;
 
-public struct WindowStoreEnumerator(TrackedWindow[] items) : IEnumerator<TrackedWindow>
+public struct WindowStoreEnumerator(
+    TrackedWindow[] items) : IEnumerator<TrackedWindow>
 {
     private readonly TrackedWindow[] items = items;
     private int index = -1;

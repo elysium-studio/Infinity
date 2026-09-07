@@ -1,6 +1,10 @@
 namespace Infinity.Platform.Windows;
 
-public readonly record struct WindowCaptureFrameGeometry(int Width, int Height, bool RequiresPoolResize, bool CanPresent)
+public readonly record struct WindowCaptureFrameGeometry(
+    int Width,
+    int Height,
+    bool RequiresPoolResize,
+    bool CanPresent)
 {
     public static WindowCaptureFrameGeometry Calculate(int contentWidth, int contentHeight, int surfaceWidth, int surfaceHeight, int poolWidth, int poolHeight)
     {

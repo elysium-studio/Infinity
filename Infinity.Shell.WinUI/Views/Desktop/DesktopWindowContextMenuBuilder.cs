@@ -7,7 +7,16 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopWindowContextMenuBuilder(IWindowCollection windowCollection, IPager pager, IWorkspace workspace, PageTitleStore pageTitleStore, PageLayoutStore pageLayoutStore, DesktopPageStrip pageStrip, DesktopSnapLayoutCatalog layoutCatalog, DesktopWindowPlacementCoordinator placementCoordinator, ITextLocalizer localizer)
+public sealed class DesktopWindowContextMenuBuilder(
+    IWindowCollection windowCollection,
+    IPager pager,
+    IWorkspace workspace,
+    PageTitleStore pageTitleStore,
+    PageLayoutStore pageLayoutStore,
+    DesktopPageStrip pageStrip,
+    DesktopSnapLayoutCatalog layoutCatalog,
+    DesktopWindowPlacementCoordinator placementCoordinator,
+    ITextLocalizer localizer)
 {
     public MenuFlyout Create(nint windowHandle)
     {

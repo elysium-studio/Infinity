@@ -10,7 +10,9 @@ public sealed class PointerInputSource : IPointerInputSource
     private const int VelocitySampleCount = 5;
     private const int WheelDelta = 120;
 
-    private readonly record struct DeltaSample(int Delta, long TimestampMs);
+    private readonly record struct DeltaSample(
+        int Delta,
+        long TimestampMs);
 
     private readonly IMouseInputSource mouseInputSource;
     private readonly IModifierKeyState modifierKeyState;
@@ -36,7 +38,11 @@ public sealed class PointerInputSource : IPointerInputSource
 
     public event Action<double>? ScrollVelocityIdle;
 
-    public PointerInputSource(IMouseInputSource mouseInputSource, IModifierKeyState modifierKeyState, IScrollPresentationSession scrollPresentationSession, IScrollInputSuppression scrollInputSuppression)
+    public PointerInputSource(
+        IMouseInputSource mouseInputSource,
+        IModifierKeyState modifierKeyState,
+        IScrollPresentationSession scrollPresentationSession,
+        IScrollInputSuppression scrollInputSuppression)
     {
         this.mouseInputSource = mouseInputSource;
         this.modifierKeyState = modifierKeyState;

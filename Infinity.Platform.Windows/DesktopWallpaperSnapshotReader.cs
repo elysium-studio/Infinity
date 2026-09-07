@@ -5,7 +5,8 @@ using Windows.Win32.Graphics.Gdi;
 
 namespace Infinity.Platform.Windows;
 
-public sealed class DesktopWallpaperSnapshotReader(IWorkspace workspace)
+public sealed class DesktopWallpaperSnapshotReader(
+    IWorkspace workspace)
 {
     internal DesktopBackgroundSnapshot Read()
     {

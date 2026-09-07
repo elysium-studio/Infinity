@@ -19,7 +19,11 @@ public sealed partial class DesktopWindowResizePreview : UserControl
     private bool iconLoaded;
     private bool isShown;
 
-    public DesktopWindowResizePreview(nint windowHandle, IWindowIconSource icons, double scale, ILogger logger)
+    public DesktopWindowResizePreview(
+        nint windowHandle,
+        IWindowIconSource icons,
+        double scale,
+        ILogger logger)
     {
         InitializeComponent();
         this.windowHandle = windowHandle;

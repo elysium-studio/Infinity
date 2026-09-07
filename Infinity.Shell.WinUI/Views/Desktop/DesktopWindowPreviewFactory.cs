@@ -8,7 +8,21 @@ using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopWindowPreviewFactory(WindowCapturePreviewSurface previewSurface, ITrackedWindowDragController dragController, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, DesktopWindowDragFrames dragFrames, IPager pager, DesktopWindowThrowPlacementResolver throwPlacementResolver, PageLayoutStore pageLayouts, IWindowIconSource icons, ILogger<DesktopWindowPreviewFactory> logger)
+public sealed class DesktopWindowPreviewFactory(
+    WindowCapturePreviewSurface previewSurface,
+    ITrackedWindowDragController dragController,
+    DesktopOverviewDragScroller overviewDragScroller,
+    DesktopWindowDragPositionResolver dragPositionResolver,
+    DesktopDragBoundaryCalculator dragBoundaryCalculator,
+    DesktopDragCursorConfinement cursorConfinement,
+    DesktopWindowPlacementCoordinator windowPlacementCoordinator,
+    DesktopWindowContextMenuBuilder contextMenuBuilder,
+    DesktopWindowDragFrames dragFrames,
+    IPager pager,
+    DesktopWindowThrowPlacementResolver throwPlacementResolver,
+    PageLayoutStore pageLayouts,
+    IWindowIconSource icons,
+    ILogger<DesktopWindowPreviewFactory> logger)
 {
     internal DesktopWindowPreview Create(Canvas backgroundCanvas, Canvas canvas, Canvas focusCanvas, nint windowHandle, double layoutScale)
     {

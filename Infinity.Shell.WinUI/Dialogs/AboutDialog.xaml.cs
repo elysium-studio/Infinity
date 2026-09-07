@@ -5,7 +5,9 @@ namespace Infinity.Shell.WinUI;
 
 public sealed partial class AboutDialog : ContentDialog
 {
-    public AboutDialog(AboutViewModel viewModel, ITextLocalizer localizer)
+    public AboutDialog(
+        AboutViewModel viewModel,
+        ITextLocalizer localizer)
     {
         ViewModel = viewModel;
         InitializeComponent();

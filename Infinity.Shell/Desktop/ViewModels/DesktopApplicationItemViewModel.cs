@@ -3,7 +3,8 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Shell;
 
-public abstract partial class DesktopApplicationItemViewModel(LaunchableApplication application) : ObservableObject
+public abstract partial class DesktopApplicationItemViewModel(
+    LaunchableApplication application) : ObservableObject
 {
     private int iconLoadState;
     [ObservableProperty]

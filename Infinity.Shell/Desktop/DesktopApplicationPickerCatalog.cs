@@ -2,7 +2,8 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopApplicationPickerCatalog(IApplicationCatalog applicationCatalog) : IDesktopApplicationPickerCatalog
+public sealed class DesktopApplicationPickerCatalog(
+    IApplicationCatalog applicationCatalog) : IDesktopApplicationPickerCatalog
 {
     private readonly SemaphoreSlim loadGate = new(1, 1);
     private IReadOnlyList<LaunchableApplication>? applications;

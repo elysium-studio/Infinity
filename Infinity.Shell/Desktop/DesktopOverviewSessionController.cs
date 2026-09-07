@@ -27,7 +27,18 @@ public sealed class DesktopOverviewSessionController
     private bool isCompletionRequested;
     private bool isReadyToClose;
 
-    public DesktopOverviewSessionController(IDispatcher dispatcher, IPointerInputSource pointer, IModifierKeyState modifierKeyState, IPageGestureSource gestureSource, IPager pager, IScroller scroller, IScrollPresentationSession scrollPresentationSession, IWindowPreviewSurface windowPreviewSurface, IWindowNavigationCoordinator windowNavigationCoordinator, IInfinityGlanceBridge glanceBridge, IDesktopOverviewSettingsNavigator settingsNavigator)
+    public DesktopOverviewSessionController(
+        IDispatcher dispatcher,
+        IPointerInputSource pointer,
+        IModifierKeyState modifierKeyState,
+        IPageGestureSource gestureSource,
+        IPager pager,
+        IScroller scroller,
+        IScrollPresentationSession scrollPresentationSession,
+        IWindowPreviewSurface windowPreviewSurface,
+        IWindowNavigationCoordinator windowNavigationCoordinator,
+        IInfinityGlanceBridge glanceBridge,
+        IDesktopOverviewSettingsNavigator settingsNavigator)
     {
         this.dispatcher = dispatcher;
         this.modifierKeyState = modifierKeyState;

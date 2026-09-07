@@ -12,7 +12,9 @@ public sealed class DesktopOverviewRefreshQueue
     private bool synchronise;
     private bool layout;
 
-    public DesktopOverviewRefreshQueue(Func<Action, bool> enqueue, Action<DesktopOverviewRefreshBatch> refresh)
+    public DesktopOverviewRefreshQueue(
+        Func<Action, bool> enqueue,
+        Action<DesktopOverviewRefreshBatch> refresh)
     {
         this.enqueue = enqueue;
         this.refresh = refresh;
@@ -96,4 +98,7 @@ public sealed class DesktopOverviewRefreshQueue
     }
 }
 
-public readonly record struct DesktopOverviewRefreshBatch(bool Synchronise, bool Layout, IReadOnlyList<nint> Windows);
+public readonly record struct DesktopOverviewRefreshBatch(
+    bool Synchronise,
+    bool Layout,
+    IReadOnlyList<nint> Windows);

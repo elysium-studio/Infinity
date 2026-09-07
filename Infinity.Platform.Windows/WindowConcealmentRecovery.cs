@@ -7,7 +7,9 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Infinity.Platform.Windows;
 
-public sealed unsafe class WindowConcealmentRecovery(IWindowEnumerator enumerator, ILogger<WindowConcealmentRecovery> logger) : IWindowConcealmentRecovery
+public sealed unsafe class WindowConcealmentRecovery(
+    IWindowEnumerator enumerator,
+    ILogger<WindowConcealmentRecovery> logger) : IWindowConcealmentRecovery
 {
     private const string RecoveryMarkerProperty = "Elysium.Infinity.WindowConcealer.Recovery";
     private const string RecoveryXProperty = "Elysium.Infinity.WindowConcealer.OriginX";

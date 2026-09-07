@@ -51,7 +51,8 @@ public sealed class RecentApplicationStoreTests
 
     private static RecentApplicationStore CreateStore(Settings settings) => new(new TestOptionsMonitor(settings), new TestWritableOptions(settings), NullLogger<RecentApplicationStore>.Instance);
 
-    private sealed class TestWritableOptions(Settings settings) : IWritableOptions<Settings>
+    private sealed class TestWritableOptions(
+        Settings settings) : IWritableOptions<Settings>
     {
         public Task<Settings?> ReadAsync(CancellationToken cancellationToken = default) => Task.FromResult<Settings?>(settings);
 
@@ -66,7 +67,8 @@ public sealed class RecentApplicationStoreTests
     }
 
 
-    private sealed class TestOptionsMonitor(Settings settings) : IOptionsMonitor<Settings>
+    private sealed class TestOptionsMonitor(
+        Settings settings) : IOptionsMonitor<Settings>
     {
         public Settings CurrentValue => settings;
 

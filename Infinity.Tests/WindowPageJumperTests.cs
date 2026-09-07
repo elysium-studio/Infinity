@@ -27,13 +27,15 @@ public sealed class WindowPageJumperTests
     }
 
 
-    private sealed class TestForegroundWindowSource(IntPtr handle) : IForegroundWindowSource
+    private sealed class TestForegroundWindowSource(
+        IntPtr handle) : IForegroundWindowSource
     {
         public IntPtr GetForegroundWindow() => handle;
     }
 
 
-    private sealed class TestTrackedForegroundWindowSource(IntPtr handle) : ITrackedForegroundWindowSource
+    private sealed class TestTrackedForegroundWindowSource(
+        IntPtr handle) : ITrackedForegroundWindowSource
     {
         public IntPtr GetTrackedForegroundWindow() => handle;
     }

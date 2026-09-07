@@ -2,7 +2,8 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Application;
 
-public sealed class FluentNavigationScrollMotion(TimeProvider timeProvider) : IDeltaScrollMotion
+public sealed class FluentNavigationScrollMotion(
+    TimeProvider timeProvider) : IDeltaScrollMotion
 {
     private const double FirstControlPointX = 0.55;
     private const double FirstControlPointY = 0.55;

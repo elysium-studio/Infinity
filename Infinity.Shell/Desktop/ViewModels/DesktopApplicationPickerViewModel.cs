@@ -5,7 +5,9 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed partial class DesktopApplicationPickerViewModel(IDesktopApplicationPickerCatalog applicationCatalog, IDispatcher dispatcher) : ObservableObject
+public sealed partial class DesktopApplicationPickerViewModel(
+    IDesktopApplicationPickerCatalog applicationCatalog,
+    IDispatcher dispatcher) : ObservableObject
 {
     private IReadOnlyList<DesktopApplicationPickerItemViewModel> applications = [];
     [ObservableProperty]

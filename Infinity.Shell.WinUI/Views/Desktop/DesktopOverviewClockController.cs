@@ -3,7 +3,9 @@ using Microsoft.UI.Dispatching;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopOverviewClockController(DesktopOverviewClockViewModel viewModel, DesktopOverviewClockFormatter formatter)
+public sealed class DesktopOverviewClockController(
+    DesktopOverviewClockViewModel viewModel,
+    DesktopOverviewClockFormatter formatter)
 {
     private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(1);
     private readonly DesktopOverviewClockViewModel viewModel = viewModel;

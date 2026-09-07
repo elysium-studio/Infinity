@@ -3,7 +3,10 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopApplicationPlacementResolver(IWorkspace workspace, DesktopSnapPlacementResolver snapPlacementResolver, DesktopWindowFrameGeometry frameGeometry)
+public sealed class DesktopApplicationPlacementResolver(
+    IWorkspace workspace,
+    DesktopSnapPlacementResolver snapPlacementResolver,
+    DesktopWindowFrameGeometry frameGeometry)
 {
     public bool TryResolve(TrackedWindow window, DesktopApplicationTarget target, int screenOriginX, int screenOriginY, out DesktopApplicationPlacement placement)
     {

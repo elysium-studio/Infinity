@@ -7,7 +7,14 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Shell;
 
-public abstract partial class TourShortcutViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IDispatcher dispatcher, Settings settings, IKeyLabelProvider labelProvider) : ObservableViewModel(provider, factory, messenger, disposer), ITourViewModel, IRecipient<OptionsChangedEventArgs<Settings>>
+public abstract partial class TourShortcutViewModel(
+    IServiceProvider provider,
+    IServiceFactory factory,
+    IMessenger messenger,
+    IDisposer disposer,
+    IDispatcher dispatcher,
+    Settings settings,
+    IKeyLabelProvider labelProvider) : ObservableViewModel(provider, factory, messenger, disposer), ITourViewModel, IRecipient<OptionsChangedEventArgs<Settings>>
 {
     [ObservableProperty]
     private string firstModifier = string.Empty;

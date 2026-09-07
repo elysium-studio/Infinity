@@ -3,7 +3,8 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopWindowFrameGeometry(IWindowGeometryReader reader)
+public sealed class DesktopWindowFrameGeometry(
+    IWindowGeometryReader reader)
 {
     public DesktopSnapPlacement GetVisiblePlacement(TrackedWindow window) => ToVisible(window.Handle, new(window.CanvasX, window.CanvasY, window.Width, window.Height));
 

@@ -1,6 +1,9 @@
 namespace Infinity.Shell;
 
-public sealed record DesktopWallpaperSample(int Width, int Height, byte[] Pixels)
+public sealed record DesktopWallpaperSample(
+    int Width,
+    int Height,
+    byte[] Pixels)
 {
     public uint? Sample(int monitorWidth, int monitorHeight, double x, double y, double verticalAlignment)
     {

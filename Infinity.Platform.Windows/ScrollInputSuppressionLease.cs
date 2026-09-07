@@ -1,6 +1,8 @@
 namespace Infinity.Platform.Windows;
 
-internal sealed class ScrollInputSuppressionLease(ScrollInputSuppression owner, bool keyboardOnly = false) : IDisposable
+internal sealed class ScrollInputSuppressionLease(
+    ScrollInputSuppression owner,
+    bool keyboardOnly = false) : IDisposable
 {
     private ScrollInputSuppression? owner = owner;
 

@@ -485,4 +485,10 @@
   <data name="DesktopSharedBoundaryResize" xml:space="preserve">
     <value>隣接するウィンドウのサイズを変更</value>
   </data>
+  <data name="SearchWindowContentsCard.Header" xml:space="preserve">
+    <value>ウィンドウの内容を検索</value>
+  </data>
+  <data name="SearchWindowContentsCard.Description" xml:space="preserve">
+    <value>概要を開いている間、ローカル OCR で表示中のテキストを検索します。スナップショットと抽出したテキストは一時的なもので、保存されません。</value>
+  </data>
 </root>

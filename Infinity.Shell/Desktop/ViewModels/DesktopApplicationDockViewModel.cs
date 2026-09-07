@@ -14,7 +14,12 @@ public sealed partial class DesktopApplicationDockViewModel : ObservableObject
     private readonly IDesktopApplicationPickerCatalog applicationCatalog;
     private readonly IDispatcher dispatcher;
 
-    public DesktopApplicationDockViewModel(IDesktopApplicationPinStore pinStore, IDesktopApplicationDockOrderStore orderStore, IDesktopApplicationDockCatalog dockCatalog, IDesktopApplicationPickerCatalog applicationCatalog, IDispatcher dispatcher)
+    public DesktopApplicationDockViewModel(
+        IDesktopApplicationPinStore pinStore,
+        IDesktopApplicationDockOrderStore orderStore,
+        IDesktopApplicationDockCatalog dockCatalog,
+        IDesktopApplicationPickerCatalog applicationCatalog,
+        IDispatcher dispatcher)
     {
         this.pinStore = pinStore;
         this.orderStore = orderStore;

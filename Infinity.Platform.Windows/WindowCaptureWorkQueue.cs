@@ -1,6 +1,7 @@
 namespace Infinity.Platform.Windows;
 
-public sealed class WindowCaptureWorkQueue(Action<Exception> reportFailure)
+public sealed class WindowCaptureWorkQueue(
+    Action<Exception> reportFailure)
 {
     private readonly Lock gate = new();
     private readonly Queue<Action> pending = new();

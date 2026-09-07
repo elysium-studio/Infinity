@@ -7,7 +7,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Shell;
 
-public sealed class TourViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IWritableOptions<Settings> writer, ILogger<TourViewModel> logger, IEnumerable<ITourViewModel> items) : ObservableCollectionViewModel<ITourViewModel>(provider, factory, messenger, disposer, items)
+public sealed class TourViewModel(
+    IServiceProvider provider,
+    IServiceFactory factory,
+    IMessenger messenger,
+    IDisposer disposer,
+    IWritableOptions<Settings> writer,
+    ILogger<TourViewModel> logger,
+    IEnumerable<ITourViewModel> items) : ObservableCollectionViewModel<ITourViewModel>(provider, factory, messenger, disposer, items)
 {
     private bool isFinishing;
 

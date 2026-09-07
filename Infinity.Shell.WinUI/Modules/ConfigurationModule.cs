@@ -45,6 +45,7 @@ public sealed class ConfigurationModule : IModule
     configuration.ShowClock = options.ShowOverviewClock;
     configuration.ShowPageHeaders = options.ShowOverviewPageHeaders;
     configuration.ShowSearchBox = options.ShowOverviewSearchBox;
+    configuration.SearchWindowContents = options.SearchWindowContents;
 });
         services.AddSingleton(provider => new ScrollerConfiguration { PixelsPerScrollNotch = provider.GetRequiredService<Settings>().ScrollSpeed.ToPixelsPerNotch() }).AddSingleton(provider => new DesktopOverviewDragScrollerConfiguration { SpeedLevel = provider.GetRequiredService<Settings>().DragScrollSpeed }).AddSingleton(provider =>
         {
@@ -59,7 +60,8 @@ public sealed class ConfigurationModule : IModule
                 ShowKeyboardShortcutButton = settings.ShowOverviewKeyboardShortcutButton,
                 ShowClock = settings.ShowOverviewClock,
                 ShowPageHeaders = settings.ShowOverviewPageHeaders,
-                ShowSearchBox = settings.ShowOverviewSearchBox
+                ShowSearchBox = settings.ShowOverviewSearchBox,
+                SearchWindowContents = settings.SearchWindowContents
             };
         }).AddSingleton<Func<ScrollerConfiguration>>(provider => () => provider.GetRequiredService<ScrollerConfiguration>()).AddSingleton<Func<DesktopOverviewDragScrollerConfiguration>>(provider => () => provider.GetRequiredService<DesktopOverviewDragScrollerConfiguration>()).AddSingleton<IConfiguration>(provider =>
 {

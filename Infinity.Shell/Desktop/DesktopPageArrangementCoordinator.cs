@@ -2,7 +2,12 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopPageArrangementCoordinator(IWindowStore windowStore, DesktopSnapLayoutCatalog layoutCatalog, DesktopSnapPlacementResolver placementResolver, DesktopSnapSlotOccupancyResolver occupancyResolver, DesktopWindowPlacementCoordinator windowPlacementCoordinator)
+public sealed class DesktopPageArrangementCoordinator(
+    IWindowStore windowStore,
+    DesktopSnapLayoutCatalog layoutCatalog,
+    DesktopSnapPlacementResolver placementResolver,
+    DesktopSnapSlotOccupancyResolver occupancyResolver,
+    DesktopWindowPlacementCoordinator windowPlacementCoordinator)
 {
     public int Arrange(int page, DesktopSnapLayoutKind layout, int screenOriginX, int screenOriginY)
     {

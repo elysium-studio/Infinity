@@ -23,7 +23,10 @@ internal sealed class DesktopOverlayResponsivenessMonitor : IDisposable
 
     public bool IsEmergencyHidden => tripped;
 
-    public DesktopOverlayResponsivenessMonitor(HWND[] handles, DispatcherQueue dispatcher, Action dismiss)
+    public DesktopOverlayResponsivenessMonitor(
+        HWND[] handles,
+        DispatcherQueue dispatcher,
+        Action dismiss)
     {
         this.handles = handles;
         this.dispatcher = dispatcher;

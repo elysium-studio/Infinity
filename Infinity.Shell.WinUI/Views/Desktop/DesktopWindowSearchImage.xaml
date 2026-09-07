@@ -1,0 +1,21 @@
+<UserControl
+    x:Class="Infinity.Shell.WinUI.DesktopWindowSearchImage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    IsHitTestVisible="False"
+    Visibility="Collapsed">
+    <UserControl.Resources>
+        <Style x:Key="SearchWordHighlightStyle" TargetType="Border">
+            <Setter Property="Background" Value="{ThemeResource SystemControlHighlightAccentBrush}" />
+            <Setter Property="Opacity" Value="0.4" />
+        </Style>
+    </UserControl.Resources>
+    <Border x:Name="Frame" Background="Black" CornerRadius="8">
+        <Viewbox Stretch="Uniform">
+            <Grid x:Name="ImageLayout">
+                <Image x:Name="SnapshotImage" Stretch="Fill" />
+                <Canvas x:Name="Highlights" />
+            </Grid>
+        </Viewbox>
+    </Border>
+</UserControl>

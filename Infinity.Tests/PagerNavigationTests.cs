@@ -42,7 +42,8 @@ public sealed class PagerNavigationTests
     }
 
 
-    private sealed class TestNavigationScroller(List<string> operations) : IScroller
+    private sealed class TestNavigationScroller(
+        List<string> operations) : IScroller
     {
         public event EventHandler? ScrollStarted;
 

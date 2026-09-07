@@ -5,12 +5,15 @@ namespace Infinity.Platform.Windows;
 
 public sealed class WindowCaptureSupport
 {
-    public WindowCaptureSupport(ILogger<WindowCaptureSupport> logger) : this(GraphicsCaptureSession.IsSupported, logger)
+    public WindowCaptureSupport(
+        ILogger<WindowCaptureSupport> logger) : this(GraphicsCaptureSession.IsSupported, logger)
     {
     }
 
 
-    public WindowCaptureSupport(Func<bool> probe, ILogger<WindowCaptureSupport> logger)
+    public WindowCaptureSupport(
+        Func<bool> probe,
+        ILogger<WindowCaptureSupport> logger)
     {
         ArgumentNullException.ThrowIfNull(probe);
         ArgumentNullException.ThrowIfNull(logger);

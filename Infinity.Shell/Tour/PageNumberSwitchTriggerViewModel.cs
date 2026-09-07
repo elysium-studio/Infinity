@@ -5,7 +5,14 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed class PageNumberSwitchTriggerViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IDispatcher dispatcher, Settings settings, IKeyLabelProvider labelProvider) : TourShortcutViewModel(provider, factory, messenger, disposer, dispatcher, settings, labelProvider)
+public sealed class PageNumberSwitchTriggerViewModel(
+    IServiceProvider provider,
+    IServiceFactory factory,
+    IMessenger messenger,
+    IDisposer disposer,
+    IDispatcher dispatcher,
+    Settings settings,
+    IKeyLabelProvider labelProvider) : TourShortcutViewModel(provider, factory, messenger, disposer, dispatcher, settings, labelProvider)
 {
     public override bool CanGoNext => false;
 }

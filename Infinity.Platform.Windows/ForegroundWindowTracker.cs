@@ -25,12 +25,22 @@ public sealed class ForegroundWindowTracker : IForegroundWindowTracker
 
     public event EventHandler<nint>? ForegroundWindowChanged;
 
-    public ForegroundWindowTracker(IWindowEventListener listener, IWindowFocusGuard focusGuard, IDispatcher dispatcher, ILogger<ForegroundWindowTracker> logger) : this(listener, focusGuard, dispatcher, logger, ForegroundDelay, IsWindowHandleValid)
+    public ForegroundWindowTracker(
+        IWindowEventListener listener,
+        IWindowFocusGuard focusGuard,
+        IDispatcher dispatcher,
+        ILogger<ForegroundWindowTracker> logger) : this(listener, focusGuard, dispatcher, logger, ForegroundDelay, IsWindowHandleValid)
     {
     }
 
 
-    internal ForegroundWindowTracker(IWindowEventListener listener, IWindowFocusGuard focusGuard, IDispatcher dispatcher, ILogger<ForegroundWindowTracker> logger, TimeSpan foregroundDelay, Func<nint, bool> isWindowHandleValid)
+    internal ForegroundWindowTracker(
+        IWindowEventListener listener,
+        IWindowFocusGuard focusGuard,
+        IDispatcher dispatcher,
+        ILogger<ForegroundWindowTracker> logger,
+        TimeSpan foregroundDelay,
+        Func<nint, bool> isWindowHandleValid)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(foregroundDelay, TimeSpan.Zero);
         this.listener = listener;
@@ -308,7 +318,11 @@ public sealed class ForegroundWindowTracker : IForegroundWindowTracker
     }
 
 
-    internal readonly record struct ForegroundTransition(nint WindowHandle, nint PreviousWindowHandle, nint PreviousPreviousWindowHandle, bool PreviousWindowDestroyed)
+    internal readonly record struct ForegroundTransition(
+        nint WindowHandle,
+        nint PreviousWindowHandle,
+        nint PreviousPreviousWindowHandle,
+        bool PreviousWindowDestroyed)
     {
         public bool IsCloseFallback => PreviousWindowDestroyed && PreviousWindowHandle != 0 && WindowHandle == PreviousPreviousWindowHandle;
     }

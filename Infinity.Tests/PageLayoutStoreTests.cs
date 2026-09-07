@@ -43,7 +43,8 @@ public sealed class PageLayoutStoreTests
     }
 
 
-    private sealed class TestWritableOptions(Settings settings) : IWritableOptions<Settings>
+    private sealed class TestWritableOptions(
+        Settings settings) : IWritableOptions<Settings>
     {
         public Task<Settings?> ReadAsync(CancellationToken cancellationToken = default) => Task.FromResult<Settings?>(settings);
 
@@ -58,7 +59,8 @@ public sealed class PageLayoutStoreTests
     }
 
 
-    private sealed class TestOptionsMonitor(Settings settings) : IOptionsMonitor<Settings>
+    private sealed class TestOptionsMonitor(
+        Settings settings) : IOptionsMonitor<Settings>
     {
         public Settings CurrentValue => settings;
 

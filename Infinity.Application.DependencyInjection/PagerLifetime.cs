@@ -6,7 +6,26 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application.DependencyInjection;
 
-public sealed class PagerLifetime(IWindowTracker tracker, IWindowEnumerator enumerator, IWindowEventListener listener, IWindowDragGuard dragGuard, IPageGestureSource gestureSource, IWindowPageJumper jumper, IWindowTitleSynchronizer titleSynchronizer, IWindowStack stack, IForegroundWindowTracker foreground, IScrollInputSource scrollInput, IPointerInputSource pointerInput, IKeyboardInputSource keyboardInput, IScroller coordinator, IWindowConcealmentRecovery concealmentRecovery, StartupPageRestorer startupPageRestorer, IPager pager, IWindowCollection windowCollection, IScrollTimer timer, ILogger<PagerLifetime> logger) : IHostedService, IDisposable
+public sealed class PagerLifetime(
+    IWindowTracker tracker,
+    IWindowEnumerator enumerator,
+    IWindowEventListener listener,
+    IWindowDragGuard dragGuard,
+    IPageGestureSource gestureSource,
+    IWindowPageJumper jumper,
+    IWindowTitleSynchronizer titleSynchronizer,
+    IWindowStack stack,
+    IForegroundWindowTracker foreground,
+    IScrollInputSource scrollInput,
+    IPointerInputSource pointerInput,
+    IKeyboardInputSource keyboardInput,
+    IScroller coordinator,
+    IWindowConcealmentRecovery concealmentRecovery,
+    StartupPageRestorer startupPageRestorer,
+    IPager pager,
+    IWindowCollection windowCollection,
+    IScrollTimer timer,
+    ILogger<PagerLifetime> logger) : IHostedService, IDisposable
 {
     private int cleanupCompleted;
     private int startInitiated;

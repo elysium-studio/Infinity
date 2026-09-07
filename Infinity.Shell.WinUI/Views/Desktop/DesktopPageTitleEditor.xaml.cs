@@ -20,7 +20,9 @@ public sealed partial class DesktopPageTitleEditor : UserControl, IDisposable
     }
 
 
-    public DesktopPageTitleEditor(DesktopPageEditorLabels labels, DesktopSnapLayoutCatalog layoutCatalog)
+    public DesktopPageTitleEditor(
+        DesktopPageEditorLabels labels,
+        DesktopSnapLayoutCatalog layoutCatalog)
     {
         ViewModel = new(labels, layoutCatalog);
         InitializeComponent();

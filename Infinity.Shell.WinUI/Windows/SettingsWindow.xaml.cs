@@ -29,7 +29,12 @@ public sealed partial class SettingsWindow : Window
     private bool isQuitDialogOpen;
     private bool isTourOpening;
 
-    public SettingsWindow(ITextLocalizer localizer, IApplicationLifetime applicationLifetime, INavigator navigator, AboutViewModel aboutViewModel, SettingsNavigationPathResolver navigationPathResolver)
+    public SettingsWindow(
+        ITextLocalizer localizer,
+        IApplicationLifetime applicationLifetime,
+        INavigator navigator,
+        AboutViewModel aboutViewModel,
+        SettingsNavigationPathResolver navigationPathResolver)
     {
         InitializeComponent();
         this.localizer = localizer;

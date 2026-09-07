@@ -5,7 +5,9 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopApplicationDockContextMenuBuilder(DesktopApplicationDockViewModel dock, ITextLocalizer localizer)
+public sealed class DesktopApplicationDockContextMenuBuilder(
+    DesktopApplicationDockViewModel dock,
+    ITextLocalizer localizer)
 {
     public MenuFlyout CreatePin(LaunchableApplication application)
     {

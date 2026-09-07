@@ -3,7 +3,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopApplicationDockCatalog(IDesktopApplicationPickerCatalog applicationCatalog, ITaskbarPinnedApplicationSource taskbarPins, IDesktopApplicationPinStore infinityPins, IDesktopApplicationDockOrderStore orderStore, ILogger<DesktopApplicationDockCatalog> logger) : IDesktopApplicationDockCatalog
+public sealed class DesktopApplicationDockCatalog(
+    IDesktopApplicationPickerCatalog applicationCatalog,
+    ITaskbarPinnedApplicationSource taskbarPins,
+    IDesktopApplicationPinStore infinityPins,
+    IDesktopApplicationDockOrderStore orderStore,
+    ILogger<DesktopApplicationDockCatalog> logger) : IDesktopApplicationDockCatalog
 {
     public async Task<IReadOnlyList<DesktopApplicationDockEntry>> GetApplicationsAsync(int maximumCount, CancellationToken cancellationToken = default)
     {

@@ -4,7 +4,17 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopWindowPlacementCoordinator(IWindowStore windowStore, IScroller scroller, IWorkspace workspace, IWindowResizeSynchronizer resizeSynchronizer, IWindowCloser windowCloser, IWindowStateController windowStateController, IWindowPageTransitionGuard pageTransitionGuard, DesktopSnapPlacementResolver snapPlacementResolver, DesktopSnapSlotOccupancyResolver occupancyResolver, DesktopWindowFrameGeometry frameGeometry)
+public sealed class DesktopWindowPlacementCoordinator(
+    IWindowStore windowStore,
+    IScroller scroller,
+    IWorkspace workspace,
+    IWindowResizeSynchronizer resizeSynchronizer,
+    IWindowCloser windowCloser,
+    IWindowStateController windowStateController,
+    IWindowPageTransitionGuard pageTransitionGuard,
+    DesktopSnapPlacementResolver snapPlacementResolver,
+    DesktopSnapSlotOccupancyResolver occupancyResolver,
+    DesktopWindowFrameGeometry frameGeometry)
 {
     public event Action<IReadOnlyList<nint>>? PlacementStarting;
 

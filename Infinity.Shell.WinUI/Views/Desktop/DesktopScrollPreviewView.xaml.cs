@@ -45,6 +45,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
     private readonly DesktopOverviewLayoutPresenter layoutPresenter;
     private readonly DesktopPageStrip pageStrip;
     private readonly DesktopWindowPreviewCollection previews;
+    private readonly DesktopWindowContentSearchController contentSearch;
     private readonly DesktopDragCursorConfinement cursorConfinement;
     private readonly DesktopApplicationDockContextMenuBuilder applicationDockContextMenuBuilder;
     private readonly DesktopApplicationDockPressAnimator applicationDockPressAnimator;
@@ -71,9 +72,40 @@ public sealed partial class DesktopScrollPreviewView : UserControl
     private int foregroundGeneration;
     private (int X, int Y, int OffsetX, int OffsetY, int ScreenWidth, int ScreenHeight, double Width, double Height)? appliedViewport;
 
-    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IPanState panState, IPager pager, IScroller scroller, IWorkspace workspace, IScrollInputSuppression scrollInputSuppression, IDesktopBackgroundSource backgroundSource, DesktopOverviewConfiguration overviewConfiguration, DesktopOverviewForegroundThemeResolver foregroundThemeResolver, DesktopScrollPreviewAnimator animator, DesktopOverviewChromeAnimator chromeAnimator, DesktopOverviewClockController clockController, DesktopOverviewLayoutPresenter layoutPresenter, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationDockViewModel applicationDock, DesktopApplicationDockContextMenuBuilder applicationDockContextMenuBuilder, DesktopApplicationDockPressAnimator applicationDockPressAnimator, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator, DesktopOverviewInputController inputController, DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator, DesktopOverlayBoundaryResizeController boundaryResize, DesktopWindowDragFrames dragFrames, ILogger<DesktopScrollPreviewView> logger)
+    public DesktopScrollPreviewView(
+        IWindowPreviewSurface windowPreviewSurface,
+        IWindowCollection windowCollection,
+        IPanState panState,
+        IPager pager,
+        IScroller scroller,
+        IWorkspace workspace,
+        IScrollInputSuppression scrollInputSuppression,
+        IDesktopBackgroundSource backgroundSource,
+        DesktopOverviewConfiguration overviewConfiguration,
+        DesktopOverviewForegroundThemeResolver foregroundThemeResolver,
+        DesktopScrollPreviewAnimator animator,
+        DesktopOverviewChromeAnimator chromeAnimator,
+        DesktopOverviewClockController clockController,
+        DesktopOverviewLayoutPresenter layoutPresenter,
+        DesktopPageStrip pageStrip,
+        DesktopWindowPreviewCollection previews,
+        DesktopDragCursorConfinement cursorConfinement,
+        DesktopShortcutHintsViewModel shortcutHints,
+        DesktopApplicationPickerViewModel applicationPicker,
+        DesktopApplicationDockViewModel applicationDock,
+        DesktopApplicationDockContextMenuBuilder applicationDockContextMenuBuilder,
+        DesktopApplicationDockPressAnimator applicationDockPressAnimator,
+        DesktopApplicationLaunchCoordinator applicationLaunchCoordinator,
+        DesktopOverviewInputController inputController,
+        DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator,
+        DesktopOverlayBoundaryResizeController boundaryResize,
+        DesktopWindowDragFrames dragFrames,
+        DesktopWindowContentSearchController contentSearch,
+        ILogger<DesktopScrollPreviewView> logger)
     {
         InitializeComponent();
+        PeekView.Dismissed += DismissPeek;
+        PeekView.Invoked += HandlePeekInvoked;
         this.windowPreviewSurface = windowPreviewSurface;
         this.windowCollection = windowCollection;
         this.panState = panState;
@@ -90,6 +122,8 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         this.layoutPresenter = layoutPresenter;
         this.pageStrip = pageStrip;
         this.previews = previews;
+        this.contentSearch = contentSearch;
+        contentSearch.Updated += HandleContentSearchUpdated;
         this.cursorConfinement = cursorConfinement;
         this.applicationLaunchCoordinator = applicationLaunchCoordinator;
         this.inputController = inputController;
@@ -109,6 +143,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         this.pageStrip.PageInvoked += HandlePageInvoked;
         this.pageStrip.ReorderPreviewChanged += HandlePageReorderPreviewChanged;
         this.previews.WindowInvoked += HandleWindowInvoked;
+        this.previews.WindowPeekRequested += HandleWindowPeekRequested;
         this.previews.WindowPositionChanged += HandleWindowPositionChanged;
         this.inputController.WindowInvoked += HandleWindowInvoked;
         ApplicationPickerFlyout.Opened += HandleApplicationPickerOpened;
@@ -229,6 +264,10 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         }
 
         windowPreviewSurface.Initialize(ownerWindowHandle);
+        if (overviewConfiguration.SearchWindowContents && overviewConfiguration.ShowSearchBox)
+        {
+            contentSearch.Start();
+        }
     }
 
 
@@ -295,6 +334,8 @@ public sealed partial class DesktopScrollPreviewView : UserControl
             return;
         }
 
+        ClosePeek();
+        contentSearch.Stop();
         if (!isRunning)
         {
             completed();
@@ -316,6 +357,8 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         }
 
         isRunning = false;
+        ClosePeek();
+        contentSearch.Stop();
         refreshQueue.Stop();
         clockController.Stop();
         foregroundGeneration++;
@@ -357,6 +400,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         RefreshMonitorOrigin();
         layoutPresenter.Synchronise(PreviewBackgroundCanvas, PreviewCanvas, FocusCanvas, animator.Scale, monitorOriginX, monitorOriginY, spacingProgress);
         UpdateLiveWindowDragPreview();
+        RefreshPeek();
         boundaryResize.Refresh();
     }
 
@@ -384,6 +428,11 @@ public sealed partial class DesktopScrollPreviewView : UserControl
 
     private void SetInteractionEnabled(bool value)
     {
+        if (!value)
+        {
+            ClosePeek();
+        }
+        contentSearch.IsInteractionEnabled = value && !contentDragEnabled;
         interactionReady = value;
         if (!value)
         {
@@ -491,6 +540,16 @@ public sealed partial class DesktopScrollPreviewView : UserControl
 
     private void ApplyChromeSettings()
     {
+        if (!overviewConfiguration.SearchWindowContents || !overviewConfiguration.ShowSearchBox)
+        {
+            ClosePeek();
+            contentSearch.Stop();
+            HandleContentSearchUpdated();
+        }
+        else if (isRunning)
+        {
+            contentSearch.Start();
+        }
         ApplicationDockChrome.Visibility = overviewConfiguration.ShowApplicationDock ? Visibility.Visible : Visibility.Collapsed;
         ShortcutHintSurface.Visibility = overviewConfiguration.ShowKeyboardShortcutButton ? Visibility.Visible : Visibility.Collapsed;
         ClockSurface.Visibility = overviewConfiguration.ShowClock ? Visibility.Visible : Visibility.Collapsed;
@@ -988,7 +1047,20 @@ public sealed partial class DesktopScrollPreviewView : UserControl
     }
 
 
-    private void HandleWindowSearchBoxTextChanged(object sender, TextChangedEventArgs args) => inputController.ApplyFilter(WindowSearchBox.Text, isRunning);
+    private void HandleWindowSearchBoxTextChanged(object sender, TextChangedEventArgs args)
+    {
+        ClosePeek();
+        inputController.ApplyFilter(WindowSearchBox.Text, isRunning);
+    }
+
+    private void HandleContentSearchUpdated()
+    {
+        RefreshPeek();
+        if (isRunning && WindowSearchBox.Text.Length > 0)
+        {
+            inputController.ApplyFilter(WindowSearchBox.Text, true, navigate: false);
+        }
+    }
 
     private void HandleWindowSearchBoxKeyDown(object sender, KeyRoutedEventArgs args) => args.Handled = inputController.HandleKeyDown(args.Key);
 
@@ -998,7 +1070,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
 
     private void HandleCharacterReceived(UIElement sender, CharacterReceivedRoutedEventArgs args)
     {
-        if (contentDragEnabled || !isRunning || !overviewConfiguration.ShowSearchBox || WindowSearchBox.FocusState != FocusState.Unfocused || ApplicationPickerFlyout.IsOpen || pageStrip.IsEditorActive || args.Character < 0x20 || args.Character == 0x7F)
+        if (peekWindowHandle != 0 || contentDragEnabled || !isRunning || !overviewConfiguration.ShowSearchBox || WindowSearchBox.FocusState != FocusState.Unfocused || ApplicationPickerFlyout.IsOpen || pageStrip.IsEditorActive || args.Character < 0x20 || args.Character == 0x7F)
         {
             return;
         }
@@ -1013,6 +1085,11 @@ public sealed partial class DesktopScrollPreviewView : UserControl
 
     internal bool TryHandleGlobalKeyDown(int virtualKeyCode, bool controlDown, bool shiftDown, bool menuDown, bool windowsDown)
     {
+        if (DesktopOverviewKeySuppression.IsModifier(virtualKeyCode))
+        {
+            return false;
+        }
+
         if (boundaryResize.IsResizing)
         {
             if (virtualKeyCode == 0x1B)
@@ -1026,6 +1103,11 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         if (!isRunning || ApplicationPickerFlyout.IsOpen || pageStrip.IsEditorActive)
         {
             return false;
+        }
+
+        if (peekWindowHandle != 0)
+        {
+            return true;
         }
 
         return inputController.TryHandleGlobalKeyDown(virtualKeyCode, controlDown, shiftDown, menuDown, windowsDown, RemoveLastFilterCharacter, AppendFilterText, FocusWindowSearchBox);

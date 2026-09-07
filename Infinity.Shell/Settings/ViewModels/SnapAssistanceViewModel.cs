@@ -3,4 +3,11 @@ using Elysium.Application.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed class SnapAssistanceViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IDispatcher dispatcher, Settings settings, IWritableOptions<Settings> writer) : DesktopOverviewBooleanSettingViewModel(provider, factory, messenger, disposer, dispatcher, settings, writer, config => config.EnableSnapAssistance, (config, value) => config.EnableSnapAssistance = value), IOverviewViewModel;
+public sealed class SnapAssistanceViewModel(
+    IServiceProvider provider,
+    IServiceFactory factory,
+    IMessenger messenger,
+    IDisposer disposer,
+    IDispatcher dispatcher,
+    Settings settings,
+    IWritableOptions<Settings> writer) : DesktopOverviewBooleanSettingViewModel(provider, factory, messenger, disposer, dispatcher, settings, writer, config => config.EnableSnapAssistance, (config, value) => config.EnableSnapAssistance = value), IOverviewViewModel;

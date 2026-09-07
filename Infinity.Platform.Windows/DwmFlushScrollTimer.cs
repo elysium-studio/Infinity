@@ -17,7 +17,8 @@ public sealed class DwmFlushScrollTimer : IScrollTimer, IDisposable
 
     public event EventHandler? Tick;
 
-    public DwmFlushScrollTimer(ILogger<DwmFlushScrollTimer> logger)
+    public DwmFlushScrollTimer(
+        ILogger<DwmFlushScrollTimer> logger)
     {
         this.logger = logger;
         thread = new(Run)

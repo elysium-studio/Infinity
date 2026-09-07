@@ -6,7 +6,15 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed partial class ResetPageCustomizationsViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IDispatcher dispatcher, Settings settings, IWritableOptions<Settings> writer, ITextLocalizer localizer) : ObservableViewModel(provider, factory, messenger, disposer), IAdvancedViewModel, IRecipient<OptionsChangedEventArgs<Settings>>
+public sealed partial class ResetPageCustomizationsViewModel(
+    IServiceProvider provider,
+    IServiceFactory factory,
+    IMessenger messenger,
+    IDisposer disposer,
+    IDispatcher dispatcher,
+    Settings settings,
+    IWritableOptions<Settings> writer,
+    ITextLocalizer localizer) : ObservableViewModel(provider, factory, messenger, disposer), IAdvancedViewModel, IRecipient<OptionsChangedEventArgs<Settings>>
 {
     private readonly IDispatcher dispatcher = dispatcher;
     [ObservableProperty]

@@ -3,7 +3,10 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopWindowDropNavigationCoordinator(IWindowStore windowStore, IWorkspace workspace, IPager pager)
+public sealed class DesktopWindowDropNavigationCoordinator(
+    IWindowStore windowStore,
+    IWorkspace workspace,
+    IPager pager)
 {
     public bool NavigateToDroppedWindow(nint handle)
     {

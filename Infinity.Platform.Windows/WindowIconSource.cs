@@ -8,7 +8,9 @@ using Windows.Win32.Foundation;
 
 namespace Infinity.Platform.Windows;
 
-public sealed partial class WindowIconSource(IApplicationCatalog catalog, ILogger<WindowIconSource> logger) : IWindowIconSource
+public sealed partial class WindowIconSource(
+    IApplicationCatalog catalog,
+    ILogger<WindowIconSource> logger) : IWindowIconSource
 {
     public async Task<ApplicationIcon?> GetIconAsync(nint windowHandle)
     {

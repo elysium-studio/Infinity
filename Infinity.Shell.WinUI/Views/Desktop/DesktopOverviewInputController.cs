@@ -7,7 +7,13 @@ using Windows.System;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopOverviewInputController(IWindowCollection windowCollection, IPager pager, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowPreviewCollection previews, ITrackedForegroundWindowSource trackedForegroundWindowSource, IKeyboardTextTranslator keyboardTextTranslator)
+public sealed class DesktopOverviewInputController(
+    IWindowCollection windowCollection,
+    IPager pager,
+    DesktopWindowPlacementCoordinator windowPlacementCoordinator,
+    DesktopWindowPreviewCollection previews,
+    ITrackedForegroundWindowSource trackedForegroundWindowSource,
+    IKeyboardTextTranslator keyboardTextTranslator)
 {
     private bool controlKeyDown;
     private bool filterActive;
@@ -16,7 +22,7 @@ public sealed class DesktopOverviewInputController(IWindowCollection windowColle
 
     public event Action<nint>? WindowInvoked;
 
-    public void ApplyFilter(string text, bool isRunning)
+    public void ApplyFilter(string text, bool isRunning, bool navigate = true)
     {
         bool isActive = !string.IsNullOrWhiteSpace(text);
         nint focusedHandle = previews.SetFilter(text, windowCollection.AllTrackedWindows);
@@ -39,7 +45,10 @@ public sealed class DesktopOverviewInputController(IWindowCollection windowColle
             return;
         }
 
-        NavigateToWindow(focusedHandle);
+        if (navigate)
+        {
+            NavigateToWindow(focusedHandle);
+        }
     }
 
 

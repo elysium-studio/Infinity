@@ -3,7 +3,8 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Platform.Windows;
 
-public sealed class WindowDragGuard(IWindowEventListener listener) : IWindowDragGuard
+public sealed class WindowDragGuard(
+    IWindowEventListener listener) : IWindowDragGuard
 {
     private readonly Lock syncRoot = new();
     private readonly HashSet<nint> draggingWindows = [];

@@ -7,7 +7,9 @@ using Microsoft.UI.Xaml.Media;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class CompositionScrollTimer(DispatcherQueue dispatcherQueue, ILogger<CompositionScrollTimer> logger) : IScrollTimer, IDisposable
+public sealed class CompositionScrollTimer(
+    DispatcherQueue dispatcherQueue,
+    ILogger<CompositionScrollTimer> logger) : IScrollTimer, IDisposable
 {
     private int running;
     private int disposed;

@@ -4,7 +4,9 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Application;
 
-public sealed class ModifiedScrollInput(IPointerInputSource pointer, IModifierKeyState modifierKeyState) : IScrollInputSource
+public sealed class ModifiedScrollInput(
+    IPointerInputSource pointer,
+    IModifierKeyState modifierKeyState) : IScrollInputSource
 {
     private bool isStarted;
 

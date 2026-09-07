@@ -10,7 +10,12 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Infinity.Platform.Windows;
 
-public sealed class WindowStack(IWindowStore repository, IWindowEventListener listener, Func<nint> handleFactory, IDispatcher dispatcher, ILogger<WindowStack> logger) : IWindowStack
+public sealed class WindowStack(
+    IWindowStore repository,
+    IWindowEventListener listener,
+    Func<nint> handleFactory,
+    IDispatcher dispatcher,
+    ILogger<WindowStack> logger) : IWindowStack
 {
     private const SET_WINDOW_POS_FLAGS SwpNoActivate = SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE;
     private const SET_WINDOW_POS_FLAGS SwpNoMove = SET_WINDOW_POS_FLAGS.SWP_NOMOVE;

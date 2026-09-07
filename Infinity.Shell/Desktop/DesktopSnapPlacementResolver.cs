@@ -2,7 +2,9 @@ using Elysium.Platform.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopSnapPlacementResolver(IWorkspace workspace, DesktopSnapLayoutCatalog catalog)
+public sealed class DesktopSnapPlacementResolver(
+    IWorkspace workspace,
+    DesktopSnapLayoutCatalog catalog)
 {
     public const double SlotGap = 0;
 

@@ -6,7 +6,14 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopOverviewLayoutPresenter(IWindowCollection windowCollection, IShellLayoutCalculator layoutCalculator, IScroller scroller, IWorkspace workspace, DesktopPageLayoutCalculator pageLayoutCalculator, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews)
+public sealed class DesktopOverviewLayoutPresenter(
+    IWindowCollection windowCollection,
+    IShellLayoutCalculator layoutCalculator,
+    IScroller scroller,
+    IWorkspace workspace,
+    DesktopPageLayoutCalculator pageLayoutCalculator,
+    DesktopPageStrip pageStrip,
+    DesktopWindowPreviewCollection previews)
 {
     private DesktopPageReorderPreviewState? pageReorderState;
 

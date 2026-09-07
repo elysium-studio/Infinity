@@ -485,4 +485,10 @@
   <data name="DesktopSharedBoundaryResize" xml:space="preserve">
     <value>调整相邻窗口大小</value>
   </data>
+  <data name="SearchWindowContentsCard.Header" xml:space="preserve">
+    <value>搜索窗口内容</value>
+  </data>
+  <data name="SearchWindowContentsCard.Description" xml:space="preserve">
+    <value>概览打开时，使用本地 OCR 搜索可见文字。快照和提取的文字仅临时使用，不会保存。</value>
+  </data>
 </root>

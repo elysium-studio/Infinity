@@ -1,6 +1,10 @@
 namespace Infinity.Shell;
 
-public sealed record DesktopPageReorderPreviewState(int SourcePage, int TargetPage, double HorizontalDelta, bool IsGapOpen = true)
+public sealed record DesktopPageReorderPreviewState(
+    int SourcePage,
+    int TargetPage,
+    double HorizontalDelta,
+    bool IsGapOpen = true)
 {
     public int MapPage(int page)
     {

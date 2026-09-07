@@ -3,7 +3,9 @@ using Microsoft.Extensions.Options;
 
 namespace Infinity.Shell;
 
-public sealed class PageLayoutStore(IOptionsMonitor<Settings> settings, IWritableOptions<Settings> writer)
+public sealed class PageLayoutStore(
+    IOptionsMonitor<Settings> settings,
+    IWritableOptions<Settings> writer)
 {
     public event Action<int, DesktopSnapLayoutKind>? LayoutChanged;
 

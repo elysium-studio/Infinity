@@ -7,7 +7,13 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Application;
 
-public sealed class WindowPageCoordinator(IWindowStore store, IScroller scroller, IWorkspace workspace, IWindowActivator activator, IDispatcher dispatcher, WindowPageGeometry geometry) : IWindowNavigationCoordinator, IForegroundWindowCoordinator, ITrackedForegroundWindowSource, ITrackedForegroundWindowTarget
+public sealed class WindowPageCoordinator(
+    IWindowStore store,
+    IScroller scroller,
+    IWorkspace workspace,
+    IWindowActivator activator,
+    IDispatcher dispatcher,
+    WindowPageGeometry geometry) : IWindowNavigationCoordinator, IForegroundWindowCoordinator, ITrackedForegroundWindowSource, ITrackedForegroundWindowTarget
 {
     private static readonly TimeSpan ProgrammaticForegroundWindow = TimeSpan.FromMilliseconds(600);
     private static readonly TimeSpan ForegroundFollowDeferDelay = TimeSpan.FromMilliseconds(80);

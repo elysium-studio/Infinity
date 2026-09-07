@@ -23,7 +23,8 @@ public sealed class DesktopApplicationDockViewModelTests
     }
 
 
-    private sealed class TestPinStore(IReadOnlyList<LaunchableApplication> applications) : IDesktopApplicationPinStore
+    private sealed class TestPinStore(
+        IReadOnlyList<LaunchableApplication> applications) : IDesktopApplicationPinStore
     {
         public event Action? PinsChanged;
 

@@ -1,6 +1,13 @@
 namespace Infinity.Shell;
 
-public readonly record struct DesktopWindowDragViewport(double ScreenX, double ScreenY, double RasterizationScale, double SurfaceX, double SurfaceY, double CenterX, double CenterY)
+public readonly record struct DesktopWindowDragViewport(
+    double ScreenX,
+    double ScreenY,
+    double RasterizationScale,
+    double SurfaceX,
+    double SurfaceY,
+    double CenterX,
+    double CenterY)
 {
     public (double X, double Y) FromScreen(double x, double y) => ((x - ScreenX) / RasterizationScale, (y - ScreenY) / RasterizationScale);
 

@@ -9,7 +9,10 @@ public sealed partial class DesktopSnapLayoutOptionViewModel : ObservableObject
     [ObservableProperty]
     private bool isSelected;
 
-    public DesktopSnapLayoutOptionViewModel(DesktopSnapLayoutDefinition definition, double previewWidth, double previewHeight)
+    public DesktopSnapLayoutOptionViewModel(
+        DesktopSnapLayoutDefinition definition,
+        double previewWidth,
+        double previewHeight)
     {
         Kind = definition.Kind;
         PreviewWidth = previewWidth;

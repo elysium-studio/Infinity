@@ -27,7 +27,9 @@ internal sealed class DesktopSnapZonePresenter : IDisposable
         IsHitTestVisible = false
     };
 
-    public DesktopSnapZonePresenter(DesktopSnapLayoutCatalog catalog, double scale)
+    public DesktopSnapZonePresenter(
+        DesktopSnapLayoutCatalog catalog,
+        double scale)
     {
         this.catalog = catalog;
         visualScale = double.IsFinite(scale) && scale > 0 ? scale : 1;

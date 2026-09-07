@@ -485,4 +485,10 @@
   <data name="DesktopSharedBoundaryResize" xml:space="preserve">
     <value>Redimensionner les fenêtres voisines</value>
   </data>
+  <data name="SearchWindowContentsCard.Header" xml:space="preserve">
+    <value>Rechercher dans le contenu des fenêtres</value>
+  </data>
+  <data name="SearchWindowContentsCard.Description" xml:space="preserve">
+    <value>Recherchez le texte visible avec la reconnaissance locale lorsque la vue d’ensemble est ouverte. Les captures et le texte extrait sont temporaires et ne sont pas enregistrés.</value>
+  </data>
 </root>

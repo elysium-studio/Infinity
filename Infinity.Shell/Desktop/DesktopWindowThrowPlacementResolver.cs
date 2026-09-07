@@ -3,7 +3,13 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopWindowThrowPlacementResolver(IWindowStore windows, IWorkspace workspace, DesktopSnapLayoutCatalog catalog, DesktopSnapPlacementResolver placements, DesktopSnapSlotOccupancyResolver occupancy, DesktopWindowFrameGeometry frames)
+public sealed class DesktopWindowThrowPlacementResolver(
+    IWindowStore windows,
+    IWorkspace workspace,
+    DesktopSnapLayoutCatalog catalog,
+    DesktopSnapPlacementResolver placements,
+    DesktopSnapSlotOccupancyResolver occupancy,
+    DesktopWindowFrameGeometry frames)
 {
     public DesktopSnapPlacement? GetOrigin(nint handle) => windows.TryGet(handle, out TrackedWindow? window) ? frames.GetVisiblePlacement(window) : null;
 

@@ -5,7 +5,16 @@ using Elysium.Presentation;
 
 namespace Infinity.Shell;
 
-public sealed partial class VirtualPagesCountViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IDispatcher dispatcher, Settings settings, IWritableOptions<Settings> writer, Func<Settings, double> read, Action<Settings, double> write) : ObservableReadWriteViewModel<Settings, double>(provider, factory, messenger, disposer, dispatcher, settings, writer, read, write), IPagesViewModel
+public sealed partial class VirtualPagesCountViewModel(
+    IServiceProvider provider,
+    IServiceFactory factory,
+    IMessenger messenger,
+    IDisposer disposer,
+    IDispatcher dispatcher,
+    Settings settings,
+    IWritableOptions<Settings> writer,
+    Func<Settings, double> read,
+    Action<Settings, double> write) : ObservableReadWriteViewModel<Settings, double>(provider, factory, messenger, disposer, dispatcher, settings, writer, read, write), IPagesViewModel
 {
     [ObservableProperty]
     private bool isEnabled;

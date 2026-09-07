@@ -1,6 +1,8 @@
 namespace Infinity.Shell;
 
-public readonly record struct DesktopContentDragTarget(int Page, nint Window)
+public readonly record struct DesktopContentDragTarget(
+    int Page,
+    nint Window)
 {
     public static DesktopContentDragTarget None => new(-1, 0);
 }

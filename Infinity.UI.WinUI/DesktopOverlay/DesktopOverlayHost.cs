@@ -66,7 +66,8 @@ internal class DesktopOverlayHost
 
     internal static void UnregisterExcludedHandle(HWND handle) => globalExcludedHandles.Remove(handle);
 
-    public DesktopOverlayHost(DesktopOverlay overlay)
+    public DesktopOverlayHost(
+        DesktopOverlay overlay)
     {
         this.overlay = overlay;
         mouseProc = MouseHookCallback;

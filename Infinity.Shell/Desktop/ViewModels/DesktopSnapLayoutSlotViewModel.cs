@@ -2,7 +2,11 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Infinity.Shell;
 
-public sealed partial class DesktopSnapLayoutSlotViewModel(double x, double y, double width, double height) : ObservableObject
+public sealed partial class DesktopSnapLayoutSlotViewModel(
+    double x,
+    double y,
+    double width,
+    double height) : ObservableObject
 {
     private DesktopSnapLayoutOptionInteractionState interactionState;
 

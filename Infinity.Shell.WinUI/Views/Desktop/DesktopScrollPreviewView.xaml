@@ -8,6 +8,7 @@
     ActualThemeChanged="HandleActualThemeChanged"
     Background="Transparent"
     CharacterReceived="HandleCharacterReceived"
+    KeyDown="HandleOverviewKeyDown"
     Opacity="0">
     <UserControl.Resources>
         <Style x:Key="OverviewShortcutKeyStyle" TargetType="Border">
@@ -541,5 +542,6 @@
             DragLeave="HandleContentDragLeave"
             Drop="HandleContentDragLeave"
             Visibility="Collapsed" />
+        <Local:DesktopWindowPeekView x:Name="PeekView" Canvas.ZIndex="3" />
     </Grid>
 </UserControl>

@@ -63,4 +63,8 @@ public sealed class DesktopWindowDragFrames
     }
 }
 
-internal readonly record struct DesktopWindowDragFrame(int ScreenX, int ScreenY, Point Position, bool IsButtonDown);
+internal readonly record struct DesktopWindowDragFrame(
+    int ScreenX,
+    int ScreenY,
+    Point Position,
+    bool IsButtonDown);

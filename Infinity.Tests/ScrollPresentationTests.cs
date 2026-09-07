@@ -482,7 +482,8 @@ public sealed class ScrollPresentationTests
     }
 
 
-    private sealed class QueuedDeltaScrollMotion(params double[] deltas) : IDeltaScrollMotion
+    private sealed class QueuedDeltaScrollMotion(
+        params double[] deltas) : IDeltaScrollMotion
     {
         private readonly Queue<double> deltas = new(deltas);
 
@@ -513,7 +514,8 @@ public sealed class ScrollPresentationTests
     }
 
 
-    private sealed class TestPageCenterTargetResolver(double pageWidth = 0) : IPageCenterTargetResolver
+    private sealed class TestPageCenterTargetResolver(
+        double pageWidth = 0) : IPageCenterTargetResolver
     {
         public bool TryResolve(double offset, double minimumOffset, double maximumOffset, out double targetOffset)
         {
@@ -530,7 +532,8 @@ public sealed class ScrollPresentationTests
     }
 
 
-    private sealed class FixedPageCenterTargetResolver(double target) : IPageCenterTargetResolver
+    private sealed class FixedPageCenterTargetResolver(
+        double target) : IPageCenterTargetResolver
     {
         public bool TryResolve(double offset, double minimumOffset, double maximumOffset, out double targetOffset)
         {

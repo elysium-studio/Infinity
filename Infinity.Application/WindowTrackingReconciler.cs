@@ -3,7 +3,11 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Application;
 
-public sealed class WindowTrackingReconciler(IWindowStore repository, IWindowFilter filter, IWindowEnumerator enumerator, nint ownerWindowHandle)
+public sealed class WindowTrackingReconciler(
+    IWindowStore repository,
+    IWindowFilter filter,
+    IWindowEnumerator enumerator,
+    nint ownerWindowHandle)
 {
     public void Reconcile(Action<nint, IReadOnlyDictionary<nint, int>> register, Action<nint> unregister)
     {

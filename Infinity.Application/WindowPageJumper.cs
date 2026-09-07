@@ -4,7 +4,17 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public sealed class WindowPageJumper(WindowArrowSwitchGesture arrowSwitch, WindowArrowMoveGesture arrowMove, WindowNumberSwitchGesture numberSwitch, WindowNumberMoveGesture numberMove, IForegroundWindowSource foregroundWindowSource, ITrackedForegroundWindowSource trackedForegroundWindowSource, IWindowStore store, IPager pager, IWorkspace workspace, ILogger<WindowPageJumper> logger) : IWindowPageJumper
+public sealed class WindowPageJumper(
+    WindowArrowSwitchGesture arrowSwitch,
+    WindowArrowMoveGesture arrowMove,
+    WindowNumberSwitchGesture numberSwitch,
+    WindowNumberMoveGesture numberMove,
+    IForegroundWindowSource foregroundWindowSource,
+    ITrackedForegroundWindowSource trackedForegroundWindowSource,
+    IWindowStore store,
+    IPager pager,
+    IWorkspace workspace,
+    ILogger<WindowPageJumper> logger) : IWindowPageJumper
 {
     private const int VirtualKeyRight = 0x27;
     private const int VirtualKey0 = 0x30;

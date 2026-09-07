@@ -13,7 +13,10 @@ public sealed class DesktopApplicationDockOrderStore : IDesktopApplicationDockOr
     private readonly ILogger<DesktopApplicationDockOrderStore> logger;
     private List<string> applicationIdentifiers;
 
-    public DesktopApplicationDockOrderStore(IOptionsMonitor<Settings> settings, IWritableOptions<Settings> writer, ILogger<DesktopApplicationDockOrderStore> logger)
+    public DesktopApplicationDockOrderStore(
+        IOptionsMonitor<Settings> settings,
+        IWritableOptions<Settings> writer,
+        ILogger<DesktopApplicationDockOrderStore> logger)
     {
         applicationIdentifiers = Normalize(settings.CurrentValue.DockApplicationOrder ?? []);
         this.writer = writer;

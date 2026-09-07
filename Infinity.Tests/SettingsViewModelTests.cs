@@ -49,7 +49,8 @@ public sealed class SettingsViewModelTests
     }
 
 
-    public sealed class TestDesktopSection(IEnumerable<TestDesktopItem> items) : DesktopSettingsSectionViewModel<TestDesktopItem>(null !, null !, WeakReferenceMessenger.Default, null !, "Pages", items);
+    public sealed class TestDesktopSection(
+        IEnumerable<TestDesktopItem> items) : DesktopSettingsSectionViewModel<TestDesktopItem>(null !, null !, WeakReferenceMessenger.Default, null !, "Pages", items);
 
     public sealed class TestDesktopItem : IDisposable
     {

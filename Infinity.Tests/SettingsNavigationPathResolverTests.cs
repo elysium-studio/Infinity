@@ -51,7 +51,9 @@ public sealed class SettingsNavigationPathResolverTests
     }
 
 
-    private sealed class TestSetting(string title, IReadOnlyList<ISettingViewModel>? children = null) : List<object>, ISettingViewModel
+    private sealed class TestSetting(
+        string title,
+        IReadOnlyList<ISettingViewModel>? children = null) : List<object>, ISettingViewModel
     {
         public IReadOnlyList<ISettingViewModel> Children { get; } = children ?? [];
 

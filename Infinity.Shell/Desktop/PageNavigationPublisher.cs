@@ -5,7 +5,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Shell;
 
-public sealed class PageNavigationPublisher(IDispatcher dispatcher, IPager pager, IInfinityGlanceBridge glanceBridge, PageTitleStore pageTitleStore, ILogger<PageNavigationPublisher> logger)
+public sealed class PageNavigationPublisher(
+    IDispatcher dispatcher,
+    IPager pager,
+    IInfinityGlanceBridge glanceBridge,
+    PageTitleStore pageTitleStore,
+    ILogger<PageNavigationPublisher> logger)
 {
     private bool started;
 

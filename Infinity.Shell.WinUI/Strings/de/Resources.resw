@@ -485,4 +485,10 @@
   <data name="DesktopSharedBoundaryResize" xml:space="preserve">
     <value>Benachbarte Fenster gemeinsam skalieren</value>
   </data>
+  <data name="SearchWindowContentsCard.Header" xml:space="preserve">
+    <value>Fensterinhalte durchsuchen</value>
+  </data>
+  <data name="SearchWindowContentsCard.Description" xml:space="preserve">
+    <value>Sichtbaren Text mit lokaler OCR durchsuchen, während die Übersicht geöffnet ist. Momentaufnahmen und erkannter Text sind temporär und werden nicht gespeichert.</value>
+  </data>
 </root>

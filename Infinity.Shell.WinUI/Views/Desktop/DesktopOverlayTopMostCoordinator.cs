@@ -5,7 +5,11 @@ using Microsoft.UI.Dispatching;
 
 namespace Infinity.Shell.WinUI;
 
-internal sealed class DesktopOverlayTopMostCoordinator(IWindowEventListener windowEvents, DispatcherQueue dispatcherQueue, Func<bool> isActive, Action promote)
+internal sealed class DesktopOverlayTopMostCoordinator(
+    IWindowEventListener windowEvents,
+    DispatcherQueue dispatcherQueue,
+    Func<bool> isActive,
+    Action promote)
 {
     private const long PromotionCooldownMilliseconds = 75;
     private int isStarted;

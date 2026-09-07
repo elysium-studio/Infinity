@@ -13,7 +13,12 @@ internal sealed class DesktopWindowDragAnchorVisual : IDisposable
     private Vector2? appliedPointer;
     private Vector2? appliedGrabOffset;
 
-    public DesktopWindowDragAnchorVisual(Visual surface, Vector2 pointer, Vector2 grabOffset, float depth, params UIElement[] elements)
+    public DesktopWindowDragAnchorVisual(
+        Visual surface,
+        Vector2 pointer,
+        Vector2 grabOffset,
+        float depth,
+        params UIElement[] elements)
     {
         this.elements = elements;
         pointerState = surface.Compositor.CreatePropertySet();

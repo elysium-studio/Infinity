@@ -18,7 +18,10 @@ public sealed class DesktopDragCursorConfinement : IDisposable
     private bool active;
     private bool disposed;
 
-    public DesktopDragCursorConfinement(IPointerConfinement pointerConfinement, IPanState panState, DesktopDragBoundaryCalculator boundaryCalculator)
+    public DesktopDragCursorConfinement(
+        IPointerConfinement pointerConfinement,
+        IPanState panState,
+        DesktopDragBoundaryCalculator boundaryCalculator)
     {
         this.pointerConfinement = pointerConfinement;
         this.panState = panState;

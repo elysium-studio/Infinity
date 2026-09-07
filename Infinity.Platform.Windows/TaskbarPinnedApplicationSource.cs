@@ -3,7 +3,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Platform.Windows;
 
-public sealed class TaskbarPinnedApplicationSource(ILogger<TaskbarPinnedApplicationSource> logger) : ITaskbarPinnedApplicationSource
+public sealed class TaskbarPinnedApplicationSource(
+    ILogger<TaskbarPinnedApplicationSource> logger) : ITaskbarPinnedApplicationSource
 {
     private static readonly string TaskbarPinsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "Internet Explorer", "Quick Launch", "User Pinned", "TaskBar");
 

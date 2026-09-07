@@ -9,7 +9,8 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Infinity.Platform.Windows;
 
-public sealed class WindowCloser(ILogger<WindowCloser> logger) : IWindowCloser, IDisposable
+public sealed class WindowCloser(
+    ILogger<WindowCloser> logger) : IWindowCloser, IDisposable
 {
     private const uint WmClose = 0x0010;
     private const uint WmSysCommand = 0x0112;

@@ -3,7 +3,8 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Application;
 
-public sealed class PageCenterTargetResolver(IWorkspace workspace) : IPageCenterTargetResolver
+public sealed class PageCenterTargetResolver(
+    IWorkspace workspace) : IPageCenterTargetResolver
 {
     private const double AlignmentTolerance = 0.5;
 

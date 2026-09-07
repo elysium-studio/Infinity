@@ -5,7 +5,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Platform.Windows;
 
-public sealed partial class ApplicationCatalog(ILogger<ApplicationCatalog> logger) : IApplicationCatalog, IApplicationLauncher
+public sealed partial class ApplicationCatalog(
+    ILogger<ApplicationCatalog> logger) : IApplicationCatalog, IApplicationLauncher
 {
     private const string LibraryName = "Infinity.Platform.Windows.Native.dll";
     private const int ApplicationIconSize = 32;

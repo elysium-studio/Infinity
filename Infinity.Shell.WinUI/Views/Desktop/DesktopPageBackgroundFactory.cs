@@ -3,7 +3,8 @@ using Microsoft.UI.Xaml.Media;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopPageBackgroundFactory(DesktopWallpaperSurfaceProvider wallpaperSurfaceProvider)
+public sealed class DesktopPageBackgroundFactory(
+    DesktopWallpaperSurfaceProvider wallpaperSurfaceProvider)
 {
     private DesktopBackground? background;
     private DesktopPageBackground? pageBackground;

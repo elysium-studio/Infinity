@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using Infinity.Platform.Abstractions;
 using Infinity.Platform.Windows;
 using Microsoft.Graphics.Canvas;
 using Microsoft.UI.Composition;
@@ -74,6 +75,25 @@ internal sealed class WindowCaptureFrameRenderer : IDisposable
         lock (GraphicsGate)
         {
             swapChain.Dispose();
+        }
+    }
+
+    public WindowContentSnapshot TakeSnapshot(Direct3D11CaptureFrame frame, WindowCaptureFrameGeometry geometry)
+    {
+        lock (GraphicsGate)
+        {
+            double scale = Math.Min(1, 2560d / Math.Max(geometry.Width, geometry.Height));
+            int targetWidth = Math.Max(1, (int)Math.Round(geometry.Width * scale));
+            int targetHeight = Math.Max(1, (int)Math.Round(geometry.Height * scale));
+            using CanvasBitmap bitmap = CanvasBitmap.CreateFromDirect3D11Surface(Device, frame.Surface);
+            using CanvasRenderTarget target = new(Device, targetWidth, targetHeight, 96, DirectXPixelFormat.B8G8R8A8UIntNormalized, CanvasAlphaMode.Ignore);
+            using (CanvasDrawingSession drawing = target.CreateDrawingSession())
+            {
+                drawing.Clear(Color.FromArgb(255, 0, 0, 0));
+                drawing.DrawImage(bitmap, new Rect(0, 0, targetWidth, targetHeight), new Rect(0, 0, geometry.Width, geometry.Height));
+            }
+
+            return new(targetWidth, targetHeight, target.GetPixelBytes());
         }
     }
 }

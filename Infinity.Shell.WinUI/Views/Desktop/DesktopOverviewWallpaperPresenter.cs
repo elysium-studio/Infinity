@@ -12,7 +12,10 @@ using Microsoft.UI.Xaml.Media;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopOverviewWallpaperPresenter(DesktopWallpaperSurfaceProvider wallpaperSurfaceProvider, DesktopWallpaperBrushFactory wallpaperBrushFactory, ILogger<DesktopOverviewWallpaperPresenter> logger) : IDisposable
+public sealed class DesktopOverviewWallpaperPresenter(
+    DesktopWallpaperSurfaceProvider wallpaperSurfaceProvider,
+    DesktopWallpaperBrushFactory wallpaperBrushFactory,
+    ILogger<DesktopOverviewWallpaperPresenter> logger) : IDisposable
 {
     private readonly DispatcherQueue dispatcherQueue = DispatcherQueue.GetForCurrentThread();
     private DesktopBackground? background;

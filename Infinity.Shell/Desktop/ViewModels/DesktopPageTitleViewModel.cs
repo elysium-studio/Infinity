@@ -4,7 +4,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Infinity.Shell;
 
-public sealed partial class DesktopPageTitleViewModel(DesktopPageEditorLabels labels, DesktopSnapLayoutCatalog layoutCatalog) : ObservableObject
+public sealed partial class DesktopPageTitleViewModel(
+    DesktopPageEditorLabels labels,
+    DesktopSnapLayoutCatalog layoutCatalog) : ObservableObject
 {
     private const double MaximumPreviewWidth = 96;
     private const double MaximumPreviewHeight = 96;

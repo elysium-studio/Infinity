@@ -6,7 +6,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopWallpaperPreloader(IDesktopBackgroundSource backgroundSource, DesktopWallpaperSurfaceProvider surfaceProvider, IDispatcher dispatcher, ILogger<DesktopWallpaperPreloader> logger)
+public sealed class DesktopWallpaperPreloader(
+    IDesktopBackgroundSource backgroundSource,
+    DesktopWallpaperSurfaceProvider surfaceProvider,
+    IDispatcher dispatcher,
+    ILogger<DesktopWallpaperPreloader> logger)
 {
     private volatile bool started;
     private int refreshQueued;

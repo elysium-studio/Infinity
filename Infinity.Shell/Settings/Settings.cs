@@ -40,6 +40,8 @@ public sealed class Settings
 
     public bool ShowOverviewSearchBox { get; set; } = true;
 
+    public bool SearchWindowContents { get; set; } = true;
+
     public bool SpanCompatibleDisplays { get; set; } = true;
 
     public bool StartWithWindows { get; set; } = true;

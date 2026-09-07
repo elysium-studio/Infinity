@@ -2,7 +2,8 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopSnapSlotOccupancyResolver(DesktopWindowFrameGeometry frameGeometry)
+public sealed class DesktopSnapSlotOccupancyResolver(
+    DesktopWindowFrameGeometry frameGeometry)
 {
     private const double GeometryTolerance = 2;
 

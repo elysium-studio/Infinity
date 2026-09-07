@@ -1,3 +1,4 @@
 namespace Infinity.Application.Abstractions;
 
-public sealed record InfinityGlanceAvailabilityChangedEventArgs(bool IsPageNavigationAvailable);
+public sealed record InfinityGlanceAvailabilityChangedEventArgs(
+    bool IsPageNavigationAvailable);

@@ -7,7 +7,8 @@ public sealed class DesktopSharedBoundaryResizePlan
     private readonly double minimumDelta;
     private readonly double maximumDelta;
 
-    public DesktopSharedBoundaryResizePlan(IReadOnlyList<(DesktopSharedBoundaryMember Member, WindowResizeLimits Limits)> windows)
+    public DesktopSharedBoundaryResizePlan(
+        IReadOnlyList<(DesktopSharedBoundaryMember Member, WindowResizeLimits Limits)> windows)
     {
         if (windows.Count < 2)
         {

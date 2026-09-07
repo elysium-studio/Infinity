@@ -3,7 +3,11 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopDragBoundaryCalculator(IPager pager, IScroller scroller, IWorkspace workspace, DesktopPageLayoutCalculator pageLayoutCalculator)
+public sealed class DesktopDragBoundaryCalculator(
+    IPager pager,
+    IScroller scroller,
+    IWorkspace workspace,
+    DesktopPageLayoutCalculator pageLayoutCalculator)
 {
     private double workAreaOffsetY;
 

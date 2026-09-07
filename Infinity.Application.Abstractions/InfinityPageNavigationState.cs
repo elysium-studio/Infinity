@@ -1,3 +1,6 @@
 namespace Infinity.Application.Abstractions;
 
-public sealed record InfinityPageNavigationState(int PageIndex, int PageNumber, string PageTitle);
+public sealed record InfinityPageNavigationState(
+    int PageIndex,
+    int PageNumber,
+    string PageTitle);

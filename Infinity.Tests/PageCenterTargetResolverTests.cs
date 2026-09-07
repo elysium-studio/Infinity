@@ -54,7 +54,8 @@ public sealed class PageCenterTargetResolverTests
     }
 
 
-    private sealed class TestWorkspace(int width) : IWorkspace
+    private sealed class TestWorkspace(
+        int width) : IWorkspace
     {
         public event EventHandler? WorkspaceLayoutChanged;
 

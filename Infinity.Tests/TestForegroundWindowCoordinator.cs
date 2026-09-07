@@ -2,7 +2,8 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Tests;
 
-internal sealed class TestForegroundWindowCoordinator(List<string>? operations = null) : IForegroundWindowCoordinator
+internal sealed class TestForegroundWindowCoordinator(
+    List<string>? operations = null) : IForegroundWindowCoordinator
 {
     public void HandleForegroundWindowChanged(IntPtr handle)
     {

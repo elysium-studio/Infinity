@@ -14,7 +14,10 @@ public sealed class RecentApplicationStore : IRecentApplicationStore
     private readonly IWritableOptions<Settings> writer;
     private readonly ILogger<RecentApplicationStore> logger;
 
-    public RecentApplicationStore(IOptionsMonitor<Settings> settings, IWritableOptions<Settings> writer, ILogger<RecentApplicationStore> logger)
+    public RecentApplicationStore(
+        IOptionsMonitor<Settings> settings,
+        IWritableOptions<Settings> writer,
+        ILogger<RecentApplicationStore> logger)
     {
         applications = [..(settings.CurrentValue.RecentApplications ?? []).Take(MaximumApplications)];
         this.writer = writer;

@@ -3,7 +3,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopOverviewSettingsNavigator(INavigator navigator, ILogger<DesktopOverviewSettingsNavigator> logger) : IDesktopOverviewSettingsNavigator
+public sealed class DesktopOverviewSettingsNavigator(
+    INavigator navigator,
+    ILogger<DesktopOverviewSettingsNavigator> logger) : IDesktopOverviewSettingsNavigator
 {
     public async Task NavigateAsync()
     {

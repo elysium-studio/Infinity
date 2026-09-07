@@ -45,7 +45,8 @@ public sealed class DesktopApplicationDockCatalogTests
     }
 
 
-    private sealed class TestPickerCatalog(IReadOnlyList<LaunchableApplication> applications) : IDesktopApplicationPickerCatalog
+    private sealed class TestPickerCatalog(
+        IReadOnlyList<LaunchableApplication> applications) : IDesktopApplicationPickerCatalog
     {
         public Task<IReadOnlyList<LaunchableApplication>> GetApplicationsAsync(CancellationToken cancellationToken = default) => Task.FromResult(applications);
 
@@ -53,13 +54,15 @@ public sealed class DesktopApplicationDockCatalogTests
     }
 
 
-    private sealed class TestTaskbarPins(IReadOnlyList<LaunchableApplication> applications) : ITaskbarPinnedApplicationSource
+    private sealed class TestTaskbarPins(
+        IReadOnlyList<LaunchableApplication> applications) : ITaskbarPinnedApplicationSource
     {
         public Task<IReadOnlyList<LaunchableApplication>> GetPinnedApplicationsAsync(IReadOnlyList<LaunchableApplication> availableApplications, CancellationToken cancellationToken = default) => Task.FromResult(applications);
     }
 
 
-    private sealed class TestPinStore(IReadOnlyList<LaunchableApplication> applications) : IDesktopApplicationPinStore
+    private sealed class TestPinStore(
+        IReadOnlyList<LaunchableApplication> applications) : IDesktopApplicationPinStore
     {
         public event Action? PinsChanged;
 
@@ -80,7 +83,8 @@ public sealed class DesktopApplicationDockCatalogTests
     }
 
 
-    private sealed class TestOrderStore(IReadOnlyList<string> identifiers) : IDesktopApplicationDockOrderStore
+    private sealed class TestOrderStore(
+        IReadOnlyList<string> identifiers) : IDesktopApplicationDockOrderStore
     {
         public IReadOnlyList<string> ApplicationIdentifiers => identifiers;
 

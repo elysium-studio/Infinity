@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,8 +40,7 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
     private readonly DispatcherQueue dispatcherQueue;
     private readonly DesktopContentDragController contentDrag;
     private readonly DesktopLiveWindowDragController liveWindowDrag;
-    private readonly HashSet<int> consumedKeyUps = [];
-    private readonly Lock consumedKeyUpsLock = new();
+    private readonly DesktopOverviewKeySuppression consumedKeyUps = new();
     private DesktopOverviewViewModel? subscribedViewModel;
     private DispatcherQueueTimer? previewCleanupTimer;
     private bool isCompletingDesktopPreview;
@@ -52,7 +50,23 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
     private int globalDismissQueued;
     private int openingGeneration;
 
-    public DesktopOverviewView(DesktopScrollPreviewView desktopScrollPreview, DesktopOverviewBackdropAnimator backdropAnimator, DesktopOverviewWallpaperPresenter wallpaperPresenter, WindowInputTransparencyController inputController, IDesktopBackgroundSource backgroundSource, IKeyboardInputSource keyboardInputSource, IWindowEventListener windowEventListener, DesktopOverviewConfiguration overviewConfiguration, IModifierKeyState modifierKeyState, IPointerInputSource pointerInputSource, IWindowDragGuard dragGuard, IWindowStore windows, IWindowGeometryReader geometry, ITrackedWindowDragController dragController, ILogger<DesktopContentDragController> contentDragLogger, ILogger<DesktopLiveWindowDragController> liveWindowDragLogger)
+    public DesktopOverviewView(
+        DesktopScrollPreviewView desktopScrollPreview,
+        DesktopOverviewBackdropAnimator backdropAnimator,
+        DesktopOverviewWallpaperPresenter wallpaperPresenter,
+        WindowInputTransparencyController inputController,
+        IDesktopBackgroundSource backgroundSource,
+        IKeyboardInputSource keyboardInputSource,
+        IWindowEventListener windowEventListener,
+        DesktopOverviewConfiguration overviewConfiguration,
+        IModifierKeyState modifierKeyState,
+        IPointerInputSource pointerInputSource,
+        IWindowDragGuard dragGuard,
+        IWindowStore windows,
+        IWindowGeometryReader geometry,
+        ITrackedWindowDragController dragController,
+        ILogger<DesktopContentDragController> contentDragLogger,
+        ILogger<DesktopLiveWindowDragController> liveWindowDragLogger)
     {
         InitializeComponent();
         IsBlurEnabled = false;
@@ -145,7 +159,7 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
 
     private void HandleGlobalKeyDown(object? sender, KeyEventArgs args)
     {
-        if (args.Handled || !isOverlayOpen || IsEmergencyHidden)
+        if (args.Handled || !isOverlayOpen || IsEmergencyHidden || DesktopOverviewKeySuppression.IsModifier(args.VirtualKeyCode))
         {
             return;
         }
@@ -173,6 +187,10 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
 
         args.Handled = true;
         TrackConsumedKeyUp(args.VirtualKeyCode);
+        if (desktopScrollPreview.TryDismissPeek())
+        {
+            return;
+        }
         if (desktopScrollPreview.TryCancelBoundaryResize())
         {
             return;
@@ -222,26 +240,18 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
 
     private void HandleGlobalKeyUp(object? sender, KeyEventArgs args)
     {
-        lock (consumedKeyUpsLock)
+        if (IsEmergencyHidden)
         {
-            if (IsEmergencyHidden)
-            {
-                consumedKeyUps.Clear();
-                return;
-            }
-
-            args.Handled = consumedKeyUps.Remove(args.VirtualKeyCode);
+            consumedKeyUps.Clear();
+            return;
         }
+
+        bool consumed = consumedKeyUps.Release(args.VirtualKeyCode);
+        args.Handled |= consumed;
     }
 
 
-    private void TrackConsumedKeyUp(int virtualKeyCode)
-    {
-        lock (consumedKeyUpsLock)
-        {
-            consumedKeyUps.Add(virtualKeyCode);
-        }
-    }
+    private void TrackConsumedKeyUp(int virtualKeyCode) => consumedKeyUps.Track(virtualKeyCode);
 
 
     private bool IsAnyKeyDown(int key, int leftKey, int rightKey) => keyboardInputSource.IsKeyDown(key) || keyboardInputSource.IsKeyDown(leftKey) || keyboardInputSource.IsKeyDown(rightKey);

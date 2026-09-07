@@ -110,5 +110,8 @@ public sealed class DesktopWindowThrowGesture
         return Math.Sign(deltaX);
     }
 
-    private readonly record struct Sample(double X, double Y, TimeSpan Time);
+    private readonly record struct Sample(
+        double X,
+        double Y,
+        TimeSpan Time);
 }

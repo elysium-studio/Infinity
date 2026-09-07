@@ -82,5 +82,10 @@ public sealed unsafe class WindowMover : IWindowMover
     }
 
 
-    private readonly record struct PendingMove(HWND Hwnd, int X, int Y, int Width, int Height);
+    private readonly record struct PendingMove(
+        HWND Hwnd,
+        int X,
+        int Y,
+        int Width,
+        int Height);
 }

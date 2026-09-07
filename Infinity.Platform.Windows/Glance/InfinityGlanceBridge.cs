@@ -8,7 +8,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Platform.Windows;
 
-public sealed class InfinityGlanceBridge(ILogger<InfinityGlanceBridge> logger) : BackgroundService, IInfinityGlanceBridge
+public sealed class InfinityGlanceBridge(
+    ILogger<InfinityGlanceBridge> logger) : BackgroundService, IInfinityGlanceBridge
 {
     private readonly Lock synchronization = new();
     private readonly SemaphoreSlim updateSignal = new(0, 1);

@@ -29,7 +29,17 @@ public sealed class DesktopLiveWindowDragController
     private int? releasedThrowDirection;
     private DesktopSnapPlacement? throwOrigin;
 
-    public DesktopLiveWindowDragController(DesktopOverviewView overlay, DesktopScrollPreviewView preview, IModifierKeyState modifiers, IWindowEventListener events, IPointerInputSource pointer, IWindowDragGuard dragGuard, IWindowStore windows, IWindowGeometryReader geometry, ITrackedWindowDragController dragController, ILogger<DesktopLiveWindowDragController> logger)
+    public DesktopLiveWindowDragController(
+        DesktopOverviewView overlay,
+        DesktopScrollPreviewView preview,
+        IModifierKeyState modifiers,
+        IWindowEventListener events,
+        IPointerInputSource pointer,
+        IWindowDragGuard dragGuard,
+        IWindowStore windows,
+        IWindowGeometryReader geometry,
+        ITrackedWindowDragController dragController,
+        ILogger<DesktopLiveWindowDragController> logger)
     {
         this.overlay = overlay;
         this.preview = preview;

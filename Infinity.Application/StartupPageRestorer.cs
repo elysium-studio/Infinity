@@ -5,7 +5,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public sealed class StartupPageRestorer(IWindowStore store, IPanState state, IWorkspace workspace, IWindowGeometryReader geometryReader, ILogger<StartupPageRestorer> logger)
+public sealed class StartupPageRestorer(
+    IWindowStore store,
+    IPanState state,
+    IWorkspace workspace,
+    IWindowGeometryReader geometryReader,
+    ILogger<StartupPageRestorer> logger)
 {
     public void Restore()
     {
@@ -53,5 +58,10 @@ public sealed class StartupPageRestorer(IWindowStore store, IPanState state, IWo
 
     private bool CanShiftWindows(long pageShift) => store.All(window => (long)window.CanvasX + pageShift is >= int.MinValue and <= int.MaxValue);
 
-    private sealed record StartupWindowBounds(IntPtr Handle, int Left, int Top, long Right, long Bottom);
+    private sealed record StartupWindowBounds(
+        IntPtr Handle,
+        int Left,
+        int Top,
+        long Right,
+        long Bottom);
 }

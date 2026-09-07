@@ -21,12 +21,19 @@ public sealed class DesktopBackgroundSource : IDesktopBackgroundSource, IDisposa
 
     public event EventHandler? BackgroundChanged;
 
-    public DesktopBackgroundSource(ILogger<DesktopBackgroundSource> logger, DesktopWallpaperSnapshotReader snapshotReader) : this(logger, snapshotReader.Read, PollingInterval, RecoveryPollingInterval, true)
+    public DesktopBackgroundSource(
+        ILogger<DesktopBackgroundSource> logger,
+        DesktopWallpaperSnapshotReader snapshotReader) : this(logger, snapshotReader.Read, PollingInterval, RecoveryPollingInterval, true)
     {
     }
 
 
-    internal DesktopBackgroundSource(ILogger<DesktopBackgroundSource> logger, Func<DesktopBackgroundSnapshot> snapshotReader, TimeSpan pollingInterval, TimeSpan recoveryPollingInterval, bool pollingEnabled)
+    internal DesktopBackgroundSource(
+        ILogger<DesktopBackgroundSource> logger,
+        Func<DesktopBackgroundSnapshot> snapshotReader,
+        TimeSpan pollingInterval,
+        TimeSpan recoveryPollingInterval,
+        bool pollingEnabled)
     {
         this.logger = logger;
         this.snapshotReader = snapshotReader;

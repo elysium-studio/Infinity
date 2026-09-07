@@ -9,7 +9,10 @@ using Microsoft.UI.Dispatching;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class ApplicationModule(string applicationData, DispatcherQueue dispatcherQueue, Action<Action<Exception?>> registerFlushHandler) : IModule
+public sealed class ApplicationModule(
+    string applicationData,
+    DispatcherQueue dispatcherQueue,
+    Action<Action<Exception?>> registerFlushHandler) : IModule
 {
     public void Register(IServiceCollection services) => services.AddExceptionLogging(builder =>
     {

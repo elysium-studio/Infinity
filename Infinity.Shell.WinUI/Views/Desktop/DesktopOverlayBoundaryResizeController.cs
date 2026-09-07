@@ -14,7 +14,17 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopOverlayBoundaryResizeController(IWindowStore windows, IWorkspace workspace, IPager pager, IScroller scroller, IWindowBoundaryResizer resizer, IScrollInputSuppression scrollSuppression, DesktopWindowPreviewCollection previews, DesktopWindowPlacementCoordinator placement, ITextLocalizer localizer, ILogger<DesktopOverlayBoundaryResizeController> logger)
+public sealed class DesktopOverlayBoundaryResizeController(
+    IWindowStore windows,
+    IWorkspace workspace,
+    IPager pager,
+    IScroller scroller,
+    IWindowBoundaryResizer resizer,
+    IScrollInputSuppression scrollSuppression,
+    DesktopWindowPreviewCollection previews,
+    DesktopWindowPlacementCoordinator placement,
+    ITextLocalizer localizer,
+    ILogger<DesktopOverlayBoundaryResizeController> logger)
 {
     private readonly List<Boundary> boundaries = [];
     private IReadOnlyList<(nint Handle, DesktopSnapPlacement Bounds)> snapshot = [];
@@ -293,5 +303,7 @@ public sealed class DesktopOverlayBoundaryResizeController(IWindowStore windows,
         grip.Tag = null;
     }
 
-    private sealed record Boundary(Splitter Handle, IReadOnlyList<DesktopSharedBoundaryMember> Members);
+    private sealed record Boundary(
+        Splitter Handle,
+        IReadOnlyList<DesktopSharedBoundaryMember> Members);
 }

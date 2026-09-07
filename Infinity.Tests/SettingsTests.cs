@@ -15,6 +15,7 @@ public sealed class SettingsTests
         Assert.True(settings.ShowOverviewClock);
         Assert.True(settings.ShowOverviewPageHeaders);
         Assert.True(settings.ShowOverviewSearchBox);
+        Assert.True(settings.SearchWindowContents);
         Assert.True(settings.SpanCompatibleDisplays);
         Assert.Equal(DesktopOverviewBackdrop.Wallpaper, settings.OverviewBackdrop);
     }

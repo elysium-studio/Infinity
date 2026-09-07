@@ -4,7 +4,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public sealed class TrackedWindowDragController(IWindowStore store, IScroller scroller, IWindowResizeSynchronizer resizeSynchronizer, ILogger<TrackedWindowDragController> logger) : ITrackedWindowDragController
+public sealed class TrackedWindowDragController(
+    IWindowStore store,
+    IScroller scroller,
+    IWindowResizeSynchronizer resizeSynchronizer,
+    ILogger<TrackedWindowDragController> logger) : ITrackedWindowDragController
 {
     private readonly Lock syncRoot = new();
     private DragSession? session;
@@ -133,5 +137,6 @@ public sealed class TrackedWindowDragController(IWindowStore store, IScroller sc
     }
 
 
-    private readonly record struct DragSession(IntPtr WindowHandle);
+    private readonly record struct DragSession(
+        IntPtr WindowHandle);
 }

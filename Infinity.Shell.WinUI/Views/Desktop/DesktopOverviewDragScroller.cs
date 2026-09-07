@@ -5,7 +5,11 @@ using Microsoft.UI.Xaml.Media;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopOverviewDragScroller(IPanState panState, IScroller scroller, Func<DesktopOverviewDragScrollerConfiguration> configurationFactory, DesktopOverviewConfiguration overviewConfiguration) : IDisposable
+public sealed class DesktopOverviewDragScroller(
+    IPanState panState,
+    IScroller scroller,
+    Func<DesktopOverviewDragScrollerConfiguration> configurationFactory,
+    DesktopOverviewConfiguration overviewConfiguration) : IDisposable
 {
     private const double EdgeThreshold = 160;
     private const double MinimumScrollAmount = 8;

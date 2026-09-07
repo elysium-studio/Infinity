@@ -158,7 +158,8 @@ public sealed class DesktopSnapAppearanceCoordinatorTests
     }
 
 
-    private sealed class Monitor(Settings settings) : IOptionsMonitor<Settings>
+    private sealed class Monitor(
+        Settings settings) : IOptionsMonitor<Settings>
     {
         public Settings CurrentValue => settings;
 
@@ -168,7 +169,8 @@ public sealed class DesktopSnapAppearanceCoordinatorTests
     }
 
 
-    private sealed class Writer(Settings settings) : IWritableOptions<Settings>
+    private sealed class Writer(
+        Settings settings) : IWritableOptions<Settings>
     {
         public Task<Settings?> ReadAsync(CancellationToken cancellationToken = default) => Task.FromResult<Settings?>(settings);
 

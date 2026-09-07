@@ -7,7 +7,8 @@ using Windows.Win32.Graphics.Dwm;
 
 namespace Infinity.Platform.Windows;
 
-public sealed unsafe class WindowSnapAppearance(ILogger<WindowSnapAppearance> logger) : IWindowSnapAppearance, IDisposable
+public sealed unsafe class WindowSnapAppearance(
+    ILogger<WindowSnapAppearance> logger) : IWindowSnapAppearance, IDisposable
 {
     private const int CornerPreference = 33;
     private const uint DoNotRound = 1;

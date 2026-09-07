@@ -5,7 +5,17 @@ using Elysium.Presentation;
 
 namespace Infinity.Shell;
 
-public sealed partial class ScrollModifierKeyViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, IDispatcher dispatcher, Settings settings, IWritableOptions<Settings> writer, Func<Settings, List<List<int>>?> read, Action<Settings, List<List<int>>?> write, ScrollModifierKeyRecorder recorder) : ObservableReadWriteViewModel<Settings, List<List<int>>>(provider, factory, messenger, disposer, dispatcher, settings, writer, read, write), IScrollingViewModel
+public sealed partial class ScrollModifierKeyViewModel(
+    IServiceProvider provider,
+    IServiceFactory factory,
+    IMessenger messenger,
+    IDisposer disposer,
+    IDispatcher dispatcher,
+    Settings settings,
+    IWritableOptions<Settings> writer,
+    Func<Settings, List<List<int>>?> read,
+    Action<Settings, List<List<int>>?> write,
+    ScrollModifierKeyRecorder recorder) : ObservableReadWriteViewModel<Settings, List<List<int>>>(provider, factory, messenger, disposer, dispatcher, settings, writer, read, write), IScrollingViewModel
 {
     private List<List<int>> previousValue = [];
     [ObservableProperty]

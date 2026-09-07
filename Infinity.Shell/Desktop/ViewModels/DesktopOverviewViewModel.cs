@@ -21,7 +21,12 @@ public sealed partial class DesktopOverviewViewModel : ObservableViewModel, IRec
     [ObservableProperty]
     private bool isDesktopPreviewReadyToClose;
 
-    public DesktopOverviewViewModel(IServiceProvider provider, IServiceFactory factory, IMessenger messenger, IDisposer disposer, DesktopOverviewSessionController sessionController) : base(provider, factory, messenger, disposer)
+    public DesktopOverviewViewModel(
+        IServiceProvider provider,
+        IServiceFactory factory,
+        IMessenger messenger,
+        IDisposer disposer,
+        DesktopOverviewSessionController sessionController) : base(provider, factory, messenger, disposer)
     {
         this.sessionController = sessionController;
         sessionController.StateChanged += HandleSessionStateChanged;

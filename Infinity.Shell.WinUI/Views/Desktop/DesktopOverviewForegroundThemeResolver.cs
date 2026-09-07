@@ -10,7 +10,9 @@ using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopOverviewForegroundThemeResolver(DesktopWallpaperColorSampler colorSampler, ILogger<DesktopOverviewForegroundThemeResolver> logger)
+public sealed class DesktopOverviewForegroundThemeResolver(
+    DesktopWallpaperColorSampler colorSampler,
+    ILogger<DesktopOverviewForegroundThemeResolver> logger)
 {
     public async Task<ElementTheme> ResolveAsync(DesktopOverviewBackdrop backdrop, DesktopBackground background, int monitorWidth, int monitorHeight, Point monitorPoint, Brush? surfaceBrush, ElementTheme fallbackTheme)
     {
@@ -70,7 +72,11 @@ public sealed class DesktopOverviewForegroundThemeResolver(DesktopWallpaperColor
         _ => default
     };
 
-    private readonly record struct SurfaceColors(Color Luminosity, double LuminosityOpacity, Color Tint, double TintOpacity)
+    private readonly record struct SurfaceColors(
+        Color Luminosity,
+        double LuminosityOpacity,
+        Color Tint,
+        double TintOpacity)
     {
         public Color Apply(Color background) => Blend(Blend(background, Luminosity, LuminosityOpacity), Tint, TintOpacity);
     }

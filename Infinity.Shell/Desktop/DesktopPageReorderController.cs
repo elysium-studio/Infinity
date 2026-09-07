@@ -4,7 +4,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopPageReorderController(IWindowStore windowStore, IScroller scroller, IWorkspace workspace, PageTitleStore pageTitleStore, PageLayoutStore pageLayoutStore, ILogger<DesktopPageReorderController> logger)
+public sealed class DesktopPageReorderController(
+    IWindowStore windowStore,
+    IScroller scroller,
+    IWorkspace workspace,
+    PageTitleStore pageTitleStore,
+    PageLayoutStore pageLayoutStore,
+    ILogger<DesktopPageReorderController> logger)
 {
     public async Task<IReadOnlyDictionary<int, string>> ReorderAsync(int sourcePage, int targetPage)
     {

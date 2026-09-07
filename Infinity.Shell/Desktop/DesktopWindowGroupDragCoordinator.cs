@@ -3,7 +3,14 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopWindowGroupDragCoordinator(IWindowStore windowStore, IWorkspace workspace, IPager pager, DesktopWindowDragPositionResolver dragPositionResolver, DesktopSnapSlotOccupancyResolver occupancyResolver, DesktopWindowPlacementCoordinator placementCoordinator, DesktopWindowFrameGeometry frameGeometry)
+public sealed class DesktopWindowGroupDragCoordinator(
+    IWindowStore windowStore,
+    IWorkspace workspace,
+    IPager pager,
+    DesktopWindowDragPositionResolver dragPositionResolver,
+    DesktopSnapSlotOccupancyResolver occupancyResolver,
+    DesktopWindowPlacementCoordinator placementCoordinator,
+    DesktopWindowFrameGeometry frameGeometry)
 {
     private const double PlacementTolerance = 2;
     private readonly Dictionary<nint, DesktopSnapPlacement> sourcePlacements = [];

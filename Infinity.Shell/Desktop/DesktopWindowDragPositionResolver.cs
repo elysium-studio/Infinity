@@ -3,7 +3,10 @@ using Infinity.Application.Abstractions;
 
 namespace Infinity.Shell;
 
-public sealed class DesktopWindowDragPositionResolver(IWindowStore windowStore, IWorkspace workspace, DesktopPageLayoutCalculator layoutCalculator)
+public sealed class DesktopWindowDragPositionResolver(
+    IWindowStore windowStore,
+    IWorkspace workspace,
+    DesktopPageLayoutCalculator layoutCalculator)
 {
     public bool TryResolveOnPage(nint windowHandle, int page, double localX, double localY, out DesktopWindowDragPosition position)
     {

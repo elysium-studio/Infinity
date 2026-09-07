@@ -26,7 +26,13 @@ public sealed class DesktopContentDragController
     private bool handingOff;
     private volatile bool isActive;
 
-    public DesktopContentDragController(DesktopOverviewView overlay, DesktopScrollPreviewView preview, IModifierKeyState modifiers, IPointerInputSource pointer, IWindowDragGuard dragGuard, ILogger<DesktopContentDragController> logger)
+    public DesktopContentDragController(
+        DesktopOverviewView overlay,
+        DesktopScrollPreviewView preview,
+        IModifierKeyState modifiers,
+        IPointerInputSource pointer,
+        IWindowDragGuard dragGuard,
+        ILogger<DesktopContentDragController> logger)
     {
         this.overlay = overlay;
         this.preview = preview;

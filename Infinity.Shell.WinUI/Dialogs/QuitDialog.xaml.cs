@@ -5,7 +5,8 @@ namespace Infinity.Shell.WinUI;
 
 public sealed partial class QuitDialog : ContentDialog
 {
-    public QuitDialog(ITextLocalizer localizer)
+    public QuitDialog(
+        ITextLocalizer localizer)
     {
         InitializeComponent();
         Title = localizer.GetText("QuitDialogTitle");

@@ -9,7 +9,19 @@ using Windows.Foundation;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory factory, IWindowGeometryReader geometryReader, IWindowStack windowStack, ITrackedForegroundWindowTarget trackedForegroundWindowTarget, DesktopWindowSelectionModel selection, DesktopWindowGroupDragCoordinator groupDragCoordinator, DesktopWindowGroupStackAnimator groupStackAnimator, DesktopWindowDropNavigationCoordinator dropNavigationCoordinator, DesktopWindowPlacementCoordinator placementCoordinator, DesktopSnapAppearanceCoordinator snapAppearance) : IDisposable
+public sealed class DesktopWindowPreviewCollection(
+    DesktopWindowPreviewFactory factory,
+    IWindowGeometryReader geometryReader,
+    IWindowStack windowStack,
+    ITrackedForegroundWindowTarget trackedForegroundWindowTarget,
+    DesktopWindowSelectionModel selection,
+    DesktopWindowGroupDragCoordinator groupDragCoordinator,
+    DesktopWindowGroupStackAnimator groupStackAnimator,
+    DesktopWindowDropNavigationCoordinator dropNavigationCoordinator,
+    DesktopWindowPlacementCoordinator placementCoordinator,
+    DesktopSnapAppearanceCoordinator snapAppearance,
+    DesktopWindowContentIndex contentIndex,
+    DesktopOverviewConfiguration configuration) : IDisposable
 {
     private readonly Dictionary<nint, DesktopWindowPreview> previews = [];
     private readonly HashSet<nint> appearanceDragHandles = [];
@@ -23,6 +35,17 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
     private bool placementEventsSubscribed;
     private DesktopCaptureViewport captureViewport;
 
+    public bool HasActiveInteraction => previews.Values.Any(preview => preview.IsDragging || preview.IsResizing);
+
+    public void ClearSearchSnippets()
+    {
+        foreach (DesktopWindowPreview preview in previews.Values)
+        {
+            preview.SetSearchSnippet(null);
+            preview.SetSearchSnapshot(null, string.Empty);
+        }
+    }
+
     public void SetCaptureViewport(DesktopCaptureViewport viewport)
     {
         if (captureViewport == viewport)
@@ -31,14 +54,18 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         }
 
         captureViewport = viewport;
-        foreach (DesktopWindowPreview preview in previews.Values)
+        foreach ((nint handle, DesktopWindowPreview preview) in previews)
         {
             preview.SetCaptureViewport(viewport);
+            preview.SetSearchSnapshot(contentIndex.GetSnapshot(handle), filterText);
         }
     }
 
 
     public event Action<nint>? WindowInvoked;
+    public event Action<nint>? WindowPeekRequested;
+
+    private void HandleWindowPeekRequested(nint handle) => WindowPeekRequested?.Invoke(handle);
 
     public event Action<nint>? WindowPositionChanged;
 
@@ -74,6 +101,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
                 preview = factory.Create(backgroundCanvas, canvas, focusCanvas, trackedWindow.Handle, layoutScale);
                 preview.SetCaptureViewport(captureViewport);
                 preview.Invoked += HandleWindowInvoked;
+                preview.PeekRequested += HandleWindowPeekRequested;
                 preview.SelectionToggled += HandleWindowSelectionToggled;
                 preview.PositionChanged += HandleWindowPositionChanged;
                 preview.DragMoved += HandleWindowDragMoved;
@@ -85,7 +113,9 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
             RefreshAppearance(preview, trackedWindow);
             preview.RefreshSourceGeometry(trackedWindow, geometryReader);
-            preview.SetFilterMatch(WindowTitleFilter.Matches(trackedWindow.Title, filterText));
+            preview.SetFilterMatch(contentIndex.ShouldDisplay(trackedWindow.Handle, trackedWindow.Title, filterText, configuration.SearchWindowContents));
+            preview.SetSearchSnippet(contentIndex.GetSnippet(trackedWindow.Handle, filterText));
+            preview.SetSearchSnapshot(contentIndex.GetSnapshot(trackedWindow.Handle), filterText);
             preview.SetKeyboardFocused(trackedWindow.Handle == selection.FocusedHandle);
             preview.SetSelected(selection.SelectedHandles.Contains(trackedWindow.Handle));
             preview.SetZIndex(zIndex);
@@ -122,6 +152,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
     public nint SetFilter(string value, IEnumerable<TrackedWindow> trackedWindows)
     {
+        contentIndex.SetSearchQuery(value);
         if (!string.IsNullOrWhiteSpace(value) && string.IsNullOrWhiteSpace(filterText))
         {
             ClearSelection();
@@ -133,7 +164,9 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         {
             if (previews.TryGetValue(trackedWindow.Handle, out DesktopWindowPreview? preview))
             {
-                preview.SetFilterMatch(WindowTitleFilter.Matches(trackedWindow.Title, filterText));
+                preview.SetFilterMatch(contentIndex.ShouldDisplay(trackedWindow.Handle, trackedWindow.Title, filterText, configuration.SearchWindowContents));
+                preview.SetSearchSnippet(contentIndex.GetSnippet(trackedWindow.Handle, filterText));
+                preview.SetSearchSnapshot(contentIndex.GetSnapshot(trackedWindow.Handle), filterText);
             }
         }
 
@@ -173,7 +206,9 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         {
             RefreshAppearance(preview, trackedWindow);
             preview.RefreshSourceGeometry(trackedWindow, geometryReader);
-            preview.SetFilterMatch(WindowTitleFilter.Matches(trackedWindow.Title, filterText));
+            preview.SetFilterMatch(contentIndex.ShouldDisplay(trackedWindow.Handle, trackedWindow.Title, filterText, configuration.SearchWindowContents));
+            preview.SetSearchSnippet(contentIndex.GetSnippet(trackedWindow.Handle, filterText));
+            preview.SetSearchSnapshot(contentIndex.GetSnapshot(trackedWindow.Handle), filterText);
         }
     }
 
@@ -224,6 +259,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
         foreach (DesktopWindowPreview preview in previews.Values)
         {
             preview.Invoked -= HandleWindowInvoked;
+            preview.PeekRequested -= HandleWindowPeekRequested;
             preview.SelectionToggled -= HandleWindowSelectionToggled;
             preview.PositionChanged -= HandleWindowPositionChanged;
             preview.DragMoved -= HandleWindowDragMoved;
@@ -263,12 +299,14 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
 
     private void Remove(nint handle)
     {
+        contentIndex.Remove(handle);
         if (!previews.Remove(handle, out DesktopWindowPreview? preview))
         {
             return;
         }
 
         preview.Invoked -= HandleWindowInvoked;
+        preview.PeekRequested -= HandleWindowPeekRequested;
         preview.SelectionToggled -= HandleWindowSelectionToggled;
         preview.PositionChanged -= HandleWindowPositionChanged;
         preview.DragMoved -= HandleWindowDragMoved;
@@ -574,7 +612,7 @@ public sealed class DesktopWindowPreviewCollection(DesktopWindowPreviewFactory f
     }
 
 
-    private TrackedWindow[] GetOrderedMatches(IEnumerable<TrackedWindow> trackedWindows) => [..trackedWindows.Where(window => WindowTitleFilter.Matches(window.Title, filterText)).OrderBy(window => window.CanvasX).ThenBy(window => window.CanvasY).ThenBy(window => (long)window.Handle)];
+    private TrackedWindow[] GetOrderedMatches(IEnumerable<TrackedWindow> trackedWindows) => [..trackedWindows.Where(window => contentIndex.Matches(window.Handle, window.Title, filterText)).OrderBy(window => window.CanvasX).ThenBy(window => window.CanvasY).ThenBy(window => (long)window.Handle)];
 
     private nint SetFocused(nint handle)
     {

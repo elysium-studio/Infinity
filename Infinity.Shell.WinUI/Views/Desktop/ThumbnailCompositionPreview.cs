@@ -33,7 +33,25 @@ public sealed class ThumbnailCompositionPreview : IDisposable
     private float height;
     private bool squareCorners;
 
-    private ThumbnailCompositionPreview(FrameworkElement host, WindowCapturePreview preview, SpriteVisual imageVisual, CompositionSurfaceBrush imageBrush, ContainerVisual rootVisual, SpriteVisual shadowVisual, CompositionColorBrush shadowSurfaceBrush, ShapeVisual shadowMaskVisual, CompositionSpriteShape shadowMaskShape, CompositionVisualSurface shadowMaskSurface, CompositionSurfaceBrush shadowMaskBrush, DropShadow shadow, CompositionRoundedRectangleGeometry shadowGeometry, CompositionRoundedRectangleGeometry roundedGeometry, CompositionGeometricClip roundedClip, ILogger logger)
+    public bool HasCurrentFrame => !isDisposed && preview.HasCurrentFrame;
+
+    private ThumbnailCompositionPreview(
+        FrameworkElement host,
+        WindowCapturePreview preview,
+        SpriteVisual imageVisual,
+        CompositionSurfaceBrush imageBrush,
+        ContainerVisual rootVisual,
+        SpriteVisual shadowVisual,
+        CompositionColorBrush shadowSurfaceBrush,
+        ShapeVisual shadowMaskVisual,
+        CompositionSpriteShape shadowMaskShape,
+        CompositionVisualSurface shadowMaskSurface,
+        CompositionSurfaceBrush shadowMaskBrush,
+        DropShadow shadow,
+        CompositionRoundedRectangleGeometry shadowGeometry,
+        CompositionRoundedRectangleGeometry roundedGeometry,
+        CompositionGeometricClip roundedClip,
+        ILogger logger)
     {
         this.host = host;
         this.preview = preview;

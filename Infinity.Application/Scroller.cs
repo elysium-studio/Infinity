@@ -6,7 +6,23 @@ using Microsoft.Extensions.Logging;
 
 namespace Infinity.Application;
 
-public sealed class Scroller(IPanState state, IScrollPresentationSession presentationSession, IWindowStore store, IWindowMover mover, IWindowMoveGuard moveGuard, IWindowDragGuard dragGuard, IScrollInputSource source, IDispatcher dispatcher, Func<ScrollerConfiguration> configurationFactory, IDeltaScrollMotion easingMotion, IDeltaScrollMotion navigationMotion, IVelocityScrollMotion momentumMotion, IPageCenterTargetResolver pageCenterTargetResolver, Action startTimer, Action stopTimer, ILogger<Scroller> logger) : IScroller
+public sealed class Scroller(
+    IPanState state,
+    IScrollPresentationSession presentationSession,
+    IWindowStore store,
+    IWindowMover mover,
+    IWindowMoveGuard moveGuard,
+    IWindowDragGuard dragGuard,
+    IScrollInputSource source,
+    IDispatcher dispatcher,
+    Func<ScrollerConfiguration> configurationFactory,
+    IDeltaScrollMotion easingMotion,
+    IDeltaScrollMotion navigationMotion,
+    IVelocityScrollMotion momentumMotion,
+    IPageCenterTargetResolver pageCenterTargetResolver,
+    Action startTimer,
+    Action stopTimer,
+    ILogger<Scroller> logger) : IScroller
 {
     private const int StandardWheelDelta = 120;
     private const double WheelScrollScale = 0.50;

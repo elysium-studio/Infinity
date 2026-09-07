@@ -4,7 +4,10 @@ using Infinity.Platform.Abstractions;
 
 namespace Infinity.Application;
 
-public sealed class WindowTitleSynchronizer(IWindowStore repository, IWindowTitleReader titleReader, IWindowEventListener listener) : IWindowTitleSynchronizer
+public sealed class WindowTitleSynchronizer(
+    IWindowStore repository,
+    IWindowTitleReader titleReader,
+    IWindowEventListener listener) : IWindowTitleSynchronizer
 {
     private bool isStarted;
 
