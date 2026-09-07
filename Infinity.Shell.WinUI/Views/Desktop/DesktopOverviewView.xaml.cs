@@ -65,7 +65,7 @@ public sealed partial class DesktopOverviewView : DesktopOverlay
         this.overviewConfiguration = overviewConfiguration;
         dispatcherQueue = DispatcherQueue;
         contentDrag = new(this, desktopScrollPreview, modifierKeyState, pointerInputSource, dragGuard, contentDragLogger);
-        liveWindowDrag = new(this, desktopScrollPreview, modifierKeyState, windowEventListener, dragGuard, windows, geometry, dragController, liveWindowDragLogger);
+        liveWindowDrag = new(this, desktopScrollPreview, modifierKeyState, windowEventListener, pointerInputSource, dragGuard, windows, geometry, dragController, liveWindowDragLogger);
         topMostCoordinator = new(windowEventListener, dispatcherQueue, () => isOverlayOpen && IsOpen, PromoteTopMost);
         backdropAnimator.Reset(BackgroundSurface);
         backdropAnimator.Reset(ThemeBackgroundSurface);

@@ -22,12 +22,14 @@ public sealed class DesktopLiveWindowDragController
     private readonly ITrackedWindowDragController dragController;
     private readonly ILogger<DesktopLiveWindowDragController> logger;
     private readonly DispatcherQueue dispatcher;
-    private readonly DispatcherQueueTimer timer;
     private bool handingOff;
     private nint candidateWindow;
     private volatile bool isActive;
+    private int pointerRefreshQueued;
+    private int? releasedThrowDirection;
+    private DesktopSnapPlacement? throwOrigin;
 
-    public DesktopLiveWindowDragController(DesktopOverviewView overlay, DesktopScrollPreviewView preview, IModifierKeyState modifiers, IWindowEventListener events, IWindowDragGuard dragGuard, IWindowStore windows, IWindowGeometryReader geometry, ITrackedWindowDragController dragController, ILogger<DesktopLiveWindowDragController> logger)
+    public DesktopLiveWindowDragController(DesktopOverviewView overlay, DesktopScrollPreviewView preview, IModifierKeyState modifiers, IWindowEventListener events, IPointerInputSource pointer, IWindowDragGuard dragGuard, IWindowStore windows, IWindowGeometryReader geometry, ITrackedWindowDragController dragController, ILogger<DesktopLiveWindowDragController> logger)
     {
         this.overlay = overlay;
         this.preview = preview;
@@ -38,16 +40,49 @@ public sealed class DesktopLiveWindowDragController
         this.dragController = dragController;
         this.logger = logger;
         dispatcher = overlay.DispatcherQueue;
-        timer = dispatcher.CreateTimer();
-        timer.Interval = TimeSpan.FromMilliseconds(32);
-        timer.Tick += HandleTick;
         events.DragStarted += HandleDragStarted;
         events.DragEnded += HandleDragEnded;
         events.WindowLocationChanged += HandleLocationChanged;
         modifiers.StateChanged += HandleModifiersChanged;
+        pointer.CursorMoved += HandleCursorMoved;
     }
 
     public bool IsActive => isActive;
+
+    private void HandleCursorMoved(int x, int y)
+    {
+        if (!IsActive || Interlocked.Exchange(ref pointerRefreshQueued, 1) != 0)
+        {
+            return;
+        }
+
+        if (!dispatcher.TryEnqueue(RefreshDragPointer))
+        {
+            Interlocked.Exchange(ref pointerRefreshQueued, 0);
+        }
+    }
+
+    private void RefreshDragPointer()
+    {
+        Interlocked.Exchange(ref pointerRefreshQueued, 0);
+        if (!IsActive || !overlay.CanContinueContentDrag)
+        {
+            return;
+        }
+
+        try
+        {
+            if (preview.DragFrames.TryRead(out DesktopWindowDragFrame frame))
+            {
+                preview.UpdateLiveWindowDragPosition(frame.ScreenX, frame.ScreenY);
+            }
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Could not update the live window drag position.");
+            Cancel();
+        }
+    }
 
     private void HandleDragStarted(nint handle) => dispatcher.TryEnqueue(() =>
     {
@@ -57,9 +92,11 @@ public sealed class DesktopLiveWindowDragController
         }
 
         gesture.Reset();
+        throwOrigin = null;
         Volatile.Write(ref candidateWindow, 0);
-        if (windows.TryGet(handle, out _) && TryRead(handle, out DesktopSnapPlacement bounds))
+        if (windows.TryGet(handle, out TrackedWindow? window) && TryRead(handle, out DesktopSnapPlacement bounds))
         {
+            throwOrigin = new DesktopWindowFrameGeometry(geometry).GetVisiblePlacement(window);
             gesture.Begin(handle, bounds);
             Volatile.Write(ref candidateWindow, gesture.Window);
         }
@@ -74,7 +111,14 @@ public sealed class DesktopLiveWindowDragController
 
         if (IsActive)
         {
-            Cancel();
+            if (!NativeDragPointer.IsButtonDown)
+            {
+                CompleteDrop();
+            }
+            else
+            {
+                Cancel();
+            }
         }
         else
         {
@@ -121,6 +165,11 @@ public sealed class DesktopLiveWindowDragController
 
         try
         {
+            if (!NativeDragPointer.TryGetPosition(out int pointerX, out int pointerY) || !TryReadVisible(gesture.Window, out DesktopSnapPlacement bounds) || !DesktopWindowDragAnchor.TryCreate(pointerX, pointerY, bounds, out DesktopWindowDragAnchor anchor))
+            {
+                return;
+            }
+
             if (!dragController.Begin(gesture.Window))
             {
                 return;
@@ -128,8 +177,8 @@ public sealed class DesktopLiveWindowDragController
 
             isActive = true;
             navigation.Update(true, DesktopContentDragTarget.None);
-            preview.SetLiveWindowDragEnabled(true);
-            timer.Start();
+            preview.BeginLiveWindowDrag(gesture.Window, anchor, pointerX, pointerY, throwOrigin);
+            preview.DragFrames.Updated += HandleDragFrame;
             overlay.ViewModel.OpenForContentDrag();
         }
         catch (Exception exception)
@@ -139,23 +188,54 @@ public sealed class DesktopLiveWindowDragController
         }
     }
 
-    private void HandleTick(DispatcherQueueTimer sender, object args)
+    private void HandleDragFrame(DesktopWindowDragFrame frame)
     {
         try
         {
+            if (!IsActive)
+            {
+                return;
+            }
+
             if (!overlay.CanContinueContentDrag)
             {
                 Stop();
             }
-            else if (!handingOff)
+            else
             {
-                if (!windows.TryGet(gesture.Window, out _) || !dragGuard.IsDragging(gesture.Window) || !NativeDragPointer.IsButtonDown)
+                if (handingOff)
+                {
+                    preview.UpdateLiveWindowDragPosition(frame.ScreenX, frame.ScreenY);
+                    return;
+                }
+
+                preview.TryGetLiveWindowDragTarget(frame.ScreenX, frame.ScreenY, out _);
+
+                if (!windows.TryGet(gesture.Window, out _))
                 {
                     Cancel();
                     return;
                 }
 
-                TryGetPage(out _);
+                if (!frame.IsButtonDown)
+                {
+                    releasedThrowDirection ??= preview.ReleaseLiveWindowThrowGesture();
+                    preview.StopLiveWindowDragScroll();
+                    if (!dragGuard.IsDragging(gesture.Window))
+                    {
+                        CompleteDrop();
+                    }
+
+                    return;
+                }
+
+                if (!dragGuard.IsDragging(gesture.Window))
+                {
+                    Cancel();
+                    return;
+                }
+
+                preview.UpdateLiveWindowDragScroll();
             }
         }
         catch (Exception exception)
@@ -171,6 +251,43 @@ public sealed class DesktopLiveWindowDragController
         return NativeDragPointer.TryGetPosition(out int x, out int y) && preview.TryGetLiveWindowDragTarget(x, y, out target);
     }
 
+    private void CompleteDrop()
+    {
+        if (!IsActive || handingOff)
+        {
+            return;
+        }
+
+        try
+        {
+            if (!overlay.CanContinueContentDrag || !NativeDragPointer.TryGetPosition(out int pointerX, out int pointerY))
+            {
+                Cancel();
+                return;
+            }
+
+            preview.TryGetLiveWindowDragTarget(pointerX, pointerY, out _);
+            releasedThrowDirection ??= preview.ReleaseLiveWindowThrowGesture();
+            if (!preview.TryCompleteLiveWindowDrop(releasedThrowDirection.Value, out int page))
+            {
+                Cancel();
+                return;
+            }
+
+            handingOff = true;
+            dragController.End(gesture.Window);
+            preview.EndLiveWindowDrag();
+            preview.CompleteContentDragSelection();
+            overlay.ViewModel.SelectPage(page);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Could not place the live window drag inside its destination page.");
+            handingOff = false;
+            Cancel();
+        }
+    }
+
     private void SelectReleasedPage()
     {
         if (handingOff)
@@ -180,6 +297,16 @@ public sealed class DesktopLiveWindowDragController
 
         try
         {
+            if (!NativeDragPointer.IsButtonDown)
+            {
+                if (!dragGuard.IsDragging(gesture.Window))
+                {
+                    CompleteDrop();
+                }
+
+                return;
+            }
+
             if (!overlay.CanContinueContentDrag || !NativeDragPointer.IsButtonDown || !dragGuard.IsDragging(gesture.Window) || !TryGetPage(out DesktopContentDragTarget target))
             {
                 Cancel();
@@ -223,14 +350,15 @@ public sealed class DesktopLiveWindowDragController
 
     public void Stop()
     {
-        timer.Stop();
+        preview.DragFrames.Updated -= HandleDragFrame;
         if (IsActive)
         {
             dragController.End(gesture.Window);
-            preview.SetLiveWindowDragEnabled(false);
+            preview.EndLiveWindowDrag();
         }
 
         isActive = false;
+        releasedThrowDirection = null;
         handingOff = false;
         gesture.Reset();
         Volatile.Write(ref candidateWindow, 0);
@@ -242,5 +370,16 @@ public sealed class DesktopLiveWindowDragController
         bool result = geometry.TryReadGeometry(handle, out int x, out int y, out int width, out int height);
         bounds = new(x, y, width, height);
         return result;
+    }
+
+    private bool TryReadVisible(nint handle, out DesktopSnapPlacement bounds)
+    {
+        if (geometry.TryReadVisibleGeometry(handle, out int x, out int y, out int width, out int height))
+        {
+            bounds = new(x, y, width, height);
+            return true;
+        }
+
+        return TryRead(handle, out bounds);
     }
 }

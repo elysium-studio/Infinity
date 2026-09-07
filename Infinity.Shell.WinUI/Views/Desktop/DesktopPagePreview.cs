@@ -16,7 +16,7 @@ namespace Infinity.Shell.WinUI;
 
 public sealed partial class DesktopPagePreview : Button, IDisposable
 {
-    private const float VisibleCornerRadius = 8;
+    internal const float VisibleCornerRadius = 8;
     private const float ShadowDepth = 64;
     private const double DragThreshold = 4;
     private const int DraggedZIndex = 1_000_000;

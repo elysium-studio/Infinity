@@ -1,4 +1,5 @@
 using Infinity.Application.Abstractions;
+using Infinity.Platform.Abstractions;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -7,7 +8,7 @@ using Windows.UI;
 
 namespace Infinity.Shell.WinUI;
 
-public sealed class DesktopWindowPreviewFactory(WindowCapturePreviewSurface previewSurface, ITrackedWindowDragController dragController, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, ILogger<DesktopWindowPreviewFactory> logger)
+public sealed class DesktopWindowPreviewFactory(WindowCapturePreviewSurface previewSurface, ITrackedWindowDragController dragController, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, DesktopWindowDragFrames dragFrames, IPager pager, DesktopWindowThrowPlacementResolver throwPlacementResolver, PageLayoutStore pageLayouts, IWindowIconSource icons, ILogger<DesktopWindowPreviewFactory> logger)
 {
     internal DesktopWindowPreview Create(Canvas backgroundCanvas, Canvas canvas, Canvas focusCanvas, nint windowHandle, double layoutScale)
     {
@@ -44,10 +45,12 @@ public sealed class DesktopWindowPreviewFactory(WindowCapturePreviewSurface prev
         {
             IsHitTestVisible = false
         };
+        Grid content = new();
+        content.Children.Add(compositionHost);
         Border host = new()
         {
             Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
-            Child = compositionHost,
+            Child = content,
             CornerRadius = cornerRadius,
             IsHitTestVisible = false
         };
@@ -68,6 +71,6 @@ public sealed class DesktopWindowPreviewFactory(WindowCapturePreviewSurface prev
             backgroundHost.Background = new SolidColorBrush(Color.FromArgb(255, 32, 32, 32));
         }
 
-        return new(windowHandle, host, backgroundHost, focusHost, preview, focusVisual, selectionVisual, dragController, overviewDragScroller, dragPositionResolver, dragBoundaryCalculator, cursorConfinement, windowPlacementCoordinator, contextMenuBuilder, layoutScale);
+        return new(windowHandle, host, backgroundHost, focusHost, preview, compositionHost, () => new(windowHandle, icons, visualScale, logger), focusVisual, selectionVisual, dragController, overviewDragScroller, dragPositionResolver, dragBoundaryCalculator, cursorConfinement, windowPlacementCoordinator, contextMenuBuilder, dragFrames, pager, throwPlacementResolver, pageLayouts, layoutScale);
     }
 }

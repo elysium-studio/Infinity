@@ -11,6 +11,12 @@ public sealed partial class DesktopScrollPreviewView
 {
     private bool contentDragEnabled;
     private bool liveWindowDragEnabled;
+    private nint liveWindowDragHandle;
+    private DesktopWindowDragAnchor liveWindowDragAnchor;
+    private DesktopWindowPreview? liveWindowDragPreview;
+    private DesktopSnapPlacement? liveWindowThrowOrigin;
+    private int liveWindowPointerX;
+    private int liveWindowPointerY;
     private bool contentDragInside;
     private bool interactionReady;
     private Point contentDragPoint;
@@ -18,21 +24,124 @@ public sealed partial class DesktopScrollPreviewView
 
     internal bool IsContentDragReady => contentDragEnabled && interactionReady && contentDragInside;
 
+    internal DesktopWindowDragFrames DragFrames { get; }
+
     internal ContentDragKind DraggedContentKind { get; private set; }
 
-    internal void SetLiveWindowDragEnabled(bool enabled)
+    internal void BeginLiveWindowDrag(nint handle, DesktopWindowDragAnchor anchor, int screenX, int screenY, DesktopSnapPlacement? throwOrigin)
     {
-        SetContentDragEnabled(enabled);
-        liveWindowDragEnabled = enabled;
-        ContentDragSurface.AllowDrop = !enabled;
+        EndLiveWindowDrag();
+        liveWindowDragHandle = handle;
+        liveWindowDragAnchor = anchor;
+        liveWindowThrowOrigin = throwOrigin;
+        SetContentDragEnabled(true);
+        liveWindowDragEnabled = true;
+        ContentDragSurface.AllowDrop = false;
+        UpdateLiveWindowDragPosition(screenX, screenY);
+    }
+
+    internal void EndLiveWindowDrag()
+    {
+        StopLiveWindowDragScroll();
+        liveWindowDragPreview?.ClearDragVisual();
+        if (liveWindowDragHandle != 0)
+        {
+            refreshQueue.RequestWindow(liveWindowDragHandle);
+        }
+
+        liveWindowDragPreview = null;
+        liveWindowDragHandle = 0;
+        liveWindowDragEnabled = false;
+        ContentDragSurface.AllowDrop = true;
+        SetContentDragEnabled(false);
+    }
+
+    internal void UpdateLiveWindowDragPosition(int screenX, int screenY)
+    {
+        liveWindowPointerX = screenX;
+        liveWindowPointerY = screenY;
+        UpdateLiveWindowDragPreview();
+    }
+
+    internal void UpdateLiveWindowDragScroll()
+    {
+        if (liveWindowDragEnabled && interactionReady)
+        {
+            liveWindowDragPreview?.UpdateDragScroll(contentDragPoint);
+        }
+        else
+        {
+            StopLiveWindowDragScroll();
+        }
+    }
+
+    internal void StopLiveWindowDragScroll() => liveWindowDragPreview?.StopDragScroll();
+
+    private void UpdateLiveWindowDragPreview()
+    {
+        if (!liveWindowDragEnabled)
+        {
+            return;
+        }
+
+        (double rootX, double rootY) = DragFrames.Viewport.FromScreen(liveWindowPointerX, liveWindowPointerY);
+        contentDragPoint = new(rootX, rootY);
+        if (!isRunning || !previews.TryGet(liveWindowDragHandle, out DesktopWindowPreview? window) || window is null)
+        {
+            return;
+        }
+
+        if (!ReferenceEquals(liveWindowDragPreview, window))
+        {
+            StopLiveWindowDragScroll();
+            liveWindowDragPreview?.ClearDragVisual();
+            liveWindowDragPreview = window;
+        }
+
+        window.SetLiveDragAnchor(contentDragPoint, liveWindowDragAnchor, followAnimatedScale: !interactionReady);
+        if (liveWindowThrowOrigin is DesktopSnapPlacement origin && workspace.Width > 0)
+        {
+            int sourcePage = Math.Max(0, (int)Math.Floor((origin.CanvasX + origin.Width / 2 - workspace.WorkAreaX) / workspace.Width));
+            window.SetThrowOrigin(sourcePage, origin);
+        }
     }
 
     internal bool TryGetLiveWindowDragTarget(int screenX, int screenY, out DesktopContentDragTarget target)
     {
-        double scale = XamlRoot?.RasterizationScale ?? 1;
-        contentDragPoint = new((screenX - overlayScreenOriginX) / scale, (screenY - overlayScreenOriginY) / scale);
+        UpdateLiveWindowDragPosition(screenX, screenY);
         contentDragInside = liveWindowDragEnabled;
         return TryGetContentDragTarget(out target);
+    }
+
+    internal int ReleaseLiveWindowThrowGesture() => liveWindowDragPreview?.ReleaseThrowGesture() ?? 0;
+
+    internal bool TryCompleteLiveWindowDrop(int throwDirection, out int page)
+    {
+        page = -1;
+        if (!liveWindowDragEnabled || !IsContentDragReady || liveWindowDragPreview is null)
+        {
+            return false;
+        }
+
+        if (throwDirection != 0)
+        {
+            return liveWindowDragPreview.TryThrowLiveWindow(throwDirection, out page);
+        }
+
+        if (!pageStrip.TryHitTestContentDrag(contentDragPoint, out int targetPage, out Rect pageBounds))
+        {
+            return false;
+        }
+
+        double localX = (contentDragPoint.X - pageBounds.X) / animator.Scale;
+        double localY = (contentDragPoint.Y - pageBounds.Y) / animator.Scale;
+        if (!liveWindowDragPreview.TryPlaceLiveDragOnPage(targetPage, localX, localY, liveWindowDragAnchor))
+        {
+            return false;
+        }
+
+        page = targetPage;
+        return true;
     }
 
     internal void SetContentDragEnabled(bool enabled)
@@ -119,6 +228,7 @@ public sealed partial class DesktopScrollPreviewView
 
     internal void CompleteContentDragSelection()
     {
+        StopLiveWindowDragScroll();
         contentDragScrollSuppression?.Dispose();
         contentDragScrollSuppression = scrollInputSuppression.Suppress();
         scroller.CancelNavigation();

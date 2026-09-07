@@ -152,10 +152,6 @@
             <Canvas>
                 <Canvas x:Name="PageCanvas" />
             </Canvas>
-            <Canvas x:Name="PreviewBackgroundCanvas" IsHitTestVisible="False" />
-            <Canvas x:Name="PreviewCanvas" />
-            <Canvas x:Name="FocusCanvas" IsHitTestVisible="False" />
-            <Canvas x:Name="SharedBoundaryCanvas" />
         </Grid>
         <Canvas x:Name="PageTitleCanvas" />
         <Grid
@@ -520,24 +516,30 @@
                 <FontIcon FontSize="16" Glyph="&#xE713;" />
             </Button>
         </Grid>
+        <Border
+            x:Name="ContentDragOutline"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            BorderBrush="{ThemeResource SystemControlHighlightAccentBrush}"
+            BorderThickness="2"
+            CornerRadius="6"
+            IsHitTestVisible="False"
+            Visibility="Collapsed" />
+        <Grid x:Name="ThumbnailSurface" Canvas.ZIndex="1">
+            <Canvas x:Name="PreviewBackgroundCanvas" IsHitTestVisible="False" />
+            <Canvas x:Name="PreviewCanvas" />
+            <Canvas x:Name="FocusCanvas" IsHitTestVisible="False" />
+            <Canvas x:Name="SharedBoundaryCanvas" />
+        </Grid>
         <Grid
             x:Name="ContentDragSurface"
+            Canvas.ZIndex="2"
             AllowDrop="True"
             Background="Transparent"
             DragEnter="HandleContentDragEntered"
             DragOver="HandleContentDragOver"
             DragLeave="HandleContentDragLeave"
             Drop="HandleContentDragLeave"
-            Visibility="Collapsed">
-            <Border
-                x:Name="ContentDragOutline"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                BorderBrush="{ThemeResource SystemControlHighlightAccentBrush}"
-                BorderThickness="2"
-                CornerRadius="6"
-                IsHitTestVisible="False"
-                Visibility="Collapsed" />
-        </Grid>
+            Visibility="Collapsed" />
     </Grid>
 </UserControl>

@@ -89,7 +89,7 @@ public sealed class ThumbnailCompositionPreview : IDisposable
             imageVisual = compositor.CreateSpriteVisual();
             imageVisual.IsVisible = false;
             imageBrush = compositor.CreateSurfaceBrush(preview.CreateSurface(compositor));
-            imageBrush.Stretch = CompositionStretch.Fill;
+            imageBrush.Stretch = CompositionStretch.Uniform;
             imageVisual.Brush = imageBrush;
             rootVisual = compositor.CreateContainerVisual();
             rootVisual.RelativeSizeAdjustment = Vector2.One;

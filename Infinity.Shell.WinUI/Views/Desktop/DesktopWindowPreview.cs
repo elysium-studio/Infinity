@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Numerics;
 using Infinity.Application.Abstractions;
 using Infinity.Platform.Abstractions;
@@ -18,11 +19,27 @@ internal sealed class DesktopWindowPreview : IDisposable
     private const int DraggedZIndex = 1_000_000;
     private const int DraggedPageZIndex = 999_000;
     private readonly ThumbnailCompositionPreview? preview;
+    private readonly Grid liveContent;
+    private readonly Func<DesktopWindowResizePreview> createResizePreview;
+    private DesktopWindowResizePreview? resizePreview;
     private readonly DesktopThumbnailCaptureVisibility captureVisibility;
     private readonly DesktopWindowPlacementAnimator placementAnimator;
     private DesktopWindowPlacementAnimator.Bounds? placementAnimationSource;
     private bool placementInProgress;
     private bool boundaryResizePreview;
+    private DesktopWindowDragAnchorVisual? dragVisual;
+    private bool isLiveDragging;
+    private readonly DesktopWindowDragFrames dragFrames;
+    private readonly IPager pager;
+    private readonly DesktopWindowThrowGesture throwGesture = new();
+    private readonly long throwClockOrigin = Stopwatch.GetTimestamp();
+    private int? throwOriginPage;
+    private DesktopSnapPlacement? throwOriginPlacement;
+    private readonly DesktopWindowThrowPlacementResolver throwPlacementResolver;
+    private readonly PageLayoutStore pageLayouts;
+    private Vector2 dragGrabOffset;
+    private int sourceWindowWidth;
+    private int sourceWindowHeight;
     private readonly Border backgroundHost;
     private readonly Border[] presentationElements;
     private readonly Border focusHost;
@@ -74,7 +91,7 @@ internal sealed class DesktopWindowPreview : IDisposable
     private TimeSpan? translationTransitionDuration;
     private TimeSpan? scaleTransitionDuration;
 
-    public DesktopWindowPreview(nint windowHandle, Border host, Border backgroundHost, Border focusHost, ThumbnailCompositionPreview? preview, Grid focusVisual, Grid selectionVisual, ITrackedWindowDragController dragController, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, double layoutScale)
+    public DesktopWindowPreview(nint windowHandle, Border host, Border backgroundHost, Border focusHost, ThumbnailCompositionPreview? preview, Grid liveContent, Func<DesktopWindowResizePreview> createResizePreview, Grid focusVisual, Grid selectionVisual, ITrackedWindowDragController dragController, DesktopOverviewDragScroller overviewDragScroller, DesktopWindowDragPositionResolver dragPositionResolver, DesktopDragBoundaryCalculator dragBoundaryCalculator, DesktopDragCursorConfinement cursorConfinement, DesktopWindowPlacementCoordinator windowPlacementCoordinator, DesktopWindowContextMenuBuilder contextMenuBuilder, DesktopWindowDragFrames dragFrames, IPager pager, DesktopWindowThrowPlacementResolver throwPlacementResolver, PageLayoutStore pageLayouts, double layoutScale)
     {
         this.windowHandle = windowHandle;
         Host = host;
@@ -84,10 +101,16 @@ internal sealed class DesktopWindowPreview : IDisposable
         presentationElements = [host, backgroundHost, focusHost];
         placementAnimator = new(host, backgroundHost, focusHost);
         this.preview = preview;
+        this.liveContent = liveContent;
+        this.createResizePreview = createResizePreview;
         captureVisibility = new(preview, host.DispatcherQueue);
         this.focusVisual = focusVisual;
         this.selectionVisual = selectionVisual;
         this.dragController = dragController;
+        this.dragFrames = dragFrames;
+        this.pager = pager;
+        this.throwPlacementResolver = throwPlacementResolver;
+        this.pageLayouts = pageLayouts;
         this.overviewDragScroller = overviewDragScroller;
         this.dragPositionResolver = dragPositionResolver;
         this.dragBoundaryCalculator = dragBoundaryCalculator;
@@ -139,11 +162,165 @@ internal sealed class DesktopWindowPreview : IDisposable
 
     public double LayoutScale => layoutScale;
 
-    public bool IsDragging => isDragging || isGroupDragLeader || isGroupStacked;
+    public void UpdateDragScroll(Point pointer) => overviewDragScroller.UpdateWindowDrag(pointer.X, Host.XamlRoot?.Size.Width ?? 0, layoutScale);
+
+    public void StopDragScroll() => overviewDragScroller.Stop();
+
+    public bool IsDragging => isDragging || isLiveDragging || isGroupDragLeader || isGroupStacked;
+
+    public bool CanDeferLiveDragRefresh(TrackedWindow window) => isLiveDragging && sourceWindowWidth == window.Width && sourceWindowHeight == window.Height;
+
+    public void SetLiveDragAnchor(Point pointer, DesktopWindowDragAnchor anchor, bool followAnimatedScale)
+    {
+        if (!isLiveDragging)
+        {
+            BeginThrowGesture();
+            CancelPlacementAnimation();
+            SetGroupTransitions(null);
+            SetPromoted(true);
+        }
+
+        isLiveDragging = true;
+        if (followAnimatedScale)
+        {
+            throwGesture.Reset();
+        }
+        else
+        {
+            RecordThrowPointer(pointer);
+        }
+        (double grabX, double grabY) = anchor.GetOffset(SourceWidth, SourceHeight);
+        UpdateDragVisual(pointer, new(ToFloat(grabX), ToFloat(grabY)), followAnimatedScale);
+        ApplyIndicatorVisibility();
+    }
+
+    private void UpdateDragVisual(Point rootPointer, Vector2 grabOffset, bool followAnimatedScale = false)
+    {
+        if (!followAnimatedScale)
+        {
+            if (dragVisual is not null)
+            {
+                dragVisual.Dispose();
+                dragVisual = null;
+                appliedTranslation = null;
+            }
+
+            (double layoutX, double layoutY) = dragFrames.Viewport.ToLayout(rootPointer.X, rootPointer.Y, layoutScale);
+            ApplyPosition(layoutX - grabOffset.X, layoutY - grabOffset.Y);
+            RefreshCaptureVisibility();
+            return;
+        }
+
+        if (dragFrames.Surface is not { } surface)
+        {
+            return;
+        }
+
+        (double pointerX, double pointerY) = dragFrames.Viewport.ToSurface(rootPointer.X, rootPointer.Y);
+        Vector2 pointer = new(ToFloat(pointerX), ToFloat(pointerY));
+        if (dragVisual is null)
+        {
+            CancelPlacementAnimation();
+            SetGroupTransitions(null);
+            dragVisual = new(surface, pointer, grabOffset, shadowDepth, presentationElements);
+            SetPromoted(true);
+            ApplyIndicatorVisibility();
+            RefreshCaptureVisibility();
+        }
+        else
+        {
+            dragVisual.Update(pointer, grabOffset);
+        }
+    }
+
+    public void ClearDragVisual()
+    {
+        bool wasLiveDragging = isLiveDragging;
+        isLiveDragging = false;
+        if (dragVisual is null && !wasLiveDragging)
+        {
+            return;
+        }
+
+        dragVisual?.Dispose();
+        dragVisual = null;
+        appliedTranslation = null;
+        SetPromoted(false);
+        ApplyTranslation();
+        ApplyIndicatorVisibility();
+    }
+
+    private void BeginThrowGesture()
+    {
+        throwGesture.Reset();
+        throwOriginPage = windowPlacementCoordinator.GetPage(windowHandle);
+        throwOriginPlacement = throwPlacementResolver.GetOrigin(windowHandle);
+    }
+
+    private void RecordThrowPointer(Point pointer) => throwGesture.Update(pointer.X, pointer.Y, Stopwatch.GetElapsedTime(throwClockOrigin));
+
+    public void SetThrowOrigin(int page, DesktopSnapPlacement placement)
+    {
+        throwOriginPage = page;
+        throwOriginPlacement = placement;
+    }
+
+    public int ReleaseThrowGesture() => throwGesture.Release(Stopwatch.GetElapsedTime(throwClockOrigin));
+
+    private bool TryGetThrowPage(int direction, out int page)
+    {
+        page = 0;
+        return throwOriginPage.HasValue && DesktopWindowThrowGesture.TryGetTargetPage(throwOriginPage.Value, direction, pager.MaxPages, out page);
+    }
+
+    public bool TryThrowLiveWindow(int direction, out int page)
+    {
+        BeginPlacementAnimation();
+        ClearDragVisual();
+        windowPlacementCoordinator.CompleteMove(windowHandle);
+        bool moved = CompleteThrow(direction, out page);
+        EndPlacementAnimation();
+        if (!moved)
+        {
+            CancelPlacementAnimation();
+        }
+
+        return moved;
+    }
+
+    private bool CompleteThrow(int direction, out int page)
+    {
+        page = throwOriginPage ?? -1;
+        if (!throwOriginPage.HasValue || !throwOriginPlacement.HasValue)
+        {
+            return false;
+        }
+
+        if (TryGetThrowPage(direction, out int targetPage) && throwPlacementResolver.TryResolve(windowHandle, throwOriginPage.Value, throwOriginPlacement.Value, targetPage, pageLayouts.GetLayout(targetPage), out DesktopSnapPlacement placement) && windowPlacementCoordinator.TryPlaceInSlot(windowHandle, placement))
+        {
+            page = targetPage;
+            return true;
+        }
+
+        return windowPlacementCoordinator.TryPlaceInSlot(windowHandle, throwOriginPlacement.Value);
+    }
+
+    public bool TryPlaceLiveDragOnPage(int page, double localPointerX, double localPointerY, DesktopWindowDragAnchor anchor)
+    {
+        (double grabX, double grabY) = anchor.GetOffset(SourceWidth, SourceHeight);
+        if (!dragPositionResolver.TryResolveOnPage(windowHandle, page, localPointerX - grabX - SourceOffsetX, localPointerY - grabY - SourceOffsetY, out DesktopWindowDragPosition position))
+        {
+            return false;
+        }
+
+        ClearDragVisual();
+        windowPlacementCoordinator.CompleteMove(windowHandle);
+        return dragController.MoveTo(windowHandle, position.CanvasX, position.CanvasY);
+    }
 
     public void SetBoundaryResizePreview(double deltaX, double deltaY, double targetWidth, double targetHeight)
     {
-        if (width <= 0 || height <= 0)
+        if (width <= 0 || height <= 0 || !double.IsFinite(targetWidth) || !double.IsFinite(targetHeight) || targetWidth <= 0 || targetHeight <= 0)
         {
             return;
         }
@@ -151,12 +328,22 @@ internal sealed class DesktopWindowPreview : IDisposable
         boundaryResizePreview = true;
         placementAnimator.Stop();
         SetGroupTransitions(null);
-        Vector3 scale = new((float)(targetWidth / width), (float)(targetHeight / height), 1);
+        liveContent.Opacity = 0;
+        if (resizePreview is null)
+        {
+            resizePreview = createResizePreview();
+            ((Grid)Host.Child).Children.Add(resizePreview);
+        }
+
+        ApplyCornerRadius();
+        resizePreview.Show(Host.CornerRadius);
         Vector3 translation = new(ToFloat(x + deltaX), ToFloat(y + deltaY), shadowDepth);
         foreach (Border element in presentationElements)
         {
-            element.CenterPoint = Vector3.Zero;
-            element.Scale = scale;
+            element.Width = targetWidth;
+            element.Height = targetHeight;
+            element.CenterPoint = new(ToFloat(targetWidth / 2), ToFloat(targetHeight / 2), 0);
+            element.Scale = Vector3.One;
             element.Translation = translation;
         }
     }
@@ -169,12 +356,10 @@ internal sealed class DesktopWindowPreview : IDisposable
         }
 
         boundaryResizePreview = false;
-        foreach (Border element in presentationElements)
-        {
-            element.Scale = Vector3.One;
-            element.CenterPoint = new(ToFloat(width / 2), ToFloat(height / 2), 0);
-        }
-
+        resizePreview?.Hide();
+        ApplyCornerRadius();
+        liveContent.Opacity = 1;
+        ApplySize(width, height);
         appliedTranslation = null;
         ApplyTranslation();
     }
@@ -189,15 +374,27 @@ internal sealed class DesktopWindowPreview : IDisposable
         }
 
         isSlotted = value;
-        CornerRadius radius = value ? new CornerRadius(0) : floatingCornerRadius;
+        ApplyCornerRadius();
+        preview?.SetSquareCorners(value);
+    }
+
+    private void ApplyCornerRadius()
+    {
+        CornerRadius radius = boundaryResizePreview ? new(DesktopPagePreview.VisibleCornerRadius / layoutScale) : isSlotted == true ? new(0) : floatingCornerRadius;
         Host.CornerRadius = radius;
         backgroundHost.CornerRadius = radius;
-        preview?.SetSquareCorners(value);
     }
 
 
     public void RefreshSourceGeometry(TrackedWindow trackedWindow, IWindowGeometryReader geometryReader)
     {
+        if (CanDeferLiveDragRefresh(trackedWindow))
+        {
+            return;
+        }
+
+        sourceWindowWidth = trackedWindow.Width;
+        sourceWindowHeight = trackedWindow.Height;
         if (geometryReader.TryReadVisibleGeometry(trackedWindow.Handle, out int visibleX, out int visibleY, out int visibleWidth, out int visibleHeight))
         {
             SourceWidth = visibleWidth;
@@ -446,6 +643,7 @@ internal sealed class DesktopWindowPreview : IDisposable
         }
 
         disposed = true;
+        ClearDragVisual();
         CancelPlacementAnimation();
         placementAnimator.Dispose();
         CompleteDrag();
@@ -506,6 +704,8 @@ internal sealed class DesktopWindowPreview : IDisposable
         dragCoordinateRoot = coordinateRoot;
         dragStartPoint = args.GetCurrentPoint(coordinateRoot).Position;
         dragLastPoint = dragStartPoint;
+        BeginThrowGesture();
+        RecordThrowPointer(dragStartPoint);
         SetPromoted(true);
         args.Handled = true;
     }
@@ -519,6 +719,13 @@ internal sealed class DesktopWindowPreview : IDisposable
         }
 
         Point rawPoint = args.GetCurrentPoint(dragCoordinateRoot).Position;
+        if (isDragging)
+        {
+            UpdateDragPosition(rawPoint);
+            args.Handled = true;
+            return;
+        }
+
         double viewportWidth = Host.XamlRoot?.Size.Width ?? 0;
         double viewportHeight = Host.XamlRoot?.Size.Height ?? 0;
         (double pointerX, double pointerY) = dragBoundaryCalculator.Constrain(rawPoint.X, rawPoint.Y, viewportWidth, viewportHeight, layoutScale);
@@ -576,19 +783,29 @@ internal sealed class DesktopWindowPreview : IDisposable
             ApplyIndicatorVisibility();
             DragStarted?.Invoke(windowHandle);
             cursorConfinement.Begin(viewportWidth, viewportHeight, layoutScale, Host.XamlRoot?.RasterizationScale ?? 1, constrainVertical: true);
-        }
-        else
-        {
-            dragHorizontalDelta += (currentPoint.X - dragLastPoint.X) / layoutScale;
-            dragVerticalDelta += (currentPoint.Y - dragLastPoint.Y) / layoutScale;
-            dragLastPoint = currentPoint;
+            (double layoutX, double layoutY) = dragFrames.Viewport.ToLayout(currentPoint.X, currentPoint.Y, layoutScale);
+            dragGrabOffset = new(ToFloat(layoutX - VisualX), ToFloat(layoutY - VisualY));
         }
 
-        overviewDragScroller.UpdateWindowDrag(rawPoint.X, viewportWidth, layoutScale);
+        UpdateDragPosition(rawPoint);
+        args.Handled = true;
+    }
+
+    private void UpdateDragPosition(Point rawPoint)
+    {
+        RecordThrowPointer(rawPoint);
+        double viewportWidth = Host.XamlRoot?.Size.Width ?? 0;
+        double viewportHeight = Host.XamlRoot?.Size.Height ?? 0;
+        (double pointerX, double pointerY) = dragBoundaryCalculator.Constrain(rawPoint.X, rawPoint.Y, viewportWidth, viewportHeight, layoutScale);
+        Point currentPoint = new(pointerX, pointerY);
+        (double layoutX, double layoutY) = dragFrames.Viewport.ToLayout(pointerX, pointerY, layoutScale);
+        dragHorizontalDelta = layoutX - dragGrabOffset.X - x;
+        dragVerticalDelta = layoutY - dragGrabOffset.Y - y;
+        dragLastPoint = currentPoint;
+        UpdateDragScroll(rawPoint);
         cursorConfinement.Update(viewportWidth, viewportHeight, layoutScale, Host.XamlRoot?.RasterizationScale ?? 1);
         DragMoved?.Invoke(windowHandle, currentPoint.X, currentPoint.Y);
-        ApplyTranslation();
-        args.Handled = true;
+        UpdateDragVisual(currentPoint, dragGrabOffset);
     }
 
 
@@ -600,7 +817,12 @@ internal sealed class DesktopWindowPreview : IDisposable
         }
 
         bool wasDragging = isDragging;
-        CompleteDrag();
+        if (wasDragging && dragCoordinateRoot is not null)
+        {
+            UpdateDragPosition(args.GetCurrentPoint(dragCoordinateRoot).Position);
+        }
+
+        CompleteDrag(wasDragging ? ReleaseThrowGesture() : 0);
         Host.ReleasePointerCapture(args.Pointer);
         args.Handled = wasDragging;
     }
@@ -630,7 +852,7 @@ internal sealed class DesktopWindowPreview : IDisposable
     }
 
 
-    private void CompleteDrag()
+    private void CompleteDrag(int throwDirection = 0)
     {
         bool wasDragging = isDragging;
         bool wasGroupDrag = wasDragging && isGroupDragLeader;
@@ -638,9 +860,17 @@ internal sealed class DesktopWindowPreview : IDisposable
         double verticalDelta = dragVerticalDelta;
         DesktopWindowSnapTarget? completedSnapTarget = snapTarget;
         int? completedDropPage = dropPage;
+        bool isThrow = wasDragging && !wasGroupDrag && throwDirection != 0;
+        throwGesture.Reset();
+        if (isThrow)
+        {
+            completedDropPage = throwOriginPage;
+            completedSnapTarget = null;
+        }
         if (wasDragging)
         {
-            overviewDragScroller.Stop();
+            ClearDragVisual();
+            StopDragScroll();
             cursorConfinement.Release();
         }
 
@@ -676,7 +906,16 @@ internal sealed class DesktopWindowPreview : IDisposable
             dragVerticalDelta = 0;
             SetPromoted(false);
             windowPlacementCoordinator.CompleteMove(windowHandle);
-            bool moved = completedSnapTarget is { OccupantHandle: not 0 } swapTarget ? windowPlacementCoordinator.TrySwapIntoSlot(windowHandle, swapTarget.OccupantHandle, swapTarget.Placement) : completedSnapTarget.HasValue ? windowPlacementCoordinator.TryPlaceInSlot(windowHandle, completedSnapTarget.Value.Placement) : dragPositionResolver.TryResolve(windowHandle, horizontalDelta, verticalDelta, out DesktopWindowDragPosition position, completedDropPage) && dragController.MoveTo(windowHandle, position.CanvasX, position.CanvasY);
+            bool moved;
+            if (isThrow)
+            {
+                moved = CompleteThrow(throwDirection, out int destinationPage);
+                completedDropPage = destinationPage >= 0 ? destinationPage : null;
+            }
+            else
+            {
+                moved = completedSnapTarget is { OccupantHandle: not 0 } swapTarget ? windowPlacementCoordinator.TrySwapIntoSlot(windowHandle, swapTarget.OccupantHandle, swapTarget.Placement) : completedSnapTarget.HasValue ? windowPlacementCoordinator.TryPlaceInSlot(windowHandle, completedSnapTarget.Value.Placement) : dragPositionResolver.TryResolve(windowHandle, horizontalDelta, verticalDelta, out DesktopWindowDragPosition position, completedDropPage) && dragController.MoveTo(windowHandle, position.CanvasX, position.CanvasY);
+            }
             dragController.End(windowHandle);
             if (moved)
             {
@@ -712,8 +951,22 @@ internal sealed class DesktopWindowPreview : IDisposable
 
     private void ApplyTranslation(bool updateCapture = true)
     {
+        if (isLiveDragging || dragVisual is not null)
+        {
+            return;
+        }
+
         double targetX = isGroupStacked ? groupTargetX : isGroupDragLeader && !isDragging ? heldGroupLeaderX : x + dragHorizontalDelta;
         double targetY = isGroupStacked ? groupTargetY : isGroupDragLeader && !isDragging ? heldGroupLeaderY : y + dragVerticalDelta;
+        ApplyPosition(targetX, targetY);
+        if (updateCapture)
+        {
+            RefreshCaptureVisibility();
+        }
+    }
+
+    private void ApplyPosition(double targetX, double targetY)
+    {
         Vector3 translation = new(ToFloat(targetX), ToFloat(targetY), shadowDepth);
         if (appliedTranslation != translation)
         {
@@ -723,14 +976,10 @@ internal sealed class DesktopWindowPreview : IDisposable
             focusHost.Translation = translation;
         }
 
-        if (updateCapture)
-        {
-            RefreshCaptureVisibility();
-        }
     }
 
 
-    private void RefreshCaptureVisibility() => captureVisibility.Update(appliedTranslation?.X ?? 0, appliedTranslation?.Y ?? 0, width, height, isFilterMatch, isDragging || isGroupDragLeader || isGroupStacked);
+    private void RefreshCaptureVisibility() => captureVisibility.Update(appliedTranslation?.X ?? 0, appliedTranslation?.Y ?? 0, width, height, isFilterMatch, IsDragging);
 
     private void ApplySize(double targetWidth, double targetHeight)
     {
@@ -778,7 +1027,7 @@ internal sealed class DesktopWindowPreview : IDisposable
 
     private void ApplyIndicatorVisibility()
     {
-        bool groupDragging = isGroupDragLeader || isGroupStacked;
+        bool groupDragging = isGroupDragLeader || isGroupStacked || isLiveDragging;
         focusVisual.Visibility = isKeyboardFocused && !isSelected && !isDragging && !groupDragging ? Visibility.Visible : Visibility.Collapsed;
         selectionVisual.Visibility = isSelected && !isDragging && !groupDragging ? Visibility.Visible : Visibility.Collapsed;
     }

@@ -17,6 +17,92 @@ public sealed class DesktopWindowPlacementCoordinatorTests
     private readonly TestWindowPageTransitionGuard pageTransitionGuard = new();
     private readonly TestWindowFrameGeometryReader geometryReader = new();
 
+    [Theory]
+    [InlineData(0, 1)]
+    [InlineData(1, 0)]
+    public void ThrowPrefersCorrespondingFreeSlot(int sourcePage, int targetPage)
+    {
+        DesktopSnapPlacement origin = new(1060 + sourcePage * 1920, 40, 960, 1040);
+        Assert.True(CreateThrowResolver().TryResolve(1, sourcePage, origin, targetPage, DesktopSnapLayoutKind.Halves, out DesktopSnapPlacement target));
+        Assert.Equal(new(1060 + targetPage * 1920, 40, 960, 1040), target);
+    }
+
+    [Fact]
+    public void ThrowUsesNextFreeSlotWithoutSwappingOccupant()
+    {
+        TrackedWindow occupant = AddWindow(2, 2980, 40, 960, 1040);
+        Assert.True(CreateThrowResolver().TryResolve(1, 0, new(1060, 40, 960, 1040), 1, DesktopSnapLayoutKind.Halves, out DesktopSnapPlacement target));
+        Assert.Equal(new(2020, 40, 960, 1040), target);
+        Assert.Equal(2980, occupant.CanvasX);
+        Assert.Equal(0, scroller.RepositionCount);
+    }
+
+    [Fact]
+    public void ThrowRejectsFullLayoutWithoutChangingWindows()
+    {
+        TrackedWindow moving = AddWindow(1, 100, 40, 960, 1040);
+        AddWindow(2, 2020, 40, 960, 1040);
+        AddWindow(3, 2980, 40, 960, 1040);
+        Assert.False(CreateThrowResolver().TryResolve(1, 0, new(100, 40, 960, 1040), 1, DesktopSnapLayoutKind.Halves, out _));
+        Assert.Equal(100, moving.CanvasX);
+        Assert.Equal(0, scroller.RepositionCount);
+    }
+
+    [Fact]
+    public void ThrowIntoDifferentLayoutUsesNearestSlot()
+    {
+        Assert.True(CreateThrowResolver().TryResolve(1, 0, new(1060, 560, 960, 520), 1, DesktopSnapLayoutKind.Thirds, out DesktopSnapPlacement target));
+        Assert.Equal(new(3300, 40, 640, 1040), target);
+    }
+
+    [Fact]
+    public void ThrowPrefersSimilarSizeBeforeNearestDifferentSize()
+    {
+        Assert.True(CreateThrowResolver().TryResolve(1, 0, new(1060, 40, 960, 1040), 1, DesktopSnapLayoutKind.MainAndStack, out DesktopSnapPlacement target));
+        Assert.Equal(new(2020, 40, 960, 1040), target);
+    }
+
+    [Fact]
+    public void ThrowOccupancyAccountsForInvisibleWindowBorders()
+    {
+        geometryReader.Insets[2] = (8, 0, 8, 8);
+        AddWindow(2, 2012, 40, 976, 1048);
+        Assert.True(CreateThrowResolver().TryResolve(1, 0, new(100, 40, 960, 1040), 1, DesktopSnapLayoutKind.Halves, out DesktopSnapPlacement target));
+        Assert.Equal(new(2980, 40, 960, 1040), target);
+    }
+
+    [Fact]
+    public void ThrowUsesCapturedOriginEvenAfterNativeWindowHasMoved()
+    {
+        AddWindow(1, 100, 40, 960, 1040);
+        DesktopWindowThrowPlacementResolver resolver = CreateThrowResolver();
+        DesktopSnapPlacement origin = resolver.GetOrigin(1)!.Value;
+        store.TryGet(1, out TrackedWindow? window);
+        window!.CanvasX = 2980;
+        Assert.True(resolver.TryResolve(1, 0, origin, 1, DesktopSnapLayoutKind.Halves, out DesktopSnapPlacement target));
+        Assert.Equal(new(2020, 40, 960, 1040), target);
+    }
+
+    [Fact]
+    public void ThrowToPageWithoutLayoutPreservesOriginalRelativeBounds()
+    {
+        Assert.True(CreateThrowResolver().TryResolve(1, 0, new(300, 140, 800, 600), 1, DesktopSnapLayoutKind.None, out DesktopSnapPlacement target));
+        Assert.Equal(new(2220, 140, 800, 600), target);
+    }
+
+    [Fact]
+    public void ThrowDoesNotUseUnknownLayoutAsFreeDrop()
+    {
+        Assert.False(CreateThrowResolver().TryResolve(1, 0, new(300, 140, 800, 600), 1, (DesktopSnapLayoutKind)999, out _));
+    }
+
+    private DesktopWindowThrowPlacementResolver CreateThrowResolver()
+    {
+        DesktopWindowFrameGeometry frames = new(geometryReader);
+        DesktopSnapLayoutCatalog catalog = new();
+        return new(store, workspace, catalog, new(workspace, catalog), new(frames), frames);
+    }
+
     [Fact]
     public void SnappingDifferentFramesAlignsVisibleBottomsAndAdjoiningEdges()
     {

@@ -5,33 +5,43 @@ namespace Infinity.Shell;
 
 public sealed class DesktopWindowDragPositionResolver(IWindowStore windowStore, IWorkspace workspace, DesktopPageLayoutCalculator layoutCalculator)
 {
+    public bool TryResolveOnPage(nint windowHandle, int page, double localX, double localY, out DesktopWindowDragPosition position)
+    {
+        position = default;
+        if (page < 0 || workspace.Width <= 0 || !double.IsFinite(localX) || !double.IsFinite(localY) || !windowStore.TryGet(windowHandle, out TrackedWindow? window) || window is null)
+        {
+            return false;
+        }
+
+        return TryConstrainToPage(window, page, workspace.WorkAreaX + page * (double)workspace.Width + localX, workspace.WorkAreaY + localY, out position);
+    }
+
     public bool TryResolve(nint windowHandle, double horizontalVisualDelta, double verticalVisualDelta, out DesktopWindowDragPosition position, int? dropPage = null)
     {
         position = default;
-        if (!TryGetConstrainedPosition(windowHandle, horizontalVisualDelta, verticalVisualDelta, dropPage, out _, out double targetCanvasX, out double targetCanvasY))
+        if (!double.IsFinite(verticalVisualDelta) || dropPage < 0 || !windowStore.TryGet(windowHandle, out TrackedWindow? trackedWindow) || trackedWindow is null || !TryCalculateHorizontalPosition(trackedWindow, horizontalVisualDelta, dropPage, out int targetPage, out double targetCanvasX))
         {
             return false;
         }
 
-        position = new(targetCanvasX, targetCanvasY);
-        return true;
+        return TryConstrainToPage(trackedWindow, targetPage, targetCanvasX, trackedWindow.CanvasY + verticalVisualDelta, out position);
     }
 
 
-    private bool TryGetConstrainedPosition(nint windowHandle, double horizontalVisualDelta, double verticalVisualDelta, int? dropPage, out TrackedWindow? trackedWindow, out double targetCanvasX, out double targetCanvasY)
+    private bool TryConstrainToPage(TrackedWindow window, int page, double canvasX, double canvasY, out DesktopWindowDragPosition position)
     {
-        trackedWindow = null;
-        targetCanvasX = 0;
-        targetCanvasY = 0;
-        if (!double.IsFinite(verticalVisualDelta) || dropPage < 0 || !windowStore.TryGet(windowHandle, out trackedWindow) || trackedWindow is null || !TryCalculateHorizontalPosition(trackedWindow, horizontalVisualDelta, dropPage, out _, out targetCanvasX))
+        position = default;
+        if (!double.IsFinite(canvasX) || !double.IsFinite(canvasY))
         {
             return false;
         }
 
+        double minimumX = workspace.WorkAreaX + page * (double)workspace.Width;
+        double maximumX = minimumX + Math.Max(0, workspace.Width - window.Width);
         double minimumY = workspace.WorkAreaY;
-        double maximumY = minimumY + Math.Max(0, workspace.Height - trackedWindow.Height);
-        targetCanvasY = Math.Clamp(trackedWindow.CanvasY + verticalVisualDelta, minimumY, maximumY);
-        return double.IsFinite(targetCanvasY);
+        double maximumY = minimumY + Math.Max(0, workspace.Height - window.Height);
+        position = new(Math.Clamp(canvasX, minimumX, maximumX), Math.Clamp(canvasY, minimumY, maximumY));
+        return true;
     }
 
 
@@ -52,9 +62,6 @@ public sealed class DesktopWindowDragPositionResolver(IWindowStore windowStore, 
         double targetSpacedCenter = windowCenter - workspace.WorkAreaX + (sourcePage * pageSpacing) + horizontalVisualDelta;
         targetPage = dropPage ?? Math.Max(0, (int)Math.Floor((targetSpacedCenter + (pageSpacing / 2)) / pageStride));
         targetCanvasX = trackedWindow.CanvasX + horizontalVisualDelta + ((sourcePage - targetPage) * pageSpacing);
-        double minimumX = workspace.WorkAreaX + (targetPage * desktopWidth);
-        double maximumX = minimumX + Math.Max(0, desktopWidth - trackedWindow.Width);
-        targetCanvasX = Math.Clamp(targetCanvasX, minimumX, maximumX);
         return double.IsFinite(targetCanvasX);
     }
 

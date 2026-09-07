@@ -1,0 +1,18 @@
+<UserControl
+    x:Class="Infinity.Shell.WinUI.DesktopWindowResizePreview"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    IsHitTestVisible="False"
+    Visibility="Collapsed">
+    <Border
+        x:Name="Surface"
+        Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+        BorderBrush="{ThemeResource SurfaceStrokeColorDefaultBrush}">
+        <Grid x:Name="IconSurface" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Viewbox x:Name="FallbackIcon">
+                <FontIcon Glyph="&#xE737;" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+            </Viewbox>
+            <Image x:Name="ApplicationIcon" Stretch="Uniform" Visibility="Collapsed" />
+        </Grid>
+    </Border>
+</UserControl>

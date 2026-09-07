@@ -178,6 +178,8 @@ public sealed class DesktopWindowPlacementCoordinator(IWindowStore windowStore, 
 
     public void CompleteMove(nint windowHandle) => pageTransitionGuard.Clear(windowHandle);
 
+    public int? GetPage(nint handle) => windowStore.TryGet(handle, out TrackedWindow? window) ? GetPage(window) : null;
+
     public int GetPage(TrackedWindow window)
     {
         if (workspace.Width <= 0)

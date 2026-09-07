@@ -71,7 +71,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
     private int foregroundGeneration;
     private (int X, int Y, int OffsetX, int OffsetY, int ScreenWidth, int ScreenHeight, double Width, double Height)? appliedViewport;
 
-    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IPanState panState, IPager pager, IScroller scroller, IWorkspace workspace, IScrollInputSuppression scrollInputSuppression, IDesktopBackgroundSource backgroundSource, DesktopOverviewConfiguration overviewConfiguration, DesktopOverviewForegroundThemeResolver foregroundThemeResolver, DesktopScrollPreviewAnimator animator, DesktopOverviewChromeAnimator chromeAnimator, DesktopOverviewClockController clockController, DesktopOverviewLayoutPresenter layoutPresenter, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationDockViewModel applicationDock, DesktopApplicationDockContextMenuBuilder applicationDockContextMenuBuilder, DesktopApplicationDockPressAnimator applicationDockPressAnimator, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator, DesktopOverviewInputController inputController, DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator, DesktopOverlayBoundaryResizeController boundaryResize, ILogger<DesktopScrollPreviewView> logger)
+    public DesktopScrollPreviewView(IWindowPreviewSurface windowPreviewSurface, IWindowCollection windowCollection, IPanState panState, IPager pager, IScroller scroller, IWorkspace workspace, IScrollInputSuppression scrollInputSuppression, IDesktopBackgroundSource backgroundSource, DesktopOverviewConfiguration overviewConfiguration, DesktopOverviewForegroundThemeResolver foregroundThemeResolver, DesktopScrollPreviewAnimator animator, DesktopOverviewChromeAnimator chromeAnimator, DesktopOverviewClockController clockController, DesktopOverviewLayoutPresenter layoutPresenter, DesktopPageStrip pageStrip, DesktopWindowPreviewCollection previews, DesktopDragCursorConfinement cursorConfinement, DesktopShortcutHintsViewModel shortcutHints, DesktopApplicationPickerViewModel applicationPicker, DesktopApplicationDockViewModel applicationDock, DesktopApplicationDockContextMenuBuilder applicationDockContextMenuBuilder, DesktopApplicationDockPressAnimator applicationDockPressAnimator, DesktopApplicationLaunchCoordinator applicationLaunchCoordinator, DesktopOverviewInputController inputController, DesktopWindowSnapInteractionCoordinator snapInteractionCoordinator, DesktopOverlayBoundaryResizeController boundaryResize, DesktopWindowDragFrames dragFrames, ILogger<DesktopScrollPreviewView> logger)
     {
         InitializeComponent();
         this.windowPreviewSurface = windowPreviewSurface;
@@ -95,6 +95,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         this.inputController = inputController;
         this.snapInteractionCoordinator = snapInteractionCoordinator;
         this.boundaryResize = boundaryResize;
+        DragFrames = dragFrames;
         boundaryResize.Attach(SharedBoundaryCanvas, animator.Scale);
         boundaryResize.Completed += HandleBoundaryResizeCompleted;
         this.logger = logger;
@@ -115,6 +116,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         ApplicationResultsList.AddHandler(PointerWheelChangedEvent, new PointerEventHandler(HandleApplicationResultsPointerWheelChanged), true);
         AttachApplicationDockPressHandlers(AllApplicationsButton);
         ElementCompositionPreview.SetIsTranslationEnabled(PreviewSurface, true);
+        ElementCompositionPreview.SetIsTranslationEnabled(ThumbnailSurface, true);
         ElementCompositionPreview.SetIsTranslationEnabled(ApplicationDockSurface, true);
         ApplicationDockSurface.Shadow = new ThemeShadow();
         ApplicationDockSurface.Translation = new(0, 0, 64);
@@ -209,6 +211,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         if (!isRunning)
         {
             isRunning = true;
+            StartThumbnailSurface();
             refreshQueue.Start();
             spacingProgress = 1;
             SubscribeEvents();
@@ -340,6 +343,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         pageStrip.Stop();
         windowPreviewSurface.Clear();
         Opacity = 0;
+        StopThumbnailSurface();
     }
 
 
@@ -352,6 +356,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
 
         RefreshMonitorOrigin();
         layoutPresenter.Synchronise(PreviewBackgroundCanvas, PreviewCanvas, FocusCanvas, animator.Scale, monitorOriginX, monitorOriginY, spacingProgress);
+        UpdateLiveWindowDragPreview();
         boundaryResize.Refresh();
     }
 
@@ -458,6 +463,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         int y = workspace.WorkAreaY;
         int offsetX = Math.Max(0, x - overlayScreenOriginX);
         int offsetY = Math.Max(0, y - overlayScreenOriginY);
+        DragFrames.Configure(ElementCompositionPreview.GetElementVisual(PreviewSurface), new(overlayScreenOriginX, overlayScreenOriginY, XamlRoot?.RasterizationScale ?? 1, offsetX, offsetY, GetAnimationWidth() / 2d, GetAnimationHeight() / 2d));
         (int X, int Y, int OffsetX, int OffsetY, int MonitorWidth, int MonitorHeight, double Width, double Height) viewport = (x, y, offsetX, offsetY, monitorWidth, monitorHeight, GetAnimationWidth(), GetAnimationHeight());
         if (appliedViewport == viewport)
         {
@@ -471,6 +477,7 @@ public sealed partial class DesktopScrollPreviewView : UserControl
         workAreaOffsetX = offsetX;
         workAreaOffsetY = offsetY;
         PreviewSurface.Translation = new(workAreaOffsetX, workAreaOffsetY, 0);
+        ThumbnailSurface.Translation = PreviewSurface.Translation;
         previews.SetCaptureViewport(DesktopCaptureViewport.Create(monitorWidth, monitorHeight, GetAnimationWidth(), GetAnimationHeight(), workAreaOffsetX, workAreaOffsetY, animator.Scale));
         UpdateTopCommandSurfaceLayout();
         ShortcutHintSurface.Margin = new(0, Math.Max(0, workAreaOffsetY + workspace.Height - 60), 24, 0);
@@ -1124,6 +1131,11 @@ public sealed partial class DesktopScrollPreviewView : UserControl
     private void ApplyQueuedRefresh(DesktopOverviewRefreshBatch batch)
     {
         if (!isRunning)
+        {
+            return;
+        }
+
+        if (!batch.Synchronise && !batch.Layout && batch.Windows.Count == 1 && batch.Windows[0] == liveWindowDragHandle && liveWindowDragPreview is not null && windowCollection.TryGetTrackedWindow(liveWindowDragHandle, out TrackedWindow? draggedWindow) && draggedWindow is not null && liveWindowDragPreview.CanDeferLiveDragRefresh(draggedWindow))
         {
             return;
         }

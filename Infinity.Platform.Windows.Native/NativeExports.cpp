@@ -2,6 +2,8 @@
 #include <knownfolders.h>
 #include <shlobj.h>
 #include <shobjidl.h>
+#include <propkey.h>
+#include <appmodel.h>
 #include <algorithm>
 #include <cstdlib>
 #include <cwctype>
@@ -39,6 +41,163 @@ namespace
     {
         return _wcsicmp(left.DisplayName.c_str(), right.DisplayName.c_str()) < 0;
     }
+}
+
+extern "C" __declspec(dllexport) int __stdcall WindowIcon_GetIcon(HWND window, int requestedSize, unsigned char** buffer, int* width, int* height)
+{
+    if (buffer == nullptr || width == nullptr || height == nullptr || requestedSize <= 0 || requestedSize > 256)
+    {
+        return E_INVALIDARG;
+    }
+
+    *buffer = nullptr;
+    *width = 0;
+    *height = 0;
+    if (!IsWindow(window))
+    {
+        return E_INVALIDARG;
+    }
+
+    HICON icon = nullptr;
+    for (WPARAM kind : { ICON_BIG, ICON_SMALL, ICON_SMALL2 })
+    {
+        DWORD_PTR result = 0;
+        if (SendMessageTimeoutW(window, WM_GETICON, kind, 96, SMTO_ABORTIFHUNG | SMTO_BLOCK | SMTO_ERRORONEXIT, 75, &result) == 0)
+        {
+            break;
+        }
+
+        if (result != 0)
+        {
+            icon = CopyIcon(reinterpret_cast<HICON>(result));
+            if (icon != nullptr)
+            {
+                break;
+            }
+        }
+    }
+
+    if (icon == nullptr)
+    {
+        icon = CopyIcon(reinterpret_cast<HICON>(GetClassLongPtrW(window, GCLP_HICON)));
+    }
+
+    if (icon == nullptr)
+    {
+        icon = CopyIcon(reinterpret_cast<HICON>(GetClassLongPtrW(window, GCLP_HICONSM)));
+    }
+
+    if (icon == nullptr)
+    {
+        ComInitialiser com;
+        IPropertyStore* properties = nullptr;
+        if (SUCCEEDED(SHGetPropertyStoreForWindow(window, IID_PPV_ARGS(&properties))))
+        {
+            PROPVARIANT value = {};
+            HRESULT result = properties->GetValue(PKEY_AppUserModel_ID, &value);
+            properties->Release();
+            if (SUCCEEDED(result) && value.vt == VT_LPWSTR && value.pwszVal != nullptr)
+            {
+                std::wstring parsingName = L"shell:AppsFolder\\";
+                parsingName += value.pwszVal;
+                result = ApplicationCatalog_GetIcon(parsingName.c_str(), requestedSize, buffer, width, height);
+            }
+            else
+            {
+                result = E_FAIL;
+            }
+
+            PropVariantClear(&value);
+            if (SUCCEEDED(result))
+            {
+                return result;
+            }
+        }
+
+        DWORD processId = 0;
+        GetWindowThreadProcessId(window, &processId);
+        HANDLE process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
+        if (process != nullptr)
+        {
+            UINT32 length = 0;
+            LONG result = GetApplicationUserModelId(process, &length, nullptr);
+            if (result == ERROR_INSUFFICIENT_BUFFER && length > 0)
+            {
+                std::vector<wchar_t> identifier(length);
+                result = GetApplicationUserModelId(process, &length, identifier.data());
+                CloseHandle(process);
+                if (result == ERROR_SUCCESS)
+                {
+                    std::wstring parsingName = L"shell:AppsFolder\\";
+                    parsingName += identifier.data();
+                    return ApplicationCatalog_GetIcon(parsingName.c_str(), requestedSize, buffer, width, height);
+                }
+            }
+            else
+            {
+                CloseHandle(process);
+            }
+        }
+
+        return E_FAIL;
+    }
+
+    HDC dc = CreateCompatibleDC(nullptr);
+    BITMAPINFO info = {};
+    info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    info.bmiHeader.biWidth = requestedSize;
+    info.bmiHeader.biHeight = -requestedSize;
+    info.bmiHeader.biPlanes = 1;
+    info.bmiHeader.biBitCount = 32;
+    void* bits = nullptr;
+    HBITMAP bitmap = CreateDIBSection(dc, &info, DIB_RGB_COLORS, &bits, nullptr, 0);
+    if (dc == nullptr || bitmap == nullptr || bits == nullptr)
+    {
+        DeleteObject(bitmap);
+        DeleteDC(dc);
+        DestroyIcon(icon);
+        return E_FAIL;
+    }
+
+    HGDIOBJ previous = SelectObject(dc, bitmap);
+    size_t byteCount = static_cast<size_t>(requestedSize) * requestedSize * 4;
+    unsigned char* pixels = static_cast<unsigned char*>(CoTaskMemAlloc(byteCount));
+    HRESULT result = E_OUTOFMEMORY;
+    if (pixels != nullptr)
+    {
+        memset(bits, 0, byteCount);
+        BOOL drawn = DrawIconEx(dc, 0, 0, icon, requestedSize, requestedSize, 0, nullptr, DI_NORMAL);
+        GdiFlush();
+        memcpy(pixels, bits, byteCount);
+        memset(bits, 255, byteCount);
+        drawn = drawn && DrawIconEx(dc, 0, 0, icon, requestedSize, requestedSize, 0, nullptr, DI_NORMAL);
+        GdiFlush();
+        unsigned char* white = static_cast<unsigned char*>(bits);
+        for (size_t index = 0; index < byteCount; index += 4)
+        {
+            int difference = (std::max)({ static_cast<int>(white[index]) - pixels[index], static_cast<int>(white[index + 1]) - pixels[index + 1], static_cast<int>(white[index + 2]) - pixels[index + 2] });
+            pixels[index + 3] = static_cast<unsigned char>(255 - std::clamp(difference, 0, 255));
+        }
+
+        if (drawn)
+        {
+            *buffer = pixels;
+            *width = requestedSize;
+            *height = requestedSize;
+            result = S_OK;
+        }
+        else
+        {
+            CoTaskMemFree(pixels);
+            result = E_FAIL;
+        }
+    }
+
+    SelectObject(dc, previous);
+    DeleteObject(bitmap);
+    DeleteDC(dc);
+    DestroyIcon(icon);
+    return result;
 }
 
 extern "C" __declspec(dllexport) int __stdcall ApplicationCatalog_Enumerate(wchar_t** buffer, int* characterCount)
